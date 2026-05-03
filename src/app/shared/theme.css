@@ -1,0 +1,99 @@
+/* ZenithDB Dark Theme - TailwindCSS v4.1 */
+
+/* Component-specific dark theme overrides */
+
+/* Buttons */
+.btn-primary {
+  @apply inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-500;
+}
+
+.btn-secondary {
+  @apply inline-flex items-center gap-2 rounded-lg bg-neutral-800 px-4 py-2 text-sm font-medium text-neutral-200 transition-colors hover:bg-neutral-700;
+}
+
+.btn-danger {
+  @apply inline-flex items-center gap-2 rounded-lg border border-red-800 bg-red-900/50 px-4 py-2 text-sm font-medium text-red-400 transition-colors hover:bg-red-800;
+}
+
+/* Form inputs */
+.input-field {
+  @apply w-full rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-2 text-sm text-white placeholder-neutral-500 transition-colors outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500;
+}
+
+.select-field {
+  @apply w-full cursor-pointer rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-2 text-sm text-white transition-colors outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500;
+}
+
+/* Cards */
+.card {
+  @apply overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900;
+}
+
+.card-header {
+  @apply border-b border-neutral-800 bg-neutral-800/50 px-4 py-3;
+}
+
+/* Tables */
+.table-container {
+  @apply overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900;
+}
+
+.table-header {
+  @apply bg-neutral-800 text-xs font-medium tracking-wider text-neutral-400 uppercase;
+}
+
+.table-row {
+  @apply border-b border-neutral-800 transition-colors hover:bg-neutral-800/50;
+}
+
+.table-cell {
+  @apply px-4 py-3 text-sm text-neutral-200;
+}
+
+/* Status indicators */
+.status-dot {
+  @apply h-2 w-2 rounded-full;
+}
+
+.status-connected {
+  @apply bg-emerald-500;
+}
+
+.status-disconnected {
+  @apply bg-neutral-600;
+}
+
+.status-error {
+  @apply bg-red-500;
+}
+
+/* Badges */
+.badge {
+  @apply inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium;
+}
+
+.badge-neutral {
+  @apply bg-neutral-800 text-neutral-400;
+}
+
+.badge-emerald {
+  @apply border border-emerald-800 bg-emerald-900/50 text-emerald-400;
+}
+
+.badge-red {
+  @apply border border-red-800 bg-red-900/50 text-red-400;
+}
+
+/* Loading spinner */
+.spinner {
+  @apply h-6 w-6 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent;
+}
+
+/* Nav items */
+.nav-item {
+  @apply flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-neutral-400 transition-colors hover:bg-neutral-800 hover:text-white;
+}
+
+.nav-item-active {
+  @apply bg-neutral-800 text-white;
+}

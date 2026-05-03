@@ -1,0 +1,22 @@
+<div class="card" (click)="onConnect()">
+  <div class="card-decoration"></div>
+
+  <div class="card-header">
+    <div class="card-icon-box">
+      <i class="fas {{ providerIcon }}"></i>
+    </div>
+    <div class="card-status-area">
+      <span class="card-status-badge {{ statusClass }}">{{ statusLabel }}</span>
+      @if (connection().status === "connected") {
+        <div class="card-uptime">Uptime: 14d 2h</div>
+      }
+    </div>
+  </div>
+
+  <h3 class="card-name">{{ connection().name }}</h3>
+  <p class="card-uri mono">{{ connection().provider }}</p>
+
+  <div class="card-tags">
+    <span class="card-tag">{{ connection().provider }}</span>
+  </div>
+</div>

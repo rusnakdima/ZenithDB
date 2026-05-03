@@ -1,0 +1,136 @@
+<div class="connections-container">
+  <div class="connections-max-width" style="max-width: 48rem">
+    <div class="connections-header" style="margin-bottom: 1.5rem">
+      <h1 class="text-2xl font-bold tracking-tight">New Connection</h1>
+    </div>
+
+    <div class="form-card">
+      <div class="mb-6">
+        <label class="form-label">Provider Type</label>
+        <select [(ngModel)]="provider" class="form-select">
+          <option value="json">JSON</option>
+          <option value="mongo">MongoDB</option>
+          <option value="redis">Redis</option>
+          <option value="postgres">PostgreSQL</option>
+          <option value="sqlite">SQLite</option>
+          <option value="mysql">MySQL</option>
+        </select>
+      </div>
+
+      <div class="mb-6">
+        <label class="form-label">Connection Name</label>
+        <input type="text" [(ngModel)]="name" placeholder="My Database" class="form-input" />
+      </div>
+
+      @switch (provider) {
+        @case ("json") {
+          <div class="mb-6">
+            <label class="form-label">File Path</label>
+            <div class="flex gap-3">
+              <input
+                type="text"
+                [(ngModel)]="path"
+                placeholder="/path/to/data.json"
+                class="form-input"
+              />
+              <button class="form-btn form-btn-browse">Browse</button>
+            </div>
+          </div>
+        }
+        @case ("mongo") {
+          <div class="mb-6">
+            <label class="form-label">Connection URI</label>
+            <input
+              type="text"
+              [(ngModel)]="uri"
+              placeholder="mongodb://localhost:27017"
+              class="form-input"
+            />
+          </div>
+          <div class="mb-6">
+            <label class="form-label">Database Name</label>
+            <input type="text" [(ngModel)]="database" placeholder="mydb" class="form-input" />
+          </div>
+        }
+        @case ("redis") {
+          <div class="mb-6">
+            <label class="form-label">Connection URI</label>
+            <input
+              type="text"
+              [(ngModel)]="uri"
+              placeholder="redis://localhost:6379"
+              class="form-input"
+            />
+          </div>
+        }
+        @case ("postgres") {
+          <div class="mb-6">
+            <label class="form-label">Connection URI</label>
+            <input
+              type="text"
+              [(ngModel)]="uri"
+              placeholder="postgres://user:pass@localhost:5432/db"
+              class="form-input"
+            />
+          </div>
+        }
+        @case ("sqlite") {
+          <div class="mb-6">
+            <label class="form-label">Database File Path</label>
+            <div class="flex gap-3">
+              <input
+                type="text"
+                [(ngModel)]="path"
+                placeholder="/path/to/database.db"
+                class="form-input"
+              />
+              <button class="form-btn form-btn-browse">Browse</button>
+            </div>
+          </div>
+        }
+        @case ("mysql") {
+          <div class="mb-6">
+            <label class="form-label">Connection URI</label>
+            <input
+              type="text"
+              [(ngModel)]="uri"
+              placeholder="mysql://user:pass@localhost:3306/db"
+              class="form-input"
+            />
+          </div>
+        }
+      }
+
+      @if (testResult()) {
+        <div
+          class="form-result"
+          [class.form-result-success]="testResult()!.ok"
+          [class.form-result-error]="!testResult()!.ok"
+        >
+          <p
+            class="form-result-text"
+            [class.form-result-text-success]="testResult()!.ok"
+            [class.form-result-text-error]="!testResult()!.ok"
+          >
+            @if (testResult()!.ok) {
+              Connected! {{ testResult()!.provider }} v{{ testResult()!.version }}
+            } @else {
+              Connection failed: {{ testResult()!.message }}
+            }
+          </p>
+        </div>
+      }
+
+      <div class="flex items-center gap-4">
+        <button
+          (click)="testConnection()"
+          [disabled]="testing() || !name"
+          class="form-btn form-btn-secondary"
+        >
+          {{ testing() ? "Testing..." : "Test Connection" }}
+        </button>
+        <button (click)="save()" [disabled]="!name" class="form-btn form-btn-primary">Save</button>
+      </div>
+    </div>
+  </div>
+</div>

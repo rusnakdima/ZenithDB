@@ -1,0 +1,56 @@
+<div class="flex flex-wrap items-center gap-3 border-b border-slate-800 bg-slate-900/30 p-3">
+  <div
+    class="group flex max-w-2xl flex-grow items-center gap-2 rounded-md border border-slate-700 bg-slate-800 px-3 py-1.5 transition focus-within:ring-1 focus-within:ring-blue-500"
+  >
+    <span class="text-[10px] font-bold text-blue-500 uppercase">Filter</span>
+    <input
+      type="text"
+      [ngModel]="filter()"
+      (ngModelChange)="filter.set($event)"
+      class="w-full border-none bg-transparent text-sm text-white outline-none"
+    />
+    <i class="fas fa-history cursor-pointer text-slate-600 group-hover:text-slate-400"></i>
+  </div>
+  <div class="flex gap-1">
+    <button
+      class="rounded-md bg-blue-600 px-4 py-1.5 text-xs font-bold text-white transition hover:bg-blue-500"
+      (click)="applyFilter()"
+    >
+      Apply
+    </button>
+    <button
+      class="rounded-md bg-slate-800 px-3 py-1.5 text-xs font-bold text-slate-300 transition hover:bg-slate-700"
+      (click)="clearFilter()"
+    >
+      Clear
+    </button>
+  </div>
+  <div class="mx-2 h-6 w-px bg-slate-800"></div>
+  <div class="flex items-center gap-1">
+    <button
+      class="rounded p-2 text-slate-400 transition hover:bg-slate-800"
+      title="Export"
+      (click)="export.emit()"
+    >
+      <i class="fas fa-download"></i>
+    </button>
+    <button
+      class="rounded p-2 text-slate-400 transition hover:bg-slate-800"
+      title="Grid View"
+      [class.text-blue-400]="viewMode() === 'grid'"
+      [class.bg-blue-500/10]="viewMode() === 'grid'"
+      (click)="setViewMode('grid')"
+    >
+      <i class="fas fa-th"></i>
+    </button>
+    <button
+      class="rounded p-2 text-slate-400 transition hover:bg-slate-800"
+      title="JSON View"
+      [class.text-blue-400]="viewMode() === 'json'"
+      [class.bg-blue-500/10]="viewMode() === 'json'"
+      (click)="setViewMode('json')"
+    >
+      <i class="fas fa-braces"></i>
+    </button>
+  </div>
+</div>

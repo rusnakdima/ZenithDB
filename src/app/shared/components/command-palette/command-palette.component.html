@@ -1,0 +1,31 @@
+<div
+  class="overlay fixed inset-0 z-50 flex items-start justify-center bg-slate-900/60 pt-[10vh] backdrop-blur-sm"
+  [class.hidden]="!visible()"
+  (click)="onOverlayClick($event)"
+>
+  <div
+    class="animate-fade w-full max-w-xl overflow-hidden rounded-xl border border-slate-700 bg-slate-800 shadow-2xl"
+  >
+    <div class="flex items-center gap-3 border-b border-slate-700 p-4">
+      <i class="fas fa-search text-slate-500"></i>
+      <input
+        type="text"
+        [(ngModel)]="query"
+        placeholder="Search tables, commands, or documentation..."
+        class="w-full border-none bg-transparent text-sm text-white placeholder-slate-500 outline-none"
+      />
+      <kbd class="rounded bg-slate-700 px-1.5 py-0.5 text-[10px] text-slate-400">ESC</kbd>
+    </div>
+    <div class="max-h-60 overflow-y-auto p-2">
+      @for (shortcut of shortcuts; track shortcut.action) {
+        <div
+          class="group flex cursor-pointer items-center gap-3 rounded-lg p-2 hover:bg-blue-600"
+          (click)="execute(shortcut.action)"
+        >
+          <i class="fas {{ shortcut.icon }} text-slate-500 group-hover:text-white"></i>
+          <span class="text-sm text-white">{{ shortcut.text }}</span>
+        </div>
+      }
+    </div>
+  </div>
+</div>

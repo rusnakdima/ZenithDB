@@ -1,0 +1,18 @@
+<div class="flex font-mono text-sm leading-relaxed">
+  <div class="w-10 shrink-0 bg-slate-900/50 pt-4 pr-2 text-right text-slate-600 select-none">
+    @for (line of lines; track $index) {
+      <div>{{ $index + 1 }}</div>
+    }
+  </div>
+  <div class="relative flex-grow">
+    <textarea
+      class="absolute inset-0 z-10 h-full w-full cursor-text resize-none border-none bg-transparent pl-2 font-mono text-sm leading-relaxed text-green-400 opacity-0 outline-none"
+      (input)="onInput($event)"
+      [value]="query"
+      spellcheck="false"
+    ></textarea>
+    <pre
+      class="pointer-events-none pl-2 font-mono text-sm leading-relaxed break-words whitespace-pre-wrap text-green-400"
+    ><span class="opacity-0">.</span>{{ query }}<span class="inline-block w-2 h-4 bg-green-400 animate-pulse ml-0.5">&nbsp;</span></pre>
+  </div>
+</div>

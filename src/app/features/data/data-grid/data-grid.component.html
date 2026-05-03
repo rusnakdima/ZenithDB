@@ -1,0 +1,91 @@
+<div class="data-grid-container">
+  @if (error) {
+    <div class="error-banner">{{ error }}</div>
+  }
+
+  <div class="table-container">
+    @if (loading) {
+      <div class="loading-state">
+        <div class="spinner"></div>
+      </div>
+    } @else if (data.length === 0) {
+      <div class="empty-state">
+        <p>No data in this collection</p>
+      </div>
+    } @else {
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th class="w-8 border-r border-slate-800 p-3 text-center">
+                <input type="checkbox" class="rounded accent-blue-500" />
+              </th>
+              @for (col of columns; track col.name) {
+                <th
+                  class="border-r border-slate-800 p-3 text-left text-xs font-bold tracking-wider text-slate-500 uppercase"
+                >
+                  <div class="header-content">
+                    {{ col.name }}
+                    <span class="type-badge">{{ col.data_type }}</span>
+                  </div>
+                </th>
+              }
+              <th class="p-3 text-left text-xs font-bold tracking-wider text-slate-500 uppercase">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of data; track row._id || row.id || $index; let i = $index) {
+              <tr
+                class="data-row group relative border-b border-slate-900 transition-colors hover:bg-slate-900"
+                (click)="onRowClick(row)"
+              >
+                <td
+                  class="border-r border-slate-800 p-3 text-center"
+                  (click)="$event.stopPropagation()"
+                >
+                  <input type="checkbox" class="rounded accent-blue-500" />
+                </td>
+                @for (col of columns; track col.name) {
+                  <td class="border-r border-slate-800 p-3 text-slate-300">
+                    @if (editingCell?.row === i && editingCell?.col === col.name) {
+                      <input
+                        [(ngModel)]="editValue"
+                        (keyup.enter)="saveEdit()"
+                        (keyup.escape)="cancelEdit()"
+                        (blur)="saveEdit()"
+                        class="edit-input"
+                      />
+                    } @else {
+                      <div (click)="startEdit(i, col.name, row[col.name])" class="cell-content">
+                        {{ row[col.name] }}
+                      </div>
+                    }
+                  </td>
+                }
+                <td class="actions-cell" (click)="$event.stopPropagation()">
+                  <div class="context-actions">
+                    <button (click)="deleteRow(row)" class="delete-btn" title="Delete row">
+                      <svg
+                        class="trash-icon"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      >
+                        <path
+                          d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>

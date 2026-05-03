@@ -1,0 +1,164 @@
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <h1 class="text-2xl font-bold text-white">New Connection</h1>
+    <button (click)="cancel()" class="text-neutral-400 transition-colors hover:text-white">
+      Cancel
+    </button>
+  </div>
+
+  <div class="rounded-xl border border-neutral-800 bg-neutral-900 p-6">
+    <div class="mb-6">
+      <label class="mb-2 block text-sm font-medium text-neutral-300">Provider Type</label>
+      <select
+        [(ngModel)]="provider"
+        class="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+      >
+        <option value="json">JSON</option>
+        <option value="mongo">MongoDB</option>
+        <option value="redis">Redis</option>
+        <option value="postgres">PostgreSQL</option>
+        <option value="sqlite">SQLite</option>
+        <option value="mysql">MySQL</option>
+      </select>
+    </div>
+
+    <div class="mb-6">
+      <label class="mb-2 block text-sm font-medium text-neutral-300">Connection Name</label>
+      <input
+        type="text"
+        [(ngModel)]="name"
+        placeholder="My Database"
+        class="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-white placeholder-neutral-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+      />
+    </div>
+
+    @switch (provider) {
+      @case ("json") {
+        <div class="mb-6">
+          <label class="mb-2 block text-sm font-medium text-neutral-300">File Path</label>
+          <div class="flex gap-2">
+            <input
+              type="text"
+              [(ngModel)]="path"
+              placeholder="/path/to/data.json"
+              class="flex-1 rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-white placeholder-neutral-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+            />
+            <button
+              class="rounded-lg bg-neutral-800 px-4 py-2 text-neutral-300 transition-colors hover:bg-neutral-700"
+            >
+              Browse
+            </button>
+          </div>
+        </div>
+      }
+      @case ("mongo") {
+        <div class="mb-6">
+          <label class="mb-2 block text-sm font-medium text-neutral-300">Connection URI</label>
+          <input
+            type="text"
+            [(ngModel)]="uri"
+            placeholder="mongodb://localhost:27017"
+            class="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-white placeholder-neutral-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+          />
+        </div>
+        <div class="mb-6">
+          <label class="mb-2 block text-sm font-medium text-neutral-300">Database Name</label>
+          <input
+            type="text"
+            [(ngModel)]="database"
+            placeholder="mydb"
+            class="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-white placeholder-neutral-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+          />
+        </div>
+      }
+      @case ("redis") {
+        <div class="mb-6">
+          <label class="mb-2 block text-sm font-medium text-neutral-300">Connection URI</label>
+          <input
+            type="text"
+            [(ngModel)]="uri"
+            placeholder="redis://localhost:6379"
+            class="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-white placeholder-neutral-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+          />
+        </div>
+      }
+      @case ("postgres") {
+        <div class="mb-6">
+          <label class="mb-2 block text-sm font-medium text-neutral-300">Connection URI</label>
+          <input
+            type="text"
+            [(ngModel)]="uri"
+            placeholder="postgres://user:pass@localhost:5432/db"
+            class="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-white placeholder-neutral-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+          />
+        </div>
+      }
+      @case ("sqlite") {
+        <div class="mb-6">
+          <label class="mb-2 block text-sm font-medium text-neutral-300">Database File Path</label>
+          <div class="flex gap-2">
+            <input
+              type="text"
+              [(ngModel)]="path"
+              placeholder="/path/to/database.db"
+              class="flex-1 rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-white placeholder-neutral-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+            />
+            <button
+              class="rounded-lg bg-neutral-800 px-4 py-2 text-neutral-300 transition-colors hover:bg-neutral-700"
+            >
+              Browse
+            </button>
+          </div>
+        </div>
+      }
+      @case ("mysql") {
+        <div class="mb-6">
+          <label class="mb-2 block text-sm font-medium text-neutral-300">Connection URI</label>
+          <input
+            type="text"
+            [(ngModel)]="uri"
+            placeholder="mysql://user:pass@localhost:3306/db"
+            class="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-white placeholder-neutral-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+          />
+        </div>
+      }
+    }
+
+    @if (testResult()) {
+      <div
+        class="mb-6 rounded-lg p-4"
+        [class.bg-emerald-900]="testResult()!.ok"
+        [class.bg-red-900]="!testResult()!.ok"
+      >
+        <p
+          class="text-sm"
+          [class.text-emerald-400]="testResult()!.ok"
+          [class.text-red-400]="!testResult()!.ok"
+        >
+          @if (testResult()!.ok) {
+            Connected! {{ testResult()!.provider }} v{{ testResult()!.version }}
+          } @else {
+            Connection failed: {{ testResult()!.message }}
+          }
+        </p>
+      </div>
+    }
+
+    <div class="flex items-center gap-3">
+      <button
+        (click)="testConnection()"
+        [disabled]="testing() || !name"
+        class="rounded-lg bg-neutral-700 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-neutral-600 disabled:opacity-50"
+      >
+        {{ testing() ? "Testing..." : "Test Connection" }}
+      </button>
+      <button
+        (click)="save()"
+        [disabled]="!name"
+        class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-500 disabled:opacity-50"
+      >
+        Save
+      </button>
+    </div>
+  </div>
+</div>

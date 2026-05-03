@@ -1,0 +1,120 @@
+.card {
+  position: relative;
+  background-color: rgb(15, 23, 42);
+  border: 1px solid rgb(30, 41, 59);
+  border-radius: 1.5rem;
+  padding: 1.25rem;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  overflow: hidden;
+}
+
+.card:hover {
+  border-color: rgb(16, 185, 129);
+}
+
+.decoration {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 8rem;
+  height: 8rem;
+  background-color: rgb(16, 185, 129);
+  opacity: 0.05;
+  border-radius: 50%;
+  margin-right: -4rem;
+  margin-top: -4rem;
+  transition: opacity 0.2s;
+}
+
+.card:hover .decoration {
+  opacity: 0.1;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.icon-box {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 1rem;
+  background-color: rgb(16, 185, 129);
+  opacity: 0.1;
+  border: 1px solid rgb(16, 185, 129);
+  opacity: 0.2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgb(16, 185, 129);
+  font-size: 1.25rem;
+}
+
+.status-area {
+  text-align: right;
+}
+
+.status-badge {
+  font-size: 0.625rem;
+  font-weight: 700;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+}
+
+.status-connected {
+  background-color: rgb(34, 197, 94);
+  opacity: 0.2;
+  color: rgb(74, 222, 128);
+  border: 1px solid rgb(34, 197, 94);
+  opacity: 0.2;
+}
+
+.status-offline {
+  background-color: rgb(30, 41, 59);
+  color: rgb(148, 163, 164);
+  border: 1px solid rgb(51, 65, 85);
+}
+
+.uptime {
+  font-size: 0.625rem;
+  color: rgb(100, 116, 139);
+  margin-top: 0.25rem;
+}
+
+.connection-name {
+  font-weight: 700;
+  font-size: 1.125rem;
+  margin-bottom: 0.25rem;
+  transition: color 0.2s;
+}
+
+.card:hover .connection-name {
+  color: rgb(16, 185, 129);
+}
+
+.connection-uri {
+  font-size: 0.75rem;
+  color: rgb(100, 116, 139);
+  margin-bottom: 0.25rem;
+  font-family: "JetBrains Mono", monospace;
+}
+
+.tags {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.tag {
+  background-color: rgb(30, 41, 59);
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.625rem;
+  color: rgb(148, 163, 164);
+}
+
+.mono {
+  font-family: "JetBrains Mono", monospace;
+}

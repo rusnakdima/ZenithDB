@@ -1,0 +1,132 @@
+<div class="explorer-container">
+  <!-- Data Tabs Bar -->
+  <div class="data-tabs-bar">
+    @for (tab of activeTabs(); track tab.collection) {
+      <div
+        class="data-tab"
+        [class.active]="activeCollection() === tab.collection"
+        (click)="selectTab(tab.collection)"
+      >
+        <svg
+          class="tab-icon"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M3 3h18v18H3z" />
+        </svg>
+        <span>{{ tab.name }}</span>
+        <button class="close-tab" (click)="closeTab(tab.collection); $event.stopPropagation()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    }
+    <button class="add-tab-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 5v14M5 12h14" />
+      </svg>
+    </button>
+  </div>
+
+  <!-- Filter & Action Bar -->
+  <div class="filter-action-bar">
+    <app-filter-bar
+      [filter]="filterText()"
+      [viewMode]="viewMode()"
+      (filterChange)="onFilterChange($event)"
+      (apply)="onFilterApply()"
+      (clear)="onFilterClear()"
+      (export)="toggleViewMode()"
+      (toggleView)="toggleViewMode()"
+    ></app-filter-bar>
+  </div>
+
+  <!-- Stats Breadcrumb -->
+  <div class="stats-breadcrumb">
+    <div class="breadcrumb-left">
+      <span
+        >Viewing: <span class="text-blue-400">{{ activeCollection() }}</span></span
+      >
+      <span class="collection-badge">Collection</span>
+    </div>
+    <div class="breadcrumb-right">
+      @if (stats()) {
+        <span
+          ><svg
+            class="inline-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M4 7h16M4 12h16M4 17h10" />
+          </svg>
+          {{ formatBytes(stats()!.size_bytes) }}</span
+        >
+        <span
+          ><svg
+            class="inline-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M9 12h6M9 16h6M9 8h6M4 7h.01M4 12h.01M4 17h.01" />
+          </svg>
+          {{ formatDocumentCount(stats()!.document_count) }} Docs</span
+        >
+      }
+    </div>
+  </div>
+
+  <!-- Data Grid -->
+  <div class="data-grid-area">
+    <app-data-grid
+      [collectionName]="activeCollection()"
+      [filter]="filterText()"
+      [page]="page()"
+      [pageSize]="pageSize()"
+      [showInspector]="showInspector()"
+      (documentClick)="openInspector($event)"
+      (pageChange)="onPageChange($event)"
+    ></app-data-grid>
+  </div>
+
+  <!-- Pagination Footer -->
+  <div class="pagination-footer">
+    <div class="pagination-info">
+      <span>Page {{ page() + 1 }} of {{ totalPages || 1 }}</span>
+      <div class="page-size-select">
+        <span>{{ pageSize() }} rows</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+      </div>
+    </div>
+    <div class="pagination-controls">
+      <button class="page-btn" [disabled]="!hasPrevPage" (click)="prevPage()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M15 18l-6-6 6-6" />
+        </svg>
+      </button>
+      <button class="page-btn" [disabled]="!hasNextPage" (click)="nextPage()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 18l6-6-6-6" />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Inspector Drawer -->
+  @if (showInspector() && inspectorDocument()) {
+    <app-inspector-drawer
+      [document]="inspectorDocument()!"
+      (close)="closeInspector()"
+      (save)="saveDocument($event)"
+      (delete)="deleteDocument($event)"
+    ></app-inspector-drawer>
+  }
+</div>

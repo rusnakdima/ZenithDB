@@ -1,0 +1,64 @@
+<div class="inspector-drawer translate-x-0">
+  <div class="drawer-header">
+    <h3 class="drawer-title">
+      <svg
+        class="title-icon"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      </svg>
+      Document Detail
+    </h3>
+    <button class="close-btn" (click)="onClose()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+  </div>
+
+  <div class="drawer-content">
+    <div class="section">
+      <label class="section-label">Internal Metadata</label>
+      <div class="metadata-grid">
+        @for (meta of metadata(); track meta.key) {
+          <div class="metadata-item">
+            <div class="metadata-key">{{ meta.key }}</div>
+            <div class="metadata-value">{{ meta.value }}</div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <label class="section-label">JSON Payload</label>
+        @if (!isEditing()) {
+          <button class="copy-btn" (click)="startEdit()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+              <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+            </svg>
+          </button>
+        }
+      </div>
+
+      @if (isEditing()) {
+        <textarea class="json-editor mono" [(ngModel)]="editText" rows="15"></textarea>
+        <div class="edit-actions">
+          <button class="cancel-btn" (click)="cancelEdit()">Cancel</button>
+          <button class="save-btn" (click)="onSave()">Save Changes</button>
+        </div>
+      } @else {
+        <div class="json-display mono" [innerHTML]="getSyntaxHighlighting(jsonPayload())"></div>
+      }
+    </div>
+  </div>
+
+  <div class="drawer-footer">
+    <button class="save-changes-btn" (click)="onSave()">Save Changes</button>
+    <button class="delete-btn" (click)="onDelete()">Delete Permanently</button>
+  </div>
+</div>

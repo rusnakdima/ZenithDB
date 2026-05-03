@@ -1,0 +1,38 @@
+<div class="flex h-full flex-col">
+  <div class="flex items-center gap-2 border-b border-slate-800 bg-slate-900/50 p-2">
+    <button
+      (click)="runQuery()"
+      class="rounded bg-blue-600 px-4 py-1.5 text-xs font-bold text-white hover:bg-blue-500"
+    >
+      Run Query
+    </button>
+    <button
+      (click)="clearEditor()"
+      class="rounded bg-slate-800 px-4 py-1.5 text-xs font-bold text-white hover:bg-slate-700"
+    >
+      Clear
+    </button>
+    <select
+      [(ngModel)]="selectedDatabase"
+      class="rounded border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs text-white"
+    >
+      @for (db of databases; track db) {
+        <option [value]="db">{{ db }}</option>
+      }
+    </select>
+  </div>
+
+  <div class="flex min-h-0 flex-grow flex-col divide-x divide-slate-800 md:flex-row">
+    <div class="min-h-0 flex-grow overflow-auto bg-slate-950 p-4">
+      <app-sql-editor [query]="query()" (queryChange)="onQueryChange($event)"></app-sql-editor>
+    </div>
+    <div class="h-64 w-full shrink-0 bg-slate-900 md:h-auto md:w-96">
+      <app-output-console
+        [results]="results"
+        [loading]="loading"
+        [error]="error"
+        (clear)="clearEditor()"
+      ></app-output-console>
+    </div>
+  </div>
+</div>

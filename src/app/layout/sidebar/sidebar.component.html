@@ -1,0 +1,91 @@
+<aside class="flex w-[260px] shrink-0 flex-col border-r border-slate-800 bg-slate-900/50">
+  <div class="p-3">
+    <a routerLink="/connections/new" class="connect-btn">
+      <i class="fas fa-plug"></i> Connect to...
+    </a>
+  </div>
+
+  <div class="custom-scrollbar flex-grow overflow-y-auto">
+    <div class="mb-4 px-2">
+      <div class="section-header">
+        <span>Pinned</span>
+        <i class="fas fa-thumbtack"></i>
+      </div>
+      <div class="mt-1 space-y-0.5">
+        <div class="sidebar-item">
+          <i class="fas fa-database text-emerald-500"></i>
+          <span class="flex-grow text-slate-300">production_main</span>
+          <span class="text-[10px] text-slate-500">SQL</span>
+        </div>
+        <div
+          class="sidebar-item rounded-md border-r-2 border-emerald-500 bg-emerald-500/10 text-emerald-400"
+        >
+          <i class="fas fa-leaf text-green-500"></i>
+          <span class="flex-grow">customer_360</span>
+          <span class="text-[10px] text-green-600">NoSQL</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="px-2">
+      <div class="section-header">
+        <span>Local Instances</span>
+        <i class="fas fa-plus cursor-pointer hover:text-white"></i>
+      </div>
+      <div class="mt-1">
+        <div class="sidebar-item">
+          <i class="fas fa-caret-down text-[10px]"></i>
+          <i class="fas fa-server text-slate-500"></i>
+          <span>localhost:27017</span>
+        </div>
+        <div class="mt-1 ml-6 space-y-0.5 border-l border-slate-800">
+          <div class="sidebar-item-level-2 hover:text-white">
+            <i class="fas fa-folder"></i> <span>admin</span>
+          </div>
+          <div class="sidebar-item-level-2 hover:text-white">
+            <i class="fas fa-folder"></i> <span>config</span>
+          </div>
+          <div class="sidebar-item-level-2 rounded-r-md bg-slate-800/50 text-emerald-400">
+            <i class="fas fa-folder-open"></i> <span>ecommerce</span>
+          </div>
+          <div class="ml-4 space-y-0.5 border-l border-slate-700">
+            <div
+              class="flex cursor-pointer items-center gap-2 p-1 pl-3 text-[11px] text-slate-500 hover:text-emerald-400"
+            >
+              <i class="fas fa-table"></i> <span>categories</span>
+            </div>
+            <div
+              class="flex cursor-pointer items-center gap-2 bg-emerald-500/5 p-1 pl-3 text-[11px] text-emerald-400"
+            >
+              <i class="fas fa-table"></i> <span>orders</span>
+            </div>
+            <div
+              class="flex cursor-pointer items-center gap-2 p-1 pl-3 text-[11px] text-slate-500 hover:text-emerald-400"
+            >
+              <i class="fas fa-table"></i> <span>products</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="border-t border-slate-800 bg-slate-900 p-3">
+    <div class="mb-2 flex items-center gap-3">
+      <div class="h-2 w-2 animate-pulse rounded-full bg-green-500"></div>
+      <span class="text-[10px] font-bold tracking-tighter text-slate-400 uppercase"
+        >System Status: Optimal</span
+      >
+    </div>
+    <div class="grid grid-cols-2 gap-2">
+      <div class="rounded bg-slate-800 p-2 text-center">
+        <div class="text-[10px] text-slate-500 uppercase">CPU</div>
+        <div class="font-mono text-xs">1.2%</div>
+      </div>
+      <div class="rounded bg-slate-800 p-2 text-center">
+        <div class="text-[10px] text-slate-500 uppercase">RAM</div>
+        <div class="font-mono text-xs">148MB</div>
+      </div>
+    </div>
+  </div>
+</aside>

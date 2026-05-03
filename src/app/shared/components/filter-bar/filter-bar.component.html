@@ -1,0 +1,53 @@
+<div class="filter-bar">
+  <div class="filter-input-wrapper">
+    <span class="filter-label">Filter</span>
+    <input
+      type="text"
+      [value]="localFilter"
+      (input)="onFilterInput($any($event.target).value)"
+      (keyup.enter)="onApply()"
+      placeholder='{ status: "active", price: { $gt: 50 } }'
+      class="filter-input mono text-green-400"
+    />
+    <button class="history-btn" title="History">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    </button>
+  </div>
+
+  <div class="filter-actions">
+    <button class="apply-btn" (click)="onApply()">Apply</button>
+    <button class="clear-btn" (click)="onClear()">Clear</button>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="view-actions">
+    <button class="action-btn" (click)="export.emit()" title="Export">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+      </svg>
+    </button>
+    <button
+      class="action-btn"
+      [class.active]="viewMode === 'grid'"
+      (click)="onToggleView(); viewMode === 'json' && toggleView.emit()"
+      title="Grid View"
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 3h7v7H3zm11 0h7v7h-7zM3 14h7v7H3zm11 0h7v7h-7z" />
+      </svg>
+    </button>
+    <button
+      class="action-btn"
+      [class.active]="viewMode === 'json'"
+      (click)="onToggleView(); viewMode === 'grid' && toggleView.emit()"
+      title="JSON View"
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M4 6h4v12H4V6zm12 0h4v12h-4V6zM8 4v16M16 4v16" />
+      </svg>
+    </button>
+  </div>
+</div>

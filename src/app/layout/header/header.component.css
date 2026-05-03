@@ -1,0 +1,11 @@
+.header {
+  height: 2.75rem;
+  border-bottom: 1px solid #1e293b;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0.75rem;
+  background: #0f172a;
+  flex-shrink: 0;
+  z-index: 30;
+}
