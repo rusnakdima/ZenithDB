@@ -1,21 +1,130 @@
-<main class="container">
-  <h1>Welcome to Tauri + Angular!</h1>
+<div class="app-layout">
+  <!-- Header -->
+  <header class="app-header">
+    <div class="flex items-center gap-6">
+      <div class="header-brand">
+        <div class="header-logo">
+          <i class="fas fa-atom text-xs text-white"></i>
+        </div>
+        <h1 class="header-title">Zenith<span class="header-title-accent">DB</span></h1>
+      </div>
+      <div class="header-breadcrumb">
+        <a routerLink="/connections" class="header-breadcrumb-link">Connections</a>
+        <i class="fas fa-chevron-right text-[8px]"></i>
+        @if (connectionState.activeConnectionName()) {
+          <button class="header-breadcrumb-link">
+            {{ connectionState.activeConnectionName() }}
+          </button>
+          <i class="fas fa-chevron-right text-[8px]"></i>
+        }
+        <button class="header-breadcrumb-active">Explorer</button>
+      </div>
+    </div>
 
-  <div class="row">
-    <a href="https://tauri.app" target="_blank">
-      <img src="/assets/tauri.svg" class="logo tauri" alt="Tauri logo" />
-    </a>
-    <a href="https://angular.io" target="_blank">
-      <img src="/assets/angular.svg" class="logo angular" alt="Angular logo" />
-    </a>
+    <div class="header-actions">
+      <div class="header-tabs">
+        <a routerLink="/connections" class="header-tab header-tab-link">Gallery</a>
+        <a routerLink="/explorer" class="header-tab header-tab-link header-tab-active">Explorer</a>
+        <a routerLink="/workbench" class="header-tab header-tab-link">Workbench</a>
+      </div>
+      <div class="header-divider"></div>
+      <button class="header-icon-btn">
+        <i class="fas fa-circle-half-stroke"></i>
+      </button>
+      <div class="header-avatar">JD</div>
+    </div>
+  </header>
+
+  <div class="flex flex-grow overflow-hidden">
+    <!-- Sidebar -->
+    <aside class="app-sidebar">
+      <div class="p-3">
+        <a routerLink="/connections/new" class="sidebar-connect-btn">
+          <i class="fas fa-plug"></i> Connect to...
+        </a>
+      </div>
+
+      <div class="sidebar-scroll">
+        <!-- Pinned -->
+        <div class="sidebar-section mb-4">
+          <div class="sidebar-section-header">
+            <span>Pinned</span>
+            <i class="fas fa-thumbtack"></i>
+          </div>
+          <div class="sidebar-section-content">
+            <div class="sidebar-item">
+              <i class="fas fa-database text-emerald-500"></i>
+              <span class="flex-grow text-slate-300">production_main</span>
+              <span class="text-[10px] text-slate-500">SQL</span>
+            </div>
+            <div class="sidebar-item sidebar-item-active">
+              <i class="fas fa-leaf text-green-500"></i>
+              <span class="flex-grow">customer_360</span>
+              <span class="text-[10px] text-green-600">NoSQL</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Local Instances -->
+        <div class="sidebar-section">
+          <div class="sidebar-section-header">
+            <span>Local Instances</span>
+            <i class="fas fa-plus cursor-pointer hover:text-white"></i>
+          </div>
+          <div class="mt-1">
+            <div class="sidebar-item">
+              <i class="fas fa-caret-down text-[10px]"></i>
+              <i class="fas fa-server text-slate-500"></i>
+              <span>localhost:27017</span>
+            </div>
+            <div class="mt-1 ml-6 space-y-0.5 border-l border-slate-800">
+              <div class="sidebar-item-level-2 hover:text-white">
+                <i class="fas fa-folder"></i> <span>admin</span>
+              </div>
+              <div class="sidebar-item-level-2 hover:text-white">
+                <i class="fas fa-folder"></i> <span>config</span>
+              </div>
+              <div class="sidebar-item-level-2 sidebar-folder-open">
+                <i class="fas fa-folder-open"></i> <span>ecommerce</span>
+              </div>
+              <div class="ml-4 space-y-0.5 border-l border-slate-700">
+                <div class="sidebar-collection">
+                  <i class="fas fa-table"></i> <span>categories</span>
+                </div>
+                <div class="sidebar-collection sidebar-collection-active">
+                  <i class="fas fa-table"></i> <span>orders</span>
+                </div>
+                <div class="sidebar-collection">
+                  <i class="fas fa-table"></i> <span>products</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar Footer -->
+      <div class="sidebar-footer">
+        <div class="sidebar-footer-status">
+          <div class="sidebar-footer-dot"></div>
+          <span class="sidebar-footer-status-text">System Status: Optimal</span>
+        </div>
+        <div class="sidebar-footer-stats">
+          <div class="sidebar-footer-stat">
+            <div class="sidebar-footer-stat-label">CPU</div>
+            <div class="sidebar-footer-stat-value">1.2%</div>
+          </div>
+          <div class="sidebar-footer-stat">
+            <div class="sidebar-footer-stat-label">RAM</div>
+            <div class="sidebar-footer-stat-value">148MB</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="app-main">
+      <router-outlet></router-outlet>
+    </main>
   </div>
-  <p>Click on the logos to learn more about the frameworks</p>
-
-  <form class="row" (submit)="greet($event, greetInput.value)">
-    <input #greetInput id="greet-input" placeholder="Enter a name..." />
-    <button type="submit">Greet</button>
-  </form>
-  <p>{{ greetingMessage }}</p>
-
-  <router-outlet />
-</main>
+</div>

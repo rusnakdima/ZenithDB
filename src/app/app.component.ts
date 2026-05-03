@@ -1,22 +1,24 @@
-import { Component } from "@angular/core";
-import { RouterOutlet } from "@angular/router";
-import { invoke } from "@tauri-apps/api/core";
+import { Component, inject, signal, HostBinding } from "@angular/core";
+import { RouterLink, RouterOutlet } from "@angular/router";
+import { CommandPaletteComponent } from "./shared/components/command-palette/command-palette.component";
+import { ConnectionStateService } from "./shared/services/connection-state.service";
 
 @Component({
   selector: "app-root",
-  imports: [RouterOutlet],
+  standalone: true,
+  imports: [RouterLink, RouterOutlet, CommandPaletteComponent],
   templateUrl: "./app.component.html",
-  styleUrl: "./app.component.css",
 })
 export class AppComponent {
-  greetingMessage = "";
+  connectionState = inject(ConnectionStateService);
+  isDarkMode = signal(true);
 
-  greet(event: SubmitEvent, name: string): void {
-    event.preventDefault();
+  @HostBinding("class.dark")
+  get darkMode(): boolean {
+    return this.isDarkMode();
+  }
 
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    invoke<string>("greet", { name }).then((text) => {
-      this.greetingMessage = text;
-    });
+  toggleTheme() {
+    this.isDarkMode.update((v) => !v);
   }
 }

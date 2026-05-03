@@ -11,6 +11,8 @@
 npm-debug.log
 yarn-error.log
 
+bun.lock
+
 # IDEs and editors
 .idea/
 .project
@@ -40,3 +42,6 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+*.md
+TEMPLATE.html
