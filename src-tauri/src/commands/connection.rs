@@ -203,6 +203,25 @@ pub async fn delete_connection(id: &str) -> Result<(), String> {
     Ok(())
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ConnectionConfigResult {
+    pub id: String,
+    pub config: ConnectionConfig,
+}
+
+#[tauri::command]
+pub async fn get_connection(id: &str) -> Result<ConnectionConfigResult, String> {
+    let store = store();
+    let store = store.read().await;
+    let entry = store
+        .find_by_id(id)
+        .ok_or_else(|| format!("Connection {} not found", id))?;
+    Ok(ConnectionConfigResult {
+        id: entry.id.clone(),
+        config: entry.config.clone(),
+    })
+}
+
 #[tauri::command]
 pub async fn test_connection(config: ConnectionConfig) -> Result<ConnectionHealth, String> {
     match &config.config {
