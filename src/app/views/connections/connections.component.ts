@@ -9,7 +9,6 @@ import { ConnectionSummary } from "../../shared/models/connection.config";
   standalone: true,
   imports: [RouterLink, ConnectionCardComponent],
   templateUrl: "./connections.component.html",
-  styleUrl: "./connections.component.css",
 })
 export class ConnectionsComponent implements OnInit {
   connections = signal<ConnectionSummary[]>([]);

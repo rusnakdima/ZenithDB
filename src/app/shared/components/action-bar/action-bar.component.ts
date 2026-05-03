@@ -7,7 +7,6 @@ import { CollectionMeta } from "../../models/connection.config";
   standalone: true,
   imports: [FormsModule],
   templateUrl: "./action-bar.component.html",
-  styleUrl: "./action-bar.component.css",
 })
 export class ActionBarComponent {
   collection = input.required<CollectionMeta>();

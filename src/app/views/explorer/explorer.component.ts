@@ -15,7 +15,6 @@ interface Tab {
   standalone: true,
   imports: [DataGridComponent, FilterBarComponent, InspectorDrawerComponent],
   templateUrl: "./explorer.component.html",
-  styleUrl: "./explorer.component.css",
 })
 export class ExplorerComponent {
   private db = inject(DatabaseService);

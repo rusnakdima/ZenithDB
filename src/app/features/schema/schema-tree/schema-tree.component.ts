@@ -7,7 +7,6 @@ import { DatabaseService } from "../../../shared/services/database.service";
   standalone: true,
   imports: [RouterLink],
   templateUrl: "./schema-tree.component.html",
-  styleUrl: "./schema-tree.component.css",
 })
 export class SchemaTreeComponent implements OnInit {
   collections = signal<any[]>([]);

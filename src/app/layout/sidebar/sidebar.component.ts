@@ -6,7 +6,6 @@ import { ConnectionStateService } from "../../shared/services/connection-state.s
   standalone: true,
   imports: [],
   templateUrl: "./sidebar.component.html",
-  styleUrl: "./sidebar.component.css",
 })
 export class SidebarComponent {
   connectionState = inject(ConnectionStateService);

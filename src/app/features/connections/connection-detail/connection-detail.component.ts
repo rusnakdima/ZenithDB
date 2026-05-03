@@ -9,7 +9,6 @@ import { ConnectionHealth } from "../../../shared/models/connection.config";
   standalone: true,
   imports: [RouterLink],
   templateUrl: "./connection-detail.component.html",
-  styleUrl: "./connection-detail.component.css",
 })
 export class ConnectionDetailComponent implements OnInit {
   private db = inject(DatabaseService);

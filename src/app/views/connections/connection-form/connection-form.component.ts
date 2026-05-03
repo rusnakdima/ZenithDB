@@ -11,7 +11,6 @@ type ProviderType = "json" | "mongo" | "redis" | "postgres" | "sqlite" | "mysql"
   standalone: true,
   imports: [RouterLink, FormsModule],
   templateUrl: "./connection-form.component.html",
-  styleUrl: "./connection-form.component.css",
 })
 export class ConnectionFormComponent {
   private db = inject(DatabaseService);

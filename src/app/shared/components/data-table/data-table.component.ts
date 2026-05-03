@@ -13,7 +13,6 @@ export interface DataTableColumn {
   standalone: true,
   imports: [FormsModule],
   templateUrl: "./data-table.component.html",
-  styleUrl: "./data-table.component.css",
 })
 export class DataTableComponent {
   @Input() set columnsInput(value: DataTableColumn[]) {

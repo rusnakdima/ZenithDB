@@ -1579,3 +1579,247 @@ body {
 input[type="checkbox"] {
   accent-color: #10b981;
 }
+
+.toast-wrapper {
+  position: fixed;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  pointer-events: none;
+  max-height: 100vh;
+  overflow: hidden;
+  padding: 1rem;
+}
+
+.toast-wrapper > * {
+  pointer-events: auto;
+}
+
+.top-right {
+  top: 0;
+  right: 0;
+  align-items: flex-end;
+}
+
+.top-left {
+  top: 0;
+  left: 0;
+  align-items: flex-start;
+}
+
+.top-center {
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  align-items: center;
+}
+
+.bottom-right {
+  bottom: 0;
+  right: 0;
+  align-items: flex-end;
+}
+
+.bottom-left {
+  bottom: 0;
+  left: 0;
+  align-items: flex-start;
+}
+
+.bottom-center {
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  align-items: center;
+}
+
+.top-right > app-toast,
+.top-left > app-toast,
+.top-center > app-toast {
+  animation: slideInTop 0.3s ease-out;
+}
+
+.bottom-right > app-toast,
+.bottom-left > app-toast,
+.bottom-center > app-toast {
+  animation: slideInBottom 0.3s ease-out;
+}
+
+@keyframes slideInTop {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInBottom {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.toast-container {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  padding-right: 2.5rem;
+  background-color: #0f172a;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+  position: relative;
+  overflow: hidden;
+  min-width: 320px;
+  max-width: 420px;
+}
+
+.dark .toast-container {
+  background-color: #0f172a;
+}
+
+.toast-icon {
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+}
+
+.toast-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.toast-title {
+  font-weight: 600;
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
+  color: #f1f5f9;
+}
+
+.toast-message {
+  font-size: 0.875rem;
+  opacity: 0.9;
+  line-height: 1.4;
+  color: #cbd5e1;
+}
+
+.toast-action {
+  margin-top: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  opacity: 0.8;
+  transition: opacity 0.15s;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #94a3b8;
+}
+
+.toast-action:hover {
+  opacity: 1;
+}
+
+.toast-close {
+  position: absolute;
+  top: 0.625rem;
+  right: 0.625rem;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  opacity: 0.6;
+  transition: opacity 0.15s, background-color 0.15s;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #94a3b8;
+}
+
+.toast-close:hover {
+  opacity: 1;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.toast-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.toast-progress-bar {
+  height: 100%;
+  animation: shrink linear forwards;
+  transform-origin: left;
+}
+
+@keyframes shrink {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
+.toast-success {
+  border-left: 4px solid rgb(34 197 94);
+  background-color: rgba(34, 197, 94, 0.15);
+}
+
+.toast-success .toast-icon {
+  color: rgb(34 197 94);
+}
+
+.toast-success .toast-progress-bar {
+  background-color: rgb(34 197 94);
+}
+
+.toast-error {
+  border-left: 4px solid rgb(239 68 68);
+  background-color: rgba(239, 68, 68, 0.15);
+}
+
+.toast-error .toast-icon {
+  color: rgb(239 68 68);
+}
+
+.toast-error .toast-progress-bar {
+  background-color: rgb(239 68 68);
+}
+
+.toast-warning {
+  border-left: 4px solid rgb(245 158 11);
+  background-color: rgba(245, 158, 11, 0.15);
+}
+
+.toast-warning .toast-icon {
+  color: rgb(245 158 11);
+}
+
+.toast-warning .toast-progress-bar {
+  background-color: rgb(245 158 11);
+}
+
+.toast-info {
+  border-left: 4px solid rgb(59 130 246);
+  background-color: rgba(59, 130, 246, 0.15);
+}
+
+.toast-info .toast-icon {
+  color: rgb(59 130 246);
+}
+
+.toast-info .toast-progress-bar {
+  background-color: rgb(59 130 246);
+}

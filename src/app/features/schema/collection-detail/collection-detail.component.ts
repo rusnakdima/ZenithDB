@@ -7,7 +7,6 @@ import { DatabaseService } from "../../../shared/services/database.service";
   standalone: true,
   imports: [RouterLink],
   templateUrl: "./collection-detail.component.html",
-  styleUrl: "./collection-detail.component.css",
 })
 export class CollectionDetailComponent implements OnInit {
   collectionName = "";

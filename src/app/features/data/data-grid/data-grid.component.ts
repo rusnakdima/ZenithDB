@@ -8,7 +8,6 @@ import { ColumnInfo } from "../../../shared/models/collection.types";
   standalone: true,
   imports: [FormsModule],
   templateUrl: "./data-grid.component.html",
-  styleUrl: "./data-grid.component.css",
 })
 export class DataGridComponent implements OnInit, OnDestroy {
   @Input() collectionName = "";

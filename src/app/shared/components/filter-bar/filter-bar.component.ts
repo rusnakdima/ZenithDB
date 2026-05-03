@@ -6,7 +6,6 @@ import { FormsModule } from "@angular/forms";
   standalone: true,
   imports: [FormsModule],
   templateUrl: "./filter-bar.component.html",
-  styleUrl: "./filter-bar.component.css",
 })
 export class FilterBarComponent {
   @Input() filter = "";

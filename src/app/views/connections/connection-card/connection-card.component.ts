@@ -5,7 +5,6 @@ import { ConnectionSummary } from "../../../shared/models/connection.config";
   selector: "app-connection-card",
   standalone: true,
   templateUrl: "./connection-card.component.html",
-  styleUrl: "./connection-card.component.css",
 })
 export class ConnectionCardComponent {
   connection = input.required<ConnectionSummary>();

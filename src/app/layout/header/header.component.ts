@@ -7,7 +7,6 @@ import { ConnectionStateService } from "../../shared/services/connection-state.s
   standalone: true,
   imports: [RouterLink],
   templateUrl: "./header.component.html",
-  styleUrl: "./header.component.css",
 })
 export class HeaderComponent {
   connectionState = inject(ConnectionStateService);

@@ -6,7 +6,6 @@ import { FormsModule } from "@angular/forms";
   standalone: true,
   imports: [FormsModule],
   templateUrl: "./inspector-drawer.component.html",
-  styleUrl: "./inspector-drawer.component.css",
 })
 export class InspectorDrawerComponent {
   document = input.required<any>();

@@ -15,7 +15,6 @@ interface Shortcut {
   standalone: true,
   imports: [FormsModule],
   templateUrl: "./command-palette.component.html",
-  styleUrl: "./command-palette.component.css",
 })
 export class CommandPaletteComponent {
   visible = signal(false);

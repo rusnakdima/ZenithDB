@@ -9,7 +9,6 @@ import { RawResult } from "../../../shared/models/connection.config";
   standalone: true,
   imports: [FormsModule],
   templateUrl: "./query-editor.component.html",
-  styleUrl: "./query-editor.component.css",
 })
 export class QueryEditorComponent implements OnInit {
   query = "";

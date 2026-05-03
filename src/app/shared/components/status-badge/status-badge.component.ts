@@ -6,23 +6,16 @@ import { Component, input } from "@angular/core";
   template: `
     @if (status() === "connected") {
       <span
-        class="rounded border border-green-500/30 bg-green-500/20 px-2 py-0.5 text-[10px] font-bold text-green-400"
+        class="rounded border border-green-500/30 bg-green-500/20 px-2 py-0.5 text-[10px] font-bold text-green-400 inline-block"
         >CONNECTED</span
       >
     } @else if (status() === "offline") {
       <span
-        class="rounded border border-slate-700 bg-slate-800 px-2 py-0.5 text-[10px] font-bold text-slate-500"
+        class="rounded border border-slate-700 bg-slate-800 px-2 py-0.5 text-[10px] font-bold text-slate-500 inline-block"
         >OFFLINE</span
       >
     }
   `,
-  styles: [
-    `
-      :host {
-        display: inline-block;
-      }
-    `,
-  ],
 })
 export class StatusBadgeComponent {
   status = input.required<"connected" | "offline">();
