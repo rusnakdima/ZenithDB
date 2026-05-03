@@ -1,68 +1,494 @@
 <div class="space-y-6">
   <div class="flex items-center justify-between">
-    <h1 class="text-xl font-bold text-white">{{ collectionName }}</h1>
-    <a
-      [routerLink]="['/data', collectionName]"
-      class="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-500"
-    >
-      Browse Data
-    </a>
+    <div class="flex items-center gap-3">
+      <a
+        routerLink="/schema"
+        class="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-800 hover:text-white"
+      >
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+        </svg>
+      </a>
+      <h1 class="text-xl font-bold text-white">{{ collectionName }}</h1>
+      <span class="rounded bg-emerald-500/20 px-2 py-0.5 text-xs font-medium text-emerald-400">
+        Collection
+      </span>
+    </div>
+    <div class="flex items-center gap-2">
+      <button
+        (click)="viewData()"
+        class="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-500"
+      >
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+        </svg>
+        View Data
+      </button>
+    </div>
   </div>
 
   @if (loading()) {
-    <div class="flex items-center justify-center py-8">
-      <div
-        class="h-6 w-6 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent"
-      ></div>
+    <div class="space-y-4">
+      <div class="grid grid-cols-4 gap-4">
+        @for (i of [1,2,3,4]; track i) {
+          <app-skeleton-loader variant="card"></app-skeleton-loader>
+        }
+      </div>
+      <app-skeleton-loader variant="table-row" [count]="5" [columns]="5"></app-skeleton-loader>
+    </div>
+  } @else if (error()) {
+    <div class="rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-red-400">
+      {{ error() }}
     </div>
   } @else {
     @if (stats()) {
-      <div class="grid grid-cols-3 gap-4">
-        <div class="rounded-xl border border-slate-800 bg-slate-900 p-4">
-          <div class="text-2xl font-bold text-white">{{ stats().count }}</div>
+      <div class="grid grid-cols-4 gap-4">
+        <div class="rounded-xl border border-slate-700 bg-slate-800/50 p-4">
+          <div class="text-2xl font-bold text-white">{{ stats()!.document_count }}</div>
           <div class="text-sm text-slate-400">Documents</div>
         </div>
-        <div class="rounded-xl border border-slate-800 bg-slate-900 p-4">
-          <div class="text-2xl font-bold text-white">{{ formatBytes(stats().sizeBytes) }}</div>
+        <div class="rounded-xl border border-slate-700 bg-slate-800/50 p-4">
+          <div class="text-2xl font-bold text-white">{{ formatBytes(stats()!.size_bytes) }}</div>
           <div class="text-sm text-slate-400">Size</div>
         </div>
-        <div class="rounded-xl border border-slate-800 bg-slate-900 p-4">
-          <div class="text-2xl font-bold text-white">{{ schema()?.fields?.length || 0 }}</div>
+        <div class="rounded-xl border border-slate-700 bg-slate-800/50 p-4">
+          <div class="text-2xl font-bold text-white">{{ schema()?.columns?.length || 0 }}</div>
           <div class="text-sm text-slate-400">Fields</div>
+        </div>
+        <div class="rounded-xl border border-slate-700 bg-slate-800/50 p-4">
+          <div class="text-2xl font-bold text-white">{{ stats()!.index_count }}</div>
+          <div class="text-sm text-slate-400">Indexes</div>
         </div>
       </div>
     }
 
     @if (schema()) {
-      <div class="overflow-hidden rounded-xl border border-slate-800 bg-slate-900">
-        <div class="border-b border-slate-800 px-4 py-3">
+      <div class="overflow-hidden rounded-xl border border-slate-700 bg-slate-800/30">
+        <div class="flex items-center justify-between border-b border-slate-700 px-4 py-3">
           <h2 class="text-sm font-semibold tracking-wider text-slate-400 uppercase">Fields</h2>
+          <button
+            (click)="openAddFieldModal()"
+            class="inline-flex items-center gap-1.5 rounded-lg bg-slate-700 px-3 py-1.5 text-sm text-slate-300 transition-colors hover:bg-slate-600"
+          >
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            Add Field
+          </button>
         </div>
         <table class="w-full text-left text-sm">
-          <thead class="bg-slate-800 text-xs tracking-wider text-slate-400 uppercase">
+          <thead class="bg-slate-800/50 text-xs tracking-wider text-slate-400 uppercase">
             <tr>
-              <th class="px-4 py-3 font-medium">Name</th>
-              <th class="px-4 py-3 font-medium">Type</th>
+              <th
+                class="cursor-pointer px-4 py-3 font-medium transition-colors hover:text-white"
+                (click)="onSort('name')"
+              >
+                <div class="flex items-center gap-1">
+                  Name
+                  <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    @if (getSortIcon('name') === 'asc') {
+                      <path d="M12 19V5M5 12l7-7 7 7"></path>
+                    } @else if (getSortIcon('name') === 'desc') {
+                      <path d="M12 5v14M5 12l7 7 7-7"></path>
+                    } @else {
+                      <path d="M8 9l4-4 4 4M8 15l4 4 4-4"></path>
+                    }
+                  </svg>
+                </div>
+              </th>
+              <th
+                class="cursor-pointer px-4 py-3 font-medium transition-colors hover:text-white"
+                (click)="onSort('data_type')"
+              >
+                <div class="flex items-center gap-1">
+                  Type
+                  <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    @if (getSortIcon('data_type') === 'asc') {
+                      <path d="M12 19V5M5 12l7-7 7 7"></path>
+                    } @else if (getSortIcon('data_type') === 'desc') {
+                      <path d="M12 5v14M5 12l7 7 7-7"></path>
+                    } @else {
+                      <path d="M8 9l4-4 4 4M8 15l4 4 4-4"></path>
+                    }
+                  </svg>
+                </div>
+              </th>
               <th class="px-4 py-3 font-medium">Nullable</th>
+              <th class="px-4 py-3 font-medium">Default</th>
+              <th class="px-4 py-3 font-medium">Description</th>
+              <th class="px-4 py-3 font-medium">Actions</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-slate-800">
-            @for (field of schema().fields; track field.name) {
-              <tr class="transition-colors hover:bg-slate-800/50">
-                <td class="px-4 py-3 font-mono text-slate-200">{{ field.name }}</td>
-                <td class="px-4 py-3 text-slate-400">{{ field.type }}</td>
+          <tbody class="divide-y divide-slate-700">
+            @for (field of sortedFields(); track field.name) {
+              <tr class="transition-colors hover:bg-slate-800/30">
+                <td class="px-4 py-3">
+                  <div class="flex items-center gap-2">
+                    <span class="font-mono text-slate-200">{{ field.name }}</span>
+                    @if (field.is_primary_key) {
+                      <span class="rounded bg-yellow-500/20 px-1.5 py-0.5 text-xs text-yellow-400">PK</span>
+                    }
+                  </div>
+                </td>
+                <td class="px-4 py-3">
+                  <span class="rounded bg-slate-700 px-2 py-0.5 text-xs" [class]="getFieldTypeClass(field.data_type)">
+                    {{ field.data_type }}
+                  </span>
+                </td>
                 <td class="px-4 py-3">
                   @if (field.nullable) {
                     <span class="text-emerald-400">Yes</span>
                   } @else {
-                    <span class="text-slate-400">No</span>
+                    <span class="text-slate-500">No</span>
                   }
+                </td>
+                <td class="px-4 py-3 text-slate-400">
+                  {{ field.default_value ?? '-' }}
+                </td>
+                <td class="px-4 py-3">
+                  @if (editingField() === field.name) {
+                    <div class="flex items-center gap-2">
+                      <input
+                        type="text"
+                        [(ngModel)]="editFieldValue"
+                        placeholder="Description"
+                        class="flex-1 rounded border border-slate-600 bg-slate-900 px-2 py-1 text-sm text-slate-200 focus:border-emerald-500 focus:outline-none"
+                        (keyup.enter)="saveEditField(field)"
+                        (keyup.escape)="cancelEditField()"
+                        autofocus
+                      />
+                      <button
+                        (click)="saveEditField(field)"
+                        class="rounded p-1 text-emerald-400 hover:bg-slate-700"
+                      >
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                      </button>
+                      <button
+                        (click)="cancelEditField()"
+                        class="rounded p-1 text-slate-400 hover:bg-slate-700 hover:text-white"
+                      >
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                      </button>
+                    </div>
+                  } @else {
+                    @if (deletingField() === field.name) {
+                      <div class="flex items-center gap-2">
+                        <span class="text-sm text-red-400">Delete?</span>
+                        <button
+                          (click)="deleteField()"
+                          class="rounded p-1 text-red-400 hover:bg-red-500/20"
+                        >
+                          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                          </svg>
+                        </button>
+                        <button
+                          (click)="cancelDeleteField()"
+                          class="rounded p-1 text-slate-400 hover:bg-slate-700 hover:text-white"
+                        >
+                          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                          </svg>
+                        </button>
+                      </div>
+                    } @else {
+                      <span class="cursor-pointer text-slate-400 hover:text-white" (click)="startEditField(field)">
+                        {{ field.description || '-' }}
+                      </span>
+                    }
+                  }
+                </td>
+                <td class="px-4 py-3">
+                  @if (deletingField() !== field.name) {
+                    <button
+                      (click)="confirmDeleteField(field)"
+                      class="rounded p-1 text-slate-500 transition-colors hover:bg-red-500/20 hover:text-red-400"
+                      title="Delete field"
+                    >
+                      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                      </svg>
+                    </button>
+                  }
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="6" class="px-4 py-8 text-center text-slate-500">
+                  No fields defined yet
                 </td>
               </tr>
             }
           </tbody>
         </table>
       </div>
+
+      <div class="overflow-hidden rounded-xl border border-slate-700 bg-slate-800/30">
+        <div class="flex items-center justify-between border-b border-slate-700 px-4 py-3">
+          <h2 class="text-sm font-semibold tracking-wider text-slate-400 uppercase">Indexes</h2>
+          <button
+            (click)="openCreateIndexModal()"
+            class="inline-flex items-center gap-1.5 rounded-lg bg-slate-700 px-3 py-1.5 text-sm text-slate-300 transition-colors hover:bg-slate-600"
+          >
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            Create Index
+          </button>
+        </div>
+        <div class="divide-y divide-slate-700">
+          @for (index of schema()?.indexes || []; track index.name) {
+            <div class="flex items-center justify-between px-4 py-3">
+              <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2">
+                  <svg class="h-4 w-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"></path>
+                  </svg>
+                  <span class="font-mono text-sm text-slate-200">{{ index.name }}</span>
+                </div>
+                <div class="flex items-center gap-1">
+                  @for (col of index.columns; track col) {
+                    <span class="rounded bg-slate-700 px-2 py-0.5 text-xs text-slate-400">{{ col }}</span>
+                  }
+                </div>
+                @if (index.is_unique) {
+                  <span class="rounded bg-purple-500/20 px-1.5 py-0.5 text-xs text-purple-400">UNIQUE</span>
+                }
+              </div>
+              <button
+                (click)="confirmDeleteIndex(index)"
+                class="rounded p-1 text-slate-500 transition-colors hover:bg-red-500/20 hover:text-red-400"
+                title="Drop index"
+              >
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+              </button>
+            </div>
+          } @empty {
+            <div class="px-4 py-6 text-center text-slate-500">
+              No indexes defined
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between rounded-xl border border-slate-700 bg-slate-800/30 px-4 py-4">
+        <div class="flex items-center gap-3">
+          <button
+            (click)="viewData()"
+            class="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-500"
+          >
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+            </svg>
+            View Data
+          </button>
+          <button
+            (click)="exportSchema('json')"
+            class="inline-flex items-center gap-2 rounded-lg border border-slate-600 px-4 py-2 text-sm text-slate-300 transition-colors hover:bg-slate-700"
+          >
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+            </svg>
+            Export JSON
+          </button>
+          <button
+            (click)="exportSchema('csv')"
+            class="inline-flex items-center gap-2 rounded-lg border border-slate-600 px-4 py-2 text-sm text-slate-300 transition-colors hover:bg-slate-700"
+          >
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            Export CSV
+          </button>
+        </div>
+        <button
+          (click)="openDeleteCollectionConfirm()"
+          class="inline-flex items-center gap-2 rounded-lg bg-red-600/20 px-4 py-2 text-sm font-medium text-red-400 transition-colors hover:bg-red-600/30"
+        >
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+          </svg>
+          Delete Collection
+        </button>
+      </div>
     }
   }
 </div>
+
+@if (showAddFieldModal()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+    <div class="w-full max-w-md rounded-xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
+      <h3 class="mb-4 text-lg font-semibold text-white">Add New Field</h3>
+      <div class="space-y-4">
+        <div>
+          <label class="mb-1.5 block text-sm text-slate-400">Field Name</label>
+          <input
+            type="text"
+            [(ngModel)]="newField.name"
+            placeholder="field_name"
+            class="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+          />
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm text-slate-400">Data Type</label>
+          <select
+            [(ngModel)]="newField.data_type"
+            class="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+          >
+            <option value="string">String</option>
+            <option value="integer">Integer</option>
+            <option value="decimal">Decimal</option>
+            <option value="boolean">Boolean</option>
+            <option value="date">Date</option>
+            <option value="datetime">DateTime</option>
+            <option value="text">Text</option>
+            <option value="json">JSON</option>
+            <option value="array">Array</option>
+          </select>
+        </div>
+        <div class="flex items-center gap-2">
+          <input
+            type="checkbox"
+            id="nullable"
+            [(ngModel)]="newField.nullable"
+            class="rounded border-slate-600 bg-slate-800 text-emerald-500 focus:ring-emerald-500"
+          />
+          <label for="nullable" class="text-sm text-slate-300">Nullable</label>
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm text-slate-400">Default Value</label>
+          <input
+            type="text"
+            [(ngModel)]="newField.default_value"
+            placeholder="Optional default value"
+            class="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+          />
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm text-slate-400">Description</label>
+          <input
+            type="text"
+            [(ngModel)]="newField.description"
+            placeholder="Optional description"
+            class="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+          />
+        </div>
+      </div>
+      <div class="mt-6 flex justify-end gap-3">
+        <button
+          (click)="closeAddFieldModal()"
+          class="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800"
+        >
+          Cancel
+        </button>
+        <button
+          (click)="addField()"
+          class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
+        >
+          Add Field
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (showCreateIndexModal()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+    <div class="w-full max-w-md rounded-xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
+      <h3 class="mb-4 text-lg font-semibold text-white">Create Index</h3>
+      <div class="space-y-4">
+        <div>
+          <label class="mb-1.5 block text-sm text-slate-400">Index Name</label>
+          <input
+            type="text"
+            [(ngModel)]="newIndex.name"
+            placeholder="idx_field_name"
+            class="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+          />
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm text-slate-400">Columns</label>
+          <div class="space-y-2">
+            @for (col of schema()?.columns || []; track col.name) {
+              <label class="flex items-center gap-2 rounded bg-slate-800 px-3 py-2 cursor-pointer hover:bg-slate-700">
+                <input
+                  type="checkbox"
+                  [checked]="newIndex.columns.includes(col.name)"
+                  (change)="toggleIndexColumn(col.name)"
+                  class="rounded border-slate-600 bg-slate-700 text-emerald-500 focus:ring-emerald-500"
+                />
+                <span class="text-sm text-slate-300">{{ col.name }}</span>
+                <span class="text-xs text-slate-500">{{ col.data_type }}</span>
+              </label>
+            }
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <input
+            type="checkbox"
+            id="unique"
+            [(ngModel)]="newIndex.is_unique"
+            class="rounded border-slate-600 bg-slate-800 text-emerald-500 focus:ring-emerald-500"
+          />
+          <label for="unique" class="text-sm text-slate-300">Unique Index</label>
+        </div>
+      </div>
+      <div class="mt-6 flex justify-end gap-3">
+        <button
+          (click)="closeCreateIndexModal()"
+          class="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800"
+        >
+          Cancel
+        </button>
+        <button
+          (click)="createIndex()"
+          class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
+        >
+          Create Index
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (showDeleteCollectionConfirm()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+    <div class="w-full max-w-md rounded-xl border border-red-700 bg-slate-900 p-6 shadow-2xl">
+      <div class="mb-4 flex items-center gap-3">
+        <div class="flex h-10 w-10 items-center justify-center rounded-full bg-red-500/20">
+          <svg class="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold text-white">Delete Collection</h3>
+          <p class="text-sm text-slate-400">This action cannot be undone</p>
+        </div>
+      </div>
+      <p class="mb-6 text-slate-300">
+        Are you sure you want to delete <span class="font-mono text-white">{{ collectionName }}</span>?
+        All data in this collection will be permanently removed.
+      </p>
+      <div class="flex justify-end gap-3">
+        <button
+          (click)="cancelDeleteCollection()"
+          class="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800"
+        >
+          Cancel
+        </button>
+        <button
+          (click)="deleteCollection()"
+          class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-500"
+        >
+          Delete Collection
+        </button>
+      </div>
+    </div>
+  </div>
+}

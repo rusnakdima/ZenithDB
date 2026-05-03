@@ -1,31 +1,59 @@
 <div
-  class="overlay fixed inset-0 z-50 flex items-start justify-center bg-slate-900/60 pt-[10vh] backdrop-blur-sm"
+  class="overlay fixed inset-0 z-[60] flex items-start justify-center bg-slate-900/60 pt-[10vh] backdrop-blur-sm"
   [class.hidden]="!visible()"
   (click)="onOverlayClick($event)"
 >
-  <div
-    class="animate-fade w-full max-w-xl overflow-hidden rounded-xl border border-slate-700 bg-slate-800 shadow-2xl"
-  >
+  <div class="w-full max-w-xl overflow-hidden rounded-xl border border-slate-700 bg-slate-800 shadow-2xl">
     <div class="flex items-center gap-3 border-b border-slate-700 p-4">
       <i class="fas fa-search text-slate-500"></i>
       <input
+        #searchInput
         type="text"
-        [(ngModel)]="query"
-        placeholder="Search tables, commands, or documentation..."
+        [value]="query()"
+        (input)="onSearchInput($any($event.target).value)"
+        (keydown)="onKeydown($event)"
+        placeholder="Search commands..."
         class="w-full border-none bg-transparent text-sm text-white placeholder-slate-500 outline-none"
       />
       <kbd class="rounded bg-slate-700 px-1.5 py-0.5 text-[10px] text-slate-400">ESC</kbd>
     </div>
-    <div class="max-h-60 overflow-y-auto p-2">
-      @for (shortcut of shortcuts; track shortcut.action) {
+
+    <div class="max-h-72 overflow-y-auto p-2">
+      @if (filteredCommands().length === 0) {
+        <div class="p-4 text-center text-sm text-slate-500">No commands found</div>
+      }
+
+      @for (command of filteredCommands(); track command.id; let i = $index) {
+        @if (isRecentCommand(command.id) && !query()) {
+          @if (i === 0) {
+            <div class="px-3 py-1 text-[10px] font-bold uppercase text-slate-500">Recent</div>
+          }
+        }
         <div
-          class="group flex cursor-pointer items-center gap-3 rounded-lg p-2 hover:bg-blue-600"
-          (click)="execute(shortcut.action)"
+          class="group flex cursor-pointer items-center gap-3 rounded-lg p-2 transition-colors"
+          [class.bg-blue-600]="selectedIndex() === i"
+          [class.text-white]="selectedIndex() === i"
+          [class.hover:bg-slate-700]="selectedIndex() !== i"
+          (click)="execute(command)"
+          (mouseenter)="selectItem(i)"
         >
-          <i class="fas {{ shortcut.icon }} text-slate-500 group-hover:text-white"></i>
-          <span class="text-sm text-white">{{ shortcut.text }}</span>
+          <i class="fas {{ command.icon }} w-5 text-center text-slate-400" [class.text-white]="selectedIndex() === i"></i>
+          <span class="flex-1 text-sm" [class.text-white]="selectedIndex() === i">{{ command.text }}</span>
+          @if (command.shortcut) {
+            <span class="rounded bg-slate-700 px-1.5 py-0.5 text-[10px] text-slate-400" [class.bg-slate-600]="selectedIndex() === i">
+              {{ command.shortcut }}
+            </span>
+          }
         </div>
       }
+    </div>
+
+    <div class="flex items-center justify-between border-t border-slate-700 px-4 py-2 text-[10px] text-slate-500">
+      <div class="flex items-center gap-3">
+        <span><kbd class="rounded bg-slate-700 px-1">↑↓</kbd> Navigate</span>
+        <span><kbd class="rounded bg-slate-700 px-1">↵</kbd> Execute</span>
+      </div>
+      <span>Press <kbd class="rounded bg-slate-700 px-1">Ctrl+P</kbd> to toggle</span>
     </div>
   </div>
 </div>

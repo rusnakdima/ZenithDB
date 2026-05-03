@@ -1,71 +1,116 @@
-<div class="space-y-6">
-  <div class="flex items-center justify-between">
-    <h1 class="text-2xl font-bold text-white">Connections</h1>
-    <a
-      routerLink="/connections/new"
-      class="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-500"
-    >
-      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-      </svg>
-      New Connection
-    </a>
-  </div>
-
-  @if (connections.length === 0) {
-    <div class="flex flex-col items-center justify-center py-16 text-center">
-      <div class="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-neutral-800">
-        <svg class="h-8 w-8 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M13 10V3L4 14h7v7l9-11h-7z"
-          />
-        </svg>
+<div class="connections-container">
+  <div class="connections-max-width">
+    <div class="connections-header">
+      <div>
+        <h2 class="connections-title">
+          My <span class="connections-title-highlight">Connections</span>
+        </h2>
+        <p class="connections-subtitle">
+          Manage and monitor your database clusters across regions.
+        </p>
       </div>
-      <p class="mb-4 text-neutral-400">No connections yet</p>
-      <a routerLink="/connections/new" class="text-emerald-400 hover:text-emerald-300"
-        >Create your first connection</a
+      <a routerLink="/connections/new" class="connections-btn">
+        <mat-icon fontIcon="add" class="inline-flex items-center justify-center text-xl!"></mat-icon> New Connection
+      </a>
+    </div>
+
+    <div class="filter-bar">
+      <div class="filter-input-wrapper">
+        <mat-icon fontIcon="search" class="inline-flex items-center justify-center text-slate-400 text-xl!"></mat-icon>
+        <input
+          type="text"
+          [value]="searchQuery()"
+          (input)="onSearchChange($event)"
+          placeholder="Search connections..."
+          class="filter-input"
+        />
+        @if (searchQuery()) {
+          <button (click)="clearSearch()" class="text-slate-400 hover:text-slate-600">
+            <mat-icon fontIcon="close" class="inline-flex items-center justify-center text-xl!"></mat-icon>
+          </button>
+        }
+      </div>
+
+      <div class="filter-divider"></div>
+
+      <select
+        [value]="sortBy()"
+        (change)="setSortBy($any($event.target).value)"
+        class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800"
       >
-    </div>
-  } @else {
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-      @for (conn of connections; track conn.id) {
-        <div
-          class="rounded-xl border border-neutral-800 bg-neutral-900 p-5 transition-colors hover:border-neutral-700"
+        <option value="name">Sort by Name</option>
+        <option value="type">Sort by Type</option>
+        <option value="status">Sort by Status</option>
+        <option value="lastConnected">Sort by Last Connected</option>
+      </select>
+
+      <div class="filter-divider"></div>
+
+      <div class="filter-view-actions">
+        <button
+          (click)="setViewMode('grid')"
+          class="filter-action-btn"
+          [class.filter-action-btn-active]="viewMode() === 'grid'"
+          title="Grid view"
         >
-          <div class="mb-3 flex items-start justify-between">
-            <div>
-              <h3 class="font-semibold text-white">{{ conn.name }}</h3>
-              <span
-                class="mt-1 inline-flex items-center rounded bg-neutral-800 px-2 py-0.5 text-xs font-medium text-neutral-400"
-              >
-                {{ conn.provider }}
-              </span>
-            </div>
-            <span
-              class="mt-2 h-2 w-2 rounded-full"
-              [class.bg-emerald-500]="conn.status === 'connected'"
-              [class.bg-neutral-600]="!conn.status || conn.status === 'disconnected'"
-            ></span>
-          </div>
-          <div class="mt-4 flex items-center gap-2">
-            <button
-              (click)="connect(conn)"
-              class="flex-1 rounded-lg bg-emerald-600 px-3 py-1.5 text-sm text-white transition-colors hover:bg-emerald-500"
-            >
-              Connect
-            </button>
-            <button
-              (click)="delete(conn)"
-              class="rounded-lg bg-neutral-800 px-3 py-1.5 text-sm text-neutral-400 transition-colors hover:bg-neutral-700 hover:text-white"
-            >
-              Delete
-            </button>
-          </div>
-        </div>
-      }
+          <mat-icon fontIcon="grid_view" class="inline-flex items-center justify-center text-xl!"></mat-icon>
+        </button>
+        <button
+          (click)="setViewMode('list')"
+          class="filter-action-btn"
+          [class.filter-action-btn-active]="viewMode() === 'list'"
+          title="List view"
+        >
+          <mat-icon fontIcon="view_list" class="inline-flex items-center justify-center text-xl!"></mat-icon>
+        </button>
+      </div>
     </div>
-  }
+
+    @if (loading()) {
+      <div class="py-8">
+        <app-skeleton-loader variant="card" [count]="6" />
+      </div>
+    }
+
+    @if (!loading() && filteredConnections().length === 0 && connections().length === 0) {
+      <div class="empty-state">
+        <div class="empty-icon">
+          <mat-icon fontIcon="plug" class="inline-flex items-center justify-center text-xl!"></mat-icon>
+        </div>
+        <h3 class="empty-title">No Connections Yet</h3>
+        <p class="empty-description">Create your first database connection to get started.</p>
+        <a routerLink="/connections/new" class="connections-btn">
+          <mat-icon fontIcon="add" class="inline-flex items-center justify-center text-xl!"></mat-icon> Create Connection
+        </a>
+      </div>
+    }
+
+    @if (!loading() && filteredConnections().length === 0 && connections().length > 0) {
+      <div class="empty-state">
+        <div class="empty-icon">
+          <mat-icon fontIcon="search" class="text-xl!"></mat-icon>
+        </div>
+        <h3 class="empty-title">No Results Found</h3>
+        <p class="empty-description">No connections match your search criteria.</p>
+        <button (click)="clearSearch()" class="form-btn form-btn-secondary">
+          Clear Search
+        </button>
+      </div>
+    }
+
+    @if (!loading() && filteredConnections().length > 0) {
+      <div [class]="viewMode() === 'grid' ? 'connections-grid' : 'space-y-3'">
+        @for (connection of filteredConnections(); track connection.id) {
+          <app-connection-card
+            [connection]="connection"
+            [viewMode]="viewMode()"
+            (connect)="onConnect($event)"
+            (delete)="onDelete($event)"
+            (duplicate)="onDuplicate($event)"
+            (edit)="onEdit($event)"
+          />
+        }
+      </div>
+    }
+  </div>
 </div>

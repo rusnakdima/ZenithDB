@@ -1,22 +1,54 @@
-<div class="card" (click)="onConnect()">
+<div
+  class="card group cursor-pointer transition-all duration-300 hover:border-emerald-500/50 hover:shadow-lg hover:shadow-emerald-500/10"
+  [class.border-2]="showActions()"
+  [class.border-emerald-500]="showActions()"
+  (mouseenter)="showCardActions()"
+  (mouseleave)="hideCardActions()"
+  (click)="onConnect()"
+>
   <div class="card-decoration"></div>
 
   <div class="card-header">
     <div class="card-icon-box">
-      <i class="fas {{ providerIcon }}"></i>
+      <mat-icon [fontIcon]="providerIcon" class="inline-flex items-center justify-center text-xl!"></mat-icon>
     </div>
     <div class="card-status-area">
       <span class="card-status-badge {{ statusClass }}">{{ statusLabel }}</span>
-      @if (connection().status === "connected") {
-        <div class="card-uptime">Uptime: 14d 2h</div>
-      }
+      <div class="card-uptime">{{ lastConnectedLabel }}</div>
     </div>
   </div>
 
   <h3 class="card-name">{{ connection().name }}</h3>
-  <p class="card-uri mono">{{ connection().provider }}</p>
+  <p class="card-uri">{{ connection().provider }}</p>
 
   <div class="card-tags">
     <span class="card-tag">{{ connection().provider }}</span>
+  </div>
+
+  <div
+    class="absolute right-4 top-4 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100"
+    (click)="$event.stopPropagation()"
+  >
+    <button
+      (click)="onEdit($event)"
+      class="rounded-lg bg-slate-100 p-2 text-slate-600 transition-colors hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
+      title="Edit"
+    >
+      <mat-icon fontIcon="edit" class="inline-flex items-center justify-center text-xs text-xl!"></mat-icon>
+    </button>
+    <button
+      (click)="onDuplicate($event)"
+      class="rounded-lg bg-slate-100 p-2 text-slate-600 transition-colors hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
+      title="Duplicate"
+    >
+      <mat-icon fontIcon="content_copy" class="inline-flex items-center justify-center text-xs text-xl!"></mat-icon>
+    </button>
+    <button
+      (click)="onDelete($event)"
+      class="rounded-lg bg-red-100 p-2 text-red-600 transition-colors hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50"
+      title="Delete"
+    >
+      <mat-icon fontIcon="delete" class="inline-flex items-center justify-center text-xs text-xl!"></mat-icon>
+    </button>
   </div>
 </div>

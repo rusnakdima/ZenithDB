@@ -1,126 +1,274 @@
-<div class="explorer-container">
-  <!-- Data Tabs Bar -->
-  <div class="data-tabs-bar">
+<div class="explorer-container h-full flex flex-col bg-slate-950">
+  <div class="data-tabs-bar flex items-center gap-1 px-4 py-2 bg-slate-900/80 border-b border-slate-800">
     @for (tab of activeTabs(); track tab.collection) {
       <div
-        class="data-tab"
+        class="data-tab flex items-center gap-2 px-3 py-2 rounded-t-md cursor-pointer transition-colors"
         [class.active]="activeCollection() === tab.collection"
+        [class.bg-slate-800]="activeCollection() === tab.collection"
+        [class.text-emerald-400]="activeCollection() === tab.collection"
+        [class.text-slate-400]="activeCollection() !== tab.collection"
+        [class.hover:text-slate-200]="activeCollection() !== tab.collection"
         (click)="selectTab(tab.collection)"
       >
-        <svg
-          class="tab-icon"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
+        <mat-icon fontIcon="table_chart" class="inline-flex items-center justify-center text-xl!"></mat-icon>
+        <span class="text-sm font-medium">{{ tab.name }}</span>
+        <button
+          class="close-tab p-0.5 rounded hover:bg-slate-700 transition-colors"
+          (click)="closeTab(tab.collection); $event.stopPropagation()"
         >
-          <path d="M3 3h18v18H3z" />
-        </svg>
-        <span>{{ tab.name }}</span>
-        <button class="close-tab" (click)="closeTab(tab.collection); $event.stopPropagation()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M18 6L6 18M6 6l12 12" />
-          </svg>
+          <mat-icon fontIcon="close" class="inline-flex items-center justify-center text-xl!"></mat-icon>
         </button>
       </div>
     }
-    <button class="add-tab-btn">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M12 5v14M5 12h14" />
-      </svg>
-    </button>
-  </div>
-
-  <!-- Filter & Action Bar -->
-  <div class="filter-action-bar">
-    <app-filter-bar
-      [filter]="filterText()"
-      [viewMode]="viewMode()"
-      (filterChange)="onFilterChange($event)"
-      (apply)="onFilterApply()"
-      (clear)="onFilterClear()"
-      (export)="toggleViewMode()"
-      (toggleView)="toggleViewMode()"
-    ></app-filter-bar>
-  </div>
-
-  <!-- Stats Breadcrumb -->
-  <div class="stats-breadcrumb">
-    <div class="breadcrumb-left">
-      <span
-        >Viewing: <span class="text-blue-400">{{ activeCollection() }}</span></span
+    <div class="relative">
+      <button
+        class="add-tab-btn p-2 rounded hover:bg-slate-800 text-slate-500 hover:text-emerald-400 transition-colors"
+        (click)="toggleCollectionSelector()"
       >
-      <span class="collection-badge">Collection</span>
-    </div>
-    <div class="breadcrumb-right">
-      @if (stats()) {
-        <span
-          ><svg
-            class="inline-icon"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path d="M4 7h16M4 12h16M4 17h10" />
-          </svg>
-          {{ formatBytes(stats()!.size_bytes) }}</span
-        >
-        <span
-          ><svg
-            class="inline-icon"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path d="M9 12h6M9 16h6M9 8h6M4 7h.01M4 12h.01M4 17h.01" />
-          </svg>
-          {{ formatDocumentCount(stats()!.document_count) }} Docs</span
-        >
+        <mat-icon fontIcon="add" class="inline-flex items-center justify-center text-xl!"></mat-icon>
+      </button>
+      @if (showCollectionSelector()) {
+        <div class="absolute top-full left-0 mt-1 w-56 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 max-h-64 overflow-y-auto">
+          @for (col of collections(); track col.name) {
+            <button
+              class="w-full text-left px-3 py-2 text-sm text-slate-300 hover:bg-slate-700/50 flex items-center gap-2 transition-colors"
+              (click)="selectCollectionFromDropdown(col.name)"
+            >
+<mat-icon fontIcon="table_chart" class="inline-flex items-center justify-center text-xl!"></mat-icon>
+              {{ col.name }}
+            </button>
+          }
+          @if (collections().length === 0) {
+            <div class="p-3 text-sm text-slate-500 text-center">No collections</div>
+          }
+        </div>
       }
     </div>
   </div>
 
-  <!-- Data Grid -->
-  <div class="data-grid-area">
-    <app-data-grid
-      [collectionName]="activeCollection()"
-      [filter]="filterText()"
-      [page]="page()"
-      [pageSize]="pageSize()"
-      [showInspector]="showInspector()"
-      (documentClick)="openInspector($event)"
-      (pageChange)="onPageChange($event)"
-    ></app-data-grid>
+  <app-filter-bar
+    [filter]="filterText()"
+    [availableColumns]="availableColumns()"
+    [viewMode]="'grid'"
+    (filterChange)="onFilterChange($event)"
+    (apply)="onFilterApply()"
+    (clear)="onFilterClear()"
+    (export)="onExport($event)"
+    (toggleView)="onRefresh()"
+    (refresh)="onRefresh()"
+    (columnsChange)="onColumnsChange($event)"
+  ></app-filter-bar>
+
+  <div class="view-tabs-bar flex items-center justify-between px-4 py-2 bg-slate-900/50 border-b border-slate-800/50">
+    <div class="flex items-center gap-1">
+      @for (tab of viewTabs; track tab.id) {
+        <button
+          class="px-4 py-2 text-sm font-medium rounded-t-md transition-colors relative"
+          [class.text-emerald-400]="viewTab() === tab.id"
+          [class.text-slate-400]="viewTab() !== tab.id"
+          [class.hover:text-slate-200]="viewTab() !== tab.id"
+          (click)="selectViewTab(tab.id)"
+        >
+          {{ tab.label }}
+          @if (viewTab() === tab.id) {
+            <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-400 rounded-t"></div>
+          }
+        </button>
+      }
+    </div>
+    <div class="flex items-center gap-2">
+      <span class="text-xs text-slate-500">Split:</span>
+      @for (mode of splitModes; track mode.id) {
+        <button
+          class="p-1.5 rounded transition-colors"
+          [class.bg-emerald-600]="splitMode() === mode.id"
+          [class.text-white]="splitMode() === mode.id"
+          [class.bg-slate-700]="splitMode() !== mode.id"
+          [class.text-slate-400]="splitMode() !== mode.id"
+          [class.hover:text-slate-300]="splitMode() !== mode.id"
+          (click)="setSplitMode(mode.id)"
+          [title]="mode.label"
+        >
+          <mat-icon [fontIcon]="mode.icon" class="inline-flex items-center justify-center text-xl!"></mat-icon>
+        </button>
+      }
+    </div>
   </div>
 
-  <!-- Pagination Footer -->
-  <div class="pagination-footer">
-    <div class="pagination-info">
-      <span>Page {{ page() + 1 }} of {{ totalPages || 1 }}</span>
-      <div class="page-size-select">
-        <span>{{ pageSize() }} rows</span>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M6 9l6 6 6-6" />
-        </svg>
-      </div>
+  <div class="stats-breadcrumb flex items-center justify-between px-4 py-2 bg-slate-900/30 border-b border-slate-800/30">
+    <div class="flex items-center gap-3">
+      <span class="text-sm text-slate-400">
+        Viewing: <span class="text-emerald-400 font-medium">{{ activeCollection() }}</span>
+      </span>
+      <span class="text-xs text-slate-600 bg-slate-800/50 px-2 py-0.5 rounded">Collection</span>
     </div>
-    <div class="pagination-controls">
-      <button class="page-btn" [disabled]="!hasPrevPage" (click)="prevPage()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M15 18l-6-6 6-6" />
-        </svg>
-      </button>
-      <button class="page-btn" [disabled]="!hasNextPage" (click)="nextPage()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M9 18l6-6-6-6" />
-        </svg>
-      </button>
+    <div class="flex items-center gap-4 text-sm text-slate-400">
+      @if (stats()) {
+        <span class="flex items-center gap-1.5">
+          <mat-icon fontIcon="format_align_left" class="inline-flex items-center justify-center text-xl!"></mat-icon>
+          {{ formatBytes(stats()!.size_bytes) }}
+        </span>
+        <span class="flex items-center gap-1.5">
+          <mat-icon fontIcon="grid_view" class="inline-flex items-center justify-center text-xl!"></mat-icon>
+          {{ formatDocumentCount(stats()!.document_count) }} Docs
+        </span>
+      }
     </div>
   </div>
 
-  <!-- Inspector Drawer -->
+  <div class="flex-1 overflow-y-auto min-h-0">
+    @switch (viewTab()) {
+      @case ("table") {
+        @if (splitMode() === 'none') {
+          <div class="h-full overflow-auto">
+            <app-data-grid
+              [collectionName]="activeCollection()"
+              [filter]="filterText()"
+              [page]="page()"
+              [pageSize]="pageSize()"
+              [showInspector]="showInspector()"
+              [viewMode]="'grid'"
+              (documentClick)="openInspector($event)"
+              (pageChange)="onPageChange($event)"
+              (viewModeChange)="selectViewTab('json')"
+            ></app-data-grid>
+          </div>
+        }
+        @if (splitMode() === 'horizontal') {
+          <div class="flex flex-row h-full">
+            <div class="w-1/2 overflow-auto">
+              <app-data-grid
+                [collectionName]="activeCollection()"
+                [filter]="filterText()"
+                [page]="page()"
+                [pageSize]="pageSize()"
+                [showInspector]="showInspector()"
+                [viewMode]="'grid'"
+                (documentClick)="openInspector($event)"
+                (pageChange)="onPageChange($event)"
+                (viewModeChange)="selectViewTab('json')"
+              ></app-data-grid>
+            </div>
+            <div class="w-1/2 overflow-auto">
+              <app-data-grid
+                [collectionName]="activeCollection()"
+                [filter]="filterText()"
+                [page]="page()"
+                [pageSize]="pageSize()"
+                [showInspector]="showInspector()"
+                [viewMode]="'grid'"
+                (documentClick)="openInspector($event)"
+                (pageChange)="onPageChange($event)"
+                (viewModeChange)="selectViewTab('json')"
+              ></app-data-grid>
+            </div>
+          </div>
+        }
+        @if (splitMode() === 'vertical') {
+          <div class="flex flex-col h-full">
+            <div class="h-1/2 overflow-auto">
+              <app-data-grid
+                [collectionName]="activeCollection()"
+                [filter]="filterText()"
+                [page]="page()"
+                [pageSize]="pageSize()"
+                [showInspector]="showInspector()"
+                [viewMode]="'grid'"
+                (documentClick)="openInspector($event)"
+                (pageChange)="onPageChange($event)"
+                (viewModeChange)="selectViewTab('json')"
+              ></app-data-grid>
+            </div>
+            <div class="h-1/2 overflow-auto">
+              <app-data-grid
+                [collectionName]="activeCollection()"
+                [filter]="filterText()"
+                [page]="page()"
+                [pageSize]="pageSize()"
+                [showInspector]="showInspector()"
+                [viewMode]="'grid'"
+                (documentClick)="openInspector($event)"
+                (pageChange)="onPageChange($event)"
+                (viewModeChange)="selectViewTab('json')"
+              ></app-data-grid>
+            </div>
+          </div>
+        }
+      }
+      @case ("tree") {
+        <div class="h-full flex flex-col items-center justify-center text-slate-400">
+          <mat-icon fontIcon="account_tree" class="inline-flex items-center justify-center text-xl! text-4xl mb-4"></mat-icon>
+          <p class="text-lg">Tree View</p>
+          <p class="text-sm text-slate-500 mt-1">Tree visualization coming soon</p>
+        </div>
+      }
+      @case ("json") {
+        <div class="h-full flex flex-col">
+          <div class="json-toolbar flex items-center justify-between px-4 py-2 bg-slate-900/50 border-b border-slate-800/50">
+            <div class="flex items-center gap-2">
+              <span class="text-sm text-slate-400">Full Collection JSON</span>
+              <span class="text-xs text-slate-500">({{ fullJsonData().length }} documents)</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button
+                class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded text-sm flex items-center gap-2 transition-colors"
+                (click)="loadFullJsonData()"
+              >
+                <mat-icon fontIcon="refresh" class="inline-flex items-center justify-center text-xl!"></mat-icon>
+                Refresh
+              </button>
+              <button
+                class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-sm flex items-center gap-2 transition-colors"
+                (click)="copyJsonToClipboard()"
+              >
+                <mat-icon fontIcon="content_copy" class="inline-flex items-center justify-center text-xl!"></mat-icon>
+                Copy to Clipboard
+              </button>
+            </div>
+          </div>
+          <div class="flex-1 overflow-auto bg-slate-900/30">
+            @if (jsonLoading()) {
+              <div class="flex items-center justify-center h-full">
+                <div class="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            } @else if (fullJsonData().length === 0) {
+              <div class="flex flex-col items-center justify-center h-full text-slate-400">
+                <mat-icon fontIcon="download" class="inline-flex items-center justify-center text-xl!"></mat-icon>
+                <p class="text-lg">No documents found</p>
+                <p class="text-sm text-slate-500 mt-1">This collection is empty</p>
+              </div>
+            } @else {
+              <div class="json-content p-4">
+                @for (doc of fullJsonData(); track $index; let docIndex = $index) {
+                  <div class="json-document mb-4 border border-slate-800 rounded-lg overflow-hidden bg-slate-900/30">
+                    <div class="bg-slate-900/80 px-4 py-2 border-b border-slate-800 flex items-center justify-between">
+                      <span class="text-slate-400 text-sm font-mono">Document {{ docIndex + 1 }}</span>
+                      <button
+                        class="text-slate-500 hover:text-emerald-400 text-xs flex items-center gap-1 px-2 py-1 rounded hover:bg-slate-800 transition-colors"
+                        (click)="openInspector(doc)"
+                      >
+                  <mat-icon fontIcon="visibility" class="inline-flex items-center justify-center text-xl!"></mat-icon>
+                        Inspect
+                      </button>
+                    </div>
+                    <div class="json-body p-4">
+                      @for (line of formatJsonLines(doc); track $index; let lineIndex = $index) {
+                        <div class="json-line flex font-mono text-sm leading-relaxed hover:bg-slate-800/20">
+                          <span class="json-line-num text-slate-600 text-xs text-right pr-4 select-none w-10 flex-shrink-0">{{ lineIndex + 1 }}</span>
+                          <span class="json-line-content" [innerHTML]="highlightJsonLine(line)"></span>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      }
+    }
+  </div>
+
   @if (showInspector() && inspectorDocument()) {
     <app-inspector-drawer
       [document]="inspectorDocument()!"

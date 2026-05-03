@@ -1,74 +1,293 @@
-import { Component, inject, signal } from "@angular/core";
-import { Router, RouterLink } from "@angular/router";
+import { Component, inject, signal, computed, OnInit } from "@angular/core";
+import { Router, RouterLink, ActivatedRoute } from "@angular/router";
 import { FormsModule } from "@angular/forms";
-import { DatabaseService } from "../../../shared/services/database.service";
-import { ConnectionConfig, ConnectionHealth } from "../../../shared/models/connection.config";
+import { MatIconModule } from "@angular/material/icon";
+import { DatabaseService } from "@shared/services/database.service";
+import { ConnectionStateService } from "@shared/services/connection-state.service";
+import { ConnectionConfig, ConnectionHealth, ConnectionSummary } from "@shared/models/connection.config";
 
 type ProviderType = "json" | "mongo" | "redis" | "postgres" | "sqlite" | "mysql";
+type WizardStep = 1 | 2 | 3;
+
+interface ProviderOption {
+  type: ProviderType;
+  label: string;
+  icon: string;
+  description: string;
+}
 
 @Component({
   selector: "app-connection-form",
   standalone: true,
-  imports: [RouterLink, FormsModule],
+  imports: [RouterLink, FormsModule, MatIconModule],
   templateUrl: "./connection-form.component.html",
 })
-export class ConnectionFormComponent {
+export class ConnectionFormComponent implements OnInit {
   private db = inject(DatabaseService);
+  private connState = inject(ConnectionStateService);
   router = inject(Router);
+  route = inject(ActivatedRoute);
 
+  editingId: string | null = null;
+
+  currentStep = signal<WizardStep>(1);
   provider: ProviderType = "json";
   name = "";
   path = "";
   uri = "";
   database = "";
+  host = "localhost";
+  port = "";
+  username = "";
+  password = "";
+  useSsl = false;
 
   testResult = signal<ConnectionHealth | null>(null);
   testing = signal(false);
+  saving = signal(false);
+
+  providers: ProviderOption[] = [
+    { type: "json", label: "JSON", icon: "description", description: "Local JSON file storage" },
+    { type: "mongo", label: "MongoDB", icon: "eco", description: "MongoDB document database" },
+    { type: "redis", label: "Redis", icon: "flash_on", description: "Redis in-memory cache" },
+    { type: "postgres", label: "PostgreSQL", icon: "storage", description: "PostgreSQL relational DB" },
+    { type: "sqlite", label: "SQLite", icon: "insert_drive_file", description: "SQLite file database" },
+    { type: "mysql", label: "MySQL", icon: "storage", description: "MySQL relational DB" },
+  ];
+
+  stepTitles = {
+    1: "Choose Provider",
+    2: "Connection Details",
+    3: "Test & Save",
+  };
+
+  ngOnInit() {
+    const id = this.route.snapshot.paramMap.get("id");
+    if (id && id !== "new") {
+      this.editingId = id;
+      this.loadConnectionForEdit(id);
+    }
+
+    const duplicateId = this.route.snapshot.queryParamMap.get("duplicate");
+    if (duplicateId) {
+      this.loadConnectionForDuplicate(duplicateId);
+    }
+  }
+
+  private async loadConnectionForEdit(id: string) {
+    try {
+      const conn = await this.db.getConnection(id);
+      this.editingId = id;
+      this.name = conn.name;
+      this.provider = conn.type as ProviderType;
+      switch (conn.type) {
+        case "json":
+        case "sqlite":
+          this.path = (conn as any).path || "";
+          break;
+        case "mongo":
+          this.uri = (conn as any).uri || "";
+          this.database = (conn as any).database || "";
+          break;
+        case "redis":
+        case "postgres":
+        case "mysql":
+          this.uri = (conn as any).uri || "";
+          break;
+      }
+    } catch (e) {
+      console.error("Failed to load connection:", e);
+    }
+  }
+
+  private async loadConnectionForDuplicate(id: string) {
+    try {
+      const conn = await this.db.getConnection(id);
+      this.name = conn.name + " (Copy)";
+      this.provider = conn.type as ProviderType;
+      switch (conn.type) {
+        case "json":
+        case "sqlite":
+          this.path = (conn as any).path || "";
+          break;
+        case "mongo":
+          this.uri = (conn as any).uri || "";
+          this.database = (conn as any).database || "";
+          break;
+        case "redis":
+        case "postgres":
+        case "mysql":
+          this.uri = (conn as any).uri || "";
+          break;
+      }
+    } catch (e) {
+      console.error("Failed to load connection:", e);
+    }
+  }
+
+  isStep1Valid = computed(() => this.provider !== null);
+
+  isStep2Valid(): boolean {
+    if (!this.name.trim()) return false;
+    switch (this.provider) {
+      case "json":
+      case "sqlite":
+        return !!this.path.trim();
+      case "mongo":
+        return !!this.uri.trim() && !!this.database.trim();
+      case "redis":
+      case "postgres":
+      case "mysql":
+        return !!this.uri.trim();
+      default:
+        return false;
+    }
+  }
+
+  selectProvider(type: ProviderType) {
+    this.provider = type;
+    this.resetFormFields();
+  }
+
+  private resetFormFields() {
+    this.path = "";
+    this.uri = "";
+    this.database = "";
+    this.host = "localhost";
+    this.port = "";
+    this.username = "";
+    this.password = "";
+    this.useSsl = false;
+  }
+
+  nextStep() {
+    if (this.currentStep() < 3) {
+      this.currentStep.update(s => (s + 1) as WizardStep);
+    }
+  }
+
+  prevStep() {
+    if (this.currentStep() > 1) {
+      this.currentStep.update(s => (s - 1) as WizardStep);
+    }
+  }
 
   async testConnection() {
     this.testing.set(true);
-    this.testResult.set(null);
     try {
       const config = this.buildConfig();
       const result = await this.db.testConnection(config);
       this.testResult.set(result);
-    } catch (e: any) {
-      this.testResult.set({
-        healthy: false,
-        provider: this.provider,
-        version: "",
-        message: e.message || "Connection failed",
-      });
+    } catch (e) {
+      this.testResult.set({ ok: false, message: String(e) } as any);
     } finally {
       this.testing.set(false);
     }
   }
 
   async save() {
-    const config = this.buildConfig();
-    await this.db.saveConnection(config);
-    this.router.navigate(["/connections"]);
+    this.saving.set(true);
+    try {
+      const config = this.buildConfig();
+      if (this.editingId) {
+        await this.db.deleteConnection(this.editingId);
+      }
+      await this.db.saveConnection(config);
+      this.router.navigate(["/connections"]);
+    } catch (e) {
+      console.error("Save failed:", e);
+    } finally {
+      this.saving.set(false);
+    }
+  }
+
+  private buildConfig(): any {
+    const typeMap: Record<ProviderType, string> = {
+      json: "Json",
+      mongo: "Mongo",
+      redis: "Redis",
+      postgres: "Postgres",
+      sqlite: "Sqlite",
+      mysql: "MySql",
+    };
+
+    const configType = typeMap[this.provider] || this.provider;
+
+    switch (this.provider) {
+      case "json":
+      case "sqlite":
+        return {
+          name: this.name,
+          config: {
+            type: configType,
+            name: this.name,
+            path: this.path,
+          }
+        };
+      case "mongo":
+        return {
+          name: this.name,
+          config: {
+            type: configType,
+            name: this.name,
+            uri: this.uri,
+            database: this.database,
+          }
+        };
+      case "redis":
+      case "postgres":
+      case "mysql":
+        return {
+          name: this.name,
+          config: {
+            type: configType,
+            name: this.name,
+            uri: this.uri,
+          }
+        };
+      default:
+        return {
+          name: this.name,
+          config: {
+            type: configType,
+            name: this.name,
+            uri: this.uri,
+          }
+        };
+    }
   }
 
   cancel() {
     this.router.navigate(["/connections"]);
   }
 
-  private buildConfig(): ConnectionConfig {
-    const base = { name: this.name };
-    switch (this.provider) {
-      case "json":
-        return { type: "json", name: this.name, path: this.path };
-      case "mongo":
-        return { type: "mongo", name: this.name, uri: this.uri, database: this.database };
-      case "redis":
-        return { type: "redis", name: this.name, uri: this.uri };
-      case "postgres":
-        return { type: "postgres", name: this.name, uri: this.uri };
-      case "sqlite":
-        return { type: "sqlite", name: this.name, path: this.path };
-      case "mysql":
-        return { type: "mysql", name: this.name, uri: this.uri };
+  async browseFile() {
+    try {
+      const { open } = await import("@tauri-apps/plugin-dialog");
+      const selected = await open({
+        multiple: false,
+        filters: [{
+          name: "Database Files",
+          extensions: ["json", "db", "sqlite", "sqlite3"]
+        }]
+      });
+      if (selected) {
+        this.path = selected as string;
+      }
+    } catch (e) {
+      console.error("File dialog error:", e);
     }
+  }
+
+  getProviderIcon(provider: ProviderType): string {
+    const iconMap: Record<ProviderType, string> = {
+      json: "description",
+      mongo: "eco",
+      redis: "flash_on",
+      postgres: "storage",
+      sqlite: "insert_drive_file",
+      mysql: "storage",
+    };
+    return iconMap[provider] || "dns";
   }
 }

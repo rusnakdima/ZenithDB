@@ -10,13 +10,13 @@
         </p>
       </div>
       <a routerLink="/connections/new" class="connections-btn">
-        <i class="fas fa-plus"></i> New Connection
+        <mat-icon fontIcon="add" class="text-xl!"></mat-icon> New Connection
       </a>
     </div>
 
     @if (loading()) {
       <div class="flex items-center justify-center gap-3 py-12 text-slate-500">
-        <i class="fas fa-spinner fa-spin"></i>
+        <mat-icon fontIcon="sync" class="inline-flex items-center justify-center fa-spin text-xl!"></mat-icon>
         <span>Loading connections...</span>
       </div>
     }
@@ -24,12 +24,12 @@
     @if (!loading() && connections().length === 0) {
       <div class="empty-state">
         <div class="empty-icon">
-          <i class="fas fa-plug"></i>
+          <mat-icon fontIcon="plug" class="text-xl!"></mat-icon>
         </div>
         <h3 class="empty-title">No Connections Yet</h3>
         <p class="empty-description">Create your first database connection to get started.</p>
         <a routerLink="/connections/new" class="connections-btn">
-          <i class="fas fa-plus"></i> Create Connection
+          <mat-icon fontIcon="add" class="text-xl!"></mat-icon> Create Connection
         </a>
       </div>
     }
@@ -41,6 +41,8 @@
             [connection]="connection"
             (connect)="onConnect($event)"
             (delete)="onDelete($event)"
+            (edit)="onEdit($event)"
+            (duplicate)="onDuplicate($event)"
           />
         }
       </div>

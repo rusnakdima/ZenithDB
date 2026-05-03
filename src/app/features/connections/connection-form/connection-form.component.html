@@ -11,6 +11,7 @@
       <label class="mb-2 block text-sm font-medium text-neutral-300">Provider Type</label>
       <select
         [(ngModel)]="provider"
+        (ngModelChange)="provider = $event"
         class="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
       >
         <option value="json">JSON</option>
@@ -24,118 +25,222 @@
 
     <div class="mb-6">
       <label class="mb-2 block text-sm font-medium text-neutral-300">Connection Name</label>
-      <input
-        type="text"
-        [(ngModel)]="name"
-        placeholder="My Database"
-        class="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-white placeholder-neutral-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-      />
+      <div class="relative">
+        <input
+          type="text"
+          [(ngModel)]="name"
+          (blur)="touchField('name'); validateField('name')"
+          placeholder="My Database"
+          class="w-full rounded-lg border px-3 py-2 text-white placeholder-neutral-500 transition-colors focus:ring-1"
+          [class.border-neutral-700]="!getError('name')"
+          [class.border-red-500]="getError('name')"
+          [class.bg-neutral-900]="!getError('name')"
+          [class.bg-red-900/20]="getError('name')"
+          [class.focus:border-emerald-500]="!getError('name')"
+          [class.focus:ring-emerald-500]="!getError('name')"
+          [class.focus:border-red-500]="getError('name')"
+          [class.focus:ring-red-500]="getError('name')"
+        />
+        @if (getError('name')) {
+          <svg class="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        }
+      </div>
+      @if (getError('name')) {
+        <p class="mt-1 text-xs text-red-500">{{ getError('name') }}</p>
+      }
     </div>
 
-    @switch (provider) {
-      @case ("json") {
-        <div class="mb-6">
-          <label class="mb-2 block text-sm font-medium text-neutral-300">File Path</label>
-          <div class="flex gap-2">
+    @if (showField('uri')) {
+      <div class="mb-6">
+        <label class="mb-2 block text-sm font-medium text-neutral-300">
+          Connection URI
+          @if (provider === 'postgres' || provider === 'mysql') {
+            <span class="text-neutral-500">(host:port/database)</span>
+          } @else {
+            <span class="text-neutral-500">(e.g. mongodb://localhost:27017)</span>
+          }
+        </label>
+        <div class="relative">
+          <input
+            type="text"
+            [(ngModel)]="uri"
+            (blur)="touchField('uri'); validateField('uri')"
+            [placeholder]="provider === 'redis' ? 'redis://localhost:6379' : provider === 'postgres' ? 'postgres://user:pass@localhost:5432/db' : provider === 'mysql' ? 'mysql://user:pass@localhost:3306/db' : provider === 'mongo' ? 'mongodb://localhost:27017' : 'Connection URI'"
+            class="w-full rounded-lg border px-3 py-2 text-white placeholder-neutral-500 transition-colors focus:ring-1"
+            [class.border-neutral-700]="!getError('uri')"
+            [class.border-red-500]="getError('uri')"
+            [class.bg-neutral-900]="!getError('uri')"
+            [class.bg-red-900/20]="getError('uri')"
+            [class.focus:border-emerald-500]="!getError('uri')"
+            [class.focus:ring-emerald-500]="!getError('uri')"
+            [class.focus:border-red-500]="getError('uri')"
+            [class.focus:ring-red-500]="getError('uri')"
+          />
+          @if (getError('uri')) {
+            <svg class="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          }
+        </div>
+        @if (getError('uri')) {
+          <p class="mt-1 text-xs text-red-500">{{ getError('uri') }}</p>
+        }
+      </div>
+    }
+
+    @if (showField('port')) {
+      <div class="mb-6">
+        <label class="mb-2 block text-sm font-medium text-neutral-300">Port</label>
+        <div class="relative">
+          <input
+            type="number"
+            [(ngModel)]="port"
+            (blur)="touchField('port'); validateField('port')"
+            placeholder="5432"
+            min="1"
+            max="65535"
+            class="w-full rounded-lg border px-3 py-2 text-white placeholder-neutral-500 transition-colors focus:ring-1"
+            [class.border-neutral-700]="!getError('port')"
+            [class.border-red-500]="getError('port')"
+            [class.bg-neutral-900]="!getError('port')"
+            [class.bg-red-900/20]="getError('port')"
+            [class.focus:border-emerald-500]="!getError('port')"
+            [class.focus:ring-emerald-500]="!getError('port')"
+            [class.focus:border-red-500]="getError('port')"
+            [class.focus:ring-red-500]="getError('port')"
+          />
+          @if (getError('port')) {
+            <svg class="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          }
+        </div>
+        @if (getError('port')) {
+          <p class="mt-1 text-xs text-red-500">{{ getError('port') }}</p>
+        }
+      </div>
+    }
+
+    @if (showField('username')) {
+      <div class="mb-6">
+        <label class="mb-2 block text-sm font-medium text-neutral-300">Username</label>
+        <div class="relative">
+          <input
+            type="text"
+            [(ngModel)]="username"
+            (blur)="touchField('username'); validateField('username')"
+            placeholder="username"
+            class="w-full rounded-lg border px-3 py-2 text-white placeholder-neutral-500 transition-colors focus:ring-1"
+            [class.border-neutral-700]="!getError('username')"
+            [class.border-red-500]="getError('username')"
+            [class.bg-neutral-900]="!getError('username')"
+            [class.bg-red-900/20]="getError('username')"
+            [class.focus:border-emerald-500]="!getError('username')"
+            [class.focus:ring-emerald-500]="!getError('username')"
+            [class.focus:border-red-500]="getError('username')"
+            [class.focus:ring-red-500]="getError('username')"
+          />
+          @if (getError('username')) {
+            <svg class="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          }
+        </div>
+        @if (getError('username')) {
+          <p class="mt-1 text-xs text-red-500">{{ getError('username') }}</p>
+        }
+      </div>
+    }
+
+    @if (showField('password')) {
+      <div class="mb-6">
+        <label class="mb-2 block text-sm font-medium text-neutral-300">Password</label>
+        <div class="relative">
+          <input
+            type="password"
+            [(ngModel)]="password"
+            (blur)="touchField('password'); validateField('password')"
+            placeholder="********"
+            class="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-white placeholder-neutral-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+          />
+        </div>
+        @if (getError('password')) {
+          <p class="mt-1 text-xs text-red-500">{{ getError('password') }}</p>
+        }
+      </div>
+    }
+
+    @if (showField('database')) {
+      <div class="mb-6">
+        <label class="mb-2 block text-sm font-medium text-neutral-300">Database Name</label>
+        <input
+          type="text"
+          [(ngModel)]="database"
+          placeholder="mydb"
+          class="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-white placeholder-neutral-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+        />
+      </div>
+    }
+
+    @if (showField('path')) {
+      <div class="mb-6">
+        <label class="mb-2 block text-sm font-medium text-neutral-300">
+          File Path
+          @if (provider === 'json') {
+            <span class="text-neutral-500">(.json)</span>
+          } @else {
+            <span class="text-neutral-500">(.db, .sqlite, .sqlite3)</span>
+          }
+        </label>
+        <div class="flex gap-2">
+          <div class="relative flex-1">
             <input
               type="text"
               [(ngModel)]="path"
-              placeholder="/path/to/data.json"
-              class="flex-1 rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-white placeholder-neutral-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+              (blur)="touchField('path'); validateField('path')"
+              [placeholder]="provider === 'json' ? '/path/to/data.json' : '/path/to/database.db'"
+              class="w-full rounded-lg border px-3 py-2 text-white placeholder-neutral-500 transition-colors focus:ring-1"
+              [class.border-neutral-700]="!getError('path')"
+              [class.border-red-500]="getError('path')"
+              [class.bg-neutral-900]="!getError('path')"
+              [class.bg-red-900/20]="getError('path')"
+              [class.focus:border-emerald-500]="!getError('path')"
+              [class.focus:ring-emerald-500]="!getError('path')"
+              [class.focus:border-red-500]="getError('path')"
+              [class.focus:ring-red-500]="getError('path')"
             />
-            <button
-              class="rounded-lg bg-neutral-800 px-4 py-2 text-neutral-300 transition-colors hover:bg-neutral-700"
-            >
-              Browse
-            </button>
+            @if (getError('path')) {
+              <svg class="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            }
           </div>
+          <button
+            class="rounded-lg bg-neutral-800 px-4 py-2 text-neutral-300 transition-colors hover:bg-neutral-700"
+          >
+            Browse
+          </button>
         </div>
-      }
-      @case ("mongo") {
-        <div class="mb-6">
-          <label class="mb-2 block text-sm font-medium text-neutral-300">Connection URI</label>
-          <input
-            type="text"
-            [(ngModel)]="uri"
-            placeholder="mongodb://localhost:27017"
-            class="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-white placeholder-neutral-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-          />
-        </div>
-        <div class="mb-6">
-          <label class="mb-2 block text-sm font-medium text-neutral-300">Database Name</label>
-          <input
-            type="text"
-            [(ngModel)]="database"
-            placeholder="mydb"
-            class="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-white placeholder-neutral-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-          />
-        </div>
-      }
-      @case ("redis") {
-        <div class="mb-6">
-          <label class="mb-2 block text-sm font-medium text-neutral-300">Connection URI</label>
-          <input
-            type="text"
-            [(ngModel)]="uri"
-            placeholder="redis://localhost:6379"
-            class="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-white placeholder-neutral-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-          />
-        </div>
-      }
-      @case ("postgres") {
-        <div class="mb-6">
-          <label class="mb-2 block text-sm font-medium text-neutral-300">Connection URI</label>
-          <input
-            type="text"
-            [(ngModel)]="uri"
-            placeholder="postgres://user:pass@localhost:5432/db"
-            class="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-white placeholder-neutral-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-          />
-        </div>
-      }
-      @case ("sqlite") {
-        <div class="mb-6">
-          <label class="mb-2 block text-sm font-medium text-neutral-300">Database File Path</label>
-          <div class="flex gap-2">
-            <input
-              type="text"
-              [(ngModel)]="path"
-              placeholder="/path/to/database.db"
-              class="flex-1 rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-white placeholder-neutral-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-            />
-            <button
-              class="rounded-lg bg-neutral-800 px-4 py-2 text-neutral-300 transition-colors hover:bg-neutral-700"
-            >
-              Browse
-            </button>
-          </div>
-        </div>
-      }
-      @case ("mysql") {
-        <div class="mb-6">
-          <label class="mb-2 block text-sm font-medium text-neutral-300">Connection URI</label>
-          <input
-            type="text"
-            [(ngModel)]="uri"
-            placeholder="mysql://user:pass@localhost:3306/db"
-            class="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-white placeholder-neutral-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-          />
-        </div>
-      }
+        @if (getError('path')) {
+          <p class="mt-1 text-xs text-red-500">{{ getError('path') }}</p>
+        }
+      </div>
     }
 
     @if (testResult()) {
       <div
         class="mb-6 rounded-lg p-4"
-        [class.bg-emerald-900]="testResult()!.ok"
-        [class.bg-red-900]="!testResult()!.ok"
+        [class.bg-emerald-900]="testResult()!.healthy"
+        [class.bg-red-900]="!testResult()!.healthy"
       >
         <p
           class="text-sm"
-          [class.text-emerald-400]="testResult()!.ok"
-          [class.text-red-400]="!testResult()!.ok"
+          [class.text-emerald-400]="testResult()!.healthy"
+          [class.text-red-400]="!testResult()!.healthy"
         >
-          @if (testResult()!.ok) {
+          @if (testResult()!.healthy) {
             Connected! {{ testResult()!.provider }} v{{ testResult()!.version }}
           } @else {
             Connection failed: {{ testResult()!.message }}
@@ -147,15 +252,19 @@
     <div class="flex items-center gap-3">
       <button
         (click)="testConnection()"
-        [disabled]="testing() || !name"
-        class="rounded-lg bg-neutral-700 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-neutral-600 disabled:opacity-50"
+        [disabled]="testing()"
+        class="flex items-center gap-2 rounded-lg bg-neutral-700 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-neutral-600 disabled:opacity-50"
       >
-        {{ testing() ? "Testing..." : "Test Connection" }}
+        @if (testing()) {
+          <mat-icon fontIcon="sync" class="inline-flex items-center justify-center text-base fa-spin"></mat-icon> Testing...
+        } @else {
+          <mat-icon fontIcon="plug" class="inline-flex items-center justify-center text-base"></mat-icon> Test Connection
+        }
       </button>
       <button
         (click)="save()"
-        [disabled]="!name"
-        class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-500 disabled:opacity-50"
+        [disabled]="!isFormValid()"
+        class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         Save
       </button>

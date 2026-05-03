@@ -1,8 +1,8 @@
 import { Component, inject, signal, OnInit } from "@angular/core";
 import { Router, RouterLink, ActivatedRoute } from "@angular/router";
-import { DatabaseService } from "../../../shared/services/database.service";
-import { ConnectionStateService } from "../../../shared/services/connection-state.service";
-import { ConnectionHealth } from "../../../shared/models/connection.config";
+import { DatabaseService } from "@shared/services/database.service";
+import { ConnectionStateService } from "@shared/services/connection-state.service";
+import { ConnectionHealth } from "@shared/models/connection.config";
 
 @Component({
   selector: "app-connection-detail",

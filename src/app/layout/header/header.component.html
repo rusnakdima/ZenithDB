@@ -1,46 +1,53 @@
-<header class="header">
+<header class="app-header">
   <div class="flex items-center gap-6">
-    <div class="flex items-center gap-2">
-      <div class="rounded bg-gradient-to-br from-blue-500 to-indigo-600 p-1.5 shadow-lg">
-        <i class="fas fa-atom text-xs text-white"></i>
+    <button class="flex items-center gap-2 cursor-pointer" (click)="goHome()">
+      <div class="header-logo">
+        <mat-icon fontIcon="settings" class="inline-flex items-center justify-center text-xl!"></mat-icon>
       </div>
-      <h1 class="text-sm font-black tracking-tighter uppercase italic">
-        Zenith<span class="text-blue-500">DB</span>
+      <h1 class="header-title">
+        Zenith<span class="header-title-accent">DB</span>
       </h1>
-    </div>
-    <div
-      class="flex items-center gap-1 text-[11px] font-medium tracking-widest text-slate-500 uppercase"
-    >
-      <a routerLink="/connections" class="px-2 py-1 transition hover:text-white">Connections</a>
-      <i class="fas fa-chevron-right text-[8px]"></i>
+    </button>
+
+    <nav class="header-breadcrumb">
+      <a routerLink="/connections" class="header-breadcrumb-link hover:text-emerald-500 transition-colors">
+        Connections
+      </a>
       @if (connectionState.activeConnectionName()) {
-        <button class="px-2 py-1 hover:text-white">
+        <mat-icon fontIcon="chevron_right" class="inline-flex items-center justify-center text-[8px] text-slate-500 mx-1" style="font-size: 8px; width: 8px; height: 8px;"></mat-icon>
+        <button class="header-breadcrumb-link hover:text-emerald-500 transition-colors">
           {{ connectionState.activeConnectionName() }}
         </button>
-        <i class="fas fa-chevron-right text-[8px]"></i>
       }
-      <button class="rounded bg-blue-500/10 px-2 py-1 text-blue-400">Explorer</button>
-    </div>
+      @if (connectionState.activeConnectionName()) {
+        <mat-icon fontIcon="chevron_right" class="inline-flex items-center justify-center text-[8px] text-slate-500 mx-1" style="font-size: 8px; width: 8px; height: 8px;"></mat-icon>
+        <span class="header-breadcrumb-active">Explorer</span>
+      }
+    </nav>
   </div>
 
   <div class="flex items-center gap-4">
-    <div class="flex items-center rounded-lg border border-slate-700 bg-slate-800 p-0.5">
-      <button class="rounded-md px-3 py-1 text-xs transition hover:text-white">Gallery</button>
-      <button class="rounded-md bg-slate-700 px-3 py-1 text-xs text-white shadow-sm">
-        Explorer
-      </button>
-      <button class="rounded-md px-3 py-1 text-xs transition hover:text-white">Workbench</button>
+    <div class="header-tabs">
+      @for (tab of tabs; track tab.id) {
+        <button
+          class="header-tab transition-colors"
+          [class.header-tab-active]="activeTab() === tab.id"
+          [class.header-tab-link]="activeTab() !== tab.id"
+          (click)="setActiveTab(tab.id)"
+        >
+          {{ tab.label }}
+        </button>
+      }
     </div>
-    <div class="h-4 w-px bg-slate-700"></div>
-    <button class="text-slate-400 transition hover:text-white" (click)="toggleTheme()">
-      <i class="fas fa-circle-half-stroke"></i>
+
+    <div class="header-divider"></div>
+
+    <button class="header-icon-btn text-lg" (click)="toggleTheme()" [title]="isDarkMode() ? 'Switch to light mode' : 'Switch to dark mode'">
+      @if (isDarkMode()) {
+        <mat-icon fontIcon="light_mode" class="inline-flex items-center justify-center"></mat-icon>
+      } @else {
+        <mat-icon fontIcon="dark_mode" class="inline-flex items-center justify-center"></mat-icon>
+      }
     </button>
-    <div class="flex items-center gap-2 pl-2">
-      <div
-        class="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-tr from-orange-400 to-red-500 text-[10px] font-bold"
-      >
-        JD
-      </div>
-    </div>
   </div>
 </header>

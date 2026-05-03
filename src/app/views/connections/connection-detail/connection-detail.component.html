@@ -1,59 +1,134 @@
-<div class="space-y-6">
-  <div class="flex items-center justify-between">
-    <h1 class="text-2xl font-bold text-white">{{ connectionName() || "Connection Details" }}</h1>
-    <span class="rounded bg-neutral-800 px-3 py-1 text-sm font-medium text-neutral-400">
-      {{ provider() }}
-    </span>
-  </div>
+<div class="connections-container">
+  <div class="connections-max-width">
+    <div class="connections-header">
+      <div class="flex items-center gap-4">
+        <a routerLink="/connections" class="text-slate-400 hover:text-emerald-500 transition-colors">
+          <mat-icon fontIcon="arrow_back" class="inline-flex items-center justify-center text-xl!"></mat-icon>
+        </a>
+        <div>
+          <h2 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-3">
+            <mat-icon [fontIcon]="providerIcon()" class="inline-flex items-center justify-center text-emerald-500 text-xl!"></mat-icon>
+            {{ connectionName() || "Connection Details" }}
+          </h2>
+          <p class="mt-1 text-sm text-slate-500">{{ provider() | titlecase }} connection</p>
+        </div>
+      </div>
+      <a
+        [routerLink]="['/connections', connectionId(), 'edit']"
+        class="form-btn form-btn-secondary"
+      >
+        <mat-icon fontIcon="edit" class="inline-flex items-center justify-center mr-2 text-xl!"></mat-icon> Edit
+      </a>
+    </div>
 
-  <div class="rounded-xl border border-neutral-800 bg-neutral-900 p-6">
-    <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-      <div>
-        <h3 class="mb-1 text-sm font-medium text-neutral-400">Status</h3>
-        <div class="flex items-center gap-2">
-          <span
-            class="h-2 w-2 rounded-full"
-            [class.bg-emerald-500]="health()?.ok"
-            [class.bg-red-500]="!health()?.ok"
-          ></span>
-          <span class="text-white">{{ health()?.ok ? "Connected" : "Disconnected" }}</span>
+    @if (loading()) {
+      <div class="form-card">
+        <div class="flex items-center justify-center py-12">
+          <mat-icon fontIcon="sync" class="inline-flex items-center justify-center text-2xl text-slate-400 fa-spin text-xl!"></mat-icon>
+        </div>
+      </div>
+    } @else {
+      <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div class="form-card">
+          <div class="flex items-start justify-between">
+            <div>
+              <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Status</span>
+              <div class="mt-3 flex items-center gap-2">
+                <span
+                  class="h-3 w-3 rounded-full"
+                  [class.bg-emerald-500]="health()?.healthy"
+                  [class.bg-red-500]="!health()?.healthy"
+                ></span>
+                <span class="text-lg font-semibold text-slate-900 dark:text-white">
+                  {{ health()?.healthy ? "CONNECTED" : "OFFLINE" }}
+                </span>
+              </div>
+            </div>
+            <app-status-badge [status]="connectionStatus" />
+          </div>
+        </div>
+
+        @if (serverVersion()) {
+          <div class="form-card">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Server Version</span>
+            <div class="mt-3 flex items-center gap-2">
+              <mat-icon fontIcon="code" class="inline-flex items-center justify-center text-emerald-500 text-xl!"></mat-icon>
+              <span class="font-mono text-lg text-slate-900 dark:text-white">{{ serverVersion() }}</span>
+            </div>
+          </div>
+        }
+
+        <div class="form-card">
+          <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Collections</span>
+          <div class="mt-3 flex items-center gap-2">
+            <mat-icon fontIcon="storage" class="inline-flex items-center justify-center text-emerald-500 text-xl!"></mat-icon>
+            <span class="font-mono text-lg text-slate-900 dark:text-white">{{ collections().length }}</span>
+          </div>
         </div>
       </div>
 
-      @if (serverVersion()) {
-        <div>
-          <h3 class="mb-1 text-sm font-medium text-neutral-400">Server Version</h3>
-          <p class="text-white">{{ serverVersion() }}</p>
+      <div class="mt-6 flex flex-wrap items-center gap-3">
+        <button
+          (click)="testConnection()"
+          [disabled]="testing()"
+          class="form-btn form-btn-secondary"
+        >
+          @if (testing()) {
+            <mat-icon fontIcon="sync" class="mr-2 fa-spin text-xl!"></mat-icon> Testing...
+          } @else {
+            <mat-icon fontIcon="plug" class="mr-2 text-xl!"></mat-icon> Test Connection
+          }
+        </button>
+
+        <button
+          (click)="refresh()"
+          class="form-btn form-btn-secondary"
+        >
+          <mat-icon fontIcon="refresh" class="inline-flex items-center justify-center mr-2 text-xl!"></mat-icon> Refresh
+        </button>
+
+        <a
+          routerLink="/explorer"
+          class="form-btn form-btn-primary"
+        >
+          <mat-icon fontIcon="search" class="inline-flex items-center justify-center mr-2 text-xl!"></mat-icon> Explore
+        </a>
+
+        <button
+          (click)="deleteConnection()"
+          class="ml-auto rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-100 dark:border-red-900 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30"
+        >
+          <mat-icon fontIcon="delete" class="inline-flex items-center justify-center mr-2 text-xl!"></mat-icon> Delete
+        </button>
+      </div>
+
+      @if (collections().length > 0) {
+        <div class="mt-8">
+          <h3 class="mb-4 text-lg font-semibold text-slate-900 dark:text-white">Collections</h3>
+          <div class="rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800/50 overflow-hidden">
+            <table class="w-full">
+              <thead class="bg-slate-50 dark:bg-slate-800/50">
+                <tr>
+                  <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Name</th>
+                  <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">Documents</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                @for (collection of collections(); track collection.name) {
+                  <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors">
+                    <td class="px-4 py-3">
+                      <span class="font-medium text-slate-900 dark:text-white">{{ collection.name }}</span>
+                    </td>
+                    <td class="px-4 py-3 text-right">
+                      <span class="font-mono text-sm text-slate-500">{{ collection.count }}</span>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
         </div>
       }
-
-      @if (health()?.version) {
-        <div>
-          <h3 class="mb-1 text-sm font-medium text-neutral-400">Provider Version</h3>
-          <p class="text-white">{{ health()!.version }}</p>
-        </div>
-      }
-    </div>
-  </div>
-
-  <div class="flex items-center gap-3">
-    <a
-      routerLink="/explorer"
-      class="rounded-lg bg-neutral-800 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-neutral-700"
-    >
-      Explore Data
-    </a>
-    <a
-      routerLink="/workbench"
-      class="rounded-lg bg-neutral-800 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-neutral-700"
-    >
-      Workbench
-    </a>
-    <button
-      (click)="disconnect()"
-      class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-500"
-    >
-      Disconnect
-    </button>
+    }
   </div>
 </div>
