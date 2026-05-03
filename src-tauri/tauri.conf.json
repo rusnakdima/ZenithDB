@@ -5,16 +5,21 @@
   "identifier": "com.tcs.zenithdb",
   "build": {
     "beforeDevCommand": "bun run start",
-    "devUrl": "http://localhost:1420",
+    "devUrl": "http://localhost:1425",
     "beforeBuildCommand": "bun run build",
     "frontendDist": "../dist/zenithdb/browser"
   },
   "app": {
     "windows": [
       {
-        "title": "zenithdb",
-        "width": 800,
-        "height": 600
+        "title": "ZenithDB - Professional Database Manager",
+        "width": 1400,
+        "height": 900,
+        "minWidth": 1000,
+        "minHeight": 700,
+        "resizable": true,
+        "fullscreen": false,
+        "center": true
       }
     ],
     "security": {
