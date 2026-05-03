@@ -1,0 +1,50 @@
+@if (error()) {
+  <div class="fixed top-0 left-0 right-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+    <div class="w-full max-w-2xl bg-red-950/95 border border-red-800 rounded-lg shadow-xl backdrop-blur-sm pointer-events-auto">
+      <div class="flex items-start gap-3 p-4">
+        <div class="flex-shrink-0 mt-0.5">
+          <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+          </svg>
+        </div>
+
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2">
+            <span class="text-red-200 text-sm font-medium">Error</span>
+            <span class="text-red-400/60 text-xs">•</span>
+            <span class="text-red-400/60 text-xs">{{ error().code }}</span>
+          </div>
+          <p class="mt-1 text-sm text-red-100">{{ error().userMessage }}</p>
+          @if (error().details) {
+            <p class="mt-1 text-xs text-red-300/70">{{ error().details }}</p>
+          }
+          @if (!isOnline) {
+            <p class="mt-2 text-xs text-amber-300">You appear to be offline</p>
+          }
+        </div>
+
+        <div class="flex-shrink-0 flex items-center gap-2">
+          @if (error().retryable) {
+            <button
+              type="button"
+              (click)="onRetry()"
+              class="px-3 py-1.5 text-xs font-medium text-red-100 bg-red-900/50 hover:bg-red-900/70 rounded border border-red-700/50 transition-colors"
+            >
+              Retry
+            </button>
+          }
+          <button
+            type="button"
+            (click)="onDismiss()"
+            class="p-1.5 text-red-300 hover:text-red-100 hover:bg-red-900/50 rounded transition-colors"
+            aria-label="Dismiss"
+          >
+            <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

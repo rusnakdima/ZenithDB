@@ -1,0 +1,183 @@
+import { Injectable, inject } from "@angular/core";
+import { save } from "@tauri-apps/plugin-dialog";
+import { writeTextFile } from "@tauri-apps/plugin-fs";
+import { ToastService } from "@services/toast.service";
+import { LoadingService } from "@shared/services/loading.service";
+
+export interface FileFilter {
+  name: string;
+  extensions: string[];
+}
+
+export type ExportFormat = "csv" | "json" | "jsonl" | "sql" | "markdown";
+
+export interface ExportOptions {
+  format: ExportFormat;
+  filename: string;
+  includeHeaders?: boolean;
+  tableName?: string;
+}
+
+@Injectable({ providedIn: "root" })
+export class ExportService {
+  private toast = inject(ToastService) as ToastService;
+  private loading = inject(LoadingService) as LoadingService;
+
+  async exportToCsv(data: any[], filename: string, includeHeaders = true): Promise<void> {
+    if (data.length === 0) {
+      this.toast.warning("No data to export");
+      return;
+    }
+
+    const headers = Object.keys(data[0]);
+    const rows = data.map((row) =>
+      headers.map((h) => this.escapeCsvValue(row[h])).join(",")
+    );
+    const content = includeHeaders ? [headers.join(","), ...rows].join("\n") : rows.join("\n");
+
+    await this.saveFile(content, filename, [
+      { name: "CSV Files", extensions: ["csv"] },
+    ]);
+  }
+
+  async exportToJson(data: any[], filename: string): Promise<void> {
+    if (data.length === 0) {
+      this.toast.warning("No data to export");
+      return;
+    }
+
+    const content = JSON.stringify(data, null, 2);
+    await this.saveFile(content, filename, [
+      { name: "JSON Files", extensions: ["json"] },
+    ]);
+  }
+
+  async exportToJsonLines(data: any[], filename: string): Promise<void> {
+    if (data.length === 0) {
+      this.toast.warning("No data to export");
+      return;
+    }
+
+    const content = data.map((row) => JSON.stringify(row)).join("\n");
+    await this.saveFile(content, filename, [
+      { name: "JSONL Files", extensions: ["jsonl"] },
+      { name: "Text Files", extensions: ["txt"] },
+    ]);
+  }
+
+  async exportToSql(
+    data: any[],
+    tableName: string,
+    filename: string
+  ): Promise<void> {
+    if (data.length === 0) {
+      this.toast.warning("No data to export");
+      return;
+    }
+
+    const headers = Object.keys(data[0]);
+    const statements = data.map((row) => {
+      const values = headers.map((h) => this.escapeSqlValue(row[h]));
+      return `INSERT INTO ${tableName} (${headers.join(", ")}) VALUES (${values.join(", ")});`;
+    });
+
+    const content = statements.join("\n");
+    await this.saveFile(content, filename, [
+      { name: "SQL Files", extensions: ["sql"] },
+    ]);
+  }
+
+  async exportToMarkdown(data: any[], filename: string): Promise<void> {
+    if (data.length === 0) {
+      this.toast.warning("No data to export");
+      return;
+    }
+
+    const headers = Object.keys(data[0]);
+    const headerRow = `| ${headers.join(" | ")} |`;
+    const separatorRow = `| ${headers.map(() => "---").join(" | ")} |`;
+    const dataRows = data.map((row) =>
+      `| ${headers.map((h) => String(row[h] ?? "")).join(" | ")} |`
+    );
+
+    const content = [headerRow, separatorRow, ...dataRows].join("\n");
+    await this.saveFile(content, filename, [
+      { name: "Markdown Files", extensions: ["md"] },
+    ]);
+  }
+
+  async export(options: ExportOptions, data: any[]): Promise<void> {
+    const { format, filename, includeHeaders = true, tableName = "data" } = options;
+
+    this.loading.show(`Exporting to ${format.toUpperCase()}...`);
+
+    try {
+      switch (format) {
+        case "csv":
+          await this.exportToCsv(data, filename, includeHeaders);
+          break;
+        case "json":
+          await this.exportToJson(data, filename);
+          break;
+        case "jsonl":
+          await this.exportToJsonLines(data, filename);
+          break;
+        case "sql":
+          await this.exportToSql(data, tableName, filename);
+          break;
+        case "markdown":
+          await this.exportToMarkdown(data, filename);
+          break;
+      }
+      this.toast.success(`Exported ${data.length} rows to ${format.toUpperCase()}`);
+    } catch (error) {
+      const err = error as Error;
+      if (err.message !== "Export cancelled") {
+        this.toast.error(`Export failed: ${err.message}`);
+      }
+    } finally {
+      this.loading.hide();
+    }
+  }
+
+  private async saveFile(
+    content: string,
+    defaultName: string,
+    filters: FileFilter[]
+  ): Promise<void> {
+    try {
+      const filePath = await save({
+        defaultPath: defaultName,
+        filters,
+      });
+
+      if (!filePath) {
+        throw new Error("Export cancelled");
+      }
+
+      await writeTextFile(filePath, content);
+    } catch (err) {
+      const error = err as Error;
+      if (error.message === "Export cancelled") {
+        throw error;
+      }
+      throw new Error(`Failed to save file: ${error.message}`);
+    }
+  }
+
+  private escapeCsvValue(value: any): string {
+    if (value === null || value === undefined) return "";
+    const str = String(value);
+    if (str.includes(",") || str.includes('"') || str.includes("\n")) {
+      return `"${str.replace(/"/g, '""')}"`;
+    }
+    return str;
+  }
+
+  private escapeSqlValue(value: any): string {
+    if (value === null || value === undefined) return "NULL";
+    if (typeof value === "number") return String(value);
+    if (typeof value === "boolean") return value ? "1" : "0";
+    return `'${String(value).replace(/'/g, "''")}'`;
+  }
+}

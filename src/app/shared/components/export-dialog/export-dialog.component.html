@@ -1,0 +1,123 @@
+<div class="fixed inset-0 bg-black/60 flex items-center justify-center z-50" (click)="cancelExport()">
+  <div class="bg-slate-900 rounded-xl border border-slate-700 shadow-2xl w-full max-w-md" (click)="$event.stopPropagation()">
+    <div class="px-6 py-4 border-b border-slate-700 flex items-center justify-between">
+      <h2 class="text-lg font-semibold text-slate-100">{{ title }}</h2>
+      <button class="text-slate-400 hover:text-slate-200 transition-colors" (click)="cancelExport()">
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 6L6 18M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="p-6 space-y-5">
+      <div>
+        <label class="block text-sm font-medium text-slate-300 mb-2">Format</label>
+        <div class="grid grid-cols-2 gap-2">
+          @for (f of formats; track f.value) {
+            <button
+              class="px-3 py-2 text-sm rounded-lg border transition-colors"
+              [class.bg-emerald-500/20-border-emerald-500]="format() === f.value"
+              [class.text-emerald-400]="format() === f.value"
+              [class.bg-slate-800-border-slate-600]="format() !== f.value"
+              [class.text-slate-300]="format() !== f.value"
+              (click)="onFormatChange(f.value)"
+            >
+              {{ f.label }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-slate-300 mb-2">Filename</label>
+        <input
+          type="text"
+          class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500"
+          [value]="filename()"
+          (input)="filename.set($any($event.target).value)"
+        />
+      </div>
+
+      @if (format() === "sql") {
+        <div>
+          <label class="block text-sm font-medium text-slate-300 mb-2">Table Name</label>
+          <input
+            type="text"
+            class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500"
+            [value]="tableName()"
+            (input)="tableName.set($any($event.target).value)"
+          />
+        </div>
+      }
+
+      @if (format() === "csv") {
+        <div class="flex items-center gap-2">
+          <input
+            type="checkbox"
+            id="includeHeaders"
+            class="rounded bg-slate-800 border-slate-600 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0"
+            [checked]="includeHeaders()"
+            (change)="includeHeaders.set($any($event.target).checked)"
+          />
+          <label for="includeHeaders" class="text-sm text-slate-300">Include headers</label>
+        </div>
+      }
+
+      @if (showScopeSelection) {
+        <div>
+          <label class="block text-sm font-medium text-slate-300 mb-2">Scope</label>
+          <div class="flex gap-2">
+            @for (s of scopes; track s.value) {
+              <button
+                class="flex-1 px-3 py-2 text-sm rounded-lg border transition-colors"
+                [class.bg-emerald-500/20-border-emerald-500]="scope() === s.value"
+                [class.text-emerald-400]="scope() === s.value"
+                [class.bg-slate-800-border-slate-600]="scope() !== s.value"
+                [class.text-slate-300]="scope() !== s.value"
+                (click)="scope.set(s.value)"
+              >
+                {{ s.label }}
+              </button>
+            }
+          </div>
+        </div>
+      }
+
+      @if (isExporting()) {
+        <div class="space-y-2">
+          <div class="flex items-center justify-between text-sm">
+            <span class="text-slate-400">Exporting...</span>
+            <span class="text-emerald-400">{{ progress() }}%</span>
+          </div>
+          <div class="h-2 bg-slate-800 rounded-full overflow-hidden">
+            <div
+              class="h-full bg-emerald-500 transition-all duration-300"
+              [style.width.%]="progress()"
+            ></div>
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="px-6 py-4 border-t border-slate-700 flex justify-end gap-3">
+      <button
+        class="px-4 py-2 text-sm text-slate-300 hover:text-slate-100 transition-colors"
+        (click)="cancelExport()"
+        [disabled]="isExporting()"
+      >
+        Cancel
+      </button>
+      <button
+        class="px-4 py-2 text-sm bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        (click)="executeExport()"
+        [disabled]="isExporting() || !filename()"
+      >
+        @if (isExporting()) {
+          Exporting...
+        } @else {
+          Export
+        }
+      </button>
+    </div>
+  </div>
+</div>
