@@ -74,3 +74,15 @@ export interface ConnectionHealth {
   version?: string;
   message?: string;
 }
+
+export interface SystemMetrics {
+  cpu_usage: number;
+  ram_used: number;
+  ram_total: number;
+  disk_used: number;
+  disk_total: number;
+  network_received: number;
+  network_transmitted: number;
+  uptime: number;
+  status: string;
+}
