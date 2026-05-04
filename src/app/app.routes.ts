@@ -50,8 +50,6 @@ export const routes: Routes = [
   {
     path: "explorer",
     loadComponent: () =>
-      import("./views/explorer/explorer.component").then(
-        (m) => m.ExplorerComponent
-      ),
+      import("./views/explorer/explorer.component").then((m) => m.ExplorerComponent),
   },
 ];
