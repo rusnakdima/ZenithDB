@@ -11,7 +11,7 @@
   <div class="card-header">
     <div class="card-icon-box">
       <mat-icon
-        [fontIcon]="providerIcon"
+        [fontIcon]="providerUtils.getProviderIcon(connection().provider)"
         class="inline-flex items-center justify-center text-xl!"
       ></mat-icon>
     </div>

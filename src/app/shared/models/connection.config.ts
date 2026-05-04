@@ -29,8 +29,39 @@ export interface CollectionStats {
   index_count: number;
 }
 
+export type FilterOperator =
+  | "eq"
+  | "neq"
+  | "gt"
+  | "gte"
+  | "lt"
+  | "lte"
+  | "contains"
+  | "startsWith"
+  | "endsWith"
+  | "in"
+  | "notIn"
+  | "and"
+  | "or"
+  | "not";
+
+export interface FilterCondition {
+  field: string;
+  operator: FilterOperator;
+  value?: unknown;
+}
+
+export interface FilterExpression {
+  and?: FilterExpression[];
+  or?: FilterExpression[];
+  not?: FilterExpression;
+  field?: string;
+  operator?: FilterOperator;
+  value?: unknown;
+}
+
 export interface QueryParams {
-  filter?: any;
+  filter?: FilterExpression;
   order_by?: string;
   direction?: string;
   skip?: number;
@@ -38,15 +69,17 @@ export interface QueryParams {
   select?: string[];
 }
 
-export interface QueryResult {
-  data: any[];
+export interface QueryResult<T = unknown> {
+  data: T[];
   total: number;
   has_more: boolean;
 }
 
+export type RawRow = unknown[];
+
 export interface RawResult {
   columns: string[];
-  rows: any[][];
+  rows: RawRow[];
   affected_rows: number;
 }
 

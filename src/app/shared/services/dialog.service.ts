@@ -1,10 +1,10 @@
-import { Injectable, signal, computed } from "@angular/core";
+import { Injectable, signal, computed, Type } from "@angular/core";
 
-export interface DialogConfig {
+export interface DialogConfig<T = unknown> {
   id: string;
-  component: any;
-  inputs?: Record<string, any>;
-  outputs?: Record<string, any>;
+  component: Type<T>;
+  inputs?: Record<string, unknown>;
+  outputs?: Record<string, (event: unknown) => void>;
   width?: string;
   closable?: boolean;
 }

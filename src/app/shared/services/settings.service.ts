@@ -91,36 +91,28 @@ export class SettingsService {
     this.notifyListeners();
   }
 
-  updateGeneral(partial: Partial<GeneralSettings>): void {
+  update<K extends keyof AppSettings>(key: K, partial: Partial<AppSettings[K]>): void {
     this.settingsSignal.update((current) => ({
       ...current,
-      general: { ...current.general, ...partial },
+      [key]: { ...current[key], ...partial },
     }));
     this.notifyListeners();
+  }
+
+  updateGeneral(partial: Partial<GeneralSettings>): void {
+    this.update("general", partial);
   }
 
   updateEditor(partial: Partial<EditorSettings>): void {
-    this.settingsSignal.update((current) => ({
-      ...current,
-      editor: { ...current.editor, ...partial },
-    }));
-    this.notifyListeners();
+    this.update("editor", partial);
   }
 
   updateData(partial: Partial<DataSettings>): void {
-    this.settingsSignal.update((current) => ({
-      ...current,
-      data: { ...current.data, ...partial },
-    }));
-    this.notifyListeners();
+    this.update("data", partial);
   }
 
   updateConnections(partial: Partial<ConnectionSettings>): void {
-    this.settingsSignal.update((current) => ({
-      ...current,
-      connections: { ...current.connections, ...partial },
-    }));
-    this.notifyListeners();
+    this.update("connections", partial);
   }
 
   resetToDefaults(): void {

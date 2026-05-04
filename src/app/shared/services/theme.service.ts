@@ -1,13 +1,21 @@
-import { Injectable, signal, effect, Inject, PLATFORM_ID } from "@angular/core";
+import { Injectable, signal, computed, effect, Inject, PLATFORM_ID } from "@angular/core";
 import { isPlatformBrowser } from "@angular/common";
+import { SettingsService } from "./settings.service";
 
 @Injectable({ providedIn: "root" })
 export class ThemeService {
-  private readonly STORAGE_KEY = "zenithdb-theme";
+  isDarkMode = computed(() => {
+    const theme = this.settingsService.currentSettings.general.theme;
+    if (theme === "system") {
+      return this.getSystemPreference();
+    }
+    return theme === "dark";
+  });
 
-  isDarkMode = signal(true);
-
-  constructor(@Inject(PLATFORM_ID) private platformId: object) {
+  constructor(
+    @Inject(PLATFORM_ID) private platformId: object,
+    private settingsService: SettingsService
+  ) {
     if (isPlatformBrowser(platformId)) {
       effect(() => {
         this.applyTheme(this.isDarkMode());
@@ -19,7 +27,6 @@ export class ThemeService {
     if (typeof document === "undefined") return;
     document.documentElement.classList.remove("dark", "light");
     document.documentElement.classList.add(dark ? "dark" : "light");
-    localStorage.setItem(this.STORAGE_KEY, dark ? "dark" : "light");
   }
 
   getSystemPreference(): boolean {
@@ -27,6 +34,7 @@ export class ThemeService {
   }
 
   toggle(): void {
-    this.isDarkMode.update((v) => !v);
+    const currentDark = this.isDarkMode();
+    this.settingsService.updateGeneral({ theme: currentDark ? "light" : "dark" });
   }
 }

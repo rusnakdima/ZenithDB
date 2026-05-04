@@ -1,6 +1,7 @@
 import { Injectable, inject } from "@angular/core";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { LoadingService } from "@shared/services/loading.service";
+import { withConnectionAndLoading, withLoading } from "@shared/utils/api-wrapper.util";
 import { ApiProvider } from "@providers/api.provider";
 import { StorageService } from "@services/core/storage.service";
 import {
@@ -27,158 +28,121 @@ export class DatabaseService {
   private storage = inject(StorageService);
 
   async listConnections(): Promise<ConnectionSummary[]> {
-    this.loadingService.show("Loading connections...");
-    try {
-      return await this.api.listConnections();
-    } finally {
-      this.loadingService.hide();
-    }
+    return withLoading(this.loadingService, "Loading connections...", () =>
+      this.api.listConnections()
+    );
   }
 
   async getConnection(id: string): Promise<ConnectionConfigResult> {
-    this.loadingService.show("Loading connection...");
-    try {
-      return await this.api.getConnection(id);
-    } finally {
-      this.loadingService.hide();
-    }
+    return withLoading(this.loadingService, "Loading connection...", () =>
+      this.api.getConnection(id)
+    );
   }
 
   async saveConnection(config: ConnectionConfig): Promise<string> {
-    this.loadingService.show("Saving connection...");
-    try {
-      return await this.api.saveConnection(config);
-    } finally {
-      this.loadingService.hide();
-    }
+    return withLoading(this.loadingService, "Saving connection...", () =>
+      this.api.saveConnection(config)
+    );
   }
 
   async deleteConnection(id: string): Promise<void> {
-    this.loadingService.show("Deleting connection...");
-    try {
-      return await this.api.deleteConnection(id);
-    } finally {
-      this.loadingService.hide();
-    }
+    return withLoading(this.loadingService, "Deleting connection...", () =>
+      this.api.deleteConnection(id)
+    );
   }
 
   async testConnection(config: TestConnectionConfig): Promise<ConnectionHealth> {
-    this.loadingService.show("Testing connection...");
-    try {
-      return await this.api.testConnection(config);
-    } finally {
-      this.loadingService.hide();
-    }
+    return withLoading(this.loadingService, "Testing connection...", () =>
+      this.api.testConnection(config)
+    );
   }
 
   async listCollections(): Promise<CollectionMeta[]> {
     const connId = this.connectionState.activeConnectionId();
-    if (!connId) throw new Error("No active connection");
-    this.loadingService.show("Loading collections...");
-    try {
-      return await this.api.listCollections(connId);
-    } finally {
-      this.loadingService.hide();
-    }
+    return withConnectionAndLoading(
+      connId,
+      this.loadingService,
+      "Loading collections...",
+      (connId) => this.api.listCollections(connId)
+    );
   }
 
   async describeCollection(collection: string): Promise<CollectionSchema> {
     const connId = this.connectionState.activeConnectionId();
-    if (!connId) throw new Error("No active connection");
-    this.loadingService.show(`Describing ${collection}...`);
-    try {
-      return await this.api.describeCollection(connId, collection);
-    } finally {
-      this.loadingService.hide();
-    }
+    return withConnectionAndLoading(
+      connId,
+      this.loadingService,
+      `Describing ${collection}...`,
+      (connId) => this.api.describeCollection(connId, collection)
+    );
   }
 
   async getCollectionStats(collection: string): Promise<CollectionStats> {
     const connId = this.connectionState.activeConnectionId();
-    if (!connId) throw new Error("No active connection");
-    this.loadingService.show(`Loading stats for ${collection}...`);
-    try {
-      return await this.api.getCollectionStats(connId, collection);
-    } finally {
-      this.loadingService.hide();
-    }
+    return withConnectionAndLoading(
+      connId,
+      this.loadingService,
+      `Loading stats for ${collection}...`,
+      (connId) => this.api.getCollectionStats(connId, collection)
+    );
   }
 
   async queryData(collection: string, params: QueryParams): Promise<QueryResult> {
     const connId = this.connectionState.activeConnectionId();
-    if (!connId) throw new Error("No active connection");
-    this.loadingService.show("Executing query...");
-    try {
-      return await this.api.queryData(connId, collection, params);
-    } finally {
-      this.loadingService.hide();
-    }
+    return withConnectionAndLoading(connId, this.loadingService, "Executing query...", (connId) =>
+      this.api.queryData(connId, collection, params)
+    );
   }
 
-  async saveRow(collection: string, data: any): Promise<any> {
+  async saveRow(collection: string, data: Record<string, unknown>): Promise<unknown> {
     const connId = this.connectionState.activeConnectionId();
-    if (!connId) throw new Error("No active connection");
-    this.loadingService.show("Saving row...");
-    try {
-      return await this.api.saveRow(connId, collection, data);
-    } finally {
-      this.loadingService.hide();
-    }
+    return withConnectionAndLoading(connId, this.loadingService, "Saving row...", (connId) =>
+      this.api.saveRow(connId, collection, data)
+    );
   }
 
   async deleteRow(collection: string, id: string): Promise<void> {
     const connId = this.connectionState.activeConnectionId();
-    if (!connId) throw new Error("No active connection");
-    this.loadingService.show("Deleting row...");
-    try {
-      return await this.api.deleteRow(connId, collection, id);
-    } finally {
-      this.loadingService.hide();
-    }
+    return withConnectionAndLoading(connId, this.loadingService, "Deleting row...", (connId) =>
+      this.api.deleteRow(connId, collection, id)
+    );
   }
 
   async createCollection(name: string): Promise<void> {
     const connId = this.connectionState.activeConnectionId();
-    if (!connId) throw new Error("No active connection");
-    this.loadingService.show(`Creating collection ${name}...`);
-    try {
-      return await this.api.createCollection(connId, name);
-    } finally {
-      this.loadingService.hide();
-    }
+    return withConnectionAndLoading(
+      connId,
+      this.loadingService,
+      `Creating collection ${name}...`,
+      (connId) => this.api.createCollection(connId, name)
+    );
   }
 
   async dropCollection(name: string): Promise<void> {
     const connId = this.connectionState.activeConnectionId();
-    if (!connId) throw new Error("No active connection");
-    this.loadingService.show(`Dropping collection ${name}...`);
-    try {
-      return await this.api.dropCollection(connId, name);
-    } finally {
-      this.loadingService.hide();
-    }
+    return withConnectionAndLoading(
+      connId,
+      this.loadingService,
+      `Dropping collection ${name}...`,
+      (connId) => this.api.dropCollection(connId, name)
+    );
   }
 
   async executeRaw(sql: string): Promise<RawResult> {
     const connId = this.connectionState.activeConnectionId();
-    if (!connId) throw new Error("No active connection");
-    this.loadingService.show("Executing SQL...");
-    try {
-      return await this.api.executeRaw(connId, sql);
-    } finally {
-      this.loadingService.hide();
-    }
+    return withConnectionAndLoading(connId, this.loadingService, "Executing SQL...", (connId) =>
+      this.api.executeRaw(connId, sql)
+    );
   }
 
   async getServerVersion(): Promise<string> {
     const connId = this.connectionState.activeConnectionId();
-    if (!connId) throw new Error("No active connection");
-    this.loadingService.show("Fetching server version...");
-    try {
-      return await this.api.getServerVersion(connId);
-    } finally {
-      this.loadingService.hide();
-    }
+    return withConnectionAndLoading(
+      connId,
+      this.loadingService,
+      "Fetching server version...",
+      (connId) => this.api.getServerVersion(connId)
+    );
   }
 
   async getSystemStatus(): Promise<SystemMetrics> {

@@ -58,7 +58,7 @@
           <div class="text-sm text-slate-400">Documents</div>
         </div>
         <div class="rounded-xl border border-slate-700 bg-slate-800/50 p-4">
-          <div class="text-2xl font-bold text-white">{{ formatBytes(stats()!.size_bytes) }}</div>
+          <div class="text-2xl font-bold text-white">{{ stats()!.size_bytes | formatBytes }}</div>
           <div class="text-sm text-slate-400">Size</div>
         </div>
         <div class="rounded-xl border border-slate-700 bg-slate-800/50 p-4">
@@ -94,51 +94,21 @@
         <table class="w-full text-left text-sm">
           <thead class="bg-slate-800/50 text-xs tracking-wider text-slate-400 uppercase">
             <tr>
-              <th
-                class="cursor-pointer px-4 py-3 font-medium transition-colors hover:text-white"
-                (click)="onSort('name')"
-              >
-                <div class="flex items-center gap-1">
-                  Name
-                  <svg
-                    class="h-3 w-3"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    @if (getSortIcon("name") === "asc") {
-                      <path d="M12 19V5M5 12l7-7 7 7"></path>
-                    } @else if (getSortIcon("name") === "desc") {
-                      <path d="M12 5v14M5 12l7 7 7-7"></path>
-                    } @else {
-                      <path d="M8 9l4-4 4 4M8 15l4 4 4-4"></path>
-                    }
-                  </svg>
-                </div>
+              <th class="px-4 py-3 font-medium">
+                <app-sortable-header
+                  column="Name"
+                  [currentSort]="sortColumn()"
+                  [direction]="sortColumn() === 'name' ? sortDirection() : 'none'"
+                  (sortChange)="onSortChange($event)"
+                />
               </th>
-              <th
-                class="cursor-pointer px-4 py-3 font-medium transition-colors hover:text-white"
-                (click)="onSort('data_type')"
-              >
-                <div class="flex items-center gap-1">
-                  Type
-                  <svg
-                    class="h-3 w-3"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    @if (getSortIcon("data_type") === "asc") {
-                      <path d="M12 19V5M5 12l7-7 7 7"></path>
-                    } @else if (getSortIcon("data_type") === "desc") {
-                      <path d="M12 5v14M5 12l7 7 7-7"></path>
-                    } @else {
-                      <path d="M8 9l4-4 4 4M8 15l4 4 4-4"></path>
-                    }
-                  </svg>
-                </div>
+              <th class="px-4 py-3 font-medium">
+                <app-sortable-header
+                  column="Type"
+                  [currentSort]="sortColumn()"
+                  [direction]="sortColumn() === 'data_type' ? sortDirection() : 'none'"
+                  (sortChange)="onSortChange($event)"
+                />
               </th>
               <th class="px-4 py-3 font-medium">Nullable</th>
               <th class="px-4 py-3 font-medium">Default</th>
@@ -160,12 +130,7 @@
                   </div>
                 </td>
                 <td class="px-4 py-3">
-                  <span
-                    class="rounded bg-slate-700 px-2 py-0.5 text-xs"
-                    [class]="getFieldTypeClass(field.data_type)"
-                  >
-                    {{ field.data_type }}
-                  </span>
+                  <app-data-type-badge [dataType]="field.data_type" variant="full" />
                 </td>
                 <td class="px-4 py-3">
                   @if (field.nullable) {

@@ -13,6 +13,8 @@ import { CommonModule } from "@angular/common";
 
 export type ModalSize = "sm" | "md" | "lg" | "xl" | "full";
 
+export type ModalContentPosition = "center" | "top";
+
 @Component({
   selector: "app-modal",
   standalone: true,
@@ -26,6 +28,9 @@ export class ModalComponent implements OnInit, OnDestroy {
   closeOnBackdrop = input<boolean>(true);
   closeOnEscape = input<boolean>(true);
   showCloseButton = input<boolean>(true);
+  showHeader = input<boolean>(true);
+  showFooter = input<boolean>(true);
+  contentPosition = input<ModalContentPosition>("center");
 
   closed = output<void>();
   opened = output<void>();
@@ -115,6 +120,10 @@ export class ModalComponent implements OnInit, OnDestroy {
       full: "max-w-[calc(100vw-2rem)] max-h-[calc(100vh-2rem)]",
     };
     return sizes[this.size()];
+  }
+
+  get contentPositionClasses(): string {
+    return this.contentPosition() === "top" ? "items-start pt-[10vh]" : "items-center";
   }
 
   private trapFocus(): void {

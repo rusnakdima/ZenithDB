@@ -1,31 +1,22 @@
-<div
-  class="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
-  (click)="cancelSettings()"
+<app-modal
+  [open]="open()"
+  title="Settings"
+  size="lg"
+  [closeOnBackdrop]="false"
+  [closeOnEscape]="true"
+  [showCloseButton]="false"
+  (closed)="cancelSettings()"
 >
-  <div
-    class="flex max-h-[80vh] w-full max-w-2xl flex-col rounded-xl border border-slate-700 bg-slate-900 shadow-2xl"
-    (click)="$event.stopPropagation()"
-  >
-    <div class="flex items-center justify-between border-b border-slate-700 px-6 py-4">
-      <h2 class="text-lg font-semibold text-slate-100">Settings</h2>
-      <button
-        class="text-slate-400 transition-colors hover:text-slate-200"
-        (click)="cancelSettings()"
-      >
-        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M18 6L6 18M6 6l12 12" />
-        </svg>
-      </button>
-    </div>
-
-    <div class="flex flex-1 overflow-hidden">
-      <div class="w-48 border-r border-slate-700 p-4">
+  <div class="flex h-[60vh] max-h-[60vh] flex-col">
+    <div class="flex flex-1 overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
+      <div class="w-48 border-r border-gray-200 p-4 dark:border-gray-700">
         <nav class="space-y-1">
           <button
             class="w-full rounded-lg px-3 py-2 text-left text-sm transition-colors"
             [class.bg-emerald-500/20-text-emerald-400]="activeTab() === 'general'"
-            [class.text-slate-400]="activeTab() !== 'general'"
-            [class.hover:bg-slate-800]="activeTab() !== 'general'"
+            [class.text-gray-500]="activeTab() !== 'general'"
+            [class.hover:bg-gray-100]="activeTab() !== 'general'"
+            [class.dark:text-gray-400-dark:hover:bg-gray-800]="activeTab() !== 'general'"
             (click)="switchTab('general')"
           >
             General
@@ -33,8 +24,9 @@
           <button
             class="w-full rounded-lg px-3 py-2 text-left text-sm transition-colors"
             [class.bg-emerald-500/20-text-emerald-400]="activeTab() === 'editor'"
-            [class.text-slate-400]="activeTab() !== 'editor'"
-            [class.hover:bg-slate-800]="activeTab() !== 'editor'"
+            [class.text-gray-500]="activeTab() !== 'editor'"
+            [class.hover:bg-gray-100]="activeTab() !== 'editor'"
+            [class.dark:text-gray-400-dark:hover:bg-gray-800]="activeTab() !== 'editor'"
             (click)="switchTab('editor')"
           >
             Editor
@@ -42,8 +34,9 @@
           <button
             class="w-full rounded-lg px-3 py-2 text-left text-sm transition-colors"
             [class.bg-emerald-500/20-text-emerald-400]="activeTab() === 'data'"
-            [class.text-slate-400]="activeTab() !== 'data'"
-            [class.hover:bg-slate-800]="activeTab() !== 'data'"
+            [class.text-gray-500]="activeTab() !== 'data'"
+            [class.hover:bg-gray-100]="activeTab() !== 'data'"
+            [class.dark:text-gray-400-dark:hover:bg-gray-800]="activeTab() !== 'data'"
             (click)="switchTab('data')"
           >
             Data
@@ -51,8 +44,9 @@
           <button
             class="w-full rounded-lg px-3 py-2 text-left text-sm transition-colors"
             [class.bg-emerald-500/20-text-emerald-400]="activeTab() === 'connections'"
-            [class.text-slate-400]="activeTab() !== 'connections'"
-            [class.hover:bg-slate-800]="activeTab() !== 'connections'"
+            [class.text-gray-500]="activeTab() !== 'connections'"
+            [class.hover:bg-gray-100]="activeTab() !== 'connections'"
+            [class.dark:text-gray-400-dark:hover:bg-gray-800]="activeTab() !== 'connections'"
             (click)="switchTab('connections')"
           >
             Connections
@@ -64,7 +58,9 @@
         @if (activeTab() === "general") {
           <div class="space-y-6">
             <div>
-              <label class="mb-3 block text-sm font-medium text-slate-300">Theme</label>
+              <label class="mb-3 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >Theme</label
+              >
               <div class="flex gap-2">
                 @for (opt of themeOptions; track opt.value) {
                   <button
@@ -73,10 +69,12 @@
                       currentSettings.general.theme === opt.value
                     "
                     [class.text-emerald-400]="currentSettings.general.theme === opt.value"
-                    [class.bg-slate-800-border-slate-600]="
+                    [class.bg-white-border-gray-300]="currentSettings.general.theme !== opt.value"
+                    [class.text-gray-700]="currentSettings.general.theme !== opt.value"
+                    [class.dark:bg-gray-800-dark:border-gray-600]="
                       currentSettings.general.theme !== opt.value
                     "
-                    [class.text-slate-300]="currentSettings.general.theme !== opt.value"
+                    [class.dark:text-gray-300]="currentSettings.general.theme !== opt.value"
                     (click)="updateGeneralTheme(opt.value)"
                   >
                     {{ opt.label }}
@@ -89,11 +87,11 @@
               <input
                 type="checkbox"
                 id="startMinimized"
-                class="rounded border-slate-600 bg-slate-800 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0"
+                class="rounded border-gray-300 bg-white text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0 dark:border-gray-600 dark:bg-gray-700"
                 [checked]="currentSettings.general.startMinimized"
                 (change)="updateGeneral({ startMinimized: $any($event.target).checked })"
               />
-              <label for="startMinimized" class="text-sm text-slate-300"
+              <label for="startMinimized" class="text-sm text-gray-700 dark:text-gray-300"
                 >Start minimized to tray</label
               >
             </div>
@@ -102,17 +100,17 @@
               <input
                 type="checkbox"
                 id="checkUpdates"
-                class="rounded border-slate-600 bg-slate-800 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0"
+                class="rounded border-gray-300 bg-white text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0 dark:border-gray-600 dark:bg-gray-700"
                 [checked]="currentSettings.general.checkUpdates"
                 (change)="updateGeneral({ checkUpdates: $any($event.target).checked })"
               />
-              <label for="checkUpdates" class="text-sm text-slate-300"
+              <label for="checkUpdates" class="text-sm text-gray-700 dark:text-gray-300"
                 >Check for updates on startup</label
               >
             </div>
 
             <button
-              class="rounded-lg border border-slate-600 bg-slate-800 px-4 py-2 text-sm text-slate-300 transition-colors hover:bg-slate-700"
+              class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
               (click)="checkForUpdates()"
             >
               Check for Updates
@@ -123,7 +121,9 @@
         @if (activeTab() === "editor") {
           <div class="space-y-6">
             <div>
-              <label class="mb-3 block text-sm font-medium text-slate-300">Font Size</label>
+              <label class="mb-3 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >Font Size</label
+              >
               <div class="flex items-center gap-4">
                 <input
                   type="range"
@@ -133,14 +133,16 @@
                   [value]="currentSettings.editor.fontSize"
                   (input)="updateEditor({ fontSize: +$any($event.target).value })"
                 />
-                <span class="w-12 text-right text-sm text-slate-400"
+                <span class="w-12 text-right text-sm text-gray-500 dark:text-gray-400"
                   >{{ currentSettings.editor.fontSize }}px</span
                 >
               </div>
             </div>
 
             <div>
-              <label class="mb-3 block text-sm font-medium text-slate-300">Tab Size</label>
+              <label class="mb-3 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >Tab Size</label
+              >
               <div class="flex gap-2">
                 @for (size of tabSizeOptions; track size) {
                   <button
@@ -149,8 +151,12 @@
                       currentSettings.editor.tabSize === size
                     "
                     [class.text-emerald-400]="currentSettings.editor.tabSize === size"
-                    [class.bg-slate-800-border-slate-600]="currentSettings.editor.tabSize !== size"
-                    [class.text-slate-300]="currentSettings.editor.tabSize !== size"
+                    [class.bg-white-border-gray-300]="currentSettings.editor.tabSize !== size"
+                    [class.text-gray-700]="currentSettings.editor.tabSize !== size"
+                    [class.dark:bg-gray-800-dark:border-gray-600]="
+                      currentSettings.editor.tabSize !== size
+                    "
+                    [class.dark:text-gray-300]="currentSettings.editor.tabSize !== size"
                     (click)="updateEditor({ tabSize: size })"
                   >
                     {{ size }}
@@ -163,22 +169,26 @@
               <input
                 type="checkbox"
                 id="autoSave"
-                class="rounded border-slate-600 bg-slate-800 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0"
+                class="rounded border-gray-300 bg-white text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0 dark:border-gray-600 dark:bg-gray-700"
                 [checked]="currentSettings.editor.autoSave"
                 (change)="updateEditor({ autoSave: $any($event.target).checked })"
               />
-              <label for="autoSave" class="text-sm text-slate-300">Auto-save editor content</label>
+              <label for="autoSave" class="text-sm text-gray-700 dark:text-gray-300"
+                >Auto-save editor content</label
+              >
             </div>
 
             <div class="flex items-center gap-3">
               <input
                 type="checkbox"
                 id="lineNumbers"
-                class="rounded border-slate-600 bg-slate-800 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0"
+                class="rounded border-gray-300 bg-white text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0 dark:border-gray-600 dark:bg-gray-700"
                 [checked]="currentSettings.editor.lineNumbers"
                 (change)="updateEditor({ lineNumbers: $any($event.target).checked })"
               />
-              <label for="lineNumbers" class="text-sm text-slate-300">Show line numbers</label>
+              <label for="lineNumbers" class="text-sm text-gray-700 dark:text-gray-300"
+                >Show line numbers</label
+              >
             </div>
           </div>
         }
@@ -186,9 +196,11 @@
         @if (activeTab() === "data") {
           <div class="space-y-6">
             <div>
-              <label class="mb-3 block text-sm font-medium text-slate-300">Default Page Size</label>
+              <label class="mb-3 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >Default Page Size</label
+              >
               <select
-                class="rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-slate-200 focus:border-emerald-500 focus:outline-none"
+                class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-emerald-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
                 [value]="currentSettings.data.defaultPageSize"
                 (change)="updateData({ defaultPageSize: +$any($event.target).value })"
               >
@@ -199,7 +211,7 @@
             </div>
 
             <div>
-              <label class="mb-3 block text-sm font-medium text-slate-300"
+              <label class="mb-3 block text-sm font-medium text-gray-700 dark:text-gray-300"
                 >Max Rows to Display</label
               >
               <input
@@ -207,7 +219,7 @@
                 min="100"
                 max="10000"
                 step="100"
-                class="w-32 rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-slate-200 focus:border-emerald-500 focus:outline-none"
+                class="w-32 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-emerald-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
                 [value]="currentSettings.data.maxRows"
                 (input)="updateData({ maxRows: +$any($event.target).value })"
               />
@@ -217,11 +229,11 @@
               <input
                 type="checkbox"
                 id="confirmBeforeDelete"
-                class="rounded border-slate-600 bg-slate-800 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0"
+                class="rounded border-gray-300 bg-white text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0 dark:border-gray-600 dark:bg-gray-700"
                 [checked]="currentSettings.data.confirmBeforeDelete"
                 (change)="updateData({ confirmBeforeDelete: $any($event.target).checked })"
               />
-              <label for="confirmBeforeDelete" class="text-sm text-slate-300"
+              <label for="confirmBeforeDelete" class="text-sm text-gray-700 dark:text-gray-300"
                 >Confirm before deleting data</label
               >
             </div>
@@ -231,28 +243,28 @@
         @if (activeTab() === "connections") {
           <div class="space-y-6">
             <div>
-              <label class="mb-3 block text-sm font-medium text-slate-300"
+              <label class="mb-3 block text-sm font-medium text-gray-700 dark:text-gray-300"
                 >Connection Timeout (seconds)</label
               >
               <input
                 type="number"
                 min="5"
                 max="300"
-                class="w-32 rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-slate-200 focus:border-emerald-500 focus:outline-none"
+                class="w-32 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-emerald-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
                 [value]="currentSettings.connections.connectionTimeout"
                 (input)="updateConnections({ connectionTimeout: +$any($event.target).value })"
               />
             </div>
 
             <div>
-              <label class="mb-3 block text-sm font-medium text-slate-300"
+              <label class="mb-3 block text-sm font-medium text-gray-700 dark:text-gray-300"
                 >Max Concurrent Connections</label
               >
               <input
                 type="number"
                 min="1"
                 max="20"
-                class="w-32 rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-slate-200 focus:border-emerald-500 focus:outline-none"
+                class="w-32 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-emerald-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
                 [value]="currentSettings.connections.maxConcurrent"
                 (input)="updateConnections({ maxConcurrent: +$any($event.target).value })"
               />
@@ -262,11 +274,11 @@
               <input
                 type="checkbox"
                 id="autoReconnect"
-                class="rounded border-slate-600 bg-slate-800 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0"
+                class="rounded border-gray-300 bg-white text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0 dark:border-gray-600 dark:bg-gray-700"
                 [checked]="currentSettings.connections.autoReconnect"
                 (change)="updateConnections({ autoReconnect: $any($event.target).checked })"
               />
-              <label for="autoReconnect" class="text-sm text-slate-300"
+              <label for="autoReconnect" class="text-sm text-gray-700 dark:text-gray-300"
                 >Auto-reconnect on connection loss</label
               >
             </div>
@@ -275,16 +287,16 @@
       </div>
     </div>
 
-    <div class="flex justify-between border-t border-slate-700 px-6 py-4">
+    <div modal-footer class="flex justify-between">
       <button
-        class="px-4 py-2 text-sm text-slate-400 transition-colors hover:text-slate-200"
+        class="rounded-lg px-4 py-2 text-sm text-gray-500 transition-colors hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
         (click)="resetToDefaults()"
       >
         Reset to Defaults
       </button>
       <div class="flex gap-3">
         <button
-          class="px-4 py-2 text-sm text-slate-300 transition-colors hover:text-slate-100"
+          class="rounded-lg px-4 py-2 text-sm text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
           (click)="cancelSettings()"
         >
           Cancel
@@ -298,4 +310,4 @@
       </div>
     </div>
   </div>
-</div>
+</app-modal>

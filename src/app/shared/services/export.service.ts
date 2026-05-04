@@ -23,11 +23,16 @@ export class ExportService {
   private toast = inject(ToastService) as ToastService;
   private loading = inject(LoadingService) as LoadingService;
 
-  async exportToCsv(data: any[], filename: string, includeHeaders = true): Promise<void> {
-    if (data.length === 0) {
+  private validateExportData(data: any[]): boolean {
+    if (!data || data.length === 0) {
       this.toast.warning("No data to export");
-      return;
+      return false;
     }
+    return true;
+  }
+
+  async exportToCsv(data: any[], filename: string, includeHeaders = true): Promise<void> {
+    if (!this.validateExportData(data)) return;
 
     const headers = Object.keys(data[0]);
     const rows = data.map((row) => headers.map((h) => this.escapeCsvValue(row[h])).join(","));
@@ -37,20 +42,14 @@ export class ExportService {
   }
 
   async exportToJson(data: any[], filename: string): Promise<void> {
-    if (data.length === 0) {
-      this.toast.warning("No data to export");
-      return;
-    }
+    if (!this.validateExportData(data)) return;
 
     const content = JSON.stringify(data, null, 2);
     await this.saveFile(content, filename, [{ name: "JSON Files", extensions: ["json"] }]);
   }
 
   async exportToJsonLines(data: any[], filename: string): Promise<void> {
-    if (data.length === 0) {
-      this.toast.warning("No data to export");
-      return;
-    }
+    if (!this.validateExportData(data)) return;
 
     const content = data.map((row) => JSON.stringify(row)).join("\n");
     await this.saveFile(content, filename, [
@@ -60,10 +59,7 @@ export class ExportService {
   }
 
   async exportToSql(data: any[], tableName: string, filename: string): Promise<void> {
-    if (data.length === 0) {
-      this.toast.warning("No data to export");
-      return;
-    }
+    if (!this.validateExportData(data)) return;
 
     const headers = Object.keys(data[0]);
     const statements = data.map((row) => {
@@ -76,10 +72,7 @@ export class ExportService {
   }
 
   async exportToMarkdown(data: any[], filename: string): Promise<void> {
-    if (data.length === 0) {
-      this.toast.warning("No data to export");
-      return;
-    }
+    if (!this.validateExportData(data)) return;
 
     const headers = Object.keys(data[0]);
     const headerRow = `| ${headers.join(" | ")} |`;

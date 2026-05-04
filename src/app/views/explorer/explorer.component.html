@@ -1,4 +1,4 @@
-<div class="explorer-container flex h-full flex-col bg-slate-950">
+<div class="explorer-container flex h-full flex-col overflow-y-auto bg-slate-950">
   <div
     class="data-tabs-bar flex items-center gap-1 border-b border-slate-800 bg-slate-900/80 px-4 py-2"
   >
@@ -132,7 +132,7 @@
             fontIcon="format_align_left"
             class="inline-flex items-center justify-center text-xl!"
           ></mat-icon>
-          {{ formatBytes(stats()!.size_bytes) }}
+          {{ stats()!.size_bytes | formatBytes }}
         </span>
         <span class="flex items-center gap-1.5">
           <mat-icon

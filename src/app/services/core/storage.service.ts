@@ -185,4 +185,22 @@ export class StorageService extends BaseStorageService {
   setSystemMetrics(metrics: SystemMetrics) {
     this.systemMetricsSignal.set(metrics);
   }
+
+  getItem<T>(key: string): T | null {
+    const stored = localStorage.getItem(key);
+    if (!stored) return null;
+    try {
+      return JSON.parse(stored) as T;
+    } catch {
+      return null;
+    }
+  }
+
+  setItem<T>(key: string, value: T): void {
+    localStorage.setItem(key, JSON.stringify(value));
+  }
+
+  removeItem(key: string): void {
+    localStorage.removeItem(key);
+  }
 }

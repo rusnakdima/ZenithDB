@@ -1,6 +1,7 @@
-import { Component, input, output, signal } from "@angular/core";
+import { Component, input, output, signal, inject } from "@angular/core";
 import { MatIconModule } from "@angular/material/icon";
 import { ConnectionSummary } from "@shared/models/connection.config";
+import { ProviderUtils } from "@shared/utils/provider.utils";
 
 @Component({
   selector: "app-connection-card",
@@ -18,17 +19,7 @@ export class ConnectionCardComponent {
   edit = output<ConnectionSummary>();
 
   showActions = signal(false);
-
-  get providerIcon(): string {
-    const provider = this.connection().provider?.toLowerCase() || "";
-    if (provider.includes("mongo")) return "eco";
-    if (provider.includes("postgres")) return "storage";
-    if (provider.includes("redis")) return "flash_on";
-    if (provider.includes("mysql")) return "storage";
-    if (provider.includes("sqlite")) return "insert_drive_file";
-    if (provider.includes("json")) return "description";
-    return "dns";
-  }
+  providerUtils = inject(ProviderUtils);
 
   get statusClass(): string {
     return this.connection().status === "connected"

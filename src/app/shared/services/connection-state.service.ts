@@ -7,7 +7,7 @@ export class ConnectionStateService {
   activeConnectionName = signal<string | null>(null);
   activeProvider = signal<string | null>(null);
   activeConnection = signal<ConnectionSummary | null>(null);
-  activeConnectionConfig = signal<any>(null);
+  activeConnectionConfig = signal<ConnectionConfig | null>(null);
 
   setActiveConnection(connOrId: ConnectionSummary | string): void {
     if (typeof connOrId === "string") {
@@ -20,7 +20,7 @@ export class ConnectionStateService {
     }
   }
 
-  setActiveConnectionConfig(config: any) {
+  setActiveConnectionConfig(config: ConnectionConfig) {
     this.activeConnectionConfig.set(config);
   }
 }

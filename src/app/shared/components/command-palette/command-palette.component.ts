@@ -10,6 +10,8 @@ import {
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { Router } from "@angular/router";
+
+import { ModalComponent } from "../modal/modal.component";
 import { fromEvent } from "rxjs";
 import { filter } from "rxjs/operators";
 
@@ -25,7 +27,7 @@ interface Command {
 @Component({
   selector: "app-command-palette",
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, ModalComponent],
   templateUrl: "./command-palette.component.html",
 })
 export class CommandPaletteComponent implements AfterViewInit {
@@ -296,12 +298,6 @@ export class CommandPaletteComponent implements AfterViewInit {
       case "export":
         document.dispatchEvent(new CustomEvent("zenith:export-view"));
         break;
-    }
-  }
-
-  onOverlayClick(event: MouseEvent): void {
-    if ((event.target as HTMLElement).classList.contains("overlay")) {
-      this.hide();
     }
   }
 

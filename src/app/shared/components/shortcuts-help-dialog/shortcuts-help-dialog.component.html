@@ -1,83 +1,92 @@
-<div
-  class="overlay fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm"
-  [class.hidden]="!visible()"
-  (click)="onOverlayClick($event)"
+<app-modal
+  [open]="isOpen"
+  title="Keyboard Shortcuts"
+  size="lg"
+  [closeOnBackdrop]="true"
+  [closeOnEscape]="true"
+  (closed)="onClose()"
 >
-  <div
-    class="w-full max-w-2xl overflow-hidden rounded-xl border border-slate-700 bg-slate-800 shadow-2xl"
-  >
-    <div class="flex items-center justify-between border-b border-slate-700 px-6 py-4">
-      <h2 class="text-lg font-semibold text-white">Keyboard Shortcuts</h2>
-      <button
-        class="rounded-lg p-1 text-slate-400 hover:bg-slate-700 hover:text-white"
-        (click)="hide()"
-      >
-        <i class="fas fa-times"></i>
-      </button>
-    </div>
-
-    <div class="grid grid-cols-2 gap-6 p-6">
-      <div>
-        <h3 class="mb-3 text-sm font-semibold text-slate-400 uppercase">Navigation</h3>
-        <div class="space-y-2">
-          @for (shortcut of navigationShortcuts; track shortcut.key) {
-            <div class="flex items-center justify-between text-sm">
-              <span class="text-slate-300">{{ shortcut.desc }}</span>
-              <kbd class="rounded bg-slate-700 px-2 py-1 text-xs text-white">{{
-                shortcut.key
-              }}</kbd>
-            </div>
-          }
-        </div>
-      </div>
-
-      <div>
-        <h3 class="mb-3 text-sm font-semibold text-slate-400 uppercase">Editor</h3>
-        <div class="space-y-2">
-          @for (shortcut of editorShortcuts; track shortcut.key) {
-            <div class="flex items-center justify-between text-sm">
-              <span class="text-slate-300">{{ shortcut.desc }}</span>
-              <kbd class="rounded bg-slate-700 px-2 py-1 text-xs text-white">{{
-                shortcut.key
-              }}</kbd>
-            </div>
-          }
-        </div>
-      </div>
-
-      <div class="col-span-2">
-        <h3 class="mb-3 text-sm font-semibold text-slate-400 uppercase">Table Navigation</h3>
-        <div class="grid grid-cols-2 gap-4">
+  <div class="grid grid-cols-2 gap-6">
+    <div>
+      <h3 class="mb-3 text-sm font-semibold text-gray-500 uppercase dark:text-gray-400">
+        Navigation
+      </h3>
+      <div class="space-y-2">
+        @for (shortcut of navigationShortcuts; track shortcut.key) {
           <div class="flex items-center justify-between text-sm">
-            <span class="text-slate-300">Navigate Cells</span>
-            <kbd class="rounded bg-slate-700 px-2 py-1 text-xs text-white">↑ ↓ ← →</kbd>
+            <span class="text-gray-700 dark:text-gray-300">{{ shortcut.desc }}</span>
+            <kbd
+              class="rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 dark:bg-gray-700 dark:text-gray-200"
+              >{{ shortcut.key }}</kbd
+            >
           </div>
-          <div class="flex items-center justify-between text-sm">
-            <span class="text-slate-300">Edit Cell / Confirm</span>
-            <kbd class="rounded bg-slate-700 px-2 py-1 text-xs text-white">Enter</kbd>
-          </div>
-          <div class="flex items-center justify-between text-sm">
-            <span class="text-slate-300">Next Cell</span>
-            <kbd class="rounded bg-slate-700 px-2 py-1 text-xs text-white">Tab</kbd>
-          </div>
-          <div class="flex items-center justify-between text-sm">
-            <span class="text-slate-300">Cancel Edit</span>
-            <kbd class="rounded bg-slate-700 px-2 py-1 text-xs text-white">Esc</kbd>
-          </div>
-          <div class="flex items-center justify-between text-sm">
-            <span class="text-slate-300">Delete Selected Rows</span>
-            <kbd class="rounded bg-slate-700 px-2 py-1 text-xs text-white">Shift+Del</kbd>
-          </div>
-          <div class="flex items-center justify-between text-sm">
-            <span class="text-slate-300">Select All</span>
-            <kbd class="rounded bg-slate-700 px-2 py-1 text-xs text-white">Ctrl+A</kbd>
-          </div>
-        </div>
+        }
       </div>
     </div>
 
-    <div class="border-t border-slate-700 px-6 py-3 text-center text-xs text-slate-500">
-      Press <kbd class="rounded bg-slate-700 px-1">ESC</kbd> to close
+    <div>
+      <h3 class="mb-3 text-sm font-semibold text-gray-500 uppercase dark:text-gray-400">Editor</h3>
+      <div class="space-y-2">
+        @for (shortcut of editorShortcuts; track shortcut.key) {
+          <div class="flex items-center justify-between text-sm">
+            <span class="text-gray-700 dark:text-gray-300">{{ shortcut.desc }}</span>
+            <kbd
+              class="rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 dark:bg-gray-700 dark:text-gray-200"
+              >{{ shortcut.key }}</kbd
+            >
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="col-span-2">
+      <h3 class="mb-3 text-sm font-semibold text-gray-500 uppercase dark:text-gray-400">
+        Table Navigation
+      </h3>
+      <div class="grid grid-cols-2 gap-4">
+        <div class="flex items-center justify-between text-sm">
+          <span class="text-gray-700 dark:text-gray-300">Navigate Cells</span>
+          <kbd
+            class="rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 dark:bg-gray-700 dark:text-gray-200"
+            >↑ ↓ ← →</kbd
+          >
+        </div>
+        <div class="flex items-center justify-between text-sm">
+          <span class="text-gray-700 dark:text-gray-300">Edit Cell / Confirm</span>
+          <kbd
+            class="rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 dark:bg-gray-700 dark:text-gray-200"
+            >Enter</kbd
+          >
+        </div>
+        <div class="flex items-center justify-between text-sm">
+          <span class="text-gray-700 dark:text-gray-300">Next Cell</span>
+          <kbd
+            class="rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 dark:bg-gray-700 dark:text-gray-200"
+            >Tab</kbd
+          >
+        </div>
+        <div class="flex items-center justify-between text-sm">
+          <span class="text-gray-700 dark:text-gray-300">Cancel Edit</span>
+          <kbd
+            class="rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 dark:bg-gray-700 dark:text-gray-200"
+            >Esc</kbd
+          >
+        </div>
+        <div class="flex items-center justify-between text-sm">
+          <span class="text-gray-700 dark:text-gray-300">Delete Selected Rows</span>
+          <kbd
+            class="rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 dark:bg-gray-700 dark:text-gray-200"
+            >Shift+Del</kbd
+          >
+        </div>
+        <div class="flex items-center justify-between text-sm">
+          <span class="text-gray-700 dark:text-gray-300">Select All</span>
+          <kbd
+            class="rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 dark:bg-gray-700 dark:text-gray-200"
+            >Ctrl+A</kbd
+          >
+        </div>
+      </div>
     </div>
   </div>
-</div>
+</app-modal>

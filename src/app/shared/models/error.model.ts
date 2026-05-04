@@ -18,7 +18,7 @@ export interface AppError {
   message: string;
   userMessage: string;
   details?: string;
-  originalError?: any;
+  originalError?: unknown;
   timestamp: Date;
   retryable: boolean;
 }

@@ -10,13 +10,15 @@ import {
   runInInjectionContext,
 } from "@angular/core";
 import { Router, RouterLink } from "@angular/router";
-import { TitleCasePipe, UpperCasePipe } from "@angular/common";
+import { TitleCasePipe } from "@angular/common";
 import { MatIconModule } from "@angular/material/icon";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { DatabaseService } from "@shared/services/database.service";
 import { StorageService } from "@services/core/storage.service";
 import { CollectionMeta, SystemMetrics, ConnectionSummary } from "@shared/models/connection.config";
 import { interval, Subscription } from "rxjs";
+import { FormatBytesPipe } from "@shared/pipes/format-bytes.pipe";
+import { ProviderUtils } from "@shared/utils/provider.utils";
 
 interface TreeNode {
   name: string;
@@ -29,11 +31,12 @@ interface TreeNode {
 @Component({
   selector: "app-sidebar",
   standalone: true,
-  imports: [RouterLink, TitleCasePipe, UpperCasePipe, MatIconModule],
+  imports: [RouterLink, TitleCasePipe, MatIconModule, FormatBytesPipe],
   templateUrl: "./sidebar.component.html",
 })
 export class SidebarComponent implements OnInit, OnDestroy {
   private injector = inject(Injector);
+  providerUtils = inject(ProviderUtils);
   private router = inject(Router);
   connectionState = inject(ConnectionStateService);
   databaseService = inject(DatabaseService);
@@ -176,38 +179,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
       critical: "bg-red-500",
     };
     return colorMap[status] || "bg-green-500";
-  }
-
-  formatBytes(bytes: number): string {
-    if (bytes === 0) return "0 B";
-    const k = 1024;
-    const sizes = ["B", "KB", "MB", "GB", "TB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
-  }
-
-  getIconClass(provider: string): string {
-    const iconMap: Record<string, string> = {
-      postgresql: "storage",
-      mongodb: "eco",
-      mysql: "storage",
-      sqlite: "storage",
-      redis: "flash_on",
-      json: "description",
-    };
-    return iconMap[provider] || "storage";
-  }
-
-  getProviderColor(provider: string): string {
-    const colorMap: Record<string, string> = {
-      postgresql: "text-blue-500",
-      mongodb: "text-green-500",
-      mysql: "text-orange-500",
-      sqlite: "text-slate-400",
-      redis: "text-red-500",
-      json: "text-yellow-500",
-    };
-    return colorMap[provider] || "text-emerald-500";
   }
 
   toggleCollapse() {

@@ -1,6 +1,13 @@
 @if (loadingService.isLoading()) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-    <div class="flex flex-col items-center gap-4">
+  <app-modal
+    [open]="true"
+    [closeOnBackdrop]="false"
+    [closeOnEscape]="false"
+    [showCloseButton]="false"
+    title=""
+    size="sm"
+  >
+    <div class="flex flex-col items-center gap-4 py-4">
       <div class="relative h-16 w-16">
         <div
           class="absolute inset-0 animate-spin rounded-full border-4 border-emerald-500/20"
@@ -18,5 +25,5 @@
         <p class="text-sm font-medium text-emerald-400">{{ loadingService.loadingMessage() }}</p>
       }
     </div>
-  </div>
+  </app-modal>
 }

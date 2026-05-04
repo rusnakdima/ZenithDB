@@ -2,6 +2,7 @@ import { Component, input, output, signal, computed, inject } from "@angular/cor
 import { FormsModule } from "@angular/forms";
 import { ToastService } from "@services/toast.service";
 import { ExportService } from "@shared/services/export.service";
+import { formatJsonLines, highlightJsonLine } from "@shared/utils/json.utils";
 
 @Component({
   selector: "app-inspector-drawer",
@@ -146,48 +147,6 @@ export class InspectorDrawerComponent {
     this.copyToClipboard(JSON.stringify(this.document(), null, 2));
   }
 
-  formatJsonLines(json: string): string[] {
-    return json.split("\n");
-  }
-
-  getSyntaxHighlighting(json: string): string {
-    const escaped = json.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-
-    return escaped.replace(
-      /("([^"\\]|\\.)*")\s*:|("([^"\\]|\\.)*")|(true|false)|(null)|(-?\d+\.?\d*)/g,
-      (match, key, keyStr, str, bool, nul, num) => {
-        if (key) {
-          return `<span class="json-key">${keyStr || key}</span>:`;
-        }
-        if (str) {
-          return `<span class="json-string">${str}</span>`;
-        }
-        if (bool) {
-          return `<span class="json-boolean">${bool}</span>`;
-        }
-        if (nul) {
-          return `<span class="json-null">${nul}</span>`;
-        }
-        if (num) {
-          return `<span class="json-number">${num}</span>`;
-        }
-        return match;
-      }
-    );
-  }
-
-  highlightJsonLine(line: string): string {
-    let result = line.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-
-    result = result.replace(/("([^"\\]|\\.)*")\s*:/g, '<span class="json-key">$1</span>:');
-    result = result.replace(/:\s*("([^"\\]|\\.)*")/g, ': <span class="json-string">$1</span>');
-    result = result.replace(/:\s*(true|false)/g, ': <span class="json-boolean">$1</span>');
-    result = result.replace(/:\s*(null)/g, ': <span class="json-null">$1</span>');
-    result = result.replace(/:\s*(-?\d+\.?\d*)/g, ': <span class="json-number">$1</span>');
-
-    return result;
-  }
-
   async exportDocument(format: "json" | "csv") {
     const doc = this.document();
     try {
@@ -197,5 +156,13 @@ export class InspectorDrawerComponent {
         this.toast.error("Export failed");
       }
     }
+  }
+
+  formatJsonLines(json: string): string[] {
+    return formatJsonLines(json);
+  }
+
+  highlightJsonLine(line: string): string {
+    return highlightJsonLine(line);
   }
 }

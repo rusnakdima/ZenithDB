@@ -1,9 +1,10 @@
 import { Component, inject, signal, computed, OnInit } from "@angular/core";
-import { Router, RouterLink, ActivatedRoute } from "@angular/router";
+import { Router, ActivatedRoute } from "@angular/router";
 import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
 import { DatabaseService } from "@shared/services/database.service";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
+import { ProviderUtils } from "@shared/utils/provider.utils";
 import {
   ConnectionConfig,
   ConnectionHealth,
@@ -23,12 +24,13 @@ interface ProviderOption {
 @Component({
   selector: "app-connection-form",
   standalone: true,
-  imports: [RouterLink, FormsModule, MatIconModule],
+  imports: [FormsModule, MatIconModule],
   templateUrl: "./connection-form.component.html",
 })
 export class ConnectionFormComponent implements OnInit {
   private db = inject(DatabaseService);
   private connState = inject(ConnectionStateService);
+  private providerUtils = inject(ProviderUtils);
   router = inject(Router);
   route = inject(ActivatedRoute);
 
@@ -94,15 +96,7 @@ export class ConnectionFormComponent implements OnInit {
       this.editingId = id;
       this.name = conn.config.name;
       const innerConfig = conn.config.config;
-      const typeMap: Record<string, ProviderType> = {
-        Json: "json",
-        Mongo: "mongo",
-        Redis: "redis",
-        Postgres: "postgres",
-        Sqlite: "sqlite",
-        MySql: "mysql",
-      };
-      this.provider = typeMap[innerConfig.type] || (innerConfig.type.toLowerCase() as ProviderType);
+      this.provider = this.providerUtils.toProviderType(innerConfig.type);
       switch (innerConfig.type) {
         case "Json":
         case "Sqlite":
@@ -128,15 +122,7 @@ export class ConnectionFormComponent implements OnInit {
       const conn = await this.db.getConnection(id);
       const innerConfig = conn.config.config;
       this.name = innerConfig.name + " (Copy)";
-      const typeMap: Record<string, ProviderType> = {
-        Json: "json",
-        Mongo: "mongo",
-        Redis: "redis",
-        Postgres: "postgres",
-        Sqlite: "sqlite",
-        MySql: "mysql",
-      };
-      this.provider = typeMap[innerConfig.type] || (innerConfig.type.toLowerCase() as ProviderType);
+      this.provider = this.providerUtils.toProviderType(innerConfig.type);
       switch (innerConfig.type) {
         case "Json":
         case "Sqlite":
@@ -234,16 +220,7 @@ export class ConnectionFormComponent implements OnInit {
   }
 
   private buildConfig(): any {
-    const typeMap: Record<ProviderType, string> = {
-      json: "Json",
-      mongo: "Mongo",
-      redis: "Redis",
-      postgres: "Postgres",
-      sqlite: "Sqlite",
-      mysql: "MySql",
-    };
-
-    const configType = typeMap[this.provider] || this.provider;
+    const configType = this.providerUtils.toConfigType(this.provider);
 
     switch (this.provider) {
       case "json":

@@ -1,5 +1,5 @@
 import { Component, inject, signal, HostBinding, OnInit } from "@angular/core";
-import { RouterLink, RouterOutlet } from "@angular/router";
+import { RouterOutlet } from "@angular/router";
 import { CommonModule } from "@angular/common";
 import { CommandPaletteComponent } from "@shared/components/command-palette/command-palette.component";
 import { LoadingOverlayComponent } from "@shared/components/loading/loading-overlay.component";
@@ -16,7 +16,6 @@ import { ThemeService } from "@shared/services/theme.service";
   selector: "app-root",
   standalone: true,
   imports: [
-    RouterLink,
     RouterOutlet,
     CommonModule,
     CommandPaletteComponent,

@@ -5,6 +5,9 @@ import { DatabaseService } from "@shared/services/database.service";
 import { ToastService } from "@services/toast.service";
 import { ExportService } from "@shared/services/export.service";
 import { SkeletonLoaderComponent } from "@shared/components/loading/skeleton-loader.component";
+import { FormatBytesPipe } from "@shared/pipes/format-bytes.pipe";
+import { SortableHeaderComponent } from "@shared/components/sortable-header/sortable-header.component";
+import { DataTypeBadgeComponent } from "@shared/components/data-type-badge/data-type-badge.component";
 
 interface FieldInfo {
   name: string;
@@ -24,7 +27,14 @@ interface IndexInfo {
 @Component({
   selector: "app-collection-detail",
   standalone: true,
-  imports: [RouterLink, FormsModule, SkeletonLoaderComponent],
+  imports: [
+    RouterLink,
+    FormsModule,
+    SkeletonLoaderComponent,
+    FormatBytesPipe,
+    SortableHeaderComponent,
+    DataTypeBadgeComponent,
+  ],
   templateUrl: "./collection-detail.component.html",
 })
 export class CollectionDetailComponent implements OnInit {
@@ -83,14 +93,6 @@ export class CollectionDetailComponent implements OnInit {
     }
   }
 
-  formatBytes(bytes: number): string {
-    if (bytes === 0) return "0 B";
-    const k = 1024;
-    const sizes = ["B", "KB", "MB", "GB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
-  }
-
   sortedFields(): FieldInfo[] {
     const fields = this.schema()?.columns || [];
     const col = this.sortColumn();
@@ -104,44 +106,9 @@ export class CollectionDetailComponent implements OnInit {
     });
   }
 
-  onSort(column: string) {
-    if (this.sortColumn() === column) {
-      this.sortDirection.update((d) => (d === "asc" ? "desc" : "asc"));
-    } else {
-      this.sortColumn.set(column);
-      this.sortDirection.set("asc");
-    }
-  }
-
-  getSortIcon(column: string): string {
-    if (this.sortColumn() !== column) return "none";
-    return this.sortDirection();
-  }
-
-  getFieldTypeClass(dataType: string): string {
-    switch (dataType.toLowerCase()) {
-      case "string":
-      case "text":
-        return "text-blue-400";
-      case "number":
-      case "integer":
-      case "decimal":
-      case "float":
-        return "text-emerald-400";
-      case "boolean":
-        return "text-orange-400";
-      case "date":
-      case "datetime":
-      case "timestamp":
-        return "text-purple-400";
-      case "object":
-      case "json":
-        return "text-yellow-400";
-      case "array":
-        return "text-pink-400";
-      default:
-        return "text-slate-400";
-    }
+  onSortChange(event: { column: string; direction: "asc" | "desc" }) {
+    this.sortColumn.set(event.column);
+    this.sortDirection.set(event.direction);
   }
 
   openAddFieldModal() {
@@ -164,6 +131,7 @@ export class CollectionDetailComponent implements OnInit {
       this.toast.warning("Field name is required");
       return;
     }
+    // TODO: Backend API needed - db.addField(this.collectionName, this.newField)
     this.toast.info("Add field functionality requires backend support");
     this.closeAddFieldModal();
   }
@@ -191,6 +159,7 @@ export class CollectionDetailComponent implements OnInit {
   async deleteField() {
     const fieldName = this.deletingField();
     if (!fieldName) return;
+    // TODO: Backend API needed - db.deleteField(this.collectionName, fieldName)
     this.toast.info("Delete field functionality requires backend support");
     this.deletingField.set(null);
   }
@@ -217,6 +186,7 @@ export class CollectionDetailComponent implements OnInit {
       this.toast.warning("Select at least one column");
       return;
     }
+    // TODO: Backend API needed - db.createIndex(this.collectionName, this.newIndex)
     this.toast.info("Create index functionality requires backend support");
     this.closeCreateIndexModal();
   }
@@ -236,6 +206,7 @@ export class CollectionDetailComponent implements OnInit {
   async deleteIndex() {
     const indexName = this.deletingIndex();
     if (!indexName) return;
+    // TODO: Backend API needed - db.deleteIndex(this.collectionName, indexName)
     this.toast.info("Delete index functionality requires backend support");
     this.deletingIndex.set(null);
   }

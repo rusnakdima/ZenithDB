@@ -1,10 +1,34 @@
 import { Injectable } from "@angular/core";
 
+export interface JsonHighlightClasses {
+  key?: string;
+  string?: string;
+  number?: string;
+  boolean?: string;
+  null?: string;
+}
+
+const DEFAULT_CLASSES: JsonHighlightClasses = {
+  key: "json-key",
+  string: "json-string",
+  number: "json-number",
+  boolean: "json-boolean",
+  null: "json-null",
+};
+
+const TAILWIND_CLASSES: JsonHighlightClasses = {
+  key: "text-yellow-400",
+  string: "text-green-400",
+  number: "text-blue-400",
+  boolean: "text-red-400",
+  null: "text-slate-500",
+};
+
 @Injectable({
   providedIn: "root",
 })
 export class JsonHighlighterService {
-  highlight(json: string): string {
+  highlight(json: string, classes: JsonHighlightClasses = DEFAULT_CLASSES): string {
     if (!json) return "";
 
     const escaped = json.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -12,20 +36,24 @@ export class JsonHighlighterService {
     return escaped.replace(
       /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
       (match) => {
-        let cls = "json-number";
+        let cls = classes.number ?? "json-number";
         if (/^"/.test(match)) {
           if (/:$/.test(match)) {
-            cls = "json-key";
+            cls = classes.key ?? "json-key";
           } else {
-            cls = "json-string";
+            cls = classes.string ?? "json-string";
           }
         } else if (/true|false/.test(match)) {
-          cls = "json-boolean";
+          cls = classes.boolean ?? "json-boolean";
         } else if (/null/.test(match)) {
-          cls = "json-null";
+          cls = classes.null ?? "json-null";
         }
         return `<span class="${cls}">${match}</span>`;
       }
     );
+  }
+
+  highlightJsonLine(line: string): string {
+    return this.highlight(line, TAILWIND_CLASSES);
   }
 }

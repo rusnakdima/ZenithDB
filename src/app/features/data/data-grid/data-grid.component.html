@@ -130,57 +130,13 @@
                       [style.width.px]="columnWidths()[col.name]"
                     >
                       <div class="flex items-center gap-1">
-                        <span
-                          class="flex cursor-pointer items-center gap-1"
-                          (click)="sortBy(col.name)"
-                        >
-                          {{ col.name }}
-                          <span
-                            class="sort-indicator ml-1"
-                            [class.text-emerald-400]="sortColumn() === col.name"
-                            [class.text-slate-600]="sortColumn() !== col.name"
-                          >
-                            @if (sortColumn() === col.name) {
-                              @if (sortDirection() === "asc") {
-                                <svg
-                                  class="h-3 w-3"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  stroke-width="3"
-                                >
-                                  <path d="M5 15l7-7 7 7" />
-                                </svg>
-                              } @else {
-                                <svg
-                                  class="h-3 w-3"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  stroke-width="3"
-                                >
-                                  <path d="M19 9l-7 7-7-7" />
-                                </svg>
-                              }
-                            } @else {
-                              <svg
-                                class="h-3 w-3 opacity-30"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                              >
-                                <path d="M8 9l4-4 4 4m-4 6l4 4 4-4" />
-                              </svg>
-                            }
-                          </span>
-                        </span>
-                        <span
-                          class="{{ getTypeIconClass(col.data_type) }} text-[10px]"
-                          title="{{ col.data_type }}"
-                        >
-                          {{ getTypeIcon(col.data_type) }}
-                        </span>
+                        <app-sortable-header
+                          [column]="col.name"
+                          [currentSort]="sortColumn()"
+                          [direction]="sortColumn() === col.name ? sortDirection() : 'none'"
+                          (sortChange)="onSort($event)"
+                        />
+                        <app-data-type-badge [dataType]="col.data_type" variant="icon" />
                       </div>
                       <div
                         class="resize-handle absolute top-0 right-0 bottom-0 w-1 cursor-col-resize transition-colors hover:bg-emerald-500/50"

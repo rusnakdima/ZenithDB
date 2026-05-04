@@ -91,7 +91,7 @@
         <div class="flex items-center gap-2">
           <button
             (click)="executeCurrentTab()"
-            [disabled]="activeTab()?.loading || !activeTab()?.query?.trim()"
+            [disabled]="activeTab().loading || !activeTab().query.trim()"
             class="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
           >
             @if (activeTab()?.loading) {
@@ -146,7 +146,7 @@
         </div>
         <div class="flex items-center gap-2 text-xs text-neutral-500">
           @if (activeTab()?.executionTime) {
-            <span class="font-mono">{{ activeTab()?.executionTime?.toFixed(1) }}ms</span>
+            <span class="font-mono">{{ activeTab().executionTime.toFixed(1) }}ms</span>
           }
         </div>
       </div>
@@ -157,10 +157,10 @@
         <div
           class="flex shrink-0 flex-col bg-neutral-800/30 pt-3 pr-4 text-right text-neutral-600 select-none"
         >
-          @for (line of activeTab()?.query?.split("\n") || []; track $index) {
+          @for (line of activeTab().query.split("\n") || []; track $index) {
             <span class="px-2 font-mono text-xs">{{ $index + 1 }}</span>
           }
-          @if ((activeTab()?.query?.split("\n") || []).length === 0) {
+          @if ((activeTab().query.split("\n") || []).length === 0) {
             <span class="px-2 font-mono text-xs">1</span>
           }
         </div>

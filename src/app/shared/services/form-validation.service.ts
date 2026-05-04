@@ -1,57 +1,54 @@
 import { Injectable, signal, computed, type Signal } from "@angular/core";
 
-export interface ValidationRule {
-  validate: (value: any) => boolean;
+export interface ValidationRule<T = unknown> {
+  validate: (value: T) => boolean;
   message: string;
 }
 
-export interface FieldValidator {
+export interface FieldValidator<T = unknown> {
   errors: Signal<Record<string, string>>;
   touched: Signal<boolean>;
   dirty: Signal<boolean>;
   isValid: () => boolean;
   isInvalid: () => boolean;
-  validate: (value: any) => void;
+  validate: (value: T) => void;
   touch: () => void;
   reset: () => void;
 }
 
 @Injectable({ providedIn: "root" })
 export class FormValidationService {
-  required(message = "This field is required"): ValidationRule {
+  required<T = unknown>(message = "This field is required"): ValidationRule<T> {
     return {
-      validate: (value: any) =>
-        value !== null && value !== undefined && String(value).trim() !== "",
+      validate: (value: T) => value !== null && value !== undefined && String(value).trim() !== "",
       message,
     };
   }
 
-  minLength(min: number, message?: string): ValidationRule {
+  minLength<T = unknown>(min: number, message?: string): ValidationRule<T> {
     return {
-      validate: (value: any) =>
-        value === null || value === undefined || String(value).length >= min,
+      validate: (value: T) => value === null || value === undefined || String(value).length >= min,
       message: message || `Minimum ${min} characters required`,
     };
   }
 
-  maxLength(max: number, message?: string): ValidationRule {
+  maxLength<T = unknown>(max: number, message?: string): ValidationRule<T> {
     return {
-      validate: (value: any) =>
-        value === null || value === undefined || String(value).length <= max,
+      validate: (value: T) => value === null || value === undefined || String(value).length <= max,
       message: message || `Maximum ${max} characters allowed`,
     };
   }
 
-  pattern(regex: RegExp, message = "Invalid format"): ValidationRule {
+  pattern<T = unknown>(regex: RegExp, message = "Invalid format"): ValidationRule<T> {
     return {
-      validate: (value: any) => value === null || value === undefined || regex.test(String(value)),
+      validate: (value: T) => value === null || value === undefined || regex.test(String(value)),
       message,
     };
   }
 
-  email(message = "Invalid email address"): ValidationRule {
+  email<T = unknown>(message = "Invalid email address"): ValidationRule<T> {
     return {
-      validate: (value: any) => {
+      validate: (value: T) => {
         if (value === null || value === undefined || value === "") return true;
         return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value));
       },
@@ -59,9 +56,9 @@ export class FormValidationService {
     };
   }
 
-  url(message = "Invalid URL"): ValidationRule {
+  url<T = unknown>(message = "Invalid URL"): ValidationRule<T> {
     return {
-      validate: (value: any) => {
+      validate: (value: T) => {
         if (value === null || value === undefined || value === "") return true;
         try {
           new URL(String(value));
@@ -74,9 +71,9 @@ export class FormValidationService {
     };
   }
 
-  numberMin(min: number, message?: string): ValidationRule {
+  numberMin<T = unknown>(min: number, message?: string): ValidationRule<T> {
     return {
-      validate: (value: any) => {
+      validate: (value: T) => {
         if (value === null || value === undefined || value === "") return true;
         return Number(value) >= min;
       },
@@ -84,9 +81,9 @@ export class FormValidationService {
     };
   }
 
-  numberMax(max: number, message?: string): ValidationRule {
+  numberMax<T = unknown>(max: number, message?: string): ValidationRule<T> {
     return {
-      validate: (value: any) => {
+      validate: (value: T) => {
         if (value === null || value === undefined || value === "") return true;
         return Number(value) <= max;
       },
@@ -94,19 +91,22 @@ export class FormValidationService {
     };
   }
 
-  custom(validatorFn: (value: any) => boolean, message = "Invalid value"): ValidationRule {
+  custom<T = string>(
+    validatorFn: (value: T) => boolean,
+    message = "Invalid value"
+  ): ValidationRule<T> {
     return {
-      validate: validatorFn,
+      validate: (value) => validatorFn(value as T),
       message,
     };
   }
 
-  createFieldValidator(rules: ValidationRule[]): FieldValidator {
+  createFieldValidator<T = unknown>(rules: ValidationRule<T>[]): FieldValidator<T> {
     const errors = signal<Record<string, string>>({});
     const touched = signal(false);
     const dirty = signal(false);
 
-    const validate = (value: any) => {
+    const validate = (value: T) => {
       const newErrors: Record<string, string> = {};
       for (const rule of rules) {
         if (!rule.validate(value)) {
@@ -141,12 +141,14 @@ export class FormValidationService {
     };
   }
 
-  createFormValidator(fieldValidators: Record<string, FieldValidator>) {
+  createFormValidator<T extends Record<string, unknown>>(
+    fieldValidators: Record<string, FieldValidator<T>>
+  ) {
     return {
-      validate: (values: Record<string, any>) => {
+      validate: (values: T) => {
         let isValid = true;
         for (const [key, validator] of Object.entries(fieldValidators)) {
-          validator.validate(values[key]);
+          validator.validate(values[key] as T);
           if (!validator.isValid()) {
             isValid = false;
           }

@@ -1,7 +1,6 @@
 import { Component, inject, OnInit, signal, computed } from "@angular/core";
 import { Router, RouterLink } from "@angular/router";
 import { MatIconModule } from "@angular/material/icon";
-import { ConnectionListComponent } from "@features/connections/connection-list/connection-list.component";
 import { ConnectionCardComponent } from "@views/connections/connection-card/connection-card.component";
 import { DatabaseService } from "@shared/services/database.service";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
@@ -11,7 +10,7 @@ import { ConnectionSummary } from "@shared/models/connection.config";
 @Component({
   selector: "app-connections",
   standalone: true,
-  imports: [RouterLink, ConnectionListComponent, ConnectionCardComponent, MatIconModule],
+  imports: [RouterLink, ConnectionCardComponent, MatIconModule],
   templateUrl: "./connections.component.html",
 })
 export class ConnectionsComponent implements OnInit {

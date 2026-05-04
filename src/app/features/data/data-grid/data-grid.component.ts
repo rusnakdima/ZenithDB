@@ -1,7 +1,6 @@
 import {
   Component,
   OnInit,
-  OnDestroy,
   inject,
   Input,
   Output,
@@ -15,15 +14,18 @@ import { FormsModule } from "@angular/forms";
 import { DatabaseService } from "@shared/services/database.service";
 import { ToastService } from "@services/toast.service";
 import { ExportService } from "@shared/services/export.service";
-import { ColumnInfo } from "@shared/models/collection.types";
+import { JsonHighlighterService } from "@shared/services/json-highlighter.service";
+import { ColumnInfo } from "@shared/models/connection.config";
+import { DataTypeBadgeComponent } from "@shared/components/data-type-badge/data-type-badge.component";
+import { SortableHeaderComponent } from "@shared/components/sortable-header/sortable-header.component";
 
 @Component({
   selector: "app-data-grid",
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, DataTypeBadgeComponent, SortableHeaderComponent],
   templateUrl: "./data-grid.component.html",
 })
-export class DataGridComponent implements OnInit, OnDestroy, OnChanges {
+export class DataGridComponent implements OnInit, OnChanges {
   @Input() collectionName = "";
   @Input() filter = "";
   @Input() page = 0;
@@ -88,6 +90,7 @@ export class DataGridComponent implements OnInit, OnDestroy, OnChanges {
   private db = inject(DatabaseService);
   private toast = inject(ToastService);
   private exportService = inject(ExportService);
+  private jsonHighlighter = inject(JsonHighlighterService);
 
   showExportMenu = signal(false);
   exportFormat = signal<"csv" | "json" | "jsonl" | "sql" | "markdown">("csv");
@@ -125,8 +128,6 @@ export class DataGridComponent implements OnInit, OnDestroy, OnChanges {
       this.initColumnWidths();
     }
   }
-
-  ngOnDestroy() {}
 
   initColumnWidths() {
     const widths: Record<string, number> = {};
@@ -213,19 +214,10 @@ export class DataGridComponent implements OnInit, OnDestroy, OnChanges {
     await this.loadData();
   }
 
-  sortBy(col: string) {
-    if (this.sortColumn() === col) {
-      this.sortDirection.update((d) => (d === "asc" ? "desc" : "asc"));
-    } else {
-      this.sortColumn.set(col);
-      this.sortDirection.set("asc");
-    }
+  onSort(event: { column: string; direction: "asc" | "desc" }) {
+    this.sortColumn.set(event.column);
+    this.sortDirection.set(event.direction);
     this.loadData();
-  }
-
-  getSortIcon(col: string): string {
-    if (this.sortColumn() !== col) return "none";
-    return this.sortDirection();
   }
 
   startEdit(rowIndex: number, col: string, value: any) {
@@ -348,48 +340,6 @@ export class DataGridComponent implements OnInit, OnDestroy, OnChanges {
     this.visibleColumns.set(visible);
   }
 
-  getTypeIcon(dataType: string): string {
-    switch (dataType.toLowerCase()) {
-      case "string":
-      case "text":
-        return "Aa";
-      case "number":
-      case "integer":
-      case "decimal":
-      case "float":
-        return "#";
-      case "boolean":
-        return "T/F";
-      case "date":
-      case "datetime":
-      case "timestamp":
-        return "dt";
-      default:
-        return "?";
-    }
-  }
-
-  getTypeIconClass(dataType: string): string {
-    switch (dataType.toLowerCase()) {
-      case "string":
-      case "text":
-        return "type-icon string";
-      case "number":
-      case "integer":
-      case "decimal":
-      case "float":
-        return "type-icon number";
-      case "boolean":
-        return "type-icon boolean";
-      case "date":
-      case "datetime":
-      case "timestamp":
-        return "type-icon date";
-      default:
-        return "type-icon";
-    }
-  }
-
   async duplicateRow(row: any) {
     const { _id, id, ...rest } = row;
     const newRow = { ...rest };
@@ -429,15 +379,7 @@ export class DataGridComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   highlightJsonLine(line: string): string {
-    let result = line.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-
-    result = result.replace(/("([^"\\]|\\.)*")\s*:/g, '<span class="text-yellow-400">$1</span>:');
-    result = result.replace(/:\s*("([^"\\]|\\.)*")/g, ': <span class="text-green-400">$1</span>');
-    result = result.replace(/:\s*(true|false)/g, ': <span class="text-red-400">$1</span>');
-    result = result.replace(/:\s*(null)/g, ': <span class="text-slate-500">$1</span>');
-    result = result.replace(/:\s*(-?\d+\.?\d*)/g, ': <span class="text-blue-400">$1</span>');
-
-    return result;
+    return this.jsonHighlighter.highlightJsonLine(line);
   }
 
   trackByRow(index: number, row: any): string {

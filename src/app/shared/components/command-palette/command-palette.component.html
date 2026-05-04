@@ -1,7 +1,11 @@
-<div
-  class="overlay fixed inset-0 z-[60] flex items-start justify-center bg-slate-900/60 pt-[10vh] backdrop-blur-sm"
-  [class.hidden]="!visible()"
-  (click)="onOverlayClick($event)"
+<app-modal
+  [open]="visible()"
+  [showCloseButton]="false"
+  [closeOnBackdrop]="true"
+  [closeOnEscape]="true"
+  [contentPosition]="'top'"
+  size="xl"
+  (closed)="hide()"
 >
   <div
     class="w-full max-w-xl overflow-hidden rounded-xl border border-slate-700 bg-slate-800 shadow-2xl"
@@ -68,4 +72,4 @@
       <span>Press <kbd class="rounded bg-slate-700 px-1">Ctrl+P</kbd> to toggle</span>
     </div>
   </div>
-</div>
+</app-modal>

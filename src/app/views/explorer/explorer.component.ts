@@ -10,6 +10,8 @@ import { ConnectionStateService } from "@shared/services/connection-state.servic
 import { ToastService } from "@services/toast.service";
 import { ExportService } from "@shared/services/export.service";
 import { CollectionMeta, CollectionStats } from "@shared/models/connection.config";
+import { FormatBytesPipe } from "@shared/pipes/format-bytes.pipe";
+import { formatJsonLines, highlightJsonLine } from "@shared/utils/json.utils";
 import { InspectorDrawerComponent } from "./inspector-drawer/inspector-drawer.component";
 
 type ViewTab = "table" | "tree" | "json";
@@ -29,6 +31,7 @@ interface Tab {
     SchemaTreeComponent,
     FilterBarComponent,
     InspectorDrawerComponent,
+    FormatBytesPipe,
   ],
   templateUrl: "./explorer.component.html",
 })
@@ -336,14 +339,6 @@ export class ExplorerComponent implements OnInit, OnDestroy {
     return this.page() > 0;
   }
 
-  formatBytes(bytes: number): string {
-    if (bytes === 0) return "0 B";
-    const k = 1024;
-    const sizes = ["B", "KB", "MB", "GB", "TB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
-  }
-
   formatDocumentCount(count: number): string {
     if (count >= 1000000) {
       return (count / 1000000).toFixed(1) + "M";
@@ -367,19 +362,10 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   }
 
   formatJsonLines(obj: any): string[] {
-    const json = JSON.stringify(obj, null, 2);
-    return json.split("\n");
+    return formatJsonLines(JSON.stringify(obj, null, 2));
   }
 
   highlightJsonLine(line: string): string {
-    let result = line.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-
-    result = result.replace(/("([^"\\]|\\.)*")\s*:/g, '<span class="json-key">$1</span>:');
-    result = result.replace(/:\s*("([^"\\]|\\.)*")/g, ': <span class="json-string">$1</span>');
-    result = result.replace(/:\s*(true|false)/g, ': <span class="json-boolean">$1</span>');
-    result = result.replace(/:\s*(null)/g, ': <span class="json-null">$1</span>');
-    result = result.replace(/:\s*(-?\d+\.?\d*)/g, ': <span class="json-number">$1</span>');
-
-    return result;
+    return highlightJsonLine(line);
   }
 }

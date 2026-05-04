@@ -8,11 +8,14 @@ import {
   OnDestroy,
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
-import { DatePipe, TitleCasePipe } from "@angular/common";
+import { DatePipe } from "@angular/common";
 import { DatabaseService } from "@shared/services/database.service";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { ToastService } from "@services/toast.service";
+import { StorageService } from "@services/core/storage.service";
+import { ExportService } from "@shared/services/export.service";
 import { RawResult } from "@shared/models/connection.config";
+import { formatSQL } from "@shared/utils";
 
 interface QueryTab {
   id: string;
@@ -35,13 +38,15 @@ interface HistoryItem {
 @Component({
   selector: "app-query-editor",
   standalone: true,
-  imports: [FormsModule, DatePipe, TitleCasePipe],
+  imports: [FormsModule, DatePipe],
   templateUrl: "./query-editor.component.html",
 })
 export class QueryEditorComponent implements OnInit, OnDestroy {
   protected db = inject(DatabaseService);
   protected connState = inject(ConnectionStateService);
   protected toast = inject(ToastService);
+  protected storage = inject(StorageService);
+  protected exportService = inject(ExportService);
 
   tabs = signal<QueryTab[]>([this.createTab("Tab 1")]);
   activeTabId = signal<string>("Tab 1");
@@ -116,27 +121,24 @@ export class QueryEditorComponent implements OnInit, OnDestroy {
   }
 
   loadHistory() {
-    const stored = localStorage.getItem("zenith_query_history");
+    const stored = this.storage.getItem<any[]>("zenith_query_history");
     if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        this.history.set(
-          parsed.map((h: any) => ({
-            ...h,
-            timestamp: new Date(h.timestamp),
-          }))
-        );
-      } catch {
-        this.history.set([]);
-      }
+      this.history.set(
+        stored.map((h: any) => ({
+          ...h,
+          timestamp: new Date(h.timestamp),
+        }))
+      );
+    } else {
+      this.history.set([]);
     }
   }
 
   saveHistory() {
     const limited = this.history().slice(0, 20);
-    localStorage.setItem(
+    this.storage.setItem(
       "zenith_query_history",
-      JSON.stringify(limited.map((h) => ({ ...h, timestamp: h.timestamp.toISOString() })))
+      limited.map((h) => ({ ...h, timestamp: h.timestamp.toISOString() }))
     );
   }
 
@@ -242,7 +244,7 @@ export class QueryEditorComponent implements OnInit, OnDestroy {
 
   clearAllHistory() {
     this.history.set([]);
-    localStorage.removeItem("zenith_query_history");
+    this.storage.removeItem("zenith_query_history");
   }
 
   formatSQL() {
@@ -255,52 +257,7 @@ export class QueryEditorComponent implements OnInit, OnDestroy {
   }
 
   private formatSQLText(sql: string): string {
-    const keywords = [
-      "SELECT",
-      "FROM",
-      "WHERE",
-      "AND",
-      "OR",
-      "INSERT",
-      "INTO",
-      "VALUES",
-      "UPDATE",
-      "SET",
-      "DELETE",
-      "CREATE",
-      "TABLE",
-      "DROP",
-      "ALTER",
-      "JOIN",
-      "LEFT",
-      "RIGHT",
-      "INNER",
-      "OUTER",
-      "ON",
-      "GROUP BY",
-      "ORDER BY",
-      "HAVING",
-      "LIMIT",
-      "OFFSET",
-      "AS",
-      "DISTINCT",
-      "UNION",
-      "ALL",
-    ];
-
-    let result = sql;
-    keywords.forEach((kw) => {
-      const regex = new RegExp(`\\b${kw}\\b`, "gi");
-      result = result.replace(regex, kw);
-    });
-
-    result = result
-      .replace(/\s+/g, " ")
-      .replace(/,\s*/g, ", ")
-      .replace(/\(\s*/g, "(")
-      .replace(/\s*\)/g, ")");
-
-    return result;
+    return formatSQL(sql);
   }
 
   clearEditor() {
@@ -346,22 +303,23 @@ export class QueryEditorComponent implements OnInit, OnDestroy {
     return lines.length - 1;
   }
 
-  exportResults() {
+  async exportResults() {
     const tab = this.activeTab();
     if (!tab?.results) return;
 
     const { columns, rows } = tab.results;
-    const csv = [columns.join(","), ...rows.map((r) => r.map((c) => `"${c}"`).join(","))].join(
-      "\n"
-    );
+    const data = rows.map((r: unknown[]) => {
+      const obj: Record<string, unknown> = {};
+      columns.forEach((col: string, i: number) => {
+        obj[col] = r[i];
+      });
+      return obj;
+    });
 
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `query_results_${Date.now()}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    await this.exportService.export(
+      { format: "csv", filename: `query_results_${Date.now()}.csv` },
+      data
+    );
   }
 
   trackByTabId(_: number, tab: QueryTab) {

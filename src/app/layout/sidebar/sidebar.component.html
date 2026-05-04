@@ -31,7 +31,7 @@
                   ></mat-icon>
                 </button>
                 <mat-icon
-                  [fontIcon]="getIconClass(conn.provider)"
+                  [fontIcon]="providerUtils.getProviderIcon(conn.provider)"
                   class="inline-flex items-center justify-center text-xl!"
                 ></mat-icon>
                 <span class="sidebar-connection-name">{{ conn.name }}</span>
@@ -115,7 +115,7 @@
         <div class="sidebar-footer-stat">
           <div class="sidebar-footer-stat-label">RAM</div>
           <div class="sidebar-footer-stat-value">
-            {{ formatBytes(status.ram_used) }} / {{ formatBytes(status.ram_total) }}
+            {{ status.ram_used | formatBytes }} / {{ status.ram_total | formatBytes }}
           </div>
         </div>
       </div>

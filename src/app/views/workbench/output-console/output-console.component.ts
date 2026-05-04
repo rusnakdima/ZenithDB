@@ -1,5 +1,5 @@
 import { Component, Input, Output, EventEmitter, signal, computed } from "@angular/core";
-import { JsonPipe, DatePipe, TitleCasePipe, UpperCasePipe } from "@angular/common";
+import { JsonPipe, DatePipe } from "@angular/common";
 import { RawResult } from "@shared/models/connection.config";
 
 type LogLevel = "all" | "info" | "warn" | "error";
@@ -14,7 +14,7 @@ interface LogEntry {
 @Component({
   selector: "app-output-console",
   standalone: true,
-  imports: [JsonPipe, DatePipe, TitleCasePipe, UpperCasePipe],
+  imports: [JsonPipe, DatePipe],
   templateUrl: "./output-console.component.html",
 })
 export class OutputConsoleComponent {

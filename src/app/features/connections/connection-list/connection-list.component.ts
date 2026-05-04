@@ -1,5 +1,5 @@
 import { Component, inject, signal, computed, OnInit } from "@angular/core";
-import { RouterLink } from "@angular/router";
+
 import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
 import { ConnectionCardComponent } from "@views/connections/connection-card/connection-card.component";
@@ -14,13 +14,7 @@ type ViewMode = "grid" | "list";
 @Component({
   selector: "app-connection-list",
   standalone: true,
-  imports: [
-    RouterLink,
-    FormsModule,
-    ConnectionCardComponent,
-    SkeletonLoaderComponent,
-    MatIconModule,
-  ],
+  imports: [FormsModule, ConnectionCardComponent, SkeletonLoaderComponent, MatIconModule],
   templateUrl: "./connection-list.component.html",
 })
 export class ConnectionListComponent implements OnInit {

@@ -1,5 +1,5 @@
 import { Component, inject, signal, computed } from "@angular/core";
-import { Router, RouterLink } from "@angular/router";
+import { Router } from "@angular/router";
 import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
 import { DatabaseService } from "@shared/services/database.service";
@@ -11,7 +11,7 @@ type ProviderType = "json" | "mongo" | "redis" | "postgres" | "sqlite" | "mysql"
 @Component({
   selector: "app-connection-form",
   standalone: true,
-  imports: [RouterLink, FormsModule, MatIconModule],
+  imports: [FormsModule, MatIconModule],
   templateUrl: "./connection-form.component.html",
 })
 export class ConnectionFormComponent {

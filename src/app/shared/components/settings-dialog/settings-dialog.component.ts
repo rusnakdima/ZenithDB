@@ -1,5 +1,6 @@
-import { Component, inject, signal, Output, EventEmitter, OnInit } from "@angular/core";
+import { Component, inject, input, signal, output, OnInit } from "@angular/core";
 import { FormsModule } from "@angular/forms";
+import { ModalComponent } from "@shared/components/modal/modal.component";
 import {
   SettingsService,
   AppSettings,
@@ -14,11 +15,12 @@ type SettingsTab = "general" | "editor" | "data" | "connections";
 @Component({
   selector: "app-settings-dialog",
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, ModalComponent],
   templateUrl: "./settings-dialog.component.html",
 })
 export class SettingsDialogComponent implements OnInit {
-  @Output() close = new EventEmitter<void>();
+  open = input<boolean>(false);
+  closed = output<void>();
 
   private settingsService = inject(SettingsService);
   private themeService = inject(ThemeService);
@@ -65,9 +67,10 @@ export class SettingsDialogComponent implements OnInit {
   private applyTheme(theme: ThemeSetting) {
     if (theme === "system") {
       const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      this.themeService.isDarkMode.set(prefersDark);
+      this.themeService.toggle(); // This will sync with settings service
     } else {
-      this.themeService.isDarkMode.set(theme === "dark");
+      // Update settings service to reflect the theme change
+      this.settingsService.updateGeneral({ theme });
     }
   }
 
@@ -110,12 +113,12 @@ export class SettingsDialogComponent implements OnInit {
     const current = this.settings();
     this.settingsService.updateSettings(current);
     this.toast.success("Settings saved");
-    this.close.emit();
+    this.closed.emit();
   }
 
   cancelSettings() {
     this.settings.set(this.settingsService.currentSettings);
-    this.close.emit();
+    this.closed.emit();
   }
 
   resetToDefaults() {

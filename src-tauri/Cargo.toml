@@ -23,9 +23,7 @@ uuid = { version = "1", features = ["v4"] }
 tokio = { version = "1", features = ["full"] }
 sysinfo = "0.32"
 tauri-plugin-mcp-bridge = "0.11"
-lazy_static = "1.4"
-chrono = { version = "0.4", features = ["serde"] }
 
 # nosql_orm = { git = "https://github.com/rusnakdima/nosql_orm", branch = "main", features = ["json", "mongo", "query_cache", "validators"] }
-# nosql_orm = { path = "/mnt/Other/Projects/Rust/nosql_orm", features = ["json", "mongo", "query_cache", "validators"] }
-nosql_orm = { path = "C:\\Users\\D.Rusnak\\Projects\\nosql_orm", features = ["json", "mongo", "redis", "sql-postgres", "sql-sqlite", "sql-mysql", "query_cache", "validators"] }
+nosql_orm = { path = "/mnt/Other/Projects/Rust/nosql_orm", features = ["json", "mongo", "redis", "sql-postgres", "sql-sqlite", "sql-mysql", "query_cache", "validators"] }
+# nosql_orm = { path = "C:\\Users\\D.Rusnak\\Projects\\nosql_orm", features = ["json", "mongo", "redis", "sql-postgres", "sql-sqlite", "sql-mysql", "query_cache", "validators"] }
