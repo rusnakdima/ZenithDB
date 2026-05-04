@@ -1,6 +1,11 @@
 import { Component, inject, signal, Output, EventEmitter, OnInit } from "@angular/core";
 import { FormsModule } from "@angular/forms";
-import { SettingsService, AppSettings, ThemeSetting, TabSize } from "@shared/services/settings.service";
+import {
+  SettingsService,
+  AppSettings,
+  ThemeSetting,
+  TabSize,
+} from "@shared/services/settings.service";
 import { ThemeService } from "@shared/services/theme.service";
 import { ToastService } from "@services/toast.service";
 

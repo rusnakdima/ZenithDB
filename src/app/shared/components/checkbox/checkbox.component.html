@@ -1,5 +1,5 @@
 <label
-  class="flex items-center gap-3 cursor-pointer group select-none"
+  class="group flex cursor-pointer items-center gap-3 select-none"
   [class.opacity-50]="disabled()"
   [class.cursor-not-allowed]="disabled()"
 >
@@ -15,7 +15,9 @@
     </mat-checkbox>
   </div>
   @if (label()) {
-    <span class="text-sm text-slate-300 dark:text-slate-200 group-hover:text-white transition-colors duration-150">
+    <span
+      class="text-sm text-slate-300 transition-colors duration-150 group-hover:text-white dark:text-slate-200"
+    >
       {{ label() }}
     </span>
   }

@@ -104,7 +104,7 @@ export class FilterBarComponent implements OnInit {
   addToHistory(filter: string) {
     if (!filter.trim()) return;
     const history = this.filterHistory();
-    const filtered = history.filter(f => f !== filter);
+    const filtered = history.filter((f) => f !== filter);
     const updated = [filter, ...filtered].slice(0, this.MAX_HISTORY);
     this.filterHistory.set(updated);
     this.saveHistory();
@@ -123,19 +123,19 @@ export class FilterBarComponent implements OnInit {
   }
 
   toggleHistory() {
-    this.showHistory.update(v => !v);
+    this.showHistory.update((v) => !v);
     this.showExportMenu.set(false);
     this.showColumnChooser.set(false);
   }
 
   toggleExportMenu() {
-    this.showExportMenu.update(v => !v);
+    this.showExportMenu.update((v) => !v);
     this.showHistory.set(false);
     this.showColumnChooser.set(false);
   }
 
   toggleColumnChooser() {
-    this.showColumnChooser.update(v => !v);
+    this.showColumnChooser.update((v) => !v);
     this.showHistory.set(false);
     this.showExportMenu.set(false);
   }
@@ -152,12 +152,12 @@ export class FilterBarComponent implements OnInit {
 
   initColumns(columns: string[]) {
     const selected = new Set<string>();
-    columns.forEach(c => selected.add(c));
+    columns.forEach((c) => selected.add(c));
     this.selectedColumns.set(selected);
   }
 
   toggleColumn(col: string) {
-    this.selectedColumns.update(selected => {
+    this.selectedColumns.update((selected) => {
       const newSet = new Set(selected);
       if (newSet.has(col)) {
         newSet.delete(col);
@@ -170,7 +170,7 @@ export class FilterBarComponent implements OnInit {
 
   selectAllColumns() {
     const all = new Set<string>();
-    this.availableColumns.forEach(c => all.add(c));
+    this.availableColumns.forEach((c) => all.add(c));
     this.selectedColumns.set(all);
   }
 
@@ -184,7 +184,7 @@ export class FilterBarComponent implements OnInit {
 
   closeDropdowns(event: MouseEvent) {
     const target = event.target as HTMLElement;
-    if (!target.closest('.dropdown-container')) {
+    if (!target.closest(".dropdown-container")) {
       this.showHistory.set(false);
       this.showExportMenu.set(false);
       this.showColumnChooser.set(false);

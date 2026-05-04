@@ -94,7 +94,10 @@ export class ModalComponent implements OnInit, OnDestroy {
   }
 
   onBackdropClick(event: MouseEvent): void {
-    if (this.closeOnBackdrop() && (event.target as HTMLElement).classList.contains("modal-backdrop")) {
+    if (
+      this.closeOnBackdrop() &&
+      (event.target as HTMLElement).classList.contains("modal-backdrop")
+    ) {
       this.onClose();
     }
   }

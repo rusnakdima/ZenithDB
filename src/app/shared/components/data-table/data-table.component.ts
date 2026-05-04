@@ -1,4 +1,13 @@
-import { Component, Input, Output, EventEmitter, signal, computed, OnInit, OnDestroy } from "@angular/core";
+import {
+  Component,
+  Input,
+  Output,
+  EventEmitter,
+  signal,
+  computed,
+  OnInit,
+  OnDestroy,
+} from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { ColumnInfo } from "@shared/models/collection.types";
 import { CheckboxComponent } from "@shared/components/checkbox/checkbox.component";
@@ -72,9 +81,7 @@ export class DataTableComponent implements OnInit, OnDestroy {
     return rows.length > 0 && this.selectedRows().size === rows.length;
   });
 
-  visibleColumns = computed(() =>
-    this._columns().filter((c) => c.visible !== false)
-  );
+  visibleColumns = computed(() => this._columns().filter((c) => c.visible !== false));
 
   pageInfo = computed(() => {
     const total = this.pagination?.total || this._data().length;
@@ -105,9 +112,7 @@ export class DataTableComponent implements OnInit, OnDestroy {
     for (const col of cols) {
       visibility[col.name] = col.visible !== false;
     }
-    this._columns.update((c) =>
-      c.map((col) => ({ ...col, visible: col.visible !== false }))
-    );
+    this._columns.update((c) => c.map((col) => ({ ...col, visible: col.visible !== false })));
   }
 
   private updatePaginatedData() {
@@ -123,9 +128,7 @@ export class DataTableComponent implements OnInit, OnDestroy {
     if (this.allSelected()) {
       this.selectedRows.set(new Set());
     } else {
-      this.selectedRows.set(
-        new Set(this.paginatedData().map((_, i) => i))
-      );
+      this.selectedRows.set(new Set(this.paginatedData().map((_, i) => i)));
     }
     this.rowSelected.emit(this.getSelectedRows());
   }
@@ -151,10 +154,7 @@ export class DataTableComponent implements OnInit, OnDestroy {
 
   onRowClick(row: any, event: MouseEvent) {
     const target = event.target as HTMLElement;
-    if (
-      target.tagName !== "INPUT" ||
-      (target as HTMLInputElement).type !== "checkbox"
-    ) {
+    if (target.tagName !== "INPUT" || (target as HTMLInputElement).type !== "checkbox") {
       this.rowClicked.emit(row);
     }
   }
@@ -184,9 +184,7 @@ export class DataTableComponent implements OnInit, OnDestroy {
 
   toggleColumnVisibility(colName: string) {
     this._columns.update((cols) =>
-      cols.map((c) =>
-        c.name === colName ? { ...c, visible: !c.visible } : c
-      )
+      cols.map((c) => (c.name === colName ? { ...c, visible: !c.visible } : c))
     );
   }
 
@@ -261,23 +259,19 @@ export class DataTableComponent implements OnInit, OnDestroy {
 
   getStatusBadgeClass(value: string): string {
     const v = value?.toUpperCase();
-    if (v === "PAID" || v === "ACTIVE" || v === "COMPLETED")
-      return "status-paid";
+    if (v === "PAID" || v === "ACTIVE" || v === "COMPLETED") return "status-paid";
     if (v === "PENDING" || v === "PROCESSING") return "status-pending";
-    if (v === "FAILED" || v === "ERROR" || v === "CANCELLED")
-      return "status-failed";
+    if (v === "FAILED" || v === "ERROR" || v === "CANCELLED") return "status-failed";
     if (v === "REFUNDED") return "status-refunded";
     return "";
   }
 
   getCellClass(value: any, dataType: string): string {
-    if (value === null || value === undefined)
-      return "text-slate-600 dark:text-slate-500 italic";
+    if (value === null || value === undefined) return "text-slate-600 dark:text-slate-500 italic";
     if (typeof value === "number" || dataType === "decimal" || dataType === "integer")
       return "text-emerald-600 dark:text-emerald-400";
     if (typeof value === "boolean") return "text-orange-600 dark:text-orange-400";
-    if (dataType === "object" || dataType === "array")
-      return "text-slate-500 dark:text-slate-500";
+    if (dataType === "object" || dataType === "array") return "text-slate-500 dark:text-slate-500";
     return "text-slate-700 dark:text-slate-300";
   }
 

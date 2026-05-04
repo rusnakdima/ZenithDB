@@ -1,10 +1,19 @@
-<div class="fixed inset-0 bg-black/60 flex items-center justify-center z-50" (click)="cancelSettings()">
-  <div class="bg-slate-900 rounded-xl border border-slate-700 shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col" (click)="$event.stopPropagation()">
-    <div class="px-6 py-4 border-b border-slate-700 flex items-center justify-between">
+<div
+  class="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+  (click)="cancelSettings()"
+>
+  <div
+    class="flex max-h-[80vh] w-full max-w-2xl flex-col rounded-xl border border-slate-700 bg-slate-900 shadow-2xl"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="flex items-center justify-between border-b border-slate-700 px-6 py-4">
       <h2 class="text-lg font-semibold text-slate-100">Settings</h2>
-      <button class="text-slate-400 hover:text-slate-200 transition-colors" (click)="cancelSettings()">
-        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M18 6L6 18M6 6l12 12"/>
+      <button
+        class="text-slate-400 transition-colors hover:text-slate-200"
+        (click)="cancelSettings()"
+      >
+        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 6L6 18M6 6l12 12" />
         </svg>
       </button>
     </div>
@@ -13,7 +22,7 @@
       <div class="w-48 border-r border-slate-700 p-4">
         <nav class="space-y-1">
           <button
-            class="w-full px-3 py-2 text-sm text-left rounded-lg transition-colors"
+            class="w-full rounded-lg px-3 py-2 text-left text-sm transition-colors"
             [class.bg-emerald-500/20-text-emerald-400]="activeTab() === 'general'"
             [class.text-slate-400]="activeTab() !== 'general'"
             [class.hover:bg-slate-800]="activeTab() !== 'general'"
@@ -22,7 +31,7 @@
             General
           </button>
           <button
-            class="w-full px-3 py-2 text-sm text-left rounded-lg transition-colors"
+            class="w-full rounded-lg px-3 py-2 text-left text-sm transition-colors"
             [class.bg-emerald-500/20-text-emerald-400]="activeTab() === 'editor'"
             [class.text-slate-400]="activeTab() !== 'editor'"
             [class.hover:bg-slate-800]="activeTab() !== 'editor'"
@@ -31,7 +40,7 @@
             Editor
           </button>
           <button
-            class="w-full px-3 py-2 text-sm text-left rounded-lg transition-colors"
+            class="w-full rounded-lg px-3 py-2 text-left text-sm transition-colors"
             [class.bg-emerald-500/20-text-emerald-400]="activeTab() === 'data'"
             [class.text-slate-400]="activeTab() !== 'data'"
             [class.hover:bg-slate-800]="activeTab() !== 'data'"
@@ -40,7 +49,7 @@
             Data
           </button>
           <button
-            class="w-full px-3 py-2 text-sm text-left rounded-lg transition-colors"
+            class="w-full rounded-lg px-3 py-2 text-left text-sm transition-colors"
             [class.bg-emerald-500/20-text-emerald-400]="activeTab() === 'connections'"
             [class.text-slate-400]="activeTab() !== 'connections'"
             [class.hover:bg-slate-800]="activeTab() !== 'connections'"
@@ -51,18 +60,22 @@
         </nav>
       </div>
 
-      <div class="flex-1 p-6 overflow-y-auto">
+      <div class="flex-1 overflow-y-auto p-6">
         @if (activeTab() === "general") {
           <div class="space-y-6">
             <div>
-              <label class="block text-sm font-medium text-slate-300 mb-3">Theme</label>
+              <label class="mb-3 block text-sm font-medium text-slate-300">Theme</label>
               <div class="flex gap-2">
                 @for (opt of themeOptions; track opt.value) {
                   <button
-                    class="px-4 py-2 text-sm rounded-lg border transition-colors"
-                    [class.bg-emerald-500/20-border-emerald-500]="currentSettings.general.theme === opt.value"
+                    class="rounded-lg border px-4 py-2 text-sm transition-colors"
+                    [class.bg-emerald-500/20-border-emerald-500]="
+                      currentSettings.general.theme === opt.value
+                    "
                     [class.text-emerald-400]="currentSettings.general.theme === opt.value"
-                    [class.bg-slate-800-border-slate-600]="currentSettings.general.theme !== opt.value"
+                    [class.bg-slate-800-border-slate-600]="
+                      currentSettings.general.theme !== opt.value
+                    "
                     [class.text-slate-300]="currentSettings.general.theme !== opt.value"
                     (click)="updateGeneralTheme(opt.value)"
                   >
@@ -76,26 +89,30 @@
               <input
                 type="checkbox"
                 id="startMinimized"
-                class="rounded bg-slate-800 border-slate-600 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0"
+                class="rounded border-slate-600 bg-slate-800 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0"
                 [checked]="currentSettings.general.startMinimized"
                 (change)="updateGeneral({ startMinimized: $any($event.target).checked })"
               />
-              <label for="startMinimized" class="text-sm text-slate-300">Start minimized to tray</label>
+              <label for="startMinimized" class="text-sm text-slate-300"
+                >Start minimized to tray</label
+              >
             </div>
 
             <div class="flex items-center gap-3">
               <input
                 type="checkbox"
                 id="checkUpdates"
-                class="rounded bg-slate-800 border-slate-600 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0"
+                class="rounded border-slate-600 bg-slate-800 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0"
                 [checked]="currentSettings.general.checkUpdates"
                 (change)="updateGeneral({ checkUpdates: $any($event.target).checked })"
               />
-              <label for="checkUpdates" class="text-sm text-slate-300">Check for updates on startup</label>
+              <label for="checkUpdates" class="text-sm text-slate-300"
+                >Check for updates on startup</label
+              >
             </div>
 
             <button
-              class="px-4 py-2 text-sm bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg border border-slate-600 transition-colors"
+              class="rounded-lg border border-slate-600 bg-slate-800 px-4 py-2 text-sm text-slate-300 transition-colors hover:bg-slate-700"
               (click)="checkForUpdates()"
             >
               Check for Updates
@@ -106,7 +123,7 @@
         @if (activeTab() === "editor") {
           <div class="space-y-6">
             <div>
-              <label class="block text-sm font-medium text-slate-300 mb-3">Font Size</label>
+              <label class="mb-3 block text-sm font-medium text-slate-300">Font Size</label>
               <div class="flex items-center gap-4">
                 <input
                   type="range"
@@ -116,17 +133,21 @@
                   [value]="currentSettings.editor.fontSize"
                   (input)="updateEditor({ fontSize: +$any($event.target).value })"
                 />
-                <span class="text-sm text-slate-400 w-12 text-right">{{ currentSettings.editor.fontSize }}px</span>
+                <span class="w-12 text-right text-sm text-slate-400"
+                  >{{ currentSettings.editor.fontSize }}px</span
+                >
               </div>
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-slate-300 mb-3">Tab Size</label>
+              <label class="mb-3 block text-sm font-medium text-slate-300">Tab Size</label>
               <div class="flex gap-2">
                 @for (size of tabSizeOptions; track size) {
                   <button
-                    class="px-4 py-2 text-sm rounded-lg border transition-colors"
-                    [class.bg-emerald-500/20-border-emerald-500]="currentSettings.editor.tabSize === size"
+                    class="rounded-lg border px-4 py-2 text-sm transition-colors"
+                    [class.bg-emerald-500/20-border-emerald-500]="
+                      currentSettings.editor.tabSize === size
+                    "
                     [class.text-emerald-400]="currentSettings.editor.tabSize === size"
                     [class.bg-slate-800-border-slate-600]="currentSettings.editor.tabSize !== size"
                     [class.text-slate-300]="currentSettings.editor.tabSize !== size"
@@ -142,7 +163,7 @@
               <input
                 type="checkbox"
                 id="autoSave"
-                class="rounded bg-slate-800 border-slate-600 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0"
+                class="rounded border-slate-600 bg-slate-800 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0"
                 [checked]="currentSettings.editor.autoSave"
                 (change)="updateEditor({ autoSave: $any($event.target).checked })"
               />
@@ -153,7 +174,7 @@
               <input
                 type="checkbox"
                 id="lineNumbers"
-                class="rounded bg-slate-800 border-slate-600 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0"
+                class="rounded border-slate-600 bg-slate-800 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0"
                 [checked]="currentSettings.editor.lineNumbers"
                 (change)="updateEditor({ lineNumbers: $any($event.target).checked })"
               />
@@ -165,9 +186,9 @@
         @if (activeTab() === "data") {
           <div class="space-y-6">
             <div>
-              <label class="block text-sm font-medium text-slate-300 mb-3">Default Page Size</label>
+              <label class="mb-3 block text-sm font-medium text-slate-300">Default Page Size</label>
               <select
-                class="bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500"
+                class="rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-slate-200 focus:border-emerald-500 focus:outline-none"
                 [value]="currentSettings.data.defaultPageSize"
                 (change)="updateData({ defaultPageSize: +$any($event.target).value })"
               >
@@ -178,13 +199,15 @@
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-slate-300 mb-3">Max Rows to Display</label>
+              <label class="mb-3 block text-sm font-medium text-slate-300"
+                >Max Rows to Display</label
+              >
               <input
                 type="number"
                 min="100"
                 max="10000"
                 step="100"
-                class="w-32 bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500"
+                class="w-32 rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-slate-200 focus:border-emerald-500 focus:outline-none"
                 [value]="currentSettings.data.maxRows"
                 (input)="updateData({ maxRows: +$any($event.target).value })"
               />
@@ -194,11 +217,13 @@
               <input
                 type="checkbox"
                 id="confirmBeforeDelete"
-                class="rounded bg-slate-800 border-slate-600 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0"
+                class="rounded border-slate-600 bg-slate-800 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0"
                 [checked]="currentSettings.data.confirmBeforeDelete"
                 (change)="updateData({ confirmBeforeDelete: $any($event.target).checked })"
               />
-              <label for="confirmBeforeDelete" class="text-sm text-slate-300">Confirm before deleting data</label>
+              <label for="confirmBeforeDelete" class="text-sm text-slate-300"
+                >Confirm before deleting data</label
+              >
             </div>
           </div>
         }
@@ -206,24 +231,28 @@
         @if (activeTab() === "connections") {
           <div class="space-y-6">
             <div>
-              <label class="block text-sm font-medium text-slate-300 mb-3">Connection Timeout (seconds)</label>
+              <label class="mb-3 block text-sm font-medium text-slate-300"
+                >Connection Timeout (seconds)</label
+              >
               <input
                 type="number"
                 min="5"
                 max="300"
-                class="w-32 bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500"
+                class="w-32 rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-slate-200 focus:border-emerald-500 focus:outline-none"
                 [value]="currentSettings.connections.connectionTimeout"
                 (input)="updateConnections({ connectionTimeout: +$any($event.target).value })"
               />
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-slate-300 mb-3">Max Concurrent Connections</label>
+              <label class="mb-3 block text-sm font-medium text-slate-300"
+                >Max Concurrent Connections</label
+              >
               <input
                 type="number"
                 min="1"
                 max="20"
-                class="w-32 bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500"
+                class="w-32 rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-slate-200 focus:border-emerald-500 focus:outline-none"
                 [value]="currentSettings.connections.maxConcurrent"
                 (input)="updateConnections({ maxConcurrent: +$any($event.target).value })"
               />
@@ -233,33 +262,35 @@
               <input
                 type="checkbox"
                 id="autoReconnect"
-                class="rounded bg-slate-800 border-slate-600 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0"
+                class="rounded border-slate-600 bg-slate-800 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0"
                 [checked]="currentSettings.connections.autoReconnect"
                 (change)="updateConnections({ autoReconnect: $any($event.target).checked })"
               />
-              <label for="autoReconnect" class="text-sm text-slate-300">Auto-reconnect on connection loss</label>
+              <label for="autoReconnect" class="text-sm text-slate-300"
+                >Auto-reconnect on connection loss</label
+              >
             </div>
           </div>
         }
       </div>
     </div>
 
-    <div class="px-6 py-4 border-t border-slate-700 flex justify-between">
+    <div class="flex justify-between border-t border-slate-700 px-6 py-4">
       <button
-        class="px-4 py-2 text-sm text-slate-400 hover:text-slate-200 transition-colors"
+        class="px-4 py-2 text-sm text-slate-400 transition-colors hover:text-slate-200"
         (click)="resetToDefaults()"
       >
         Reset to Defaults
       </button>
       <div class="flex gap-3">
         <button
-          class="px-4 py-2 text-sm text-slate-300 hover:text-slate-100 transition-colors"
+          class="px-4 py-2 text-sm text-slate-300 transition-colors hover:text-slate-100"
           (click)="cancelSettings()"
         >
           Cancel
         </button>
         <button
-          class="px-4 py-2 text-sm bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-colors"
+          class="rounded-lg bg-emerald-600 px-4 py-2 text-sm text-white transition-colors hover:bg-emerald-500"
           (click)="saveSettings()"
         >
           Save

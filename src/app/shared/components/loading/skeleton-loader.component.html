@@ -1,12 +1,12 @@
 @for (item of items; track $index) {
   @switch (variant) {
     @case ("text") {
-      <div class="h-4 w-3/4 rounded bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
+      <div class="h-4 w-3/4 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
     }
     @case ("card") {
-      <div class="rounded-xl bg-gray-200 dark:bg-gray-700 animate-pulse">
+      <div class="animate-pulse rounded-xl bg-gray-200 dark:bg-gray-700">
         <div class="h-32 w-full rounded-t-xl bg-gray-300 dark:bg-gray-600"></div>
-        <div class="p-4 space-y-2">
+        <div class="space-y-2 p-4">
           <div class="h-4 w-2/3 rounded bg-gray-300 dark:bg-gray-600"></div>
           <div class="h-3 w-1/2 rounded bg-gray-300 dark:bg-gray-600"></div>
         </div>
@@ -15,24 +15,24 @@
     @case ("table-row") {
       <div class="flex items-center gap-4 py-3">
         @for (col of columnsArray; track col) {
-          <div class="h-4 flex-1 rounded bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
+          <div class="h-4 flex-1 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
         }
       </div>
     }
     @case ("avatar") {
       <div class="flex items-center gap-3">
-        <div class="h-10 w-10 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
+        <div class="h-10 w-10 animate-pulse rounded-full bg-gray-200 dark:bg-gray-700"></div>
         <div class="space-y-2">
-          <div class="h-4 w-32 rounded bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
-          <div class="h-3 w-24 rounded bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
+          <div class="h-4 w-32 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+          <div class="h-3 w-24 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
         </div>
       </div>
     }
     @case ("button") {
-      <div class="h-10 w-24 rounded-lg bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
+      <div class="h-10 w-24 animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700"></div>
     }
     @default {
-      <div class="h-4 rounded bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
+      <div class="h-4 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
     }
   }
 }

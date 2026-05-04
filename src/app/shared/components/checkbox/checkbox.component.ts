@@ -6,7 +6,7 @@ import { MatCheckboxModule } from "@angular/material/checkbox";
   standalone: true,
   imports: [MatCheckboxModule],
   templateUrl: "./checkbox.component.html",
-  styleUrl: "./checkbox.component.css"
+  styleUrl: "./checkbox.component.css",
 })
 export class CheckboxComponent {
   checked = input<boolean>(false);

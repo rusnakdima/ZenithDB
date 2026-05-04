@@ -1,4 +1,13 @@
-import { Component, signal, inject, computed, AfterViewInit, ViewChild, ElementRef, HostListener } from "@angular/core";
+import {
+  Component,
+  signal,
+  inject,
+  computed,
+  AfterViewInit,
+  ViewChild,
+  ElementRef,
+  HostListener,
+} from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { Router } from "@angular/router";
 import { fromEvent } from "rxjs";
@@ -32,34 +41,116 @@ export class CommandPaletteComponent implements AfterViewInit {
   private maxRecent = 5;
 
   private allCommands: Command[] = [
-    { id: "nav-connections", icon: "fa-plug", text: "Go to Connections", shortcut: "Ctrl+P", action: "/connections", type: "navigation" },
-    { id: "nav-schema", icon: "fa-table", text: "Go to Schema", shortcut: "Ctrl+G → S", action: "/schema", type: "navigation" },
-    { id: "nav-query", icon: "fa-terminal", text: "Go to Query Editor", shortcut: "Ctrl+G → Q", action: "/query", type: "navigation" },
-    { id: "nav-workbench", icon: "fa-laptop", text: "Go to Workbench", shortcut: "Ctrl+G → W", action: "/workbench", type: "navigation" },
-    { id: "nav-explorer", icon: "fa-folder-tree", text: "Go to Explorer", shortcut: "Ctrl+G → E", action: "/explorer", type: "navigation" },
-    { id: "action-new-connection", icon: "fa-plus", text: "New Connection", shortcut: "Ctrl+N", action: "new-connection", type: "action" },
-    { id: "action-run-query", icon: "fa-play", text: "Run Selected Query", shortcut: "Ctrl+Enter", action: "run-query", type: "action" },
-    { id: "action-format-sql", icon: "fa-align-left", text: "Format SQL", shortcut: "Ctrl+Shift+F", action: "format-sql", type: "action" },
-    { id: "action-clear-editor", icon: "fa-eraser", text: "Clear Editor", shortcut: "Ctrl+L", action: "clear-editor", type: "action" },
-    { id: "action-toggle-theme", icon: "fa-circle-half-stroke", text: "Toggle Theme", action: "toggle-theme", type: "action" },
-    { id: "action-show-shortcuts", icon: "fa-keyboard", text: "Show Keyboard Shortcuts", shortcut: "Ctrl+/", action: "show-shortcuts", type: "action" },
-    { id: "action-export", icon: "fa-download", text: "Export Current View", action: "export", type: "action" },
+    {
+      id: "nav-connections",
+      icon: "fa-plug",
+      text: "Go to Connections",
+      shortcut: "Ctrl+P",
+      action: "/connections",
+      type: "navigation",
+    },
+    {
+      id: "nav-schema",
+      icon: "fa-table",
+      text: "Go to Schema",
+      shortcut: "Ctrl+G → S",
+      action: "/schema",
+      type: "navigation",
+    },
+    {
+      id: "nav-query",
+      icon: "fa-terminal",
+      text: "Go to Query Editor",
+      shortcut: "Ctrl+G → Q",
+      action: "/query",
+      type: "navigation",
+    },
+    {
+      id: "nav-workbench",
+      icon: "fa-laptop",
+      text: "Go to Workbench",
+      shortcut: "Ctrl+G → W",
+      action: "/workbench",
+      type: "navigation",
+    },
+    {
+      id: "nav-explorer",
+      icon: "fa-folder-tree",
+      text: "Go to Explorer",
+      shortcut: "Ctrl+G → E",
+      action: "/explorer",
+      type: "navigation",
+    },
+    {
+      id: "action-new-connection",
+      icon: "fa-plus",
+      text: "New Connection",
+      shortcut: "Ctrl+N",
+      action: "new-connection",
+      type: "action",
+    },
+    {
+      id: "action-run-query",
+      icon: "fa-play",
+      text: "Run Selected Query",
+      shortcut: "Ctrl+Enter",
+      action: "run-query",
+      type: "action",
+    },
+    {
+      id: "action-format-sql",
+      icon: "fa-align-left",
+      text: "Format SQL",
+      shortcut: "Ctrl+Shift+F",
+      action: "format-sql",
+      type: "action",
+    },
+    {
+      id: "action-clear-editor",
+      icon: "fa-eraser",
+      text: "Clear Editor",
+      shortcut: "Ctrl+L",
+      action: "clear-editor",
+      type: "action",
+    },
+    {
+      id: "action-toggle-theme",
+      icon: "fa-circle-half-stroke",
+      text: "Toggle Theme",
+      action: "toggle-theme",
+      type: "action",
+    },
+    {
+      id: "action-show-shortcuts",
+      icon: "fa-keyboard",
+      text: "Show Keyboard Shortcuts",
+      shortcut: "Ctrl+/",
+      action: "show-shortcuts",
+      type: "action",
+    },
+    {
+      id: "action-export",
+      icon: "fa-download",
+      text: "Export Current View",
+      action: "export",
+      type: "action",
+    },
   ];
 
   filteredCommands = computed(() => {
     const q = this.query().toLowerCase().trim();
     const recent = this.recentCommands();
 
-    let commands = this.allCommands.filter(cmd => {
+    let commands = this.allCommands.filter((cmd) => {
       if (!q) return true;
       const text = cmd.text.toLowerCase();
       const words = q.split(" ").filter(Boolean);
-      return words.every(word => text.includes(word));
+      return words.every((word) => text.includes(word));
     });
 
     if (recent.length > 0 && !q) {
-      const recentCmds = commands.filter(c => recent.includes(c.id));
-      const otherCmds = commands.filter(c => !recent.includes(c.id));
+      const recentCmds = commands.filter((c) => recent.includes(c.id));
+      const otherCmds = commands.filter((c) => !recent.includes(c.id));
       return [...recentCmds, ...otherCmds];
     }
 
@@ -75,18 +166,17 @@ export class CommandPaletteComponent implements AfterViewInit {
 
   private setupEventListeners(): void {
     fromEvent<KeyboardEvent>(document, "keydown")
-      .pipe(filter(e => (e.ctrlKey || e.metaKey) && e.key === "p"))
-      .subscribe(e => {
+      .pipe(filter((e) => (e.ctrlKey || e.metaKey) && e.key === "p"))
+      .subscribe((e) => {
         e.preventDefault();
         this.toggle();
       });
 
     fromEvent<KeyboardEvent>(document, "keydown")
-      .pipe(filter(e => e.key === "Escape" && this.visible()))
+      .pipe(filter((e) => e.key === "Escape" && this.visible()))
       .subscribe(() => this.hide());
 
-    fromEvent(document, "zenith:toggle-command-palette")
-      .subscribe(() => this.toggle());
+    fromEvent(document, "zenith:toggle-command-palette").subscribe(() => this.toggle());
   }
 
   @HostListener("document:keydown", ["$event"])
@@ -107,7 +197,7 @@ export class CommandPaletteComponent implements AfterViewInit {
   }
 
   private saveRecentCommand(id: string): void {
-    const recent = this.recentCommands().filter(r => r !== id);
+    const recent = this.recentCommands().filter((r) => r !== id);
     recent.unshift(id);
     this.recentCommands.set(recent.slice(0, this.maxRecent));
     try {
@@ -148,11 +238,11 @@ export class CommandPaletteComponent implements AfterViewInit {
     switch (event.key) {
       case "ArrowDown":
         event.preventDefault();
-        this.selectedIndex.update(i => (i + 1) % len);
+        this.selectedIndex.update((i) => (i + 1) % len);
         break;
       case "ArrowUp":
         event.preventDefault();
-        this.selectedIndex.update(i => (i - 1 + len) % len);
+        this.selectedIndex.update((i) => (i - 1 + len) % len);
         break;
       case "Enter":
         event.preventDefault();
