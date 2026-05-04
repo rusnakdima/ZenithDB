@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=ZenithDB
+Comment=Professional Database Manager
+Icon=com.tcs.zenithdb
+Exec=zenithdb
+Terminal=false
+Categories=Development;Database;
+Keywords=database;manager;professional;sql;nosql;
+StartupWMClass=zenithdb
+StartupNotify=true

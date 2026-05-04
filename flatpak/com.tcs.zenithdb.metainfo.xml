@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>com.tcs.zenithdb</id>
+  <metadata_license>MIT</metadata_license>
+  <project_license>MIT</project_license>
+
+  <name>ZenithDB</name>
+  <summary>Professional Database Manager</summary>
+
+  <developer id="com.tcs">
+    <name>TechCraft Solutions</name>
+  </developer>
+
+  <description>
+    <p>ZenithDB is a professional database management application supporting multiple database types including MongoDB, Redis, PostgreSQL, MySQL, and SQLite.</p>
+    <p>Features include:</p>
+    <ul>
+      <li>Multi-database connectivity</li>
+      <li>Schema management</li>
+      <li>Data browsing and editing</li>
+      <li>Connection management</li>
+      <li>Professional database tools</li>
+    </ul>
+  </description>
+
+  <launchable type="desktop-id">com.tcs.zenithdb.desktop</launchable>
+
+  <screenshots>
+    <screenshot type="default">
+      <image>https://via.placeholder.com/800x600</image>
+      <caption>Main database management interface</caption>
+    </screenshot>
+  </screenshots>
+
+  <url type="homepage">https://github.com/rusnakdima/ZenithDB</url>
+  <url type="bugtracker">https://github.com/rusnakdima/ZenithDB/issues</url>
+
+  <releases>
+    <release version="0.1.0" date="2026-05-04">
+      <description>
+        <p>Initial release of ZenithDB</p>
+      </description>
+    </release>
+  </releases>
+
+  <content_rating type="oars-1.1" />
+
+  <categories>
+    <category>Development</category>
+    <category>Database</category>
+  </categories>
+</component>

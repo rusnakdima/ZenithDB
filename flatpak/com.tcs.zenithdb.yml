@@ -1,0 +1,46 @@
+app-id: com.tcs.zenithdb
+runtime: org.gnome.Platform
+runtime-version: "49"
+sdk: org.gnome.Sdk
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.rust-stable
+  - org.freedesktop.Sdk.Extension.node22
+command: zenithdb
+
+finish-args:
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --device=dri
+  - --share=ipc
+  - --share=network
+  - --filesystem=home
+
+modules:
+  - name: zenithdb-local
+    buildsystem: simple
+    build-options:
+      append-path: /usr/lib/sdk/node22/bin:/usr/lib/sdk/rust-stable/bin
+    build-commands:
+      - install -Dm755 src-tauri/target/release/zenithdb /app/bin/zenithdb
+      - install -Dm644 com.tcs.zenithdb.desktop /app/share/applications/com.tcs.zenithdb.desktop
+      - install -Dm644 com.tcs.zenithdb.metainfo.xml /app/share/metainfo/com.tcs.zenithdb.metainfo.xml
+      - |
+        for size in 128x128 256x256; do
+          install -Dm644 src-tauri/icons/icon.png /app/share/icons/hicolor/$size/apps/com.tcs.zenithdb.png
+        done
+      - install -Dm644 src-tauri/icons/icon.png /app/share/icons/hicolor/scalable/apps/com.tcs.zenithdb.svg
+
+    sources:
+      - type: file
+        path: "com.tcs.zenithdb.desktop"
+      - type: file
+        path: "com.tcs.zenithdb.metainfo.xml"
+      - type: dir
+        path: "../src-tauri/icons"
+        dest: "src-tauri/icons"
+      - type: dir
+        path: "../src-tauri/target/release"
+        dest: "src-tauri/target/release"
+
+    cleanup:
+      - /share/man
