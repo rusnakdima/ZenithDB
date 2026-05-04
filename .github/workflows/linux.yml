@@ -1,0 +1,67 @@
+name: Build for Linux
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build-linux:
+    permissions:
+      contents: write
+    runs-on: blacksmith-2vcpu-ubuntu-2204
+    env:
+      NAME_APP: zenithdb
+      APP_HOME_FOLDER: ZenithDB
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create .env file
+        run: |
+          echo "NAME_APP=zenithdb" > src-tauri/.env
+          echo "APP_HOME_FOLDER=ZenithDB" >> src-tauri/.env
+
+      - name: Install dependencies (ubuntu only)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.0-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: "./src-tauri -> target"
+
+      - name: Install frontend dependencies
+        run: bun install
+
+      - name: Build app
+        shell: bash
+        run: |
+          chmod +x ./scripts/build-optimized.sh
+          FORCE_BUILD=true ./scripts/build-optimized.sh build desktop release
+
+      - name: Upload to Existing Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          tag_name: ${{ github.ref_name }}
+          files: |
+            src-tauri/target/release/bundle/deb/*.deb
+            src-tauri/target/release/bundle/rpm/*.rpm
+            src-tauri/target/release/bundle/appimage/*.AppImage
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
