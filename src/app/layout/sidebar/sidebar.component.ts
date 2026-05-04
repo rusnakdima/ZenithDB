@@ -1,4 +1,14 @@
-import { Component, output, inject, signal, OnInit, OnDestroy, effect, Injector, runInInjectionContext } from "@angular/core";
+import {
+  Component,
+  output,
+  inject,
+  signal,
+  OnInit,
+  OnDestroy,
+  effect,
+  Injector,
+  runInInjectionContext,
+} from "@angular/core";
 import { Router, RouterLink } from "@angular/router";
 import { TitleCasePipe, UpperCasePipe } from "@angular/common";
 import { MatIconModule } from "@angular/material/icon";
@@ -82,7 +92,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
     this.connectionState.setActiveConnection(conn);
 
     if (!this.expandedConnections().has(conn.id)) {
-      this.expandedConnections.update(set => {
+      this.expandedConnections.update((set) => {
         const newSet = new Set(set);
         newSet.add(conn.id);
         return newSet;
@@ -101,16 +111,16 @@ export class SidebarComponent implements OnInit, OnDestroy {
         name: connId,
         type: "database",
         expanded: true,
-        children: collections.map(c => ({
+        children: collections.map((c) => ({
           name: c.name,
           type: "collection" as const,
           expanded: false,
-          collection: c
-        }))
+          collection: c,
+        })),
       };
       this.databases.set([dbNode]);
     } catch (e) {
-      console.error('Failed to load databases:', e);
+      console.error("Failed to load databases:", e);
       this.databases.set([]);
     } finally {
       this.loadingDatabases.set(false);
@@ -120,13 +130,13 @@ export class SidebarComponent implements OnInit, OnDestroy {
   toggleConnection(connId: string, event: Event) {
     event.stopPropagation();
     if (this.expandedConnections().has(connId)) {
-      this.expandedConnections.update(set => {
+      this.expandedConnections.update((set) => {
         const newSet = new Set(set);
         newSet.delete(connId);
         return newSet;
       });
     } else {
-      this.expandedConnections.update(set => {
+      this.expandedConnections.update((set) => {
         const newSet = new Set(set);
         newSet.add(connId);
         return newSet;

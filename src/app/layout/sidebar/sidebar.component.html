@@ -1,96 +1,129 @@
 <aside class="app-sidebar">
   <div class="p-3">
     <a routerLink="/connections/new" class="sidebar-connect-btn flex items-center gap-2">
-      <mat-icon fontIcon="plug" class="inline-flex items-center justify-center text-xl!"></mat-icon> Connect to...
+      <mat-icon fontIcon="plug" class="inline-flex items-center justify-center text-xl!"></mat-icon>
+      Connect to...
     </a>
   </div>
 
   <div class="sidebar-scroll">
     <!-- Connections List -->
     @if (storage.connections().length > 0) {
-    <div class="sidebar-section">
-      <div class="sidebar-section-header">
-        <span>Connections</span>
-        <mat-icon fontIcon="dns" class="inline-flex items-center justify-center text-xl!"></mat-icon>
-      </div>
-      <div class="sidebar-section-content">
-        @for (conn of storage.connections(); track conn.id) {
-        <div class="sidebar-connection-item" [class.sidebar-connection-active]="activeConnectionId() === conn.id">
-          <div class="sidebar-connection-header" (click)="selectConnection(conn)">
-            <button class="sidebar-expand-btn" (click)="toggleConnection(conn.id, $event)">
-              <mat-icon [fontIcon]="!isConnectionExpanded(conn.id) ? 'chevron_right' : 'expand_more'" class="inline-flex items-center justify-center text-xl!"></mat-icon>
-            </button>
-            <mat-icon [fontIcon]="getIconClass(conn.provider)" class="inline-flex items-center justify-center text-xl!"></mat-icon>
-            <span class="sidebar-connection-name">{{ conn.name }}</span>
-          </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-header">
+          <span>Connections</span>
+          <mat-icon
+            fontIcon="dns"
+            class="inline-flex items-center justify-center text-xl!"
+          ></mat-icon>
+        </div>
+        <div class="sidebar-section-content">
+          @for (conn of storage.connections(); track conn.id) {
+            <div
+              class="sidebar-connection-item"
+              [class.sidebar-connection-active]="activeConnectionId() === conn.id"
+            >
+              <div class="sidebar-connection-header" (click)="selectConnection(conn)">
+                <button class="sidebar-expand-btn" (click)="toggleConnection(conn.id, $event)">
+                  <mat-icon
+                    [fontIcon]="!isConnectionExpanded(conn.id) ? 'chevron_right' : 'expand_more'"
+                    class="inline-flex items-center justify-center text-xl!"
+                  ></mat-icon>
+                </button>
+                <mat-icon
+                  [fontIcon]="getIconClass(conn.provider)"
+                  class="inline-flex items-center justify-center text-xl!"
+                ></mat-icon>
+                <span class="sidebar-connection-name">{{ conn.name }}</span>
+              </div>
 
-          @if (isConnectionExpanded(conn.id)) {
-          <div class="sidebar-database-list">
-            @if (loadingDatabases() && activeConnectionId() === conn.id) {
-            <div class="sidebar-loading">
-              <mat-icon fontIcon="sync" class="inline-flex items-center justify-center fa-spin text-xl!"></mat-icon> Loading...
-            </div>
-            } @else if (databases().length > 0) {
-            @for (db of databases(); track db.name) {
-            <div class="sidebar-database">
-              <div class="sidebar-database-header" (click)="toggleDatabase(db, $event)">
-                <mat-icon [fontIcon]="!db.expanded ? 'chevron_right' : 'expand_more'" class="inline-flex items-center justify-center text-xl!"></mat-icon>
-                <mat-icon fontIcon="storage" class="inline-flex items-center justify-center text-xl!"></mat-icon>
-                <span>{{ db.name }}</span>
-              </div>
-              @if (db.expanded && db.children) {
-              <div class="sidebar-collections">
-                @for (col of db.children; track col.name) {
-                <div class="sidebar-collection" (click)="onCollectionClick(col)">
-                  <mat-icon fontIcon="table_chart" class="text-xl!"></mat-icon>
-                  <span>{{ col.name }}</span>
+              @if (isConnectionExpanded(conn.id)) {
+                <div class="sidebar-database-list">
+                  @if (loadingDatabases() && activeConnectionId() === conn.id) {
+                    <div class="sidebar-loading">
+                      <mat-icon
+                        fontIcon="sync"
+                        class="fa-spin inline-flex items-center justify-center text-xl!"
+                      ></mat-icon>
+                      Loading...
+                    </div>
+                  } @else if (databases().length > 0) {
+                    @for (db of databases(); track db.name) {
+                      <div class="sidebar-database">
+                        <div class="sidebar-database-header" (click)="toggleDatabase(db, $event)">
+                          <mat-icon
+                            [fontIcon]="!db.expanded ? 'chevron_right' : 'expand_more'"
+                            class="inline-flex items-center justify-center text-xl!"
+                          ></mat-icon>
+                          <mat-icon
+                            fontIcon="storage"
+                            class="inline-flex items-center justify-center text-xl!"
+                          ></mat-icon>
+                          <span>{{ db.name }}</span>
+                        </div>
+                        @if (db.expanded && db.children) {
+                          <div class="sidebar-collections">
+                            @for (col of db.children; track col.name) {
+                              <div class="sidebar-collection" (click)="onCollectionClick(col)">
+                                <mat-icon fontIcon="table_chart" class="text-xl!"></mat-icon>
+                                <span>{{ col.name }}</span>
+                                @if (col.collection?.count !== undefined) {
+                                  <span class="sidebar-collection-count"
+                                    >({{ col.collection?.count }})</span
+                                  >
+                                }
+                              </div>
+                            }
+                          </div>
+                        }
+                      </div>
+                    }
+                  } @else {
+                    <div class="sidebar-empty">No collections</div>
+                  }
                 </div>
-                }
-              </div>
               }
             </div>
-            }
-            } @else {
-            <div class="sidebar-empty">
-              No collections
-            </div>
-            }
-          </div>
           }
         </div>
-        }
       </div>
-    </div>
     } @else {
-    <div class="sidebar-empty-state">
-      <mat-icon fontIcon="plug" class="inline-flex items-center justify-center text-xl!"></mat-icon>
-      <p>No connections</p>
-      <a routerLink="/connections/new">Add Connection</a>
-    </div>
+      <div class="sidebar-empty-state">
+        <mat-icon
+          fontIcon="plug"
+          class="inline-flex items-center justify-center text-xl!"
+        ></mat-icon>
+        <p>No connections</p>
+        <a routerLink="/connections/new">Add Connection</a>
+      </div>
     }
   </div>
 
   <div class="sidebar-footer">
     @if (systemStatus(); as status) {
-    <div class="sidebar-footer-status">
-      <div class="sidebar-footer-dot" [class]="getStatusColor(status.status)"></div>
-      <span class="sidebar-footer-status-text">System Status: {{ status.status | titlecase }}</span>
-    </div>
-    <div class="sidebar-footer-stats">
-      <div class="sidebar-footer-stat">
-        <div class="sidebar-footer-stat-label">CPU</div>
-        <div class="sidebar-footer-stat-value">{{ status.cpu_usage.toFixed(1) }}%</div>
+      <div class="sidebar-footer-status">
+        <div class="sidebar-footer-dot" [class]="getStatusColor(status.status)"></div>
+        <span class="sidebar-footer-status-text"
+          >System Status: {{ status.status | titlecase }}</span
+        >
       </div>
-      <div class="sidebar-footer-stat">
-        <div class="sidebar-footer-stat-label">RAM</div>
-        <div class="sidebar-footer-stat-value">{{ formatBytes(status.ram_used) }} / {{ formatBytes(status.ram_total) }}</div>
+      <div class="sidebar-footer-stats">
+        <div class="sidebar-footer-stat">
+          <div class="sidebar-footer-stat-label">CPU</div>
+          <div class="sidebar-footer-stat-value">{{ status.cpu_usage.toFixed(1) }}%</div>
+        </div>
+        <div class="sidebar-footer-stat">
+          <div class="sidebar-footer-stat-label">RAM</div>
+          <div class="sidebar-footer-stat-value">
+            {{ formatBytes(status.ram_used) }} / {{ formatBytes(status.ram_total) }}
+          </div>
+        </div>
       </div>
-    </div>
     } @else {
-    <div class="sidebar-footer-status">
-      <div class="sidebar-footer-dot bg-slate-500"></div>
-      <span class="sidebar-footer-status-text">Loading...</span>
-    </div>
+      <div class="sidebar-footer-status">
+        <div class="sidebar-footer-dot bg-slate-500"></div>
+        <span class="sidebar-footer-status-text">Loading...</span>
+      </div>
     }
   </div>
 </aside>

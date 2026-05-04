@@ -18,7 +18,13 @@ export interface ToastConfig {
   position?: ToastPosition;
 }
 
-export type ToastPosition = "top-right" | "top-left" | "bottom-right" | "bottom-left" | "top-center" | "bottom-center";
+export type ToastPosition =
+  | "top-right"
+  | "top-left"
+  | "bottom-right"
+  | "bottom-left"
+  | "top-center"
+  | "bottom-center";
 
 const DEFAULT_DURATIONS: Record<ToastType, number> = {
   success: 3000,
@@ -66,7 +72,10 @@ export class ToastService {
     return id;
   }
 
-  success(message: string, options?: Partial<Omit<ToastConfig, "id" | "type" | "message">>): string {
+  success(
+    message: string,
+    options?: Partial<Omit<ToastConfig, "id" | "type" | "message">>
+  ): string {
     return this.show({ ...options, type: "success", message });
   }
 
@@ -74,7 +83,10 @@ export class ToastService {
     return this.show({ ...options, type: "error", message });
   }
 
-  warning(message: string, options?: Partial<Omit<ToastConfig, "id" | "type" | "message">>): string {
+  warning(
+    message: string,
+    options?: Partial<Omit<ToastConfig, "id" | "type" | "message">>
+  ): string {
     return this.show({ ...options, type: "warning", message });
   }
 
@@ -90,7 +102,12 @@ export class ToastService {
     this.toastsSignal.set([]);
   }
 
-  update(id: string, changes: Partial<Pick<ToastConfig, "message" | "title" | "type" | "duration" | "persistent" | "action">>): void {
+  update(
+    id: string,
+    changes: Partial<
+      Pick<ToastConfig, "message" | "title" | "type" | "duration" | "persistent" | "action">
+    >
+  ): void {
     this.toastsSignal.update((toasts) =>
       toasts.map((t) => (t.id === id ? { ...t, ...changes } : t))
     );

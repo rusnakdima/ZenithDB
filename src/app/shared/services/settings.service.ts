@@ -131,9 +131,7 @@ export class SettingsService {
   onSettingsChange(callback: (settings: AppSettings) => void): () => void {
     this.changeListeners.update((listeners) => [...listeners, callback]);
     return () => {
-      this.changeListeners.update((listeners) =>
-        listeners.filter((l) => l !== callback)
-      );
+      this.changeListeners.update((listeners) => listeners.filter((l) => l !== callback));
     };
   }
 

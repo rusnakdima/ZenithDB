@@ -103,27 +103,63 @@ export class ErrorHandlerService {
           retryable: true,
         };
       case 400:
-        return this.parseErrorResponse(error, ErrorCode.VALIDATION_ERROR, "Invalid request. Please check your input.");
+        return this.parseErrorResponse(
+          error,
+          ErrorCode.VALIDATION_ERROR,
+          "Invalid request. Please check your input."
+        );
       case 401:
-        return this.parseErrorResponse(error, ErrorCode.UNAUTHORIZED, "Authentication required. Please log in.");
+        return this.parseErrorResponse(
+          error,
+          ErrorCode.UNAUTHORIZED,
+          "Authentication required. Please log in."
+        );
       case 403:
-        return this.parseErrorResponse(error, ErrorCode.FORBIDDEN, "You don't have permission to perform this action.");
+        return this.parseErrorResponse(
+          error,
+          ErrorCode.FORBIDDEN,
+          "You don't have permission to perform this action."
+        );
       case 404:
-        return this.parseErrorResponse(error, ErrorCode.NOT_FOUND, "The requested resource was not found.");
+        return this.parseErrorResponse(
+          error,
+          ErrorCode.NOT_FOUND,
+          "The requested resource was not found."
+        );
       case 408:
-        return this.parseErrorResponse(error, ErrorCode.TIMEOUT, "Request timed out. Please try again.");
+        return this.parseErrorResponse(
+          error,
+          ErrorCode.TIMEOUT,
+          "Request timed out. Please try again."
+        );
       case 500:
-        return this.parseErrorResponse(error, ErrorCode.SERVER_ERROR, "Server error. Please try again later.");
+        return this.parseErrorResponse(
+          error,
+          ErrorCode.SERVER_ERROR,
+          "Server error. Please try again later."
+        );
       case 502:
       case 503:
       case 504:
-        return this.parseErrorResponse(error, ErrorCode.SERVER_ERROR, "Service temporarily unavailable. Please try again later.");
+        return this.parseErrorResponse(
+          error,
+          ErrorCode.SERVER_ERROR,
+          "Service temporarily unavailable. Please try again later."
+        );
       default:
-        return this.parseErrorResponse(error, ErrorCode.UNKNOWN, "An error occurred. Please try again.");
+        return this.parseErrorResponse(
+          error,
+          ErrorCode.UNKNOWN,
+          "An error occurred. Please try again."
+        );
     }
   }
 
-  private parseErrorResponse(error: HttpErrorResponse, defaultCode: ErrorCode, defaultMessage: string): AppError {
+  private parseErrorResponse(
+    error: HttpErrorResponse,
+    defaultCode: ErrorCode,
+    defaultMessage: string
+  ): AppError {
     let userMessage = defaultMessage;
     let details: string | undefined;
     let code = defaultCode;

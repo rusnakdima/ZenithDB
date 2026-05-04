@@ -72,7 +72,7 @@ export const SHORTCUT_CONFIG: Record<string, Shortcut> = {
     category: "editor",
     modifiers: ["ctrl"],
   },
-  "save": {
+  save: {
     key: "s",
     description: "Save",
     category: "editor",

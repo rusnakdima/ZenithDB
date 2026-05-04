@@ -6,6 +6,9 @@ import { StorageService } from "@services/core/storage.service";
 import {
   ConnectionSummary,
   ConnectionConfig,
+  ConnectionConfigResult,
+  ConnectionConfigEnum,
+  TestConnectionConfig,
   ConnectionHealth,
   CollectionMeta,
   CollectionSchema,
@@ -32,7 +35,7 @@ export class DatabaseService {
     }
   }
 
-  async getConnection(id: string): Promise<ConnectionConfig & { id: string }> {
+  async getConnection(id: string): Promise<ConnectionConfigResult> {
     this.loadingService.show("Loading connection...");
     try {
       return await this.api.getConnection(id);
@@ -59,7 +62,7 @@ export class DatabaseService {
     }
   }
 
-  async testConnection(config: ConnectionConfig): Promise<ConnectionHealth> {
+  async testConnection(config: TestConnectionConfig): Promise<ConnectionHealth> {
     this.loadingService.show("Testing connection...");
     try {
       return await this.api.testConnection(config);

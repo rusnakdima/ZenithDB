@@ -30,14 +30,10 @@ export class ExportService {
     }
 
     const headers = Object.keys(data[0]);
-    const rows = data.map((row) =>
-      headers.map((h) => this.escapeCsvValue(row[h])).join(",")
-    );
+    const rows = data.map((row) => headers.map((h) => this.escapeCsvValue(row[h])).join(","));
     const content = includeHeaders ? [headers.join(","), ...rows].join("\n") : rows.join("\n");
 
-    await this.saveFile(content, filename, [
-      { name: "CSV Files", extensions: ["csv"] },
-    ]);
+    await this.saveFile(content, filename, [{ name: "CSV Files", extensions: ["csv"] }]);
   }
 
   async exportToJson(data: any[], filename: string): Promise<void> {
@@ -47,9 +43,7 @@ export class ExportService {
     }
 
     const content = JSON.stringify(data, null, 2);
-    await this.saveFile(content, filename, [
-      { name: "JSON Files", extensions: ["json"] },
-    ]);
+    await this.saveFile(content, filename, [{ name: "JSON Files", extensions: ["json"] }]);
   }
 
   async exportToJsonLines(data: any[], filename: string): Promise<void> {
@@ -65,11 +59,7 @@ export class ExportService {
     ]);
   }
 
-  async exportToSql(
-    data: any[],
-    tableName: string,
-    filename: string
-  ): Promise<void> {
+  async exportToSql(data: any[], tableName: string, filename: string): Promise<void> {
     if (data.length === 0) {
       this.toast.warning("No data to export");
       return;
@@ -82,9 +72,7 @@ export class ExportService {
     });
 
     const content = statements.join("\n");
-    await this.saveFile(content, filename, [
-      { name: "SQL Files", extensions: ["sql"] },
-    ]);
+    await this.saveFile(content, filename, [{ name: "SQL Files", extensions: ["sql"] }]);
   }
 
   async exportToMarkdown(data: any[], filename: string): Promise<void> {
@@ -96,14 +84,12 @@ export class ExportService {
     const headers = Object.keys(data[0]);
     const headerRow = `| ${headers.join(" | ")} |`;
     const separatorRow = `| ${headers.map(() => "---").join(" | ")} |`;
-    const dataRows = data.map((row) =>
-      `| ${headers.map((h) => String(row[h] ?? "")).join(" | ")} |`
+    const dataRows = data.map(
+      (row) => `| ${headers.map((h) => String(row[h] ?? "")).join(" | ")} |`
     );
 
     const content = [headerRow, separatorRow, ...dataRows].join("\n");
-    await this.saveFile(content, filename, [
-      { name: "Markdown Files", extensions: ["md"] },
-    ]);
+    await this.saveFile(content, filename, [{ name: "Markdown Files", extensions: ["md"] }]);
   }
 
   async export(options: ExportOptions, data: any[]): Promise<void> {

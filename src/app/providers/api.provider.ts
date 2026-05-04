@@ -1,7 +1,20 @@
 import { Injectable, inject } from "@angular/core";
 import { invoke } from "@tauri-apps/api/core";
 import { StorageService } from "@services/core/storage.service";
-import { ConnectionSummary, ConnectionConfig, ConnectionHealth, CollectionMeta, CollectionSchema, CollectionStats, QueryParams, QueryResult, RawResult, SystemMetrics } from "@shared/models/connection.config";
+import {
+  ConnectionSummary,
+  ConnectionConfig,
+  ConnectionConfigResult,
+  TestConnectionConfig,
+  ConnectionHealth,
+  CollectionMeta,
+  CollectionSchema,
+  CollectionStats,
+  QueryParams,
+  QueryResult,
+  RawResult,
+  SystemMetrics,
+} from "@shared/models/connection.config";
 
 export interface CrudOptions {
   visibility?: "private" | "shared" | "public";
@@ -16,85 +29,231 @@ export interface CrudOptions {
 @Injectable({ providedIn: "root" })
 export class ApiProvider {
   private storage = inject(StorageService);
+  private abortController: AbortController | null = null;
 
-  async listConnections(): Promise<ConnectionSummary[]> {
-    const connections = await invoke<ConnectionSummary[]>("list_connections");
-    this.storage.setConnections(connections);
-    return connections;
+  private getAbortSignal(): AbortSignal {
+    this.abortController?.abort();
+    this.abortController = new AbortController();
+    return this.abortController.signal;
   }
 
-  async getConnection(id: string): Promise<ConnectionConfig & { id: string }> {
-    return await invoke<ConnectionConfig & { id: string }>("get_connection", { id });
+  cancelPendingRequests(): void {
+    this.abortController?.abort();
+  }
+
+  async listConnections(): Promise<ConnectionSummary[]> {
+    try {
+      const connections = await invoke<ConnectionSummary[]>("list_connections", {
+        options: { signal: this.getAbortSignal() },
+      });
+      this.storage.setConnections(connections);
+      return connections;
+    } catch (e) {
+      if (e instanceof Error && e.name === "AbortError") return [];
+      throw e;
+    }
+  }
+
+  async getConnection(id: string): Promise<ConnectionConfigResult> {
+    try {
+      return await invoke<ConnectionConfigResult>("get_connection", {
+        id,
+        options: { signal: this.getAbortSignal() },
+      });
+    } catch (e) {
+      if (e instanceof Error && e.name === "AbortError") throw new Error("Operation cancelled");
+      throw e;
+    }
   }
 
   async saveConnection(config: ConnectionConfig): Promise<string> {
-    const id = await invoke<string>("save_connection", { config });
-    await this.listConnections();
-    return id;
+    try {
+      const id = await invoke<string>("save_connection", {
+        config,
+        options: { signal: this.getAbortSignal() },
+      });
+      await this.listConnections();
+      return id;
+    } catch (e) {
+      if (e instanceof Error && e.name === "AbortError") throw new Error("Operation cancelled");
+      throw e;
+    }
   }
 
   async deleteConnection(id: string): Promise<void> {
-    await invoke<void>("delete_connection", { id });
-    this.storage.removeConnection(id);
+    try {
+      await invoke<void>("delete_connection", { id, options: { signal: this.getAbortSignal() } });
+      this.storage.removeConnection(id);
+    } catch (e) {
+      if (e instanceof Error && e.name === "AbortError") return;
+      throw e;
+    }
   }
 
-  async testConnection(config: ConnectionConfig): Promise<ConnectionHealth> {
-    return await invoke<ConnectionHealth>("test_connection", { config });
+  async testConnection(config: TestConnectionConfig): Promise<ConnectionHealth> {
+    try {
+      return await invoke<ConnectionHealth>("test_connection", {
+        config,
+        options: { signal: this.getAbortSignal() },
+      });
+    } catch (e) {
+      if (e instanceof Error && e.name === "AbortError") throw new Error("Operation cancelled");
+      throw e;
+    }
   }
 
   async listCollections(connId: string): Promise<CollectionMeta[]> {
-    const collections = await invoke<CollectionMeta[]>("list_collections", { connId });
-    this.storage.setCollections(collections);
-    return collections;
+    try {
+      const collections = await invoke<CollectionMeta[]>("list_collections", {
+        connId,
+        options: { signal: this.getAbortSignal() },
+      });
+      this.storage.setCollections(collections);
+      return collections;
+    } catch (e) {
+      if (e instanceof Error && e.name === "AbortError") return [];
+      throw e;
+    }
   }
 
   async describeCollection(connId: string, collection: string): Promise<CollectionSchema> {
-    return await invoke<CollectionSchema>("describe_collection", { connId, collection });
+    try {
+      return await invoke<CollectionSchema>("describe_collection", {
+        connId,
+        collection,
+        options: { signal: this.getAbortSignal() },
+      });
+    } catch (e) {
+      if (e instanceof Error && e.name === "AbortError") throw new Error("Operation cancelled");
+      throw e;
+    }
   }
 
   async getCollectionStats(connId: string, collection: string): Promise<CollectionStats> {
-    return await invoke<CollectionStats>("get_collection_stats", { connId, collection });
+    try {
+      return await invoke<CollectionStats>("get_collection_stats", {
+        connId,
+        collection,
+        options: { signal: this.getAbortSignal() },
+      });
+    } catch (e) {
+      if (e instanceof Error && e.name === "AbortError") throw new Error("Operation cancelled");
+      throw e;
+    }
   }
 
   async queryData(connId: string, collection: string, params: QueryParams): Promise<QueryResult> {
-    const result = await invoke<QueryResult>("query_data", { connId, collection, query: params });
-    this.storage.setCollectionData(collection, result.data, result.total);
-    return result;
+    try {
+      const result = await invoke<QueryResult>("query_data", {
+        connId,
+        collection,
+        query: params,
+        options: { signal: this.getAbortSignal() },
+      });
+      this.storage.setCollectionData(collection, result.data, result.total);
+      return result;
+    } catch (e) {
+      if (e instanceof Error && e.name === "AbortError") throw new Error("Operation cancelled");
+      throw e;
+    }
   }
 
   async saveRow(connId: string, collection: string, data: any): Promise<any> {
-    const result = await invoke<any>("save_row", { connId, collection, data });
-    this.storage.addToCollectionData(collection, result);
-    return result;
+    try {
+      const result = await invoke<any>("save_row", {
+        connId,
+        collection,
+        data,
+        options: { signal: this.getAbortSignal() },
+      });
+      this.storage.addToCollectionData(collection, result);
+      return result;
+    } catch (e) {
+      if (e instanceof Error && e.name === "AbortError") return null;
+      throw e;
+    }
   }
 
   async deleteRow(connId: string, collection: string, id: string): Promise<void> {
-    await invoke<void>("delete_row", { connId, collection, id });
-    this.storage.removeFromCollectionData(collection, id);
+    try {
+      await invoke<void>("delete_row", {
+        connId,
+        collection,
+        id,
+        options: { signal: this.getAbortSignal() },
+      });
+      this.storage.removeFromCollectionData(collection, id);
+    } catch (e) {
+      if (e instanceof Error && e.name === "AbortError") return;
+      throw e;
+    }
   }
 
   async createCollection(connId: string, name: string): Promise<void> {
-    await invoke<void>("create_collection", { connId, name });
-    await this.listCollections(connId);
+    try {
+      await invoke<void>("create_collection", {
+        connId,
+        name,
+        options: { signal: this.getAbortSignal() },
+      });
+      await this.listCollections(connId);
+    } catch (e) {
+      if (e instanceof Error && e.name === "AbortError") return;
+      throw e;
+    }
   }
 
   async dropCollection(connId: string, name: string): Promise<void> {
-    await invoke<void>("drop_collection", { connId, name });
-    this.storage.clearCollectionData(name);
-    await this.listCollections(connId);
+    try {
+      await invoke<void>("drop_collection", {
+        connId,
+        name,
+        options: { signal: this.getAbortSignal() },
+      });
+      this.storage.clearCollectionData(name);
+      await this.listCollections(connId);
+    } catch (e) {
+      if (e instanceof Error && e.name === "AbortError") return;
+      throw e;
+    }
   }
 
   async executeRaw(connId: string, sql: string): Promise<RawResult> {
-    return await invoke<RawResult>("execute_raw", { connId, sql });
+    try {
+      return await invoke<RawResult>("execute_raw", {
+        connId,
+        sql,
+        options: { signal: this.getAbortSignal() },
+      });
+    } catch (e) {
+      if (e instanceof Error && e.name === "AbortError")
+        return { columns: [], rows: [], affected_rows: 0 } as RawResult;
+      throw e;
+    }
   }
 
   async getServerVersion(connId: string): Promise<string> {
-    return await invoke<string>("get_server_version", { connId });
+    try {
+      return await invoke<string>("get_server_version", {
+        connId,
+        options: { signal: this.getAbortSignal() },
+      });
+    } catch (e) {
+      if (e instanceof Error && e.name === "AbortError") return "";
+      throw e;
+    }
   }
 
   async getSystemStatus(): Promise<SystemMetrics> {
-    const metrics = await invoke<SystemMetrics>("get_system_status");
-    this.storage.setSystemMetrics(metrics);
-    return metrics;
+    try {
+      const metrics = await invoke<SystemMetrics>("get_system_status", {
+        options: { signal: this.getAbortSignal() },
+      });
+      this.storage.setSystemMetrics(metrics);
+      return metrics;
+    } catch (e) {
+      if (e instanceof Error && e.name === "AbortError") throw new Error("Operation cancelled");
+      throw e;
+    }
   }
 }

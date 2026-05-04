@@ -58,6 +58,27 @@ export type ConnectionConfig =
   | { type: "sqlite"; name: string; path: string }
   | { type: "mysql"; name: string; uri: string };
 
+export type ConnectionConfigEnum =
+  | { type: "Json"; name: string; path: string }
+  | { type: "Mongo"; name: string; uri: string; database: string }
+  | { type: "Redis"; name: string; uri: string }
+  | { type: "Postgres"; name: string; uri: string }
+  | { type: "Sqlite"; name: string; path: string }
+  | { type: "MySql"; name: string; uri: string };
+
+export interface ConnectionConfigResult {
+  id: string;
+  config: {
+    name: string;
+    config: ConnectionConfigEnum;
+  };
+}
+
+export interface TestConnectionConfig {
+  name: string;
+  config: ConnectionConfigEnum;
+}
+
 export interface ConnectionSummary {
   id: string;
   name: string;

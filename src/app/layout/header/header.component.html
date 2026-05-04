@@ -1,26 +1,41 @@
 <header class="app-header">
   <div class="flex items-center gap-6">
-    <button class="flex items-center gap-2 cursor-pointer" (click)="goHome()">
+    <button class="flex cursor-pointer items-center gap-2" (click)="goHome()">
       <div class="header-logo">
-        <mat-icon fontIcon="settings" class="inline-flex items-center justify-center text-xl!"></mat-icon>
+        <mat-icon
+          fontIcon="settings"
+          class="inline-flex items-center justify-center text-xl!"
+        ></mat-icon>
       </div>
-      <h1 class="header-title">
-        Zenith<span class="header-title-accent">DB</span>
-      </h1>
+      <h1 class="header-title">Zenith<span class="header-title-accent">DB</span></h1>
     </button>
 
     <nav class="header-breadcrumb">
-      <a routerLink="/connections" class="header-breadcrumb-link hover:text-emerald-500 transition-colors">
+      <a
+        routerLink="/connections"
+        class="header-breadcrumb-link transition-colors hover:text-emerald-500"
+      >
         Connections
       </a>
       @if (connectionState.activeConnectionName()) {
-        <mat-icon fontIcon="chevron_right" class="inline-flex items-center justify-center text-[8px] text-slate-500 mx-1" style="font-size: 8px; width: 8px; height: 8px;"></mat-icon>
-        <button class="header-breadcrumb-link hover:text-emerald-500 transition-colors">
+        <mat-icon
+          fontIcon="chevron_right"
+          class="mx-1 inline-flex items-center justify-center text-[8px] text-slate-500"
+          style="font-size: 8px; width: 8px; height: 8px"
+        ></mat-icon>
+        <a
+          [routerLink]="['/connections', connectionState.activeConnectionId()]"
+          class="header-breadcrumb-link transition-colors hover:text-emerald-500"
+        >
           {{ connectionState.activeConnectionName() }}
-        </button>
+        </a>
       }
       @if (connectionState.activeConnectionName()) {
-        <mat-icon fontIcon="chevron_right" class="inline-flex items-center justify-center text-[8px] text-slate-500 mx-1" style="font-size: 8px; width: 8px; height: 8px;"></mat-icon>
+        <mat-icon
+          fontIcon="chevron_right"
+          class="mx-1 inline-flex items-center justify-center text-[8px] text-slate-500"
+          style="font-size: 8px; width: 8px; height: 8px"
+        ></mat-icon>
         <span class="header-breadcrumb-active">Explorer</span>
       }
     </nav>
@@ -42,7 +57,11 @@
 
     <div class="header-divider"></div>
 
-    <button class="header-icon-btn text-lg" (click)="toggleTheme()" [title]="isDarkMode() ? 'Switch to light mode' : 'Switch to dark mode'">
+    <button
+      class="header-icon-btn text-lg"
+      (click)="toggleTheme()"
+      [title]="isDarkMode() ? 'Switch to light mode' : 'Switch to dark mode'"
+    >
       @if (isDarkMode()) {
         <mat-icon fontIcon="light_mode" class="inline-flex items-center justify-center"></mat-icon>
       } @else {

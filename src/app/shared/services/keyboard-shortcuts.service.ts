@@ -1,6 +1,11 @@
 import { Injectable, signal, NgZone, inject } from "@angular/core";
 import { Router } from "@angular/router";
-import { SHORTCUT_CONFIG, formatShortcut, parseKeyEvent, ShortcutCategory } from "./keyboard-shortcuts.models";
+import {
+  SHORTCUT_CONFIG,
+  formatShortcut,
+  parseKeyEvent,
+  ShortcutCategory,
+} from "./keyboard-shortcuts.models";
 
 @Injectable({ providedIn: "root" })
 export class KeyboardShortcutsService {
@@ -13,7 +18,8 @@ export class KeyboardShortcutsService {
   shortcutsHelpVisible = signal(false);
 
   private shortcutActions: Record<string, () => void> = {
-    "command-palette": () => document.dispatchEvent(new CustomEvent("zenith:toggle-command-palette")),
+    "command-palette": () =>
+      document.dispatchEvent(new CustomEvent("zenith:toggle-command-palette")),
     "new-connection": () => this.router.navigate(["/connections/new"]),
     "quick-search": () => document.dispatchEvent(new CustomEvent("zenith:focus-search")),
     "open-settings": () => document.dispatchEvent(new CustomEvent("zenith:open-settings")),
@@ -23,7 +29,7 @@ export class KeyboardShortcutsService {
     "execute-query": () => document.dispatchEvent(new CustomEvent("zenith:run-query")),
     "format-sql": () => document.dispatchEvent(new CustomEvent("zenith:format-sql")),
     "clear-editor": () => document.dispatchEvent(new CustomEvent("zenith:clear-editor")),
-    "save": () => document.dispatchEvent(new CustomEvent("zenith:save")),
+    save: () => document.dispatchEvent(new CustomEvent("zenith:save")),
     "duplicate-line": () => document.dispatchEvent(new CustomEvent("zenith:duplicate-line")),
   };
 
@@ -109,7 +115,7 @@ export class KeyboardShortcutsService {
   }
 
   private notifyListeners(shortcut: string, event: KeyboardEvent): void {
-    this.listeners.get(shortcut)?.forEach(cb => cb(event));
+    this.listeners.get(shortcut)?.forEach((cb) => cb(event));
   }
 
   setEnabled(enabled: boolean): void {

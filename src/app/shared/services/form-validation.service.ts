@@ -44,8 +44,7 @@ export class FormValidationService {
 
   pattern(regex: RegExp, message = "Invalid format"): ValidationRule {
     return {
-      validate: (value: any) =>
-        value === null || value === undefined || regex.test(String(value)),
+      validate: (value: any) => value === null || value === undefined || regex.test(String(value)),
       message,
     };
   }
@@ -95,10 +94,7 @@ export class FormValidationService {
     };
   }
 
-  custom(
-    validatorFn: (value: any) => boolean,
-    message = "Invalid value"
-  ): ValidationRule {
+  custom(validatorFn: (value: any) => boolean, message = "Invalid value"): ValidationRule {
     return {
       validate: validatorFn,
       message,

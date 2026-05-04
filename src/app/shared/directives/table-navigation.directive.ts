@@ -1,4 +1,13 @@
-import { Directive, ElementRef, HostListener, inject, Input, Output, EventEmitter, signal } from "@angular/core";
+import {
+  Directive,
+  ElementRef,
+  HostListener,
+  inject,
+  Input,
+  Output,
+  EventEmitter,
+  signal,
+} from "@angular/core";
 
 @Directive({
   selector: "[appTableNavigation]",

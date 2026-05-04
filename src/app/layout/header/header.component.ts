@@ -30,16 +30,19 @@ export class HeaderComponent {
   isDarkMode = computed(() => this.themeService.isDarkMode());
 
   constructor() {
-    effect(() => {
-      const url = this.router.url;
-      if (url.includes("/connections") || url === "/") {
-        this.activeTab.set("gallery");
-      } else if (url.includes("/schema")) {
-        this.activeTab.set("explorer");
-      } else if (url.includes("/query")) {
-        this.activeTab.set("workbench");
-      }
-    }, { allowSignalWrites: true });
+    effect(
+      () => {
+        const url = this.router.url;
+        if (url.includes("/connections") || url === "/") {
+          this.activeTab.set("gallery");
+        } else if (url.includes("/schema")) {
+          this.activeTab.set("explorer");
+        } else if (url.includes("/query")) {
+          this.activeTab.set("workbench");
+        }
+      },
+      { allowSignalWrites: true }
+    );
   }
 
   setActiveTab(tabId: "gallery" | "explorer" | "workbench") {

@@ -1,13 +1,7 @@
 @if (visibleToasts().length > 0) {
-  <div
-    class="fixed z-50 flex flex-col gap-2 p-4 w-80 max-w-full"
-    [ngClass]="positionClass"
-  >
+  <div class="fixed z-50 flex w-80 max-w-full flex-col gap-2 p-4" [ngClass]="positionClass">
     @for (toast of visibleToasts(); track toast.id) {
-      <app-toast
-        [toast]="toast"
-        (dismiss)="dismiss($event)"
-      ></app-toast>
+      <app-toast [toast]="toast" (dismiss)="dismiss($event)"></app-toast>
     }
   </div>
 }

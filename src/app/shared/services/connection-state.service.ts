@@ -10,7 +10,7 @@ export class ConnectionStateService {
   activeConnectionConfig = signal<any>(null);
 
   setActiveConnection(connOrId: ConnectionSummary | string): void {
-    if (typeof connOrId === 'string') {
+    if (typeof connOrId === "string") {
       this.activeConnectionId.set(connOrId);
     } else {
       this.activeConnectionId.set(connOrId.id);
