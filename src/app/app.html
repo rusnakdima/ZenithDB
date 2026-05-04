@@ -1,12 +1,12 @@
 <div class="app-layout transition-colors duration-200">
   <app-header></app-header>
 
-  <div class="flex min-h-0 flex-1 overflow-hidden">
+  <div class="layout-content flex min-h-0 flex-1">
     <app-sidebar></app-sidebar>
 
     <!-- Main Content -->
     <main
-      class="app-main flex min-h-0 flex-1 flex-col overflow-hidden transition-colors duration-200"
+      class="app-main flex min-h-0 flex-1 flex-col overflow-y-scroll transition-colors duration-200"
     >
       <router-outlet></router-outlet>
     </main>
