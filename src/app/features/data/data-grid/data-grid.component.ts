@@ -1,4 +1,16 @@
-import { Component, OnInit, OnDestroy, inject, Input, Output, EventEmitter, signal, computed, OnChanges, SimpleChanges } from "@angular/core";
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  inject,
+  Input,
+  Output,
+  EventEmitter,
+  signal,
+  computed,
+  OnChanges,
+  SimpleChanges,
+} from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { DatabaseService } from "@shared/services/database.service";
 import { ToastService } from "@services/toast.service";
@@ -18,6 +30,7 @@ export class DataGridComponent implements OnInit, OnDestroy, OnChanges {
   @Input() pageSize = 50;
   @Input() showInspector = false;
   @Input() viewMode: "grid" | "json" = "grid";
+  @Input() inputVisibleColumns: string[] = [];
   @Output() documentClick = new EventEmitter<any>();
   @Output() pageChange = new EventEmitter<number>();
   @Output() viewModeChange = new EventEmitter<"grid" | "json">();
@@ -30,10 +43,11 @@ export class DataGridComponent implements OnInit, OnDestroy, OnChanges {
   ngOnChanges(changes: SimpleChanges) {
     if (!this.collectionName) return;
 
-    const collectionChanged = changes['collectionName']?.currentValue !== this.lastCollectionName;
-    const filterChanged = changes['filter']?.currentValue !== this.lastFilter;
-    const pageChanged = changes['page']?.currentValue !== this.lastPageNum;
-    const pageSizeChanged = changes['pageSize']?.currentValue !== this.lastPageSizeNum;
+    const collectionChanged = changes["collectionName"]?.currentValue !== this.lastCollectionName;
+    const filterChanged = changes["filter"]?.currentValue !== this.lastFilter;
+    const pageChanged = changes["page"]?.currentValue !== this.lastPageNum;
+    const pageSizeChanged = changes["pageSize"]?.currentValue !== this.lastPageSizeNum;
+    const visibleColumnsChanged = changes["inputVisibleColumns"]?.currentValue !== undefined;
 
     if (collectionChanged) {
       this.lastCollectionName = this.collectionName;
@@ -48,7 +62,12 @@ export class DataGridComponent implements OnInit, OnDestroy, OnChanges {
       this.lastPageSizeNum = this.pageSize;
       this.loadData();
     }
+
+    if (visibleColumnsChanged && this.inputVisibleColumns.length > 0) {
+      this.visibleColumns.set(new Set(this.inputVisibleColumns));
+    }
   }
+
   data: any[] = [];
   columns: ColumnInfo[] = [];
   total = 0;
@@ -93,10 +112,10 @@ export class DataGridComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   visibleColumnsList = computed(() => {
-    const all = this.columns.map(c => c.name);
+    const all = this.columns.map((c) => c.name);
     const visible = this.visibleColumns();
     if (visible.size === 0) return all;
-    return all.filter(c => visible.has(c));
+    return all.filter((c) => visible.has(c));
   });
 
   async ngOnInit() {
@@ -111,12 +130,12 @@ export class DataGridComponent implements OnInit, OnDestroy, OnChanges {
 
   initColumnWidths() {
     const widths: Record<string, number> = {};
-    this.columns.forEach(c => {
+    this.columns.forEach((c) => {
       widths[c.name] = 150;
     });
     this.columnWidths.set(widths);
     const visible = new Set<string>();
-    this.columns.forEach(c => visible.add(c.name));
+    this.columns.forEach((c) => visible.add(c.name));
     this.visibleColumns.set(visible);
   }
 
@@ -155,6 +174,7 @@ export class DataGridComponent implements OnInit, OnDestroy, OnChanges {
     try {
       const schema = await this.db.describeCollection(this.collectionName);
       this.columns = schema.columns;
+      this.initColumnWidths();
     } catch {}
   }
 
@@ -195,7 +215,7 @@ export class DataGridComponent implements OnInit, OnDestroy, OnChanges {
 
   sortBy(col: string) {
     if (this.sortColumn() === col) {
-      this.sortDirection.update(d => d === "asc" ? "desc" : "asc");
+      this.sortDirection.update((d) => (d === "asc" ? "desc" : "asc"));
     } else {
       this.sortColumn.set(col);
       this.sortDirection.set("asc");
@@ -250,8 +270,8 @@ export class DataGridComponent implements OnInit, OnDestroy, OnChanges {
           } catch (e: any) {
             this.toast.error("Failed to delete row");
           }
-        }
-      }
+        },
+      },
     });
   }
 
@@ -293,7 +313,7 @@ export class DataGridComponent implements OnInit, OnDestroy, OnChanges {
 
     const onMove = (e: MouseEvent) => {
       const newWidth = Math.max(80, startWidth + (e.clientX - startX));
-      this.columnWidths.update(w => ({ ...w, [col]: newWidth }));
+      this.columnWidths.update((w) => ({ ...w, [col]: newWidth }));
     };
 
     const onUp = () => {
@@ -307,11 +327,11 @@ export class DataGridComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   toggleColumnMenu() {
-    this.showColumnMenu.update(v => !v);
+    this.showColumnMenu.update((v) => !v);
   }
 
   toggleColumnVisibility(col: string) {
-    this.visibleColumns.update(visible => {
+    this.visibleColumns.update((visible) => {
       const newSet = new Set(visible);
       if (newSet.has(col)) {
         newSet.delete(col);
@@ -324,7 +344,7 @@ export class DataGridComponent implements OnInit, OnDestroy, OnChanges {
 
   showAllColumns() {
     const visible = new Set<string>();
-    this.columns.forEach(c => visible.add(c.name));
+    this.columns.forEach((c) => visible.add(c.name));
     this.visibleColumns.set(visible);
   }
 
@@ -405,35 +425,17 @@ export class DataGridComponent implements OnInit, OnDestroy, OnChanges {
 
   formatJsonLines(obj: any): string[] {
     const json = JSON.stringify(obj, null, 2);
-    return json.split('\n');
+    return json.split("\n");
   }
 
   highlightJsonLine(line: string): string {
-    let result = line
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
+    let result = line.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-    result = result.replace(
-      /("([^"\\]|\\.)*")\s*:/g,
-      '<span class="text-yellow-400">$1</span>:'
-    );
-    result = result.replace(
-      /:\s*("([^"\\]|\\.)*")/g,
-      ': <span class="text-green-400">$1</span>'
-    );
-    result = result.replace(
-      /:\s*(true|false)/g,
-      ': <span class="text-red-400">$1</span>'
-    );
-    result = result.replace(
-      /:\s*(null)/g,
-      ': <span class="text-slate-500">$1</span>'
-    );
-    result = result.replace(
-      /:\s*(-?\d+\.?\d*)/g,
-      ': <span class="text-blue-400">$1</span>'
-    );
+    result = result.replace(/("([^"\\]|\\.)*")\s*:/g, '<span class="text-yellow-400">$1</span>:');
+    result = result.replace(/:\s*("([^"\\]|\\.)*")/g, ': <span class="text-green-400">$1</span>');
+    result = result.replace(/:\s*(true|false)/g, ': <span class="text-red-400">$1</span>');
+    result = result.replace(/:\s*(null)/g, ': <span class="text-slate-500">$1</span>');
+    result = result.replace(/:\s*(-?\d+\.?\d*)/g, ': <span class="text-blue-400">$1</span>');
 
     return result;
   }
@@ -448,8 +450,7 @@ export class DataGridComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   async exportData(format: "csv" | "json" | "jsonl" | "sql" | "markdown") {
-    const dataToExport =
-      this.selectedRows().size > 0 ? this.getSelectedData() : this.data;
+    const dataToExport = this.selectedRows().size > 0 ? this.getSelectedData() : this.data;
     const filename = `${this.collectionName}_export_${Date.now()}`;
 
     try {

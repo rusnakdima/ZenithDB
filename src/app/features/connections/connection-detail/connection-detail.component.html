@@ -13,10 +13,10 @@
         <div class="flex items-center gap-2">
           <span
             class="h-2 w-2 rounded-full"
-            [class.bg-emerald-500]="health()?.ok"
-            [class.bg-red-500]="!health()?.ok"
+            [class.bg-emerald-500]="health()?.healthy"
+            [class.bg-red-500]="!health()?.healthy"
           ></span>
-          <span class="text-white">{{ health()?.ok ? "Connected" : "Disconnected" }}</span>
+          <span class="text-white">{{ health()?.healthy ? "Connected" : "Disconnected" }}</span>
         </div>
       </div>
 

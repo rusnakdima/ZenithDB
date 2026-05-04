@@ -43,9 +43,7 @@ export class QueryEditorComponent implements OnInit, OnDestroy {
   protected connState = inject(ConnectionStateService);
   protected toast = inject(ToastService);
 
-  tabs = signal<QueryTab[]>([
-    this.createTab("Tab 1"),
-  ]);
+  tabs = signal<QueryTab[]>([this.createTab("Tab 1")]);
   activeTabId = signal<string>("Tab 1");
   showHistory = signal(false);
   history = signal<HistoryItem[]>([]);
@@ -75,7 +73,7 @@ export class QueryEditorComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.eventCleanup.forEach(cleanup => cleanup());
+    this.eventCleanup.forEach((cleanup) => cleanup());
   }
 
   private setupKeyboardListeners(): void {
@@ -184,9 +182,7 @@ export class QueryEditorComponent implements OnInit, OnDestroy {
     if (!tab || !tab.query.trim()) return;
 
     this.tabs.set(
-      this.tabs().map((t) =>
-        t.id === tab.id ? { ...t, loading: true, error: "" } : t
-      )
+      this.tabs().map((t) => (t.id === tab.id ? { ...t, loading: true, error: "" } : t))
     );
 
     const startTime = performance.now();
@@ -235,9 +231,7 @@ export class QueryEditorComponent implements OnInit, OnDestroy {
     const tab = this.activeTab();
     if (!tab) return;
     this.tabs.set(
-      this.tabs().map((t) =>
-        t.id === tab.id ? { ...t, query: item.query, modified: true } : t
-      )
+      this.tabs().map((t) => (t.id === tab.id ? { ...t, query: item.query, modified: true } : t))
     );
   }
 
@@ -256,18 +250,42 @@ export class QueryEditorComponent implements OnInit, OnDestroy {
     if (!tab) return;
     const formatted = this.formatSQLText(tab.query);
     this.tabs.set(
-      this.tabs().map((t) =>
-        t.id === tab.id ? { ...t, query: formatted, modified: true } : t
-      )
+      this.tabs().map((t) => (t.id === tab.id ? { ...t, query: formatted, modified: true } : t))
     );
   }
 
   private formatSQLText(sql: string): string {
     const keywords = [
-      "SELECT", "FROM", "WHERE", "AND", "OR", "INSERT", "INTO", "VALUES",
-      "UPDATE", "SET", "DELETE", "CREATE", "TABLE", "DROP", "ALTER", "JOIN",
-      "LEFT", "RIGHT", "INNER", "OUTER", "ON", "GROUP BY", "ORDER BY", "HAVING",
-      "LIMIT", "OFFSET", "AS", "DISTINCT", "UNION", "ALL",
+      "SELECT",
+      "FROM",
+      "WHERE",
+      "AND",
+      "OR",
+      "INSERT",
+      "INTO",
+      "VALUES",
+      "UPDATE",
+      "SET",
+      "DELETE",
+      "CREATE",
+      "TABLE",
+      "DROP",
+      "ALTER",
+      "JOIN",
+      "LEFT",
+      "RIGHT",
+      "INNER",
+      "OUTER",
+      "ON",
+      "GROUP BY",
+      "ORDER BY",
+      "HAVING",
+      "LIMIT",
+      "OFFSET",
+      "AS",
+      "DISTINCT",
+      "UNION",
+      "ALL",
     ];
 
     let result = sql;
@@ -307,9 +325,7 @@ export class QueryEditorComponent implements OnInit, OnDestroy {
       lines.splice(lineIndex + 1, 0, duplicatedLine);
       const newQuery = lines.join("\n");
       this.tabs.set(
-        this.tabs().map((t) =>
-          t.id === tab.id ? { ...t, query: newQuery, modified: true } : t
-        )
+        this.tabs().map((t) => (t.id === tab.id ? { ...t, query: newQuery, modified: true } : t))
       );
     }
   }
@@ -335,10 +351,9 @@ export class QueryEditorComponent implements OnInit, OnDestroy {
     if (!tab?.results) return;
 
     const { columns, rows } = tab.results;
-    const csv = [
-      columns.join(","),
-      ...rows.map((r) => r.map((c) => `"${c}"`).join(","))
-    ].join("\n");
+    const csv = [columns.join(","), ...rows.map((r) => r.map((c) => `"${c}"`).join(","))].join(
+      "\n"
+    );
 
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);

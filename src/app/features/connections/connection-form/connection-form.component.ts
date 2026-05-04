@@ -88,12 +88,18 @@ export class ConnectionFormComponent {
   }
 
   validateField(field: "name" | "uri" | "path" | "port" | "username" | "password") {
-    const value = field === "name" ? this.name :
-                  field === "uri" ? this.uri :
-                  field === "path" ? this.path :
-                  field === "port" ? this.port :
-                  field === "username" ? this.username :
-                  this.password;
+    const value =
+      field === "name"
+        ? this.name
+        : field === "uri"
+          ? this.uri
+          : field === "path"
+            ? this.path
+            : field === "port"
+              ? this.port
+              : field === "username"
+                ? this.username
+                : this.password;
     this.validators[field].validate(value);
   }
 
@@ -137,7 +143,11 @@ export class ConnectionFormComponent {
     this.testing.set(true);
     this.testResult.set(null);
     try {
-      const config = this.buildConfig();
+      const flatConfig = this.buildConfig();
+      const config = {
+        name: flatConfig.name,
+        config: flatConfig as any,
+      };
       const result = await this.db.testConnection(config);
       this.testResult.set(result);
     } catch (e: any) {

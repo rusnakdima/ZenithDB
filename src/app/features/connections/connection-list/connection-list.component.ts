@@ -14,7 +14,13 @@ type ViewMode = "grid" | "list";
 @Component({
   selector: "app-connection-list",
   standalone: true,
-  imports: [RouterLink, FormsModule, ConnectionCardComponent, SkeletonLoaderComponent, MatIconModule],
+  imports: [
+    RouterLink,
+    FormsModule,
+    ConnectionCardComponent,
+    SkeletonLoaderComponent,
+    MatIconModule,
+  ],
   templateUrl: "./connection-list.component.html",
 })
 export class ConnectionListComponent implements OnInit {
@@ -33,9 +39,7 @@ export class ConnectionListComponent implements OnInit {
     const query = this.searchQuery().toLowerCase();
     if (query) {
       result = result.filter(
-        (c) =>
-          c.name.toLowerCase().includes(query) ||
-          c.provider.toLowerCase().includes(query)
+        (c) => c.name.toLowerCase().includes(query) || c.provider.toLowerCase().includes(query)
       );
     }
 

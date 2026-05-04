@@ -30,7 +30,12 @@ interface IndexInfo {
 export class CollectionDetailComponent implements OnInit {
   collectionName = "";
   schema = signal<{ name: string; columns: FieldInfo[]; indexes: IndexInfo[] } | null>(null);
-  stats = signal<{ name: string; document_count: number; size_bytes: number; index_count: number } | null>(null);
+  stats = signal<{
+    name: string;
+    document_count: number;
+    size_bytes: number;
+    index_count: number;
+  } | null>(null);
   loading = signal(false);
   error = signal("");
 
@@ -140,7 +145,13 @@ export class CollectionDetailComponent implements OnInit {
   }
 
   openAddFieldModal() {
-    this.newField = { name: "", data_type: "string", nullable: true, default_value: "", description: "" };
+    this.newField = {
+      name: "",
+      data_type: "string",
+      nullable: true,
+      default_value: "",
+      description: "",
+    };
     this.showAddFieldModal.set(true);
   }
 
@@ -212,7 +223,7 @@ export class CollectionDetailComponent implements OnInit {
 
   toggleIndexColumn(colName: string) {
     if (this.newIndex.columns.includes(colName)) {
-      this.newIndex.columns = this.newIndex.columns.filter(c => c !== colName);
+      this.newIndex.columns = this.newIndex.columns.filter((c) => c !== colName);
     } else {
       this.newIndex.columns = [...this.newIndex.columns, colName];
     }
@@ -245,10 +256,9 @@ export class CollectionDetailComponent implements OnInit {
     };
 
     if (format === "json") {
-      this.exportService.export(
-        { format: "json", filename: `${this.collectionName}_schema` },
-        [data]
-      );
+      this.exportService.export({ format: "json", filename: `${this.collectionName}_schema` }, [
+        data,
+      ]);
     } else {
       this.exportService.export(
         { format: "csv", filename: `${this.collectionName}_schema`, includeHeaders: true },

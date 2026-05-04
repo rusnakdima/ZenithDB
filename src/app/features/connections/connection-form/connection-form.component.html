@@ -41,22 +41,32 @@
           [class.focus:border-red-500]="getError('name')"
           [class.focus:ring-red-500]="getError('name')"
         />
-        @if (getError('name')) {
-          <svg class="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        @if (getError("name")) {
+          <svg
+            class="absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-red-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            stroke-width="2"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
           </svg>
         }
       </div>
-      @if (getError('name')) {
-        <p class="mt-1 text-xs text-red-500">{{ getError('name') }}</p>
+      @if (getError("name")) {
+        <p class="mt-1 text-xs text-red-500">{{ getError("name") }}</p>
       }
     </div>
 
-    @if (showField('uri')) {
+    @if (showField("uri")) {
       <div class="mb-6">
         <label class="mb-2 block text-sm font-medium text-neutral-300">
           Connection URI
-          @if (provider === 'postgres' || provider === 'mysql') {
+          @if (provider === "postgres" || provider === "mysql") {
             <span class="text-neutral-500">(host:port/database)</span>
           } @else {
             <span class="text-neutral-500">(e.g. mongodb://localhost:27017)</span>
@@ -67,7 +77,17 @@
             type="text"
             [(ngModel)]="uri"
             (blur)="touchField('uri'); validateField('uri')"
-            [placeholder]="provider === 'redis' ? 'redis://localhost:6379' : provider === 'postgres' ? 'postgres://user:pass@localhost:5432/db' : provider === 'mysql' ? 'mysql://user:pass@localhost:3306/db' : provider === 'mongo' ? 'mongodb://localhost:27017' : 'Connection URI'"
+            [placeholder]="
+              provider === 'redis'
+                ? 'redis://localhost:6379'
+                : provider === 'postgres'
+                  ? 'postgres://user:pass@localhost:5432/db'
+                  : provider === 'mysql'
+                    ? 'mysql://user:pass@localhost:3306/db'
+                    : provider === 'mongo'
+                      ? 'mongodb://localhost:27017'
+                      : 'Connection URI'
+            "
             class="w-full rounded-lg border px-3 py-2 text-white placeholder-neutral-500 transition-colors focus:ring-1"
             [class.border-neutral-700]="!getError('uri')"
             [class.border-red-500]="getError('uri')"
@@ -78,19 +98,29 @@
             [class.focus:border-red-500]="getError('uri')"
             [class.focus:ring-red-500]="getError('uri')"
           />
-          @if (getError('uri')) {
-            <svg class="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          @if (getError("uri")) {
+            <svg
+              class="absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-red-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
             </svg>
           }
         </div>
-        @if (getError('uri')) {
-          <p class="mt-1 text-xs text-red-500">{{ getError('uri') }}</p>
+        @if (getError("uri")) {
+          <p class="mt-1 text-xs text-red-500">{{ getError("uri") }}</p>
         }
       </div>
     }
 
-    @if (showField('port')) {
+    @if (showField("port")) {
       <div class="mb-6">
         <label class="mb-2 block text-sm font-medium text-neutral-300">Port</label>
         <div class="relative">
@@ -111,19 +141,29 @@
             [class.focus:border-red-500]="getError('port')"
             [class.focus:ring-red-500]="getError('port')"
           />
-          @if (getError('port')) {
-            <svg class="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          @if (getError("port")) {
+            <svg
+              class="absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-red-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
             </svg>
           }
         </div>
-        @if (getError('port')) {
-          <p class="mt-1 text-xs text-red-500">{{ getError('port') }}</p>
+        @if (getError("port")) {
+          <p class="mt-1 text-xs text-red-500">{{ getError("port") }}</p>
         }
       </div>
     }
 
-    @if (showField('username')) {
+    @if (showField("username")) {
       <div class="mb-6">
         <label class="mb-2 block text-sm font-medium text-neutral-300">Username</label>
         <div class="relative">
@@ -142,19 +182,29 @@
             [class.focus:border-red-500]="getError('username')"
             [class.focus:ring-red-500]="getError('username')"
           />
-          @if (getError('username')) {
-            <svg class="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          @if (getError("username")) {
+            <svg
+              class="absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-red-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
             </svg>
           }
         </div>
-        @if (getError('username')) {
-          <p class="mt-1 text-xs text-red-500">{{ getError('username') }}</p>
+        @if (getError("username")) {
+          <p class="mt-1 text-xs text-red-500">{{ getError("username") }}</p>
         }
       </div>
     }
 
-    @if (showField('password')) {
+    @if (showField("password")) {
       <div class="mb-6">
         <label class="mb-2 block text-sm font-medium text-neutral-300">Password</label>
         <div class="relative">
@@ -166,13 +216,13 @@
             class="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-white placeholder-neutral-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
           />
         </div>
-        @if (getError('password')) {
-          <p class="mt-1 text-xs text-red-500">{{ getError('password') }}</p>
+        @if (getError("password")) {
+          <p class="mt-1 text-xs text-red-500">{{ getError("password") }}</p>
         }
       </div>
     }
 
-    @if (showField('database')) {
+    @if (showField("database")) {
       <div class="mb-6">
         <label class="mb-2 block text-sm font-medium text-neutral-300">Database Name</label>
         <input
@@ -184,11 +234,11 @@
       </div>
     }
 
-    @if (showField('path')) {
+    @if (showField("path")) {
       <div class="mb-6">
         <label class="mb-2 block text-sm font-medium text-neutral-300">
           File Path
-          @if (provider === 'json') {
+          @if (provider === "json") {
             <span class="text-neutral-500">(.json)</span>
           } @else {
             <span class="text-neutral-500">(.db, .sqlite, .sqlite3)</span>
@@ -211,9 +261,19 @@
               [class.focus:border-red-500]="getError('path')"
               [class.focus:ring-red-500]="getError('path')"
             />
-            @if (getError('path')) {
-              <svg class="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            @if (getError("path")) {
+              <svg
+                class="absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-red-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                stroke-width="2"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
             }
           </div>
@@ -223,8 +283,8 @@
             Browse
           </button>
         </div>
-        @if (getError('path')) {
-          <p class="mt-1 text-xs text-red-500">{{ getError('path') }}</p>
+        @if (getError("path")) {
+          <p class="mt-1 text-xs text-red-500">{{ getError("path") }}</p>
         }
       </div>
     }
@@ -256,15 +316,23 @@
         class="flex items-center gap-2 rounded-lg bg-neutral-700 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-neutral-600 disabled:opacity-50"
       >
         @if (testing()) {
-          <mat-icon fontIcon="sync" class="inline-flex items-center justify-center text-base fa-spin"></mat-icon> Testing...
+          <mat-icon
+            fontIcon="sync"
+            class="fa-spin inline-flex items-center justify-center text-base"
+          ></mat-icon>
+          Testing...
         } @else {
-          <mat-icon fontIcon="plug" class="inline-flex items-center justify-center text-base"></mat-icon> Test Connection
+          <mat-icon
+            fontIcon="plug"
+            class="inline-flex items-center justify-center text-base"
+          ></mat-icon>
+          Test Connection
         }
       </button>
       <button
         (click)="save()"
         [disabled]="!isFormValid()"
-        class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
+        class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
       >
         Save
       </button>

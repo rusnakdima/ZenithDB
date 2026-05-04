@@ -10,13 +10,20 @@
         </p>
       </div>
       <a routerLink="/connections/new" class="connections-btn">
-        <mat-icon fontIcon="add" class="inline-flex items-center justify-center text-xl!"></mat-icon> New Connection
+        <mat-icon
+          fontIcon="add"
+          class="inline-flex items-center justify-center text-xl!"
+        ></mat-icon>
+        New Connection
       </a>
     </div>
 
     <div class="filter-bar">
       <div class="filter-input-wrapper">
-        <mat-icon fontIcon="search" class="inline-flex items-center justify-center text-slate-400 text-xl!"></mat-icon>
+        <mat-icon
+          fontIcon="search"
+          class="inline-flex items-center justify-center text-xl! text-slate-400"
+        ></mat-icon>
         <input
           type="text"
           [value]="searchQuery()"
@@ -26,7 +33,10 @@
         />
         @if (searchQuery()) {
           <button (click)="clearSearch()" class="text-slate-400 hover:text-slate-600">
-            <mat-icon fontIcon="close" class="inline-flex items-center justify-center text-xl!"></mat-icon>
+            <mat-icon
+              fontIcon="close"
+              class="inline-flex items-center justify-center text-xl!"
+            ></mat-icon>
           </button>
         }
       </div>
@@ -53,7 +63,10 @@
           [class.filter-action-btn-active]="viewMode() === 'grid'"
           title="Grid view"
         >
-          <mat-icon fontIcon="grid_view" class="inline-flex items-center justify-center text-xl!"></mat-icon>
+          <mat-icon
+            fontIcon="grid_view"
+            class="inline-flex items-center justify-center text-xl!"
+          ></mat-icon>
         </button>
         <button
           (click)="setViewMode('list')"
@@ -61,7 +74,10 @@
           [class.filter-action-btn-active]="viewMode() === 'list'"
           title="List view"
         >
-          <mat-icon fontIcon="view_list" class="inline-flex items-center justify-center text-xl!"></mat-icon>
+          <mat-icon
+            fontIcon="view_list"
+            class="inline-flex items-center justify-center text-xl!"
+          ></mat-icon>
         </button>
       </div>
     </div>
@@ -75,12 +91,19 @@
     @if (!loading() && filteredConnections().length === 0 && connections().length === 0) {
       <div class="empty-state">
         <div class="empty-icon">
-          <mat-icon fontIcon="plug" class="inline-flex items-center justify-center text-xl!"></mat-icon>
+          <mat-icon
+            fontIcon="plug"
+            class="inline-flex items-center justify-center text-xl!"
+          ></mat-icon>
         </div>
         <h3 class="empty-title">No Connections Yet</h3>
         <p class="empty-description">Create your first database connection to get started.</p>
         <a routerLink="/connections/new" class="connections-btn">
-          <mat-icon fontIcon="add" class="inline-flex items-center justify-center text-xl!"></mat-icon> Create Connection
+          <mat-icon
+            fontIcon="add"
+            class="inline-flex items-center justify-center text-xl!"
+          ></mat-icon>
+          Create Connection
         </a>
       </div>
     }
@@ -92,9 +115,7 @@
         </div>
         <h3 class="empty-title">No Results Found</h3>
         <p class="empty-description">No connections match your search criteria.</p>
-        <button (click)="clearSearch()" class="form-btn form-btn-secondary">
-          Clear Search
-        </button>
+        <button (click)="clearSearch()" class="form-btn form-btn-secondary">Clear Search</button>
       </div>
     }
 
