@@ -4,7 +4,12 @@ import { TitleCasePipe } from "@angular/common";
 import { MatIconModule } from "@angular/material/icon";
 import { DatabaseService } from "@shared/services/database.service";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
-import { ConnectionHealth, CollectionMeta, ConnectionSummary, ConnectionConfig } from "@shared/models/connection.config";
+import {
+  ConnectionHealth,
+  CollectionMeta,
+  ConnectionSummary,
+  ConnectionConfig,
+} from "@shared/models/connection.config";
 import { StatusBadgeComponent } from "@shared/components/status-badge/status-badge.component";
 
 @Component({
@@ -36,7 +41,7 @@ export class ConnectionDetailComponent implements OnInit {
     if (id && id !== "new") {
       this.connectionId.set(id);
       const connections = await this.db.listConnections();
-      const conn = connections.find(c => c.id === id);
+      const conn = connections.find((c) => c.id === id);
       if (conn) {
         this.connectionName.set(conn.name);
         this.provider.set(conn.provider);
@@ -78,7 +83,7 @@ export class ConnectionDetailComponent implements OnInit {
         const [version, collections, healthResult] = await Promise.all([
           this.db.getServerVersion().catch(() => null),
           this.db.listCollections().catch(() => []),
-          config ? this.db.testConnection(config).catch(() => null) : Promise.resolve(null),
+          config ? this.db.testConnection(config.config).catch(() => null) : Promise.resolve(null),
         ]);
 
         this.serverVersion.set(version);
@@ -95,10 +100,14 @@ export class ConnectionDetailComponent implements OnInit {
   async testConnection() {
     this.testing.set(true);
     try {
-      const config = this.fullConfig();
-      if (!config) {
+      const fullConfig = this.fullConfig();
+      if (!fullConfig) {
         throw new Error("No connection config available");
       }
+      const config = {
+        name: fullConfig.config.name,
+        config: fullConfig.config.config,
+      };
       const result = await this.db.testConnection(config);
       this.health.set(result);
     } catch (e) {

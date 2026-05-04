@@ -1,13 +1,24 @@
-<div class="connections-container">
+<div class="connections-container min-h-0 flex-1 overflow-y-auto">
   <div class="connections-max-width">
     <div class="connections-header">
       <div class="flex items-center gap-4">
-        <a routerLink="/connections" class="text-slate-400 hover:text-emerald-500 transition-colors">
-          <mat-icon fontIcon="arrow_back" class="inline-flex items-center justify-center text-xl!"></mat-icon>
+        <a
+          routerLink="/connections"
+          class="text-slate-400 transition-colors hover:text-emerald-500"
+        >
+          <mat-icon
+            fontIcon="arrow_back"
+            class="inline-flex items-center justify-center text-xl!"
+          ></mat-icon>
         </a>
         <div>
-          <h2 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-3">
-            <mat-icon [fontIcon]="providerIcon()" class="inline-flex items-center justify-center text-emerald-500 text-xl!"></mat-icon>
+          <h2
+            class="flex items-center gap-3 text-2xl font-bold tracking-tight text-slate-900 dark:text-white"
+          >
+            <mat-icon
+              [fontIcon]="providerIcon()"
+              class="inline-flex items-center justify-center text-xl! text-emerald-500"
+            ></mat-icon>
             {{ connectionName() || "Connection Details" }}
           </h2>
           <p class="mt-1 text-sm text-slate-500">{{ provider() | titlecase }} connection</p>
@@ -17,14 +28,21 @@
         [routerLink]="['/connections', connectionId(), 'edit']"
         class="form-btn form-btn-secondary"
       >
-        <mat-icon fontIcon="edit" class="inline-flex items-center justify-center mr-2 text-xl!"></mat-icon> Edit
+        <mat-icon
+          fontIcon="edit"
+          class="mr-2 inline-flex items-center justify-center text-xl!"
+        ></mat-icon>
+        Edit
       </a>
     </div>
 
     @if (loading()) {
       <div class="form-card">
         <div class="flex items-center justify-center py-12">
-          <mat-icon fontIcon="sync" class="inline-flex items-center justify-center text-2xl text-slate-400 fa-spin text-xl!"></mat-icon>
+          <mat-icon
+            fontIcon="sync"
+            class="fa-spin inline-flex items-center justify-center text-2xl text-xl! text-slate-400"
+          ></mat-icon>
         </div>
       </div>
     } @else {
@@ -32,7 +50,9 @@
         <div class="form-card">
           <div class="flex items-start justify-between">
             <div>
-              <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Status</span>
+              <span class="text-xs font-semibold tracking-wider text-slate-500 uppercase"
+                >Status</span
+              >
               <div class="mt-3 flex items-center gap-2">
                 <span
                   class="h-3 w-3 rounded-full"
@@ -50,19 +70,33 @@
 
         @if (serverVersion()) {
           <div class="form-card">
-            <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Server Version</span>
+            <span class="text-xs font-semibold tracking-wider text-slate-500 uppercase"
+              >Server Version</span
+            >
             <div class="mt-3 flex items-center gap-2">
-              <mat-icon fontIcon="code" class="inline-flex items-center justify-center text-emerald-500 text-xl!"></mat-icon>
-              <span class="font-mono text-lg text-slate-900 dark:text-white">{{ serverVersion() }}</span>
+              <mat-icon
+                fontIcon="code"
+                class="inline-flex items-center justify-center text-xl! text-emerald-500"
+              ></mat-icon>
+              <span class="font-mono text-lg text-slate-900 dark:text-white">{{
+                serverVersion()
+              }}</span>
             </div>
           </div>
         }
 
         <div class="form-card">
-          <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Collections</span>
+          <span class="text-xs font-semibold tracking-wider text-slate-500 uppercase"
+            >Collections</span
+          >
           <div class="mt-3 flex items-center gap-2">
-            <mat-icon fontIcon="storage" class="inline-flex items-center justify-center text-emerald-500 text-xl!"></mat-icon>
-            <span class="font-mono text-lg text-slate-900 dark:text-white">{{ collections().length }}</span>
+            <mat-icon
+              fontIcon="storage"
+              class="inline-flex items-center justify-center text-xl! text-emerald-500"
+            ></mat-icon>
+            <span class="font-mono text-lg text-slate-900 dark:text-white">{{
+              collections().length
+            }}</span>
           </div>
         </div>
       </div>
@@ -74,50 +108,70 @@
           class="form-btn form-btn-secondary"
         >
           @if (testing()) {
-            <mat-icon fontIcon="sync" class="mr-2 fa-spin text-xl!"></mat-icon> Testing...
+            <mat-icon fontIcon="sync" class="fa-spin mr-2 text-xl!"></mat-icon> Testing...
           } @else {
             <mat-icon fontIcon="plug" class="mr-2 text-xl!"></mat-icon> Test Connection
           }
         </button>
 
-        <button
-          (click)="refresh()"
-          class="form-btn form-btn-secondary"
-        >
-          <mat-icon fontIcon="refresh" class="inline-flex items-center justify-center mr-2 text-xl!"></mat-icon> Refresh
+        <button (click)="refresh()" class="form-btn form-btn-secondary">
+          <mat-icon
+            fontIcon="refresh"
+            class="mr-2 inline-flex items-center justify-center text-xl!"
+          ></mat-icon>
+          Refresh
         </button>
 
-        <a
-          routerLink="/explorer"
-          class="form-btn form-btn-primary"
-        >
-          <mat-icon fontIcon="search" class="inline-flex items-center justify-center mr-2 text-xl!"></mat-icon> Explore
+        <a routerLink="/explorer" class="form-btn form-btn-primary">
+          <mat-icon
+            fontIcon="search"
+            class="mr-2 inline-flex items-center justify-center text-xl!"
+          ></mat-icon>
+          Explore
         </a>
 
         <button
           (click)="deleteConnection()"
           class="ml-auto rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-100 dark:border-red-900 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30"
         >
-          <mat-icon fontIcon="delete" class="inline-flex items-center justify-center mr-2 text-xl!"></mat-icon> Delete
+          <mat-icon
+            fontIcon="delete"
+            class="mr-2 inline-flex items-center justify-center text-xl!"
+          ></mat-icon>
+          Delete
         </button>
       </div>
 
       @if (collections().length > 0) {
         <div class="mt-8">
           <h3 class="mb-4 text-lg font-semibold text-slate-900 dark:text-white">Collections</h3>
-          <div class="rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800/50 overflow-hidden">
+          <div
+            class="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800/50"
+          >
             <table class="w-full">
               <thead class="bg-slate-50 dark:bg-slate-800/50">
                 <tr>
-                  <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Name</th>
-                  <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">Documents</th>
+                  <th
+                    class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-slate-500 uppercase"
+                  >
+                    Name
+                  </th>
+                  <th
+                    class="px-4 py-3 text-right text-xs font-semibold tracking-wider text-slate-500 uppercase"
+                  >
+                    Documents
+                  </th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
                 @for (collection of collections(); track collection.name) {
-                  <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors">
+                  <tr
+                    class="cursor-pointer transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                  >
                     <td class="px-4 py-3">
-                      <span class="font-medium text-slate-900 dark:text-white">{{ collection.name }}</span>
+                      <span class="font-medium text-slate-900 dark:text-white">{{
+                        collection.name
+                      }}</span>
                     </td>
                     <td class="px-4 py-3 text-right">
                       <span class="font-mono text-sm text-slate-500">{{ collection.count }}</span>

@@ -46,7 +46,7 @@ export class ConnectionsComponent implements OnInit {
 
   onDuplicate(connection: ConnectionSummary): void {
     this.router.navigate(["/connections/new"], {
-      queryParams: { duplicate: connection.id }
+      queryParams: { duplicate: connection.id },
     });
   }
 }

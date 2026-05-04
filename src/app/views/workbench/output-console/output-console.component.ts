@@ -1,11 +1,4 @@
-import {
-  Component,
-  Input,
-  Output,
-  EventEmitter,
-  signal,
-  computed,
-} from "@angular/core";
+import { Component, Input, Output, EventEmitter, signal, computed } from "@angular/core";
 import { JsonPipe, DatePipe, TitleCasePipe, UpperCasePipe } from "@angular/common";
 import { RawResult } from "@shared/models/connection.config";
 
@@ -73,10 +66,7 @@ export class OutputConsoleComponent {
   }
 
   addLog(level: "info" | "warn" | "error", message: string) {
-    this.logs.update((logs) => [
-      ...logs,
-      { timestamp: new Date(), level, message },
-    ]);
+    this.logs.update((logs) => [...logs, { timestamp: new Date(), level, message }]);
   }
 
   startResize(event: MouseEvent) {

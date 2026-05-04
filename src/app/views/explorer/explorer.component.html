@@ -1,8 +1,10 @@
-<div class="explorer-container h-full flex flex-col bg-slate-950">
-  <div class="data-tabs-bar flex items-center gap-1 px-4 py-2 bg-slate-900/80 border-b border-slate-800">
+<div class="explorer-container flex h-full flex-col bg-slate-950">
+  <div
+    class="data-tabs-bar flex items-center gap-1 border-b border-slate-800 bg-slate-900/80 px-4 py-2"
+  >
     @for (tab of activeTabs(); track tab.collection) {
       <div
-        class="data-tab flex items-center gap-2 px-3 py-2 rounded-t-md cursor-pointer transition-colors"
+        class="data-tab flex cursor-pointer items-center gap-2 rounded-t-md px-3 py-2 transition-colors"
         [class.active]="activeCollection() === tab.collection"
         [class.bg-slate-800]="activeCollection() === tab.collection"
         [class.text-emerald-400]="activeCollection() === tab.collection"
@@ -10,36 +12,50 @@
         [class.hover:text-slate-200]="activeCollection() !== tab.collection"
         (click)="selectTab(tab.collection)"
       >
-        <mat-icon fontIcon="table_chart" class="inline-flex items-center justify-center text-xl!"></mat-icon>
+        <mat-icon
+          fontIcon="table_chart"
+          class="inline-flex items-center justify-center text-xl!"
+        ></mat-icon>
         <span class="text-sm font-medium">{{ tab.name }}</span>
         <button
-          class="close-tab p-0.5 rounded hover:bg-slate-700 transition-colors"
+          class="close-tab rounded p-0.5 transition-colors hover:bg-slate-700"
           (click)="closeTab(tab.collection); $event.stopPropagation()"
         >
-          <mat-icon fontIcon="close" class="inline-flex items-center justify-center text-xl!"></mat-icon>
+          <mat-icon
+            fontIcon="close"
+            class="inline-flex items-center justify-center text-xl!"
+          ></mat-icon>
         </button>
       </div>
     }
     <div class="relative">
       <button
-        class="add-tab-btn p-2 rounded hover:bg-slate-800 text-slate-500 hover:text-emerald-400 transition-colors"
+        class="add-tab-btn rounded p-2 text-slate-500 transition-colors hover:bg-slate-800 hover:text-emerald-400"
         (click)="toggleCollectionSelector()"
       >
-        <mat-icon fontIcon="add" class="inline-flex items-center justify-center text-xl!"></mat-icon>
+        <mat-icon
+          fontIcon="add"
+          class="inline-flex items-center justify-center text-xl!"
+        ></mat-icon>
       </button>
       @if (showCollectionSelector()) {
-        <div class="absolute top-full left-0 mt-1 w-56 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 max-h-64 overflow-y-auto">
+        <div
+          class="absolute top-full left-0 z-50 mt-1 max-h-64 w-56 overflow-y-auto rounded-lg border border-slate-700 bg-slate-800 shadow-xl"
+        >
           @for (col of collections(); track col.name) {
             <button
-              class="w-full text-left px-3 py-2 text-sm text-slate-300 hover:bg-slate-700/50 flex items-center gap-2 transition-colors"
+              class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-300 transition-colors hover:bg-slate-700/50"
               (click)="selectCollectionFromDropdown(col.name)"
             >
-<mat-icon fontIcon="table_chart" class="inline-flex items-center justify-center text-xl!"></mat-icon>
+              <mat-icon
+                fontIcon="table_chart"
+                class="inline-flex items-center justify-center text-xl!"
+              ></mat-icon>
               {{ col.name }}
             </button>
           }
           @if (collections().length === 0) {
-            <div class="p-3 text-sm text-slate-500 text-center">No collections</div>
+            <div class="p-3 text-center text-sm text-slate-500">No collections</div>
           }
         </div>
       }
@@ -59,11 +75,13 @@
     (columnsChange)="onColumnsChange($event)"
   ></app-filter-bar>
 
-  <div class="view-tabs-bar flex items-center justify-between px-4 py-2 bg-slate-900/50 border-b border-slate-800/50">
+  <div
+    class="view-tabs-bar flex items-center justify-between border-b border-slate-800/50 bg-slate-900/50 px-4 py-2"
+  >
     <div class="flex items-center gap-1">
       @for (tab of viewTabs; track tab.id) {
         <button
-          class="px-4 py-2 text-sm font-medium rounded-t-md transition-colors relative"
+          class="relative rounded-t-md px-4 py-2 text-sm font-medium transition-colors"
           [class.text-emerald-400]="viewTab() === tab.id"
           [class.text-slate-400]="viewTab() !== tab.id"
           [class.hover:text-slate-200]="viewTab() !== tab.id"
@@ -71,7 +89,7 @@
         >
           {{ tab.label }}
           @if (viewTab() === tab.id) {
-            <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-400 rounded-t"></div>
+            <div class="absolute right-0 bottom-0 left-0 h-0.5 rounded-t bg-emerald-400"></div>
           }
         </button>
       }
@@ -80,7 +98,7 @@
       <span class="text-xs text-slate-500">Split:</span>
       @for (mode of splitModes; track mode.id) {
         <button
-          class="p-1.5 rounded transition-colors"
+          class="rounded p-1.5 transition-colors"
           [class.bg-emerald-600]="splitMode() === mode.id"
           [class.text-white]="splitMode() === mode.id"
           [class.bg-slate-700]="splitMode() !== mode.id"
@@ -89,37 +107,48 @@
           (click)="setSplitMode(mode.id)"
           [title]="mode.label"
         >
-          <mat-icon [fontIcon]="mode.icon" class="inline-flex items-center justify-center text-xl!"></mat-icon>
+          <mat-icon
+            [fontIcon]="mode.icon"
+            class="inline-flex items-center justify-center text-xl!"
+          ></mat-icon>
         </button>
       }
     </div>
   </div>
 
-  <div class="stats-breadcrumb flex items-center justify-between px-4 py-2 bg-slate-900/30 border-b border-slate-800/30">
+  <div
+    class="stats-breadcrumb flex items-center justify-between border-b border-slate-800/30 bg-slate-900/30 px-4 py-2"
+  >
     <div class="flex items-center gap-3">
       <span class="text-sm text-slate-400">
-        Viewing: <span class="text-emerald-400 font-medium">{{ activeCollection() }}</span>
+        Viewing: <span class="font-medium text-emerald-400">{{ activeCollection() }}</span>
       </span>
-      <span class="text-xs text-slate-600 bg-slate-800/50 px-2 py-0.5 rounded">Collection</span>
+      <span class="rounded bg-slate-800/50 px-2 py-0.5 text-xs text-slate-600">Collection</span>
     </div>
     <div class="flex items-center gap-4 text-sm text-slate-400">
       @if (stats()) {
         <span class="flex items-center gap-1.5">
-          <mat-icon fontIcon="format_align_left" class="inline-flex items-center justify-center text-xl!"></mat-icon>
+          <mat-icon
+            fontIcon="format_align_left"
+            class="inline-flex items-center justify-center text-xl!"
+          ></mat-icon>
           {{ formatBytes(stats()!.size_bytes) }}
         </span>
         <span class="flex items-center gap-1.5">
-          <mat-icon fontIcon="grid_view" class="inline-flex items-center justify-center text-xl!"></mat-icon>
+          <mat-icon
+            fontIcon="grid_view"
+            class="inline-flex items-center justify-center text-xl!"
+          ></mat-icon>
           {{ formatDocumentCount(stats()!.document_count) }} Docs
         </span>
       }
     </div>
   </div>
 
-  <div class="flex-1 overflow-y-auto min-h-0">
+  <div class="min-h-0 flex-1 overflow-y-auto">
     @switch (viewTab()) {
       @case ("table") {
-        @if (splitMode() === 'none') {
+        @if (splitMode() === "none") {
           <div class="h-full overflow-auto">
             <app-data-grid
               [collectionName]="activeCollection()"
@@ -128,14 +157,15 @@
               [pageSize]="pageSize()"
               [showInspector]="showInspector()"
               [viewMode]="'grid'"
+              [inputVisibleColumns]="selectedColumns()"
               (documentClick)="openInspector($event)"
               (pageChange)="onPageChange($event)"
               (viewModeChange)="selectViewTab('json')"
             ></app-data-grid>
           </div>
         }
-        @if (splitMode() === 'horizontal') {
-          <div class="flex flex-row h-full">
+        @if (splitMode() === "horizontal") {
+          <div class="flex h-full flex-row">
             <div class="w-1/2 overflow-auto">
               <app-data-grid
                 [collectionName]="activeCollection()"
@@ -144,6 +174,7 @@
                 [pageSize]="pageSize()"
                 [showInspector]="showInspector()"
                 [viewMode]="'grid'"
+                [inputVisibleColumns]="selectedColumns()"
                 (documentClick)="openInspector($event)"
                 (pageChange)="onPageChange($event)"
                 (viewModeChange)="selectViewTab('json')"
@@ -157,6 +188,7 @@
                 [pageSize]="pageSize()"
                 [showInspector]="showInspector()"
                 [viewMode]="'grid'"
+                [inputVisibleColumns]="selectedColumns()"
                 (documentClick)="openInspector($event)"
                 (pageChange)="onPageChange($event)"
                 (viewModeChange)="selectViewTab('json')"
@@ -164,8 +196,8 @@
             </div>
           </div>
         }
-        @if (splitMode() === 'vertical') {
-          <div class="flex flex-col h-full">
+        @if (splitMode() === "vertical") {
+          <div class="flex h-full flex-col">
             <div class="h-1/2 overflow-auto">
               <app-data-grid
                 [collectionName]="activeCollection()"
@@ -174,6 +206,7 @@
                 [pageSize]="pageSize()"
                 [showInspector]="showInspector()"
                 [viewMode]="'grid'"
+                [inputVisibleColumns]="selectedColumns()"
                 (documentClick)="openInspector($event)"
                 (pageChange)="onPageChange($event)"
                 (viewModeChange)="selectViewTab('json')"
@@ -187,6 +220,7 @@
                 [pageSize]="pageSize()"
                 [showInspector]="showInspector()"
                 [viewMode]="'grid'"
+                [inputVisibleColumns]="selectedColumns()"
                 (documentClick)="openInspector($event)"
                 (pageChange)="onPageChange($event)"
                 (viewModeChange)="selectViewTab('json')"
@@ -196,66 +230,94 @@
         }
       }
       @case ("tree") {
-        <div class="h-full flex flex-col items-center justify-center text-slate-400">
-          <mat-icon fontIcon="account_tree" class="inline-flex items-center justify-center text-xl! text-4xl mb-4"></mat-icon>
-          <p class="text-lg">Tree View</p>
-          <p class="text-sm text-slate-500 mt-1">Tree visualization coming soon</p>
+        <div class="h-full">
+          <app-schema-tree (collectionSelect)="onTreeCollectionSelect($event)"></app-schema-tree>
         </div>
       }
       @case ("json") {
-        <div class="h-full flex flex-col">
-          <div class="json-toolbar flex items-center justify-between px-4 py-2 bg-slate-900/50 border-b border-slate-800/50">
+        <div class="flex h-full flex-col">
+          <div
+            class="json-toolbar flex items-center justify-between border-b border-slate-800/50 bg-slate-900/50 px-4 py-2"
+          >
             <div class="flex items-center gap-2">
               <span class="text-sm text-slate-400">Full Collection JSON</span>
               <span class="text-xs text-slate-500">({{ fullJsonData().length }} documents)</span>
             </div>
             <div class="flex items-center gap-2">
               <button
-                class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded text-sm flex items-center gap-2 transition-colors"
+                class="flex items-center gap-2 rounded bg-slate-700 px-3 py-1.5 text-sm text-slate-300 transition-colors hover:bg-slate-600"
                 (click)="loadFullJsonData()"
               >
-                <mat-icon fontIcon="refresh" class="inline-flex items-center justify-center text-xl!"></mat-icon>
+                <mat-icon
+                  fontIcon="refresh"
+                  class="inline-flex items-center justify-center text-xl!"
+                ></mat-icon>
                 Refresh
               </button>
               <button
-                class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-sm flex items-center gap-2 transition-colors"
+                class="flex items-center gap-2 rounded bg-emerald-600 px-3 py-1.5 text-sm text-white transition-colors hover:bg-emerald-500"
                 (click)="copyJsonToClipboard()"
               >
-                <mat-icon fontIcon="content_copy" class="inline-flex items-center justify-center text-xl!"></mat-icon>
+                <mat-icon
+                  fontIcon="content_copy"
+                  class="inline-flex items-center justify-center text-xl!"
+                ></mat-icon>
                 Copy to Clipboard
               </button>
             </div>
           </div>
           <div class="flex-1 overflow-auto bg-slate-900/30">
             @if (jsonLoading()) {
-              <div class="flex items-center justify-center h-full">
-                <div class="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+              <div class="flex h-full items-center justify-center">
+                <div
+                  class="h-8 w-8 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent"
+                ></div>
               </div>
             } @else if (fullJsonData().length === 0) {
-              <div class="flex flex-col items-center justify-center h-full text-slate-400">
-                <mat-icon fontIcon="download" class="inline-flex items-center justify-center text-xl!"></mat-icon>
+              <div class="flex h-full flex-col items-center justify-center text-slate-400">
+                <mat-icon
+                  fontIcon="download"
+                  class="inline-flex items-center justify-center text-xl!"
+                ></mat-icon>
                 <p class="text-lg">No documents found</p>
-                <p class="text-sm text-slate-500 mt-1">This collection is empty</p>
+                <p class="mt-1 text-sm text-slate-500">This collection is empty</p>
               </div>
             } @else {
               <div class="json-content p-4">
                 @for (doc of fullJsonData(); track $index; let docIndex = $index) {
-                  <div class="json-document mb-4 border border-slate-800 rounded-lg overflow-hidden bg-slate-900/30">
-                    <div class="bg-slate-900/80 px-4 py-2 border-b border-slate-800 flex items-center justify-between">
-                      <span class="text-slate-400 text-sm font-mono">Document {{ docIndex + 1 }}</span>
+                  <div
+                    class="json-document mb-4 overflow-hidden rounded-lg border border-slate-800 bg-slate-900/30"
+                  >
+                    <div
+                      class="flex items-center justify-between border-b border-slate-800 bg-slate-900/80 px-4 py-2"
+                    >
+                      <span class="font-mono text-sm text-slate-400"
+                        >Document {{ docIndex + 1 }}</span
+                      >
                       <button
-                        class="text-slate-500 hover:text-emerald-400 text-xs flex items-center gap-1 px-2 py-1 rounded hover:bg-slate-800 transition-colors"
+                        class="flex items-center gap-1 rounded px-2 py-1 text-xs text-slate-500 transition-colors hover:bg-slate-800 hover:text-emerald-400"
                         (click)="openInspector(doc)"
                       >
-                  <mat-icon fontIcon="visibility" class="inline-flex items-center justify-center text-xl!"></mat-icon>
+                        <mat-icon
+                          fontIcon="visibility"
+                          class="inline-flex items-center justify-center text-xl!"
+                        ></mat-icon>
                         Inspect
                       </button>
                     </div>
                     <div class="json-body p-4">
                       @for (line of formatJsonLines(doc); track $index; let lineIndex = $index) {
-                        <div class="json-line flex font-mono text-sm leading-relaxed hover:bg-slate-800/20">
-                          <span class="json-line-num text-slate-600 text-xs text-right pr-4 select-none w-10 flex-shrink-0">{{ lineIndex + 1 }}</span>
-                          <span class="json-line-content" [innerHTML]="highlightJsonLine(line)"></span>
+                        <div
+                          class="json-line flex font-mono text-sm leading-relaxed hover:bg-slate-800/20"
+                        >
+                          <span
+                            class="json-line-num w-10 flex-shrink-0 pr-4 text-right text-xs text-slate-600 select-none"
+                            >{{ lineIndex + 1 }}</span
+                          >
+                          <span
+                            class="json-line-content"
+                            [innerHTML]="highlightJsonLine(line)"
+                          ></span>
                         </div>
                       }
                     </div>

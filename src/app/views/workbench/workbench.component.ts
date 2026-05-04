@@ -107,11 +107,7 @@ export class WorkbenchComponent implements AfterViewInit {
   updateQuery(query: string) {
     const tab = this.activeTab();
     if (!tab) return;
-    this.tabs.set(
-      this.tabs().map((t) =>
-        t.id === tab.id ? { ...t, query, modified: true } : t
-      )
-    );
+    this.tabs.set(this.tabs().map((t) => (t.id === tab.id ? { ...t, query, modified: true } : t)));
   }
 
   async runCurrentTab() {
@@ -119,9 +115,7 @@ export class WorkbenchComponent implements AfterViewInit {
     if (!tab || !tab.query.trim()) return;
 
     this.tabs.set(
-      this.tabs().map((t) =>
-        t.id === tab.id ? { ...t, loading: true, error: "" } : t
-      )
+      this.tabs().map((t) => (t.id === tab.id ? { ...t, loading: true, error: "" } : t))
     );
 
     const startTime = performance.now();
@@ -165,9 +159,7 @@ export class WorkbenchComponent implements AfterViewInit {
     if (!tab || !tab.query.trim()) return;
 
     this.tabs.set(
-      this.tabs().map((t) =>
-        t.id === tabId ? { ...t, loading: true, error: "" } : t
-      )
+      this.tabs().map((t) => (t.id === tabId ? { ...t, loading: true, error: "" } : t))
     );
 
     const startTime = performance.now();
@@ -197,10 +189,36 @@ export class WorkbenchComponent implements AfterViewInit {
   formatAllSQL() {
     const formatSQL = (sql: string): string => {
       const keywords = [
-        "SELECT", "FROM", "WHERE", "AND", "OR", "INSERT", "INTO", "VALUES",
-        "UPDATE", "SET", "DELETE", "CREATE", "TABLE", "DROP", "ALTER", "JOIN",
-        "LEFT", "RIGHT", "INNER", "OUTER", "ON", "GROUP BY", "ORDER BY", "HAVING",
-        "LIMIT", "OFFSET", "AS", "DISTINCT", "UNION", "ALL",
+        "SELECT",
+        "FROM",
+        "WHERE",
+        "AND",
+        "OR",
+        "INSERT",
+        "INTO",
+        "VALUES",
+        "UPDATE",
+        "SET",
+        "DELETE",
+        "CREATE",
+        "TABLE",
+        "DROP",
+        "ALTER",
+        "JOIN",
+        "LEFT",
+        "RIGHT",
+        "INNER",
+        "OUTER",
+        "ON",
+        "GROUP BY",
+        "ORDER BY",
+        "HAVING",
+        "LIMIT",
+        "OFFSET",
+        "AS",
+        "DISTINCT",
+        "UNION",
+        "ALL",
       ];
 
       let result = sql;
@@ -209,7 +227,11 @@ export class WorkbenchComponent implements AfterViewInit {
         result = result.replace(regex, kw);
       });
 
-      return result.replace(/\s+/g, " ").replace(/,\s*/g, ", ").replace(/\(\s*/g, "(").replace(/\s*\)/g, ")");
+      return result
+        .replace(/\s+/g, " ")
+        .replace(/,\s*/g, ", ")
+        .replace(/\(\s*/g, "(")
+        .replace(/\s*\)/g, ")");
     };
 
     this.tabs.set(

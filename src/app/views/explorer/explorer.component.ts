@@ -23,7 +23,13 @@ interface Tab {
 @Component({
   selector: "app-explorer",
   standalone: true,
-  imports: [MatIconModule, DataGridComponent, SchemaTreeComponent, FilterBarComponent, InspectorDrawerComponent],
+  imports: [
+    MatIconModule,
+    DataGridComponent,
+    SchemaTreeComponent,
+    FilterBarComponent,
+    InspectorDrawerComponent,
+  ],
   templateUrl: "./explorer.component.html",
 })
 export class ExplorerComponent implements OnInit, OnDestroy {
@@ -51,6 +57,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   viewTab = signal<ViewTab>("table");
   splitMode = signal<SplitMode>("none");
   availableColumns = signal<string[]>([]);
+  selectedColumns = signal<string[]>([]);
   showCollectionSelector = signal(false);
   fullJsonData = signal<any[]>([]);
   jsonLoading = signal(false);
@@ -87,7 +94,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
       this.loading.set(false);
     }
 
-    this.queryParamsSub = this.route.queryParams.subscribe(params => {
+    this.queryParamsSub = this.route.queryParams.subscribe((params) => {
       const collection = params["collection"];
       if (collection && collection !== this.activeCollection()) {
         this.addTab(collection);
@@ -104,9 +111,10 @@ export class ExplorerComponent implements OnInit, OnDestroy {
       const cols = await this.db.listCollections();
       this.collections.set(cols);
       if (cols.length > 0) {
-        const collectionToSelect = selectedCollection && cols.some(c => c.name === selectedCollection)
-          ? selectedCollection
-          : cols[0].name;
+        const collectionToSelect =
+          selectedCollection && cols.some((c) => c.name === selectedCollection)
+            ? selectedCollection
+            : cols[0].name;
         this.activeCollection.set(collectionToSelect);
         this.activeTabs.set([{ name: collectionToSelect, collection: collectionToSelect }]);
         await this.loadStats();
@@ -136,7 +144,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
     if (!collection) return;
     try {
       const schema = await this.db.describeCollection(collection);
-      this.availableColumns.set(schema.columns.map(c => c.name));
+      this.availableColumns.set(schema.columns.map((c) => c.name));
     } catch {
       this.availableColumns.set([]);
     }
@@ -158,15 +166,15 @@ export class ExplorerComponent implements OnInit, OnDestroy {
 
   addTab(collection: string) {
     const name = collection;
-    const existingTab = this.activeTabs().find(t => t.collection === collection);
+    const existingTab = this.activeTabs().find((t) => t.collection === collection);
     if (!existingTab) {
-      this.activeTabs.update(tabs => [...tabs, { name, collection }]);
+      this.activeTabs.update((tabs) => [...tabs, { name, collection }]);
     }
     this.selectTab(collection);
   }
 
   closeTab(collection: string) {
-    const tabs = this.activeTabs().filter(t => t.collection !== collection);
+    const tabs = this.activeTabs().filter((t) => t.collection !== collection);
     this.activeTabs.set(tabs);
     if (this.activeCollection() === collection && tabs.length > 0) {
       this.selectTab(tabs[0].collection);
@@ -203,7 +211,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   }
 
   toggleCollectionSelector() {
-    this.showCollectionSelector.update(v => !v);
+    this.showCollectionSelector.update((v) => !v);
   }
 
   selectCollectionFromDropdown(collection: string) {
@@ -258,6 +266,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   }
 
   onColumnsChange(columns: string[]) {
+    this.selectedColumns.set(columns);
   }
 
   onTreeCollectionSelect(collection: string) {
@@ -303,11 +312,11 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   }
 
   async nextPage() {
-    this.page.update(p => p + 1);
+    this.page.update((p) => p + 1);
   }
 
   async prevPage() {
-    this.page.update(p => Math.max(0, p - 1));
+    this.page.update((p) => Math.max(0, p - 1));
   }
 
   async changePageSize(size: number) {
@@ -347,44 +356,29 @@ export class ExplorerComponent implements OnInit, OnDestroy {
 
   copyJsonToClipboard() {
     const json = JSON.stringify(this.fullJsonData(), null, 2);
-    navigator.clipboard.writeText(json).then(() => {
-      this.toast.success("JSON copied to clipboard");
-    }).catch(() => {
-      this.toast.error("Failed to copy JSON");
-    });
+    navigator.clipboard
+      .writeText(json)
+      .then(() => {
+        this.toast.success("JSON copied to clipboard");
+      })
+      .catch(() => {
+        this.toast.error("Failed to copy JSON");
+      });
   }
 
   formatJsonLines(obj: any): string[] {
     const json = JSON.stringify(obj, null, 2);
-    return json.split('\n');
+    return json.split("\n");
   }
 
   highlightJsonLine(line: string): string {
-    let result = line
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
+    let result = line.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-    result = result.replace(
-      /("([^"\\]|\\.)*")\s*:/g,
-      '<span class="text-yellow-400">$1</span>:'
-    );
-    result = result.replace(
-      /:\s*("([^"\\]|\\.)*")/g,
-      ': <span class="text-green-400">$1</span>'
-    );
-    result = result.replace(
-      /:\s*(true|false)/g,
-      ': <span class="text-red-400">$1</span>'
-    );
-    result = result.replace(
-      /:\s*(null)/g,
-      ': <span class="text-slate-500">$1</span>'
-    );
-    result = result.replace(
-      /:\s*(-?\d+\.?\d*)/g,
-      ': <span class="text-blue-400">$1</span>'
-    );
+    result = result.replace(/("([^"\\]|\\.)*")\s*:/g, '<span class="json-key">$1</span>:');
+    result = result.replace(/:\s*("([^"\\]|\\.)*")/g, ': <span class="json-string">$1</span>');
+    result = result.replace(/:\s*(true|false)/g, ': <span class="json-boolean">$1</span>');
+    result = result.replace(/:\s*(null)/g, ': <span class="json-null">$1</span>');
+    result = result.replace(/:\s*(-?\d+\.?\d*)/g, ': <span class="json-number">$1</span>');
 
     return result;
   }

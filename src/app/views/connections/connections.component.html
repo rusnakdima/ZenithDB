@@ -16,7 +16,10 @@
 
     @if (loading()) {
       <div class="flex items-center justify-center gap-3 py-12 text-slate-500">
-        <mat-icon fontIcon="sync" class="inline-flex items-center justify-center fa-spin text-xl!"></mat-icon>
+        <mat-icon
+          fontIcon="sync"
+          class="fa-spin inline-flex items-center justify-center text-xl!"
+        ></mat-icon>
         <span>Loading connections...</span>
       </div>
     }

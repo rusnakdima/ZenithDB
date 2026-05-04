@@ -31,7 +31,9 @@ export class ConnectionCardComponent {
   }
 
   get statusClass(): string {
-    return this.connection().status === "connected" ? "card-status-connected" : "card-status-offline";
+    return this.connection().status === "connected"
+      ? "card-status-connected"
+      : "card-status-offline";
   }
 
   get statusLabel(): string {

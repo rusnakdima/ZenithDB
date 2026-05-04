@@ -1,11 +1,4 @@
-import {
-  Component,
-  signal,
-  output,
-  Input,
-  HostListener,
-  computed,
-} from "@angular/core";
+import { Component, signal, output, Input, HostListener, computed } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 
 @Component({

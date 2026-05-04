@@ -42,6 +42,14 @@ export class InspectorDrawerComponent {
 
   jsonPayload = computed(() => JSON.stringify(this.document(), null, 2));
 
+  onBackdropClick(event: MouseEvent) {
+    this.close.emit();
+  }
+
+  onDrawerClick(event: MouseEvent) {
+    event.stopPropagation();
+  }
+
   onClose() {
     this.isEditing.set(false);
     this.showDeleteConfirm.set(false);
@@ -106,7 +114,7 @@ export class InspectorDrawerComponent {
   }
 
   togglePath(path: string) {
-    this.expandedPaths.update(paths => {
+    this.expandedPaths.update((paths) => {
       const newSet = new Set(paths);
       if (newSet.has(path)) {
         newSet.delete(path);
@@ -139,14 +147,11 @@ export class InspectorDrawerComponent {
   }
 
   formatJsonLines(json: string): string[] {
-    return json.split('\n');
+    return json.split("\n");
   }
 
   getSyntaxHighlighting(json: string): string {
-    const escaped = json
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
+    const escaped = json.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
     return escaped.replace(
       /("([^"\\]|\\.)*")\s*:|("([^"\\]|\\.)*")|(true|false)|(null)|(-?\d+\.?\d*)/g,
@@ -172,31 +177,13 @@ export class InspectorDrawerComponent {
   }
 
   highlightJsonLine(line: string): string {
-    let result = line
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
+    let result = line.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-    result = result.replace(
-      /("([^"\\]|\\.)*")\s*:/g,
-      '<span class="json-key">$1</span>:'
-    );
-    result = result.replace(
-      /:\s*("([^"\\]|\\.)*")/g,
-      ': <span class="json-string">$1</span>'
-    );
-    result = result.replace(
-      /:\s*(true|false)/g,
-      ': <span class="json-boolean">$1</span>'
-    );
-    result = result.replace(
-      /:\s*(null)/g,
-      ': <span class="json-null">$1</span>'
-    );
-    result = result.replace(
-      /:\s*(-?\d+\.?\d*)/g,
-      ': <span class="json-number">$1</span>'
-    );
+    result = result.replace(/("([^"\\]|\\.)*")\s*:/g, '<span class="json-key">$1</span>:');
+    result = result.replace(/:\s*("([^"\\]|\\.)*")/g, ': <span class="json-string">$1</span>');
+    result = result.replace(/:\s*(true|false)/g, ': <span class="json-boolean">$1</span>');
+    result = result.replace(/:\s*(null)/g, ': <span class="json-null">$1</span>');
+    result = result.replace(/:\s*(-?\d+\.?\d*)/g, ': <span class="json-number">$1</span>');
 
     return result;
   }
@@ -204,10 +191,7 @@ export class InspectorDrawerComponent {
   async exportDocument(format: "json" | "csv") {
     const doc = this.document();
     try {
-      await this.exportService.export(
-        { format, filename: `document_${this.documentId()}` },
-        [doc]
-      );
+      await this.exportService.export({ format, filename: `document_${this.documentId()}` }, [doc]);
     } catch (error: any) {
       if (error.message !== "Export cancelled") {
         this.toast.error("Export failed");

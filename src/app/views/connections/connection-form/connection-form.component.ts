@@ -4,7 +4,11 @@ import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
 import { DatabaseService } from "@shared/services/database.service";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
-import { ConnectionConfig, ConnectionHealth, ConnectionSummary } from "@shared/models/connection.config";
+import {
+  ConnectionConfig,
+  ConnectionHealth,
+  ConnectionSummary,
+} from "@shared/models/connection.config";
 
 type ProviderType = "json" | "mongo" | "redis" | "postgres" | "sqlite" | "mysql";
 type WizardStep = 1 | 2 | 3;
@@ -50,8 +54,18 @@ export class ConnectionFormComponent implements OnInit {
     { type: "json", label: "JSON", icon: "description", description: "Local JSON file storage" },
     { type: "mongo", label: "MongoDB", icon: "eco", description: "MongoDB document database" },
     { type: "redis", label: "Redis", icon: "flash_on", description: "Redis in-memory cache" },
-    { type: "postgres", label: "PostgreSQL", icon: "storage", description: "PostgreSQL relational DB" },
-    { type: "sqlite", label: "SQLite", icon: "insert_drive_file", description: "SQLite file database" },
+    {
+      type: "postgres",
+      label: "PostgreSQL",
+      icon: "storage",
+      description: "PostgreSQL relational DB",
+    },
+    {
+      type: "sqlite",
+      label: "SQLite",
+      icon: "insert_drive_file",
+      description: "SQLite file database",
+    },
     { type: "mysql", label: "MySQL", icon: "storage", description: "MySQL relational DB" },
   ];
 
@@ -78,21 +92,30 @@ export class ConnectionFormComponent implements OnInit {
     try {
       const conn = await this.db.getConnection(id);
       this.editingId = id;
-      this.name = conn.name;
-      this.provider = conn.type as ProviderType;
-      switch (conn.type) {
-        case "json":
-        case "sqlite":
-          this.path = (conn as any).path || "";
+      this.name = conn.config.name;
+      const innerConfig = conn.config.config;
+      const typeMap: Record<string, ProviderType> = {
+        Json: "json",
+        Mongo: "mongo",
+        Redis: "redis",
+        Postgres: "postgres",
+        Sqlite: "sqlite",
+        MySql: "mysql",
+      };
+      this.provider = typeMap[innerConfig.type] || (innerConfig.type.toLowerCase() as ProviderType);
+      switch (innerConfig.type) {
+        case "Json":
+        case "Sqlite":
+          this.path = innerConfig.path || "";
           break;
-        case "mongo":
-          this.uri = (conn as any).uri || "";
-          this.database = (conn as any).database || "";
+        case "Mongo":
+          this.uri = innerConfig.uri || "";
+          this.database = innerConfig.database || "";
           break;
-        case "redis":
-        case "postgres":
-        case "mysql":
-          this.uri = (conn as any).uri || "";
+        case "Redis":
+        case "Postgres":
+        case "MySql":
+          this.uri = innerConfig.uri || "";
           break;
       }
     } catch (e) {
@@ -103,21 +126,30 @@ export class ConnectionFormComponent implements OnInit {
   private async loadConnectionForDuplicate(id: string) {
     try {
       const conn = await this.db.getConnection(id);
-      this.name = conn.name + " (Copy)";
-      this.provider = conn.type as ProviderType;
-      switch (conn.type) {
-        case "json":
-        case "sqlite":
-          this.path = (conn as any).path || "";
+      const innerConfig = conn.config.config;
+      this.name = innerConfig.name + " (Copy)";
+      const typeMap: Record<string, ProviderType> = {
+        Json: "json",
+        Mongo: "mongo",
+        Redis: "redis",
+        Postgres: "postgres",
+        Sqlite: "sqlite",
+        MySql: "mysql",
+      };
+      this.provider = typeMap[innerConfig.type] || (innerConfig.type.toLowerCase() as ProviderType);
+      switch (innerConfig.type) {
+        case "Json":
+        case "Sqlite":
+          this.path = innerConfig.path || "";
           break;
-        case "mongo":
-          this.uri = (conn as any).uri || "";
-          this.database = (conn as any).database || "";
+        case "Mongo":
+          this.uri = innerConfig.uri || "";
+          this.database = innerConfig.database || "";
           break;
-        case "redis":
-        case "postgres":
-        case "mysql":
-          this.uri = (conn as any).uri || "";
+        case "Redis":
+        case "Postgres":
+        case "MySql":
+          this.uri = innerConfig.uri || "";
           break;
       }
     } catch (e) {
@@ -162,13 +194,13 @@ export class ConnectionFormComponent implements OnInit {
 
   nextStep() {
     if (this.currentStep() < 3) {
-      this.currentStep.update(s => (s + 1) as WizardStep);
+      this.currentStep.update((s) => (s + 1) as WizardStep);
     }
   }
 
   prevStep() {
     if (this.currentStep() > 1) {
-      this.currentStep.update(s => (s - 1) as WizardStep);
+      this.currentStep.update((s) => (s - 1) as WizardStep);
     }
   }
 
@@ -222,7 +254,7 @@ export class ConnectionFormComponent implements OnInit {
             type: configType,
             name: this.name,
             path: this.path,
-          }
+          },
         };
       case "mongo":
         return {
@@ -232,7 +264,7 @@ export class ConnectionFormComponent implements OnInit {
             name: this.name,
             uri: this.uri,
             database: this.database,
-          }
+          },
         };
       case "redis":
       case "postgres":
@@ -243,7 +275,7 @@ export class ConnectionFormComponent implements OnInit {
             type: configType,
             name: this.name,
             uri: this.uri,
-          }
+          },
         };
       default:
         return {
@@ -252,7 +284,7 @@ export class ConnectionFormComponent implements OnInit {
             type: configType,
             name: this.name,
             uri: this.uri,
-          }
+          },
         };
     }
   }
@@ -261,15 +293,20 @@ export class ConnectionFormComponent implements OnInit {
     this.router.navigate(["/connections"]);
   }
 
-  async browseFile() {
+  async browseFile(directory: boolean = false) {
     try {
       const { open } = await import("@tauri-apps/plugin-dialog");
       const selected = await open({
         multiple: false,
-        filters: [{
-          name: "Database Files",
-          extensions: ["json", "db", "sqlite", "sqlite3"]
-        }]
+        directory,
+        filters: directory
+          ? []
+          : [
+              {
+                name: "Database Files",
+                extensions: ["json", "db", "sqlite", "sqlite3"],
+              },
+            ],
       });
       if (selected) {
         this.path = selected as string;
