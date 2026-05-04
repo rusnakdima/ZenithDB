@@ -1,3 +1,7 @@
+use crate::commands::provider::{
+    create_json_provider, create_mongo_provider, create_mysql_provider, create_postgres_provider,
+    create_redis_provider, create_sqlite_provider,
+};
 use nosql_orm::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::fs;
@@ -54,6 +58,7 @@ pub struct ConnectionSummary {
     pub id: String,
     pub name: String,
     pub provider: String,
+    pub status: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -177,16 +182,60 @@ pub async fn save_connection(config: ConnectionConfig) -> Result<ConnectionId, S
 pub async fn list_connections() -> Result<Vec<ConnectionSummary>, String> {
     let store = store();
     let store = store.read().await;
-    let summaries = store
-        .connections
-        .iter()
-        .map(|c| ConnectionSummary {
+    let mut summaries = Vec::new();
+    for c in store.connections.iter() {
+        let status = check_connection_status(&c.config).await;
+        summaries.push(ConnectionSummary {
             id: c.id.clone(),
             name: c.config.name.clone(),
             provider: get_connection_type(&c.config).to_string(),
-        })
-        .collect();
+            status,
+        });
+    }
     Ok(summaries)
+}
+
+async fn check_connection_status(config: &ConnectionConfig) -> String {
+    match &config.config {
+        ConnectionConfigEnum::Json { path, .. } => match create_json_provider(path).await {
+            Ok(p) => {
+                if p.health_check().await.unwrap_or(false) {
+                    "connected".to_string()
+                } else {
+                    "disconnected".to_string()
+                }
+            }
+            Err(_) => "disconnected".to_string(),
+        },
+        ConnectionConfigEnum::Mongo { uri, database, .. } => {
+            match create_mongo_provider(uri, database).await {
+                Ok(_) => "connected".to_string(),
+                Err(_) => "disconnected".to_string(),
+            }
+        }
+        ConnectionConfigEnum::Redis { uri, .. } => match create_redis_provider(uri).await {
+            Ok(p) => {
+                if p.health_check().await.unwrap_or(false) {
+                    "connected".to_string()
+                } else {
+                    "disconnected".to_string()
+                }
+            }
+            Err(_) => "disconnected".to_string(),
+        },
+        ConnectionConfigEnum::Postgres { uri, .. } => match create_postgres_provider(uri).await {
+            Ok(_) => "connected".to_string(),
+            Err(_) => "disconnected".to_string(),
+        },
+        ConnectionConfigEnum::Sqlite { path, .. } => match create_sqlite_provider(path).await {
+            Ok(_) => "connected".to_string(),
+            Err(_) => "disconnected".to_string(),
+        },
+        ConnectionConfigEnum::MySql { uri, .. } => match create_mysql_provider(uri).await {
+            Ok(_) => "connected".to_string(),
+            Err(_) => "disconnected".to_string(),
+        },
+    }
 }
 
 #[tauri::command]
@@ -225,55 +274,45 @@ pub async fn get_connection(id: &str) -> Result<ConnectionConfigResult, String> 
 #[tauri::command]
 pub async fn test_connection(config: ConnectionConfig) -> Result<ConnectionHealth, String> {
     match &config.config {
-        ConnectionConfigEnum::Json { path, .. } => {
-            match nosql_orm::providers::JsonProvider::new(path).await {
-                Ok(p) => {
-                    let healthy = p.health_check().await.unwrap_or(false);
-                    Ok(ConnectionHealth {
-                        healthy,
-                        server_version: Some("N/A".to_string()),
-                        latency_ms: None,
-                    })
-                }
-                Err(e) => Ok(ConnectionHealth::err(&e.to_string())),
+        ConnectionConfigEnum::Json { path, .. } => match create_json_provider(path).await {
+            Ok(p) => {
+                let healthy = p.health_check().await.unwrap_or(false);
+                Ok(ConnectionHealth {
+                    healthy,
+                    server_version: Some("N/A".to_string()),
+                    latency_ms: None,
+                })
             }
-        }
+            Err(e) => Ok(ConnectionHealth::err(&e)),
+        },
         ConnectionConfigEnum::Mongo { uri, database, .. } => {
-            match nosql_orm::providers::MongoProvider::connect(uri, database).await {
+            match create_mongo_provider(uri, database).await {
                 Ok(_) => Ok(ConnectionHealth::ok()),
-                Err(e) => Ok(ConnectionHealth::err(&e.to_string())),
+                Err(e) => Ok(ConnectionHealth::err(&e)),
             }
         }
-        ConnectionConfigEnum::Redis { uri, .. } => {
-            match nosql_orm::providers::RedisProvider::new(uri).await {
-                Ok(p) => {
-                    let healthy = p.health_check().await.unwrap_or(false);
-                    Ok(ConnectionHealth {
-                        healthy,
-                        server_version: Some("N/A".to_string()),
-                        latency_ms: None,
-                    })
-                }
-                Err(e) => Ok(ConnectionHealth::err(&e.to_string())),
+        ConnectionConfigEnum::Redis { uri, .. } => match create_redis_provider(uri).await {
+            Ok(p) => {
+                let healthy = p.health_check().await.unwrap_or(false);
+                Ok(ConnectionHealth {
+                    healthy,
+                    server_version: Some("N/A".to_string()),
+                    latency_ms: None,
+                })
             }
-        }
-        ConnectionConfigEnum::Postgres { uri, .. } => {
-            match nosql_orm::providers::sql::PostgresProvider::connect(uri).await {
-                Ok(_) => Ok(ConnectionHealth::ok()),
-                Err(e) => Ok(ConnectionHealth::err(&e.to_string())),
-            }
-        }
-        ConnectionConfigEnum::Sqlite { path, .. } => {
-            match nosql_orm::providers::sql::SqliteProvider::connect(path).await {
-                Ok(_) => Ok(ConnectionHealth::ok()),
-                Err(e) => Ok(ConnectionHealth::err(&e.to_string())),
-            }
-        }
-        ConnectionConfigEnum::MySql { uri, .. } => {
-            match nosql_orm::providers::sql::MySqlProvider::connect(uri).await {
-                Ok(_) => Ok(ConnectionHealth::ok()),
-                Err(e) => Ok(ConnectionHealth::err(&e.to_string())),
-            }
-        }
+            Err(e) => Ok(ConnectionHealth::err(&e)),
+        },
+        ConnectionConfigEnum::Postgres { uri, .. } => match create_postgres_provider(uri).await {
+            Ok(_) => Ok(ConnectionHealth::ok()),
+            Err(e) => Ok(ConnectionHealth::err(&e)),
+        },
+        ConnectionConfigEnum::Sqlite { path, .. } => match create_sqlite_provider(path).await {
+            Ok(_) => Ok(ConnectionHealth::ok()),
+            Err(e) => Ok(ConnectionHealth::err(&e)),
+        },
+        ConnectionConfigEnum::MySql { uri, .. } => match create_mysql_provider(uri).await {
+            Ok(_) => Ok(ConnectionHealth::ok()),
+            Err(e) => Ok(ConnectionHealth::err(&e)),
+        },
     }
 }
