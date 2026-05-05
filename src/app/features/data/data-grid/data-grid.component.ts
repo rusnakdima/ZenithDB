@@ -77,6 +77,9 @@ export class DataGridComponent implements OnInit, OnChanges {
     if (visibleColumnsChanged) {
       this.visibleColumns.set(new Set(this.inputVisibleColumns));
       this.columnOrder.set([...this.inputVisibleColumns]);
+      if (!collectionChanged && !filterChanged && !pageChanged && !pageSizeChanged) {
+        this.loadData();
+      }
     }
   }
 
