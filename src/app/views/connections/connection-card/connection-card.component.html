@@ -16,7 +16,14 @@
       ></mat-icon>
     </div>
     <div class="card-status-area">
-      <span class="card-status-badge {{ statusClass }}">{{ statusLabel }}</span>
+      <div class="card-status-row">
+        <span
+          class="card-status-dot"
+          [class.card-status-dot-connected]="connection().status === 'connected'"
+          [class.card-status-dot-offline]="connection().status !== 'connected'"
+        ></span>
+        <span class="card-status-badge {{ statusClass }}">{{ statusLabel }}</span>
+      </div>
       <div class="card-uptime">{{ lastConnectedLabel }}</div>
     </div>
   </div>

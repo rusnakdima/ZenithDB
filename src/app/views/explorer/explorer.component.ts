@@ -147,9 +147,12 @@ export class ExplorerComponent implements OnInit, OnDestroy {
     if (!collection) return;
     try {
       const schema = await this.db.describeCollection(collection);
-      this.availableColumns.set(schema.columns.map((c) => c.name));
+      const cols = schema.columns.map((c) => c.name);
+      this.availableColumns.set(cols);
+      this.selectedColumns.set([...cols]);
     } catch {
       this.availableColumns.set([]);
+      this.selectedColumns.set([]);
     }
   }
 
@@ -240,6 +243,14 @@ export class ExplorerComponent implements OnInit, OnDestroy {
     this.loadStats();
     if (this.viewTab() === "json") {
       this.loadFullJsonData();
+    }
+  }
+
+  onToggleView() {
+    if (this.viewTab() === "json") {
+      this.selectViewTab("table");
+    } else {
+      this.selectViewTab("json");
     }
   }
 

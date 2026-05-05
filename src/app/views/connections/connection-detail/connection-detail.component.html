@@ -110,7 +110,7 @@
           @if (testing()) {
             <mat-icon fontIcon="sync" class="fa-spin mr-2 text-xl!"></mat-icon> Testing...
           } @else {
-            <mat-icon fontIcon="plug" class="mr-2 text-xl!"></mat-icon> Test Connection
+            <mat-icon fontIcon="link" class="mr-2 text-xl!"></mat-icon> Test Connection
           }
         </button>
 
@@ -167,6 +167,7 @@
                 @for (collection of collections(); track collection.name) {
                   <tr
                     class="cursor-pointer transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                    (click)="openCollection(collection.name)"
                   >
                     <td class="px-4 py-3">
                       <span class="font-medium text-slate-900 dark:text-white">{{

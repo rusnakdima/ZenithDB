@@ -314,7 +314,7 @@
                   Testing...
                 } @else {
                   <mat-icon
-                    fontIcon="plug"
+                    fontIcon="link"
                     class="mr-2 inline-flex items-center justify-center text-xl"
                   ></mat-icon>
                   Test Connection
@@ -346,9 +346,7 @@
                       [class.form-result-text-error]="!testResult()!.healthy"
                     >
                       @if (testResult()!.healthy) {
-                        Connection successful! {{ testResult()!.provider }} v{{
-                          testResult()!.version
-                        }}
+                        Connection successful!
                       } @else {
                         Connection failed: {{ testResult()!.message }}
                       }

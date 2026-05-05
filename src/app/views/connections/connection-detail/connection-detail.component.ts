@@ -139,4 +139,8 @@ export class ConnectionDetailComponent implements OnInit {
   get connectionStatus(): "connected" | "offline" {
     return this.health()?.healthy ? "connected" : "offline";
   }
+
+  openCollection(collectionName: string) {
+    this.router.navigate(["/explorer"], { queryParams: { collection: collectionName } });
+  }
 }

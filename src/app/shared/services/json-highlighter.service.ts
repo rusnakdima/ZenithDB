@@ -17,11 +17,11 @@ const DEFAULT_CLASSES: JsonHighlightClasses = {
 };
 
 const TAILWIND_CLASSES: JsonHighlightClasses = {
-  key: "text-yellow-400",
-  string: "text-green-400",
-  number: "text-blue-400",
-  boolean: "text-red-400",
-  null: "text-slate-500",
+  key: "json-key",
+  string: "json-string",
+  number: "json-number",
+  boolean: "json-boolean",
+  null: "json-null",
 };
 
 @Injectable({

@@ -121,10 +121,10 @@ export interface ConnectionSummary {
 
 export interface ConnectionHealth {
   healthy: boolean;
+  provider: string;
   server_version?: string;
   latency_ms?: number;
   ok?: boolean;
-  provider?: string;
   version?: string;
   message?: string;
 }
