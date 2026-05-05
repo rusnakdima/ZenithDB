@@ -84,6 +84,91 @@ html.light {
 }
 
 @layer components {
+  .json-display {
+    font-family:
+      "JetBrains Mono", ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Consas, monospace;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    overflow-x: auto;
+  }
+
+  .json-line {
+    display: flex;
+    min-height: 1.5em;
+  }
+
+  .json-line:hover {
+    background-color: rgba(30, 41, 59, 0.3);
+  }
+
+  .json-line:nth-child(odd) {
+    background-color: rgba(30, 41, 59, 0.15);
+  }
+
+  .json-line:nth-child(odd):hover {
+    background-color: rgba(30, 41, 59, 0.45);
+  }
+
+  .dark .json-line:nth-child(odd) {
+    background-color: rgba(15, 23, 42, 0.5);
+  }
+
+  .dark .json-line:nth-child(odd):hover {
+    background-color: rgba(15, 23, 42, 0.7);
+  }
+
+  .json-line-num {
+    width: 2.5rem;
+    flex-shrink: 0;
+    padding-right: 0.75rem;
+    text-align: right;
+    color: #475569;
+    user-select: none;
+    font-size: 0.75rem;
+  }
+
+  .dark .json-line-num {
+    color: #64748b;
+  }
+
+  .json-line-content {
+    flex: 1;
+    white-space: pre;
+    overflow-x: auto;
+  }
+
+  .json-key {
+    color: #fbbf24;
+  }
+
+  .json-string {
+    color: #4ade80;
+  }
+
+  .json-number {
+    color: #60a5fa;
+  }
+
+  .json-boolean {
+    color: #f87171;
+  }
+
+  .json-null {
+    color: #94a3b8;
+  }
+
+  .json-punctuation {
+    color: #94a3b8;
+  }
+
+  .json-bracket {
+    color: #cbd5e1;
+  }
+
+  .json-line.bracket-line {
+    padding-left: 0;
+  }
+
   .app-layout {
     display: flex;
     flex-direction: column;
@@ -518,11 +603,27 @@ html.light {
     border-top-color: #1e293b;
   }
 
-  .sidebar-footer-status {
+  .sidebar-footer-header {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 0.5rem;
+    justify-content: space-between;
+    cursor: pointer;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    transition: background-color 0.2s ease;
+    user-select: none;
+  }
+  .sidebar-footer-header:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+  .dark .sidebar-footer-header:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+
+  .sidebar-footer-header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
   }
 
   .sidebar-footer-dot {
@@ -533,45 +634,104 @@ html.light {
     animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 
-  .sidebar-footer-status-text {
-    font-size: 0.625rem;
-    color: #94a3b8;
+  .sidebar-footer-header-text {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: #334155;
     text-transform: uppercase;
-    font-weight: 700;
-    letter-spacing: -0.025em;
+    letter-spacing: 0.025em;
+  }
+  .dark .sidebar-footer-header-text {
+    color: #cbd5e1;
   }
 
-  .sidebar-footer-stats {
+  .sidebar-footer-stats-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-top: 0.5rem;
+  }
+
+  .sidebar-footer-stat-row {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.5rem;
-  }
-
-  .sidebar-footer-stat {
+    grid-template-columns: 56px 1fr;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
     background-color: white;
-    padding: 0.5rem;
-    border-radius: 0.25rem;
-    text-align: center;
+    border-radius: 0.375rem;
     border: 1px solid #e2e8f0;
   }
-  .dark .sidebar-footer-stat {
+  .dark .sidebar-footer-stat-row {
     background-color: #1e293b;
     border-color: #334155;
   }
 
+  .sidebar-footer-stat-row.network {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+  }
+
   .sidebar-footer-stat-label {
     font-size: 0.625rem;
-    color: #94a3b8;
+    font-weight: 600;
+    color: #64748b;
     text-transform: uppercase;
+    letter-spacing: 0.025em;
+  }
+
+  .sidebar-footer-stat-bar-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+  }
+
+  .sidebar-footer-stat-bar {
+    flex: 1;
+    height: 6px;
+    background-color: #e2e8f0;
+    border-radius: 3px;
+    overflow: hidden;
+    min-width: 60px;
+  }
+  .dark .sidebar-footer-stat-bar {
+    background-color: #334155;
+  }
+
+  .sidebar-footer-stat-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+  }
+  .sidebar-footer-stat-bar-fill.cpu {
+    background: linear-gradient(90deg, #3b82f6, #60a5fa);
+  }
+  .sidebar-footer-stat-bar-fill.ram {
+    background: linear-gradient(90deg, #10b981, #34d399);
+  }
+  .sidebar-footer-stat-bar-fill.disk {
+    background: linear-gradient(90deg, #8b5cf6, #a78bfa);
   }
 
   .sidebar-footer-stat-value {
-    font-size: 0.75rem;
+    font-size: 0.6875rem;
     font-family: "JetBrains Mono", monospace;
     color: #334155;
+    white-space: nowrap;
   }
   .dark .sidebar-footer-stat-value {
     color: #cbd5e1;
+  }
+
+  .network-stat {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+  .network-icon {
+    font-size: 0.75rem;
   }
 
   .app-main {
@@ -796,6 +956,40 @@ html.light {
     text-align: right;
   }
 
+  .card-status-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.375rem;
+  }
+
+  .card-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .card-status-dot-connected {
+    background-color: #10b981;
+    box-shadow: 0 0 6px rgba(16, 185, 129, 0.6);
+    animation: pulse-green 2s infinite;
+  }
+
+  .card-status-dot-offline {
+    background-color: #94a3b8;
+  }
+
+  @keyframes pulse-green {
+    0%,
+    100% {
+      box-shadow: 0 0 6px rgba(16, 185, 129, 0.6);
+    }
+    50% {
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.9);
+    }
+  }
+
   .card-status-badge {
     font-size: 0.625rem;
     font-weight: 700;
@@ -999,6 +1193,55 @@ html.light {
     cursor: not-allowed;
   }
 
+  .form-result {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    border: 1px solid;
+  }
+
+  .form-result-success {
+    background-color: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.3);
+  }
+
+  .form-result-error {
+    background-color: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.3);
+  }
+
+  .form-result-text {
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+
+  .form-result-text-success {
+    color: #059669;
+  }
+
+  .form-result-text-error {
+    color: #dc2626;
+  }
+
+  .dark .form-result-success {
+    background-color: rgba(16, 185, 129, 0.15);
+    border-color: rgba(16, 185, 129, 0.4);
+  }
+
+  .dark .form-result-error {
+    background-color: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.4);
+  }
+
+  .dark .form-result-text-success {
+    color: #34d399;
+  }
+
+  .dark .form-result-text-error {
+    color: #f87171;
+  }
+
   .filter-bar {
     padding: 0.75rem;
     border-bottom: 1px solid #e2e8f0;
@@ -1177,7 +1420,9 @@ html.light {
     padding-right: 2.5rem;
     background-color: #0f172a;
     border-radius: 0.5rem;
-    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+    box-shadow:
+      0 10px 15px -3px rgb(0 0 0 / 0.3),
+      0 4px 6px -4px rgb(0 0 0 / 0.3);
     position: relative;
     overflow: hidden;
     min-width: 320px;
@@ -1237,7 +1482,9 @@ html.light {
     padding: 0.25rem;
     border-radius: 0.25rem;
     opacity: 0.6;
-    transition: opacity 0.15s, background-color 0.15s;
+    transition:
+      opacity 0.15s,
+      background-color 0.15s;
     background: none;
     border: none;
     cursor: pointer;
