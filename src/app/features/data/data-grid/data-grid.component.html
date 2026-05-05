@@ -98,10 +98,7 @@
                 cdkDropListOrientation="horizontal"
               >
                 <th class="w-10 border-r border-b border-[var(--border-subtle)] p-3 text-center">
-                  <app-checkbox
-                    [checked]="allSelected"
-                    (changed)="toggleSelectAll()"
-                  />
+                  <app-checkbox [checked]="allSelected" (changed)="toggleSelectAll()" />
                 </th>
                 @for (col of columns; track col.name) {
                   @if (visibleColumnsList().includes(col.name)) {

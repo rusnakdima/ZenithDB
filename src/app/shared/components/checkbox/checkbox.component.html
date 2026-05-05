@@ -3,10 +3,11 @@
   [class.checkbox-accent]="variant() === 'accent'"
   [class.checkbox-gray]="variant() === 'gray'"
   [class.disabled]="disabled()"
+  [attr.for]="inputId"
 >
   <input
     type="checkbox"
-    [id]="id()"
+    [id]="inputId"
     [checked]="checked()"
     [disabled]="disabled()"
     (change)="onChange($event.target.checked)"

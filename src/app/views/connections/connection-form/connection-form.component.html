@@ -175,12 +175,7 @@
                 />
               </div>
               <div class="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="ssl-toggle"
-                  [(ngModel)]="useSsl"
-                  class="h-4 w-4 rounded border-slate-600 bg-slate-800"
-                />
+                <app-checkbox [checked]="useSsl" (changed)="useSsl = $event" />
                 <label for="ssl-toggle" class="text-sm text-[var(--text-dim)]">Use SSL/TLS</label>
               </div>
             </div>

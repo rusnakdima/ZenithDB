@@ -1,4 +1,4 @@
-import { Component, input, output, signal } from "@angular/core";
+import { Component, input, output, signal, computed } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 
 export type CheckboxVariant = "accent" | "gray";
@@ -18,6 +18,12 @@ export class CheckboxComponent {
   variant = input<CheckboxVariant>("accent");
 
   changed = output<boolean>();
+
+  private uniqueId = `checkbox-${Math.random().toString(36).substring(2, 9)}`;
+
+  get inputId(): string {
+    return this.id() || this.uniqueId;
+  }
 
   onChange(checked: boolean) {
     this.changed.emit(checked);

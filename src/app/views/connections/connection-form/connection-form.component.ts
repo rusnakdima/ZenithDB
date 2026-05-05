@@ -3,6 +3,7 @@ import { Router, ActivatedRoute } from "@angular/router";
 import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
 import { ModalComponent } from "@shared/components/modal/modal.component";
+import { CheckboxComponent } from "@shared/components/checkbox/checkbox.component";
 import { DatabaseService } from "@shared/services/database.service";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { ProviderUtils } from "@shared/utils/provider.utils";
@@ -24,7 +25,7 @@ interface ProviderOption {
 @Component({
   selector: "app-connection-form",
   standalone: true,
-  imports: [FormsModule, MatIconModule, ModalComponent],
+  imports: [FormsModule, MatIconModule, ModalComponent, CheckboxComponent],
   templateUrl: "./connection-form.component.html",
 })
 export class ConnectionFormComponent implements OnInit {
