@@ -1,4 +1,14 @@
-import { Component, Input, Output, EventEmitter, signal, computed, OnInit } from "@angular/core";
+import {
+  Component,
+  Input,
+  Output,
+  EventEmitter,
+  signal,
+  computed,
+  OnInit,
+  OnChanges,
+  SimpleChanges,
+} from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
 import { ToastService } from "@services/toast.service";
@@ -9,7 +19,7 @@ import { ToastService } from "@services/toast.service";
   imports: [FormsModule, MatIconModule],
   templateUrl: "./filter-bar.component.html",
 })
-export class FilterBarComponent implements OnInit {
+export class FilterBarComponent implements OnInit, OnChanges {
   @Input() filter = "";
   @Input() viewMode: "grid" | "json" = "grid";
   @Input() availableColumns: string[] = [];
@@ -37,6 +47,15 @@ export class FilterBarComponent implements OnInit {
   ngOnInit() {
     this.loadHistory();
     this.localFilter = this.filter;
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes["availableColumns"] && this.availableColumns.length > 0) {
+      const all = new Set<string>();
+      this.availableColumns.forEach((c) => all.add(c));
+      this.selectedColumns.set(all);
+      this.columnsChange.emit(this.getSelectedColumns());
+    }
   }
 
   loadHistory() {
