@@ -129,17 +129,11 @@ export class DataGridComponent implements OnInit, OnChanges {
     const all = this.columns.map((c) => c.name);
     const visible = this.visibleColumns();
     const order = this.columnOrder();
-    if (visible.size === 0 && order.length === 0) return all;
-    if (visible.size === 0 && order.length > 0) return order;
-    let filtered = all.filter((c) => visible.has(c));
     if (order.length > 0) {
-      const orderedFiltered = order.filter((c) => visible.has(c));
-      filtered.forEach((c) => {
-        if (!orderedFiltered.includes(c)) orderedFiltered.push(c);
-      });
-      return orderedFiltered;
+      return order.filter((c) => visible.has(c));
     }
-    return filtered;
+    if (visible.size === 0) return [];
+    return all.filter((c) => visible.has(c));
   });
 
   async ngOnInit() {
