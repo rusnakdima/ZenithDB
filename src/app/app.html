@@ -1,18 +1,42 @@
 <div class="app-layout transition-colors duration-200">
-  <app-header></app-header>
-
   <div class="layout-content flex min-h-0 flex-1">
     <app-sidebar></app-sidebar>
 
-    <!-- Main Content -->
     <main
-      class="app-main flex min-h-0 flex-1 flex-col overflow-y-scroll transition-colors duration-200"
+      class="app-main flex min-h-0 flex-1 flex-col overflow-hidden transition-colors duration-200"
     >
-      <router-outlet></router-outlet>
+      <header class="header">
+        <div class="flex items-center gap-3">
+          <span class="text-[10px] font-black tracking-widest text-[var(--text-dim)] uppercase"
+            >Workspace</span
+          >
+          <mat-icon fontIcon="chevron_right" class="!text-xl !text-[var(--text-muted)]"></mat-icon>
+          <span class="text-[10px] font-black tracking-widest text-[var(--text-main)] uppercase">{{
+            getCurrentBreadcrumb()
+          }}</span>
+        </div>
+
+        <div class="flex items-center gap-6">
+          <div class="group relative">
+            <mat-icon
+              fontIcon="search"
+              class="absolute top-1/2 left-3 -translate-y-1/2 !text-xl !text-neutral-500"
+            ></mat-icon>
+            <input
+              type="text"
+              placeholder="Search data, collections..."
+              class="w-64 rounded-lg border border-white/5 bg-neutral-900 py-1.5 pr-4 pl-9 text-[11px] transition-all outline-none focus:border-[var(--accent)]/50"
+            />
+          </div>
+        </div>
+      </header>
+
+      <div class="main-content flex-grow overflow-y-auto">
+        <router-outlet></router-outlet>
+      </div>
     </main>
   </div>
 
-  <!-- Global Dialogs -->
   @for (dialog of dialogService.dialogs(); track dialog.id) {
     @if (dialog.component) {
       <ng-container

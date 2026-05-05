@@ -1,83 +1,56 @@
 <div class="data-grid-container flex h-full flex-col">
   @if (error) {
-    <div class="flex items-center gap-2 border border-red-700 bg-red-900/30 px-4 py-3 text-red-400">
-      <svg
-        class="h-5 w-5 flex-shrink-0"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-      >
-        <circle cx="12" cy="12" r="10" />
-        <path d="M12 8v4M12 16h.01" />
-      </svg>
+    <div
+      class="m-4 flex items-center gap-2 rounded-xl border border-red-900/50 bg-red-900/20 px-4 py-3 text-red-400"
+    >
+      <mat-icon fontIcon="error" class="!text-lg"></mat-icon>
       <span>{{ error }}</span>
       <button class="ml-auto text-red-400 hover:text-red-300" (click)="error = ''">
-        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M18 6L6 18M6 6l12 12" />
-        </svg>
+        <mat-icon fontIcon="close" class="!text-sm"></mat-icon>
       </button>
     </div>
   }
 
-  <div class="flex-1 overflow-auto">
+  <div class="flex-1 overflow-auto p-6">
     @if (viewMode === "json") {
       <div class="json-view-container h-full">
         @if (loading) {
           <div class="flex h-full items-center justify-center">
             <div
-              class="h-8 w-8 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent"
+              class="h-8 w-8 animate-spin rounded-full border-2 border-[var(--accent)] border-t-transparent"
             ></div>
           </div>
         } @else if (data.length === 0) {
-          <div class="flex h-full flex-col items-center justify-center text-slate-400">
-            <svg
-              class="mb-4 h-16 w-16 opacity-50"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1"
-            >
-              <path d="M4 6h4v12H4V6zm12 0h4v12h-4V6zM8 4v16M16 4v16" />
-            </svg>
-            <p class="text-lg">No documents found</p>
-            <p class="mt-1 text-sm text-slate-500">This collection is empty</p>
+          <div class="flex h-full flex-col items-center justify-center text-[var(--text-dim)]">
+            <mat-icon fontIcon="inbox" class="mb-4 !text-6xl opacity-50"></mat-icon>
+            <p class="text-lg font-bold">No documents found</p>
+            <p class="mt-1 text-sm text-[var(--text-muted)]">This collection is empty</p>
           </div>
         } @else {
-          <div class="json-content p-4">
+          <div class="json-content space-y-4">
             @for (row of data; track trackByRow($index, row); let docIndex = $index) {
-              <div
-                class="json-document mb-4 overflow-hidden rounded-lg border border-slate-800 bg-slate-900/30"
-              >
+              <div class="glass-card overflow-hidden">
                 <div
-                  class="flex items-center justify-between border-b border-slate-800 bg-slate-900/80 px-4 py-2"
+                  class="flex items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-4 py-3"
                 >
-                  <span class="font-mono text-sm text-slate-400">Document {{ docIndex + 1 }}</span>
+                  <span class="mono text-sm text-[var(--text-dim)]"
+                    >Document {{ docIndex + 1 }}</span
+                  >
                   <div class="flex items-center gap-2">
                     <button
-                      class="flex items-center gap-1 rounded px-2 py-1 text-xs text-slate-500 transition-colors hover:bg-slate-800 hover:text-emerald-400"
+                      class="flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs text-[var(--text-dim)] transition-all hover:bg-[var(--bg-card)] hover:text-[var(--accent)]"
                       (click)="viewJson(row)"
                     >
-                      <svg
-                        class="h-3 w-3"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                      >
-                        <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                      </svg>
+                      <mat-icon fontIcon="visibility" class="!text-sm"></mat-icon>
                       Inspect
                     </button>
                   </div>
                 </div>
                 <div class="json-body p-4">
                   @for (line of formatJsonLines(row); track $index; let lineIndex = $index) {
-                    <div
-                      class="json-line flex font-mono text-sm leading-relaxed hover:bg-slate-800/20"
-                    >
+                    <div class="json-line mono flex text-sm leading-relaxed">
                       <span
-                        class="json-line-num w-10 flex-shrink-0 pr-4 text-right text-xs text-slate-600 select-none"
+                        class="json-line-num w-10 flex-shrink-0 pr-4 text-right text-xs text-[var(--text-muted)] select-none"
                         >{{ lineIndex + 1 }}</span
                       >
                       <span class="json-line-content" [innerHTML]="highlightJsonLine(line)"></span>
@@ -94,35 +67,28 @@
         @if (loading) {
           <div class="flex h-full items-center justify-center">
             <div
-              class="h-8 w-8 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent"
+              class="h-8 w-8 animate-spin rounded-full border-2 border-[var(--accent)] border-t-transparent"
             ></div>
           </div>
         } @else if (data.length === 0) {
-          <div class="flex h-full flex-col items-center justify-center text-slate-400">
-            <svg
-              class="mb-4 h-16 w-16 opacity-50"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1"
-            >
-              <path d="M3 3h18v18H3z" />
-            </svg>
-            <p class="text-lg">No data in this collection</p>
-            <p class="mt-1 text-sm text-slate-500">Try adjusting your filter</p>
+          <div class="flex h-full flex-col items-center justify-center text-[var(--text-dim)]">
+            <mat-icon fontIcon="table_chart" class="mb-4 !text-6xl opacity-50"></mat-icon>
+            <p class="text-lg font-bold">No data in this collection</p>
+            <p class="mt-1 text-sm text-[var(--text-muted)]">Try adjusting your filter</p>
           </div>
         } @else {
           <table class="data-table w-full border-collapse">
-            <thead class="sticky top-0 z-10 bg-slate-900/95 backdrop-blur-sm">
+            <thead class="sticky top-0 z-10 bg-[var(--bg-sidebar)]/95 backdrop-blur-sm">
               <tr
                 cdkDropList
+                [cdkDropListData]="visibleColumnsList()"
                 (cdkDropListDropped)="onColumnDrop($event)"
                 cdkDropListOrientation="horizontal"
               >
-                <th class="w-10 border-r border-b border-slate-700 p-2 text-center">
+                <th class="w-10 border-r border-b border-[var(--border-subtle)] p-3 text-center">
                   <input
                     type="checkbox"
-                    class="rounded border-slate-600 bg-slate-800 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0"
+                    class="accent-[var(--accent)]"
                     [checked]="allSelected"
                     (change)="toggleSelectAll()"
                   />
@@ -130,11 +96,12 @@
                 @for (col of columns; track col.name) {
                   @if (visibleColumnsList().includes(col.name)) {
                     <th
-                      class="relative cursor-move border-r border-b border-slate-700 p-2 text-left text-xs font-bold tracking-wider text-slate-400 uppercase select-none"
+                      class="relative cursor-move border-r border-b border-[var(--border-subtle)] p-3 text-left text-[10px] font-black tracking-widest text-[var(--text-dim)] uppercase select-none"
                       cdkDrag
+                      [cdkDragData]="col.name"
                       [style.width.px]="columnWidths()[col.name]"
                     >
-                      <div class="flex items-center gap-1">
+                      <div class="flex items-center gap-2">
                         <app-sortable-header
                           [column]="col.name"
                           [currentSort]="sortColumn()"
@@ -144,50 +111,50 @@
                         <app-data-type-badge [dataType]="col.data_type" variant="icon" />
                       </div>
                       <div
-                        class="resize-handle absolute top-0 right-0 bottom-0 w-1 cursor-col-resize transition-colors hover:bg-emerald-500/50"
+                        class="resize-handle absolute top-0 right-0 bottom-0 w-1 cursor-col-resize transition-colors hover:bg-[var(--accent)]/50"
                         (mousedown)="onColumnResizeStart(col.name, $event)"
                       ></div>
                     </th>
                   }
                 }
                 <th
-                  class="w-28 border-b border-slate-700 p-2 text-left text-xs font-bold tracking-wider text-slate-400 uppercase"
+                  class="w-28 border-b border-[var(--border-subtle)] p-3 text-left text-[10px] font-black tracking-widest text-[var(--text-dim)] uppercase"
                 >
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody>
+            <tbody class="mono">
               @for (row of data; track trackByRow($index, row); let rowIndex = $index) {
                 <tr
-                  class="data-row group border-b border-slate-800 transition-colors hover:bg-slate-800/60"
-                  [class.bg-slate-800/40]="isSelected(rowIndex)"
+                  class="data-row group border-b border-[var(--border-subtle)] transition-colors hover:bg-[var(--accent)]/5"
+                  [class.bg-[var(--accent)]/10]="isSelected(rowIndex)"
                   (click)="onRowClick(row, $event)"
                 >
-                  <td class="p-2 text-center" (click)="$event.stopPropagation()">
+                  <td class="p-3 text-center" (click)="$event.stopPropagation()">
                     <input
                       type="checkbox"
-                      class="rounded border-slate-600 bg-slate-800 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0"
+                      class="accent-[var(--accent)]"
                       [checked]="isSelected(rowIndex)"
                       (change)="toggleRow(rowIndex)"
                     />
                   </td>
                   @for (col of columns; track col.name) {
                     @if (visibleColumnsList().includes(col.name)) {
-                      <td class="border-r border-slate-800/50 p-2 text-sm">
+                      <td class="border-r border-[var(--border-subtle)]/50 p-3 text-sm">
                         @if (editingCell?.row === rowIndex && editingCell?.col === col.name) {
                           <input
                             [(ngModel)]="editValue"
                             (keyup.enter)="saveEdit()"
                             (keyup.escape)="cancelEdit()"
                             (blur)="saveEdit()"
-                            class="w-full rounded border border-emerald-500/50 bg-slate-800 px-2 py-1 font-mono text-sm text-emerald-400 focus:border-emerald-500 focus:outline-none"
+                            class="mono w-full rounded-lg border border-[var(--accent)]/50 bg-[var(--bg-card)] px-3 py-1.5 text-sm text-[var(--accent)] focus:border-[var(--accent)] focus:outline-none"
                             autofocus
                           />
                         } @else {
                           <div
-                            class="-mx-1 cursor-pointer rounded px-1 py-1 text-slate-300 transition-colors hover:bg-slate-700/30"
-                            [class.text-emerald-400]="isCellModified(rowIndex, col.name)"
+                            class="-mx-1 cursor-pointer rounded-lg px-2 py-1.5 text-[var(--text-main)] transition-colors hover:bg-[var(--bg-elevated)]"
+                            [class.text-[var(--accent)]]="isCellModified(rowIndex, col.name)"
                             (dblclick)="startEdit(rowIndex, col.name, row[col.name])"
                           >
                             {{ formatValue(row[col.name]) }}
@@ -196,73 +163,37 @@
                       </td>
                     }
                   }
-                  <td class="p-2" (click)="$event.stopPropagation()">
+                  <td class="p-3" (click)="$event.stopPropagation()">
                     <div
                       class="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100"
                     >
                       <button
-                        class="rounded p-1.5 text-slate-400 transition-colors hover:bg-slate-700 hover:text-emerald-400"
+                        class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-[var(--bg-elevated)] hover:text-[var(--accent)]"
                         title="Edit"
                         (click)="viewJson(row)"
                       >
-                        <svg
-                          class="h-4 w-4"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="2"
-                        >
-                          <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
-                          <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
-                        </svg>
+                        <mat-icon fontIcon="edit" class="!text-base"></mat-icon>
                       </button>
                       <button
-                        class="rounded p-1.5 text-slate-400 transition-colors hover:bg-slate-700 hover:text-amber-400"
+                        class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-[var(--bg-elevated)] hover:text-amber-400"
                         title="Duplicate"
                         (click)="duplicateRow(row)"
                       >
-                        <svg
-                          class="h-4 w-4"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="2"
-                        >
-                          <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                          <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-                        </svg>
+                        <mat-icon fontIcon="content_copy" class="!text-base"></mat-icon>
                       </button>
                       <button
-                        class="rounded p-1.5 text-slate-400 transition-colors hover:bg-slate-700 hover:text-blue-400"
+                        class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-[var(--bg-elevated)] hover:text-blue-400"
                         title="View JSON"
                         (click)="viewJson(row)"
                       >
-                        <svg
-                          class="h-4 w-4"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="2"
-                        >
-                          <path d="M4 6h4v12H4V6zm12 0h4v12h-4V6zM8 4v16M16 4v16" />
-                        </svg>
+                        <mat-icon fontIcon="data_object" class="!text-base"></mat-icon>
                       </button>
                       <button
-                        class="rounded p-1.5 text-slate-400 transition-colors hover:bg-red-900/30 hover:text-red-400"
+                        class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-red-900/20 hover:text-red-400"
                         title="Delete"
                         (click)="deleteRow(row)"
                       >
-                        <svg
-                          class="h-4 w-4"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="2"
-                        >
-                          <path
-                            d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"
-                          />
-                        </svg>
+                        <mat-icon fontIcon="delete" class="!text-base"></mat-icon>
                       </button>
                     </div>
                   </td>
@@ -276,18 +207,18 @@
   </div>
 
   <div
-    class="pagination-footer flex flex-shrink-0 items-center justify-between border-t border-slate-800 bg-slate-900/80 px-4 py-3"
+    class="pagination-footer flex flex-shrink-0 items-center justify-between border-t border-[var(--border-subtle)] bg-[var(--bg-sidebar)] px-6 py-3"
   >
-    <div class="flex items-center gap-4">
-      <span class="text-sm text-slate-400">
-        Showing <span class="font-medium text-emerald-400">{{ startIndex }}</span
-        >-<span class="font-medium text-emerald-400">{{ endIndex }}</span> of
-        <span class="font-medium text-emerald-400">{{ total }}</span>
+    <div class="flex items-center gap-6">
+      <span class="text-sm text-[var(--text-dim)]">
+        Showing <span class="font-bold text-[var(--accent)]">{{ startIndex }}</span
+        >-<span class="font-bold text-[var(--accent)]">{{ endIndex }}</span> of
+        <span class="font-bold text-[var(--accent)]">{{ total }}</span>
       </span>
-      <div class="flex items-center gap-2">
-        <span class="text-xs text-slate-500">Rows per page:</span>
+      <div class="flex items-center gap-3">
+        <span class="text-xs text-[var(--text-muted)]">Rows per page:</span>
         <select
-          class="cursor-pointer rounded border border-slate-700 bg-slate-800 px-2 py-1 text-sm text-slate-300 focus:border-emerald-500 focus:outline-none"
+          class="cursor-pointer rounded-lg border border-[var(--border-visible)] bg-[var(--bg-card)] px-3 py-1.5 text-sm text-[var(--text-main)] focus:border-[var(--accent)] focus:outline-none"
           [value]="pageSize"
           (change)="changePageSize(+$any($event.target).value)"
         >
@@ -302,50 +233,42 @@
     <div class="flex items-center gap-2">
       <div class="relative">
         <button
-          class="rounded p-1.5 text-slate-400 transition-colors hover:bg-slate-800 hover:text-emerald-400"
+          class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-[var(--bg-card)] hover:text-[var(--accent)]"
           title="Export"
           (click)="toggleExportMenu()"
         >
-          <svg
-            class="h-4 w-4"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
-          </svg>
+          <mat-icon fontIcon="download" class="!text-base"></mat-icon>
         </button>
         @if (showExportMenu()) {
           <div
-            class="absolute right-0 bottom-full z-50 mb-2 w-40 rounded-lg border border-slate-700 bg-slate-800 py-1 shadow-xl"
+            class="absolute right-0 bottom-full z-50 mb-2 w-44 rounded-xl border border-[var(--border-visible)] bg-[var(--bg-card)] py-1 shadow-xl"
           >
             <button
-              class="w-full px-3 py-2 text-left text-sm text-slate-300 hover:bg-slate-700 hover:text-emerald-400"
+              class="w-full px-4 py-2.5 text-left text-sm text-[var(--text-dim)] hover:bg-[var(--bg-elevated)] hover:text-[var(--accent)]"
               (click)="exportData('csv')"
             >
               Export CSV
             </button>
             <button
-              class="w-full px-3 py-2 text-left text-sm text-slate-300 hover:bg-slate-700 hover:text-emerald-400"
+              class="w-full px-4 py-2.5 text-left text-sm text-[var(--text-dim)] hover:bg-[var(--bg-elevated)] hover:text-[var(--accent)]"
               (click)="exportData('json')"
             >
               Export JSON
             </button>
             <button
-              class="w-full px-3 py-2 text-left text-sm text-slate-300 hover:bg-slate-700 hover:text-emerald-400"
+              class="w-full px-4 py-2.5 text-left text-sm text-[var(--text-dim)] hover:bg-[var(--bg-elevated)] hover:text-[var(--accent)]"
               (click)="exportData('jsonl')"
             >
               Export JSONL
             </button>
             <button
-              class="w-full px-3 py-2 text-left text-sm text-slate-300 hover:bg-slate-700 hover:text-emerald-400"
+              class="w-full px-4 py-2.5 text-left text-sm text-[var(--text-dim)] hover:bg-[var(--bg-elevated)] hover:text-[var(--accent)]"
               (click)="exportData('sql')"
             >
               Export SQL
             </button>
             <button
-              class="w-full px-3 py-2 text-left text-sm text-slate-300 hover:bg-slate-700 hover:text-emerald-400"
+              class="w-full px-4 py-2.5 text-left text-sm text-[var(--text-dim)] hover:bg-[var(--bg-elevated)] hover:text-[var(--accent)]"
               (click)="exportData('markdown')"
             >
               Export Markdown
@@ -355,47 +278,39 @@
       </div>
 
       <button
-        class="rounded p-1.5 text-slate-400 transition-colors hover:bg-slate-800 hover:text-emerald-400 disabled:cursor-not-allowed disabled:opacity-30"
+        class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-[var(--bg-card)] hover:text-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-30"
         [disabled]="!hasPrevPage"
         (click)="firstPage()"
         title="First page"
       >
-        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M11 19l-7-7 7-7M18 19l-7-7 7-7" />
-        </svg>
+        <mat-icon fontIcon="first_page" class="!text-base"></mat-icon>
       </button>
       <button
-        class="rounded p-1.5 text-slate-400 transition-colors hover:bg-slate-800 hover:text-emerald-400 disabled:cursor-not-allowed disabled:opacity-30"
+        class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-[var(--bg-card)] hover:text-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-30"
         [disabled]="!hasPrevPage"
         (click)="prevPage()"
         title="Previous page"
       >
-        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M15 18l-6-6 6-6" />
-        </svg>
+        <mat-icon fontIcon="chevron_left" class="!text-base"></mat-icon>
       </button>
-      <span class="px-3 text-sm text-slate-400">
-        Page {{ page + 1 }} of {{ totalPages || 1 }}
-      </span>
+      <span class="px-3 text-sm text-[var(--text-dim)]"
+        >Page {{ page + 1 }} of {{ totalPages || 1 }}</span
+      >
       <button
-        class="rounded p-1.5 text-slate-400 transition-colors hover:bg-slate-800 hover:text-emerald-400 disabled:cursor-not-allowed disabled:opacity-30"
+        class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-[var(--bg-card)] hover:text-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-30"
         [disabled]="!hasNextPage"
         (click)="nextPage()"
         title="Next page"
       >
-        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M9 18l6-6-6-6" />
-        </svg>
+        <mat-icon fontIcon="chevron_right" class="!text-base"></mat-icon>
       </button>
       <button
-        class="rounded p-1.5 text-slate-400 transition-colors hover:bg-slate-800 hover:text-emerald-400 disabled:cursor-not-allowed disabled:opacity-30"
+        class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-[var(--bg-card)] hover:text-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-30"
         [disabled]="!hasNextPage"
         (click)="lastPage()"
         title="Last page"
       >
-        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M13 5l7 7-7 7M6 5l7 7-7 7" />
-        </svg>
+        <mat-icon fontIcon="last_page" class="!text-base"></mat-icon>
       </button>
     </div>
   </div>

@@ -249,7 +249,7 @@ export class SchemaTreeComponent implements OnInit {
       case "integer":
       case "decimal":
       case "float":
-        return "text-emerald-400";
+        return "text-orange-400";
       case "boolean":
         return "text-orange-400";
       case "date":

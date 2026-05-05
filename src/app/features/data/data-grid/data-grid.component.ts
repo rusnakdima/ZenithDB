@@ -12,6 +12,7 @@ import {
 } from "@angular/core";
 import { CdkDragDrop, CdkDrag, CdkDropList, moveItemInArray } from "@angular/cdk/drag-drop";
 import { FormsModule } from "@angular/forms";
+import { MatIconModule } from "@angular/material/icon";
 import { DatabaseService } from "@shared/services/database.service";
 import { ToastService } from "@services/toast.service";
 import { ExportService } from "@shared/services/export.service";
@@ -23,7 +24,14 @@ import { SortableHeaderComponent } from "@shared/components/sortable-header/sort
 @Component({
   selector: "app-data-grid",
   standalone: true,
-  imports: [FormsModule, DataTypeBadgeComponent, SortableHeaderComponent, CdkDrag, CdkDropList],
+  imports: [
+    FormsModule,
+    MatIconModule,
+    DataTypeBadgeComponent,
+    SortableHeaderComponent,
+    CdkDrag,
+    CdkDropList,
+  ],
   templateUrl: "./data-grid.component.html",
 })
 export class DataGridComponent implements OnInit, OnChanges {
@@ -66,8 +74,9 @@ export class DataGridComponent implements OnInit, OnChanges {
       this.loadData();
     }
 
-    if (visibleColumnsChanged && this.inputVisibleColumns.length > 0) {
+    if (visibleColumnsChanged) {
       this.visibleColumns.set(new Set(this.inputVisibleColumns));
+      this.columnOrder.set([...this.inputVisibleColumns]);
     }
   }
 

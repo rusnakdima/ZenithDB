@@ -1,6 +1,7 @@
 import { Component, inject, OnInit, signal } from "@angular/core";
 import { ActivatedRoute, Router, RouterLink } from "@angular/router";
 import { FormsModule } from "@angular/forms";
+import { MatIconModule } from "@angular/material/icon";
 import { DatabaseService } from "@shared/services/database.service";
 import { ToastService } from "@services/toast.service";
 import { ExportService } from "@shared/services/export.service";
@@ -8,6 +9,8 @@ import { SkeletonLoaderComponent } from "@shared/components/loading/skeleton-loa
 import { FormatBytesPipe } from "@shared/pipes/format-bytes.pipe";
 import { SortableHeaderComponent } from "@shared/components/sortable-header/sortable-header.component";
 import { DataTypeBadgeComponent } from "@shared/components/data-type-badge/data-type-badge.component";
+import { PageContainerComponent } from "@shared/components/page-container/page-container.component";
+import { ModalComponent } from "@shared/components/modal/modal.component";
 
 interface FieldInfo {
   name: string;
@@ -30,10 +33,13 @@ interface IndexInfo {
   imports: [
     RouterLink,
     FormsModule,
+    MatIconModule,
     SkeletonLoaderComponent,
     FormatBytesPipe,
     SortableHeaderComponent,
     DataTypeBadgeComponent,
+    PageContainerComponent,
+    ModalComponent,
   ],
   templateUrl: "./collection-detail.component.html",
 })

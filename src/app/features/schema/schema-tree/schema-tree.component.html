@@ -42,7 +42,7 @@
         [value]="searchQuery()"
         (input)="setFilter($any($event.target).value)"
         placeholder="Search collections..."
-        class="w-full rounded-lg border border-slate-700 bg-slate-800 py-2 pr-4 pl-10 text-sm text-slate-200 placeholder-slate-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
+        class="w-full rounded-lg border border-slate-700 bg-slate-800 py-2 pr-4 pl-10 text-sm text-slate-200 placeholder-slate-500 focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] focus:outline-none"
       />
     </div>
   </div>
@@ -102,7 +102,7 @@
         </p>
         <button
           (click)="openNewCollectionModal()"
-          class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-sm text-white transition-colors hover:bg-emerald-500"
+          class="inline-flex items-center gap-1.5 rounded-lg bg-[var(--accent)] px-3 py-2 text-sm text-white transition-colors hover:opacity-90"
         >
           <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
@@ -141,7 +141,7 @@
                 (keyup.enter)="confirmRename()"
                 (keyup.escape)="cancelRename()"
                 (blur)="confirmRename()"
-                class="flex-1 rounded bg-slate-900 px-2 py-1 text-sm text-slate-200 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
+                class="flex-1 rounded bg-slate-900 px-2 py-1 text-sm text-slate-200 focus:ring-1 focus:ring-[var(--accent)] focus:outline-none"
                 autofocus
               />
             </div>
@@ -157,7 +157,7 @@
             >
               <svg
                 class="h-4 w-4 flex-shrink-0 text-slate-600 group-hover:text-slate-400"
-                [class.text-emerald-500]="selectedCollection() === col.name"
+                [class.text-[var(--accent)]]="selectedCollection() === col.name"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -174,7 +174,7 @@
               <svg
                 class="h-3 w-3 flex-shrink-0 text-slate-600 transition-transform duration-200"
                 [class.rotate-90]="isExpanded(col.name)"
-                [class.text-emerald-500]="isExpanded(col.name)"
+                [class.text-[var(--accent)]]="isExpanded(col.name)"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -362,7 +362,7 @@
         type="text"
         [(ngModel)]="newCollectionName"
         placeholder="Collection name"
-        class="mb-4 w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
+        class="mb-4 w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] focus:outline-none"
         (keyup.enter)="createCollection()"
         (keyup.escape)="closeNewCollectionModal()"
         autofocus
@@ -376,7 +376,7 @@
         </button>
         <button
           (click)="createCollection()"
-          class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
+          class="rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white hover:opacity-90"
         >
           Create
         </button>

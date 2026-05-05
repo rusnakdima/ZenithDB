@@ -3,6 +3,11 @@ import { Routes } from "@angular/router";
 export const routes: Routes = [
   { path: "", redirectTo: "connections", pathMatch: "full" },
   {
+    path: "",
+    loadComponent: () =>
+      import("./views/dashboard/dashboard.component").then((m) => m.DashboardComponent),
+  },
+  {
     path: "connections",
     loadChildren: () =>
       import("./views/connections/connections.routes").then((m) => m.connectionsRoutes),
@@ -43,9 +48,7 @@ export const routes: Routes = [
   {
     path: "query",
     loadComponent: () =>
-      import("./features/query/query-editor/query-editor.component").then(
-        (m) => m.QueryEditorComponent
-      ),
+      import("./views/workbench/workbench.component").then((m) => m.WorkbenchComponent),
   },
   {
     path: "explorer",
