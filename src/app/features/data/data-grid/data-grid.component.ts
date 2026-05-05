@@ -23,6 +23,7 @@ import { formatJsonLines, highlightJsonLine } from "@shared/utils/json.utils";
 import { DataTypeBadgeComponent } from "@shared/components/data-type-badge/data-type-badge.component";
 import { SortableHeaderComponent } from "@shared/components/sortable-header/sortable-header.component";
 import { PaginationComponent } from "@shared/components/pagination/pagination.component";
+import { CheckboxComponent } from "@shared/components/checkbox/checkbox.component";
 import { withErrorHandling } from "@shared/utils/error-handler.utils";
 
 @Component({
