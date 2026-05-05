@@ -30,7 +30,7 @@
           {{ connectionState.activeConnectionName() }}
         </a>
       }
-      @if (connectionState.activeConnectionName()) {
+      @if (showExplorerBreadcrumb()) {
         <mat-icon
           fontIcon="chevron_right"
           class="mx-1 inline-flex items-center justify-center text-[8px] text-slate-500"

@@ -1,7 +1,7 @@
 <aside class="app-sidebar">
   <div class="p-3">
     <a routerLink="/connections/new" class="sidebar-connect-btn flex items-center gap-2">
-      <mat-icon fontIcon="plug" class="inline-flex items-center justify-center text-xl!"></mat-icon>
+      <mat-icon fontIcon="link" class="inline-flex items-center justify-center text-xl!"></mat-icon>
       Connect to...
     </a>
   </div>
@@ -90,7 +90,7 @@
     } @else {
       <div class="sidebar-empty-state">
         <mat-icon
-          fontIcon="plug"
+          fontIcon="link"
           class="inline-flex items-center justify-center text-xl!"
         ></mat-icon>
         <p>No connections</p>
@@ -101,28 +101,91 @@
 
   <div class="sidebar-footer">
     @if (systemStatus(); as status) {
-      <div class="sidebar-footer-status">
-        <div class="sidebar-footer-dot" [class]="getStatusColor(status.status)"></div>
-        <span class="sidebar-footer-status-text"
-          >System Status: {{ status.status | titlecase }}</span
-        >
-      </div>
-      <div class="sidebar-footer-stats">
-        <div class="sidebar-footer-stat">
-          <div class="sidebar-footer-stat-label">CPU</div>
-          <div class="sidebar-footer-stat-value">{{ status.cpu_usage.toFixed(1) }}%</div>
+      <div class="sidebar-footer-header" (click)="toggleStatsCollapse()">
+        <div class="sidebar-footer-header-left">
+          <div class="sidebar-footer-dot" [class]="getStatusColor(status.status)"></div>
+          <span class="sidebar-footer-header-text">
+            System Stats: {{ status.status | titlecase }}
+          </span>
         </div>
-        <div class="sidebar-footer-stat">
-          <div class="sidebar-footer-stat-label">RAM</div>
-          <div class="sidebar-footer-stat-value">
-            {{ status.ram_used | formatBytes }} / {{ status.ram_total | formatBytes }}
+        <mat-icon
+          [fontIcon]="isStatsCollapsed() ? 'expand_more' : 'expand_less'"
+          class="inline-flex items-center justify-center text-xl!"
+        ></mat-icon>
+      </div>
+      @if (!isStatsCollapsed()) {
+        <div class="sidebar-footer-stats-body">
+          <div class="sidebar-footer-stat-row">
+            <div class="sidebar-footer-stat-label">CPU</div>
+            <div class="sidebar-footer-stat-bar-container">
+              <div class="sidebar-footer-stat-bar">
+                <div
+                  class="sidebar-footer-stat-bar-fill cpu"
+                  [style.width.%]="status.cpu_usage"
+                ></div>
+              </div>
+              <div class="sidebar-footer-stat-value">{{ getCpuPercent(status.cpu_usage) }}%</div>
+            </div>
+          </div>
+          <div class="sidebar-footer-stat-row">
+            <div class="sidebar-footer-stat-label">RAM</div>
+            <div class="sidebar-footer-stat-bar-container">
+              <div class="sidebar-footer-stat-bar">
+                <div
+                  class="sidebar-footer-stat-bar-fill ram"
+                  [style.width.%]="getRamPercentValue(status.ram_used, status.ram_total)"
+                ></div>
+              </div>
+              <div class="sidebar-footer-stat-value">
+                {{ status.ram_used | formatBytes }} / {{ status.ram_total | formatBytes }}
+              </div>
+            </div>
+          </div>
+          <div class="sidebar-footer-stat-row">
+            <div class="sidebar-footer-stat-label">Disk</div>
+            <div class="sidebar-footer-stat-bar-container">
+              <div class="sidebar-footer-stat-bar">
+                <div
+                  class="sidebar-footer-stat-bar-fill disk"
+                  [style.width.%]="getDiskPercent(status.disk_used, status.disk_total)"
+                ></div>
+              </div>
+              <div class="sidebar-footer-stat-value">
+                {{ getDiskPercent(status.disk_used, status.disk_total) | number: "1.0-0" }}%
+              </div>
+            </div>
+          </div>
+          <div class="sidebar-footer-stat-row network">
+            <div class="sidebar-footer-stat-label">Network</div>
+            <div class="sidebar-footer-stat-bar-container">
+              <div class="network-stat">
+                <span class="network-icon text-green-500">↑</span>
+                <span class="sidebar-footer-stat-value">{{
+                  formatBytes(status.network_transmitted)
+                }}</span>
+              </div>
+              <div class="network-stat">
+                <span class="network-icon text-blue-500">↓</span>
+                <span class="sidebar-footer-stat-value">{{
+                  formatBytes(status.network_received)
+                }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="sidebar-footer-stat-row">
+            <div class="sidebar-footer-stat-label">Uptime</div>
+            <div class="sidebar-footer-stat-bar-container">
+              <div class="sidebar-footer-stat-value">{{ formatUptime(status.uptime) }}</div>
+            </div>
           </div>
         </div>
-      </div>
+      }
     } @else {
-      <div class="sidebar-footer-status">
-        <div class="sidebar-footer-dot bg-slate-500"></div>
-        <span class="sidebar-footer-status-text">Loading...</span>
+      <div class="sidebar-footer-header">
+        <div class="sidebar-footer-header-left">
+          <div class="sidebar-footer-dot bg-slate-500"></div>
+          <span class="sidebar-footer-header-text">Loading...</span>
+        </div>
       </div>
     }
   </div>

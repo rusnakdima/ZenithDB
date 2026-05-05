@@ -10,7 +10,7 @@ import {
   runInInjectionContext,
 } from "@angular/core";
 import { Router, RouterLink } from "@angular/router";
-import { TitleCasePipe } from "@angular/common";
+import { TitleCasePipe, DecimalPipe } from "@angular/common";
 import { MatIconModule } from "@angular/material/icon";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { DatabaseService } from "@shared/services/database.service";
@@ -31,7 +31,7 @@ interface TreeNode {
 @Component({
   selector: "app-sidebar",
   standalone: true,
-  imports: [RouterLink, TitleCasePipe, MatIconModule, FormatBytesPipe],
+  imports: [RouterLink, TitleCasePipe, DecimalPipe, MatIconModule, FormatBytesPipe],
   templateUrl: "./sidebar.component.html",
 })
 export class SidebarComponent implements OnInit, OnDestroy {
@@ -43,7 +43,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
   storage = inject(StorageService);
   collectionSelected = output<string>();
 
-  isCollapsed = signal(false);
+  isStatsCollapsed = signal(true);
   searchQuery = signal("");
   activeCollection = signal<string | null>(null);
   systemStatus = signal<SystemMetrics | null>(null);
@@ -181,8 +181,53 @@ export class SidebarComponent implements OnInit, OnDestroy {
     return colorMap[status] || "bg-green-500";
   }
 
-  toggleCollapse() {
-    this.isCollapsed.update((v) => !v);
+  getCpuPercent(value: number): string {
+    if (value === null || value === undefined || isNaN(value)) return "0.0";
+    return value.toFixed(1);
+  }
+
+  getRamPercentValue(used: number, total: number): number {
+    if (!total || total === 0) return 0;
+    return (used / total) * 100;
+  }
+
+  formatCpu(value: number): string {
+    if (value === null || value === undefined || isNaN(value)) return "0.0";
+    return value.toFixed(1);
+  }
+
+  getDiskPercent(used: number, total: number): number {
+    if (!total || total === 0) return 0;
+    return (used / total) * 100;
+  }
+
+  formatNetwork(received: number, transmitted: number): string {
+    const receivedStr = this.formatBytes(received);
+    const transmittedStr = this.formatBytes(transmitted);
+    return `↑ ${transmittedStr} / ↓ ${receivedStr}`;
+  }
+
+  formatUptime(seconds: number): string {
+    const days = Math.floor(seconds / 86400);
+    const hours = Math.floor((seconds % 86400) / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const parts: string[] = [];
+    if (days > 0) parts.push(`${days}d`);
+    if (hours > 0) parts.push(`${hours}h`);
+    if (minutes > 0) parts.push(`${minutes}m`);
+    return parts.join(" ") || "0m";
+  }
+
+  formatBytes(bytes: number): string {
+    if (bytes === 0) return "0 B";
+    const k = 1024;
+    const sizes = ["B", "KB", "MB", "GB", "TB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
+  }
+
+  toggleStatsCollapse() {
+    this.isStatsCollapsed.update((v) => !v);
   }
 
   showContextMenu(event: MouseEvent, node: TreeNode) {

@@ -1,11 +1,12 @@
 import { Component, inject, signal, computed, effect } from "@angular/core";
 import { Router, RouterLink, ActivatedRoute, NavigationEnd } from "@angular/router";
-import { filter } from "rxjs";
+import { filter, map } from "rxjs/operators";
 import { MatIconModule } from "@angular/material/icon";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { ThemeService } from "@shared/services/theme.service";
 import { DialogService } from "@shared/services/dialog.service";
 import { SettingsDialogComponent } from "@shared/components/settings-dialog/settings-dialog.component";
+import { toSignal } from "@angular/core/rxjs-interop";
 
 @Component({
   selector: "app-header",
@@ -19,7 +20,22 @@ export class HeaderComponent {
   private dialogService = inject(DialogService);
   router = inject(Router);
 
-  activeTab = signal<"gallery" | "explorer" | "workbench">("explorer");
+  private routerUrl = toSignal(
+    this.router.events.pipe(
+      filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+      map((e) => e.urlAfterRedirects)
+    ),
+    { initialValue: this.router.url }
+  );
+
+  showExplorerBreadcrumb = computed(
+    () =>
+      !!this.connectionState.activeConnectionName() &&
+      (this.routerUrl().includes("/schema") ||
+        this.routerUrl().includes("/query") ||
+        this.routerUrl().includes("/explorer") ||
+        this.routerUrl().includes("/data/"))
+  );
 
   tabs = [
     { id: "gallery" as const, label: "Gallery", route: "/connections" },
@@ -29,21 +45,17 @@ export class HeaderComponent {
 
   isDarkMode = computed(() => this.themeService.isDarkMode());
 
-  constructor() {
-    effect(
-      () => {
-        const url = this.router.url;
-        if (url.includes("/connections") || url === "/") {
-          this.activeTab.set("gallery");
-        } else if (url.includes("/schema")) {
-          this.activeTab.set("explorer");
-        } else if (url.includes("/query")) {
-          this.activeTab.set("workbench");
-        }
-      },
-      { allowSignalWrites: true }
-    );
-  }
+  activeTab = computed<"gallery" | "explorer" | "workbench">(() => {
+    const url = this.routerUrl();
+    if (url.includes("/connections") || url === "/") {
+      return "gallery";
+    } else if (url.includes("/schema")) {
+      return "explorer";
+    } else if (url.includes("/query")) {
+      return "workbench";
+    }
+    return "gallery";
+  });
 
   setActiveTab(tabId: "gallery" | "explorer" | "workbench") {
     const tab = this.tabs.find((t) => t.id === tabId);
