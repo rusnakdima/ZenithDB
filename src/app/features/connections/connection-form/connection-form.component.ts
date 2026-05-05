@@ -5,13 +5,14 @@ import { MatIconModule } from "@angular/material/icon";
 import { DatabaseService } from "@shared/services/database.service";
 import { ConnectionConfig, ConnectionHealth } from "@shared/models/connection.config";
 import { FormValidationService, FieldValidator } from "@shared/services/form-validation.service";
+import { PageContainerComponent } from "@shared/components/page-container/page-container.component";
 
 type ProviderType = "json" | "mongo" | "redis" | "postgres" | "sqlite" | "mysql";
 
 @Component({
   selector: "app-connection-form",
   standalone: true,
-  imports: [FormsModule, MatIconModule],
+  imports: [FormsModule, MatIconModule, PageContainerComponent],
   templateUrl: "./connection-form.component.html",
 })
 export class ConnectionFormComponent {

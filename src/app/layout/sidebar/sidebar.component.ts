@@ -10,15 +10,14 @@ import {
   runInInjectionContext,
 } from "@angular/core";
 import { Router, RouterLink } from "@angular/router";
-import { TitleCasePipe, DecimalPipe } from "@angular/common";
 import { MatIconModule } from "@angular/material/icon";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { DatabaseService } from "@shared/services/database.service";
 import { StorageService } from "@services/core/storage.service";
 import { CollectionMeta, SystemMetrics, ConnectionSummary } from "@shared/models/connection.config";
 import { interval, Subscription } from "rxjs";
-import { FormatBytesPipe } from "@shared/pipes/format-bytes.pipe";
 import { ProviderUtils } from "@shared/utils/provider.utils";
+import { ThemeService } from "@shared/services/theme.service";
 
 interface TreeNode {
   name: string;
@@ -31,7 +30,7 @@ interface TreeNode {
 @Component({
   selector: "app-sidebar",
   standalone: true,
-  imports: [RouterLink, TitleCasePipe, DecimalPipe, MatIconModule, FormatBytesPipe],
+  imports: [RouterLink, MatIconModule],
   templateUrl: "./sidebar.component.html",
 })
 export class SidebarComponent implements OnInit, OnDestroy {
@@ -41,8 +40,10 @@ export class SidebarComponent implements OnInit, OnDestroy {
   connectionState = inject(ConnectionStateService);
   databaseService = inject(DatabaseService);
   storage = inject(StorageService);
+  themeService = inject(ThemeService);
   collectionSelected = output<string>();
 
+  activeView = signal<"dashboard" | "explorer" | "workbench">("explorer");
   isStatsCollapsed = signal(true);
   searchQuery = signal("");
   activeCollection = signal<string | null>(null);
@@ -71,6 +72,30 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.statusSubscription?.unsubscribe();
+  }
+
+  setActiveView(view: "dashboard" | "explorer" | "workbench") {
+    this.activeView.set(view);
+    if (view === "explorer") {
+      this.router.navigate(["/connections"]);
+    } else if (view === "dashboard") {
+      this.router.navigate(["/"]);
+    } else if (view === "workbench") {
+      this.router.navigate(["/query"]);
+    }
+  }
+
+  openNewConnection() {
+    this.router.navigate(["/connections/new"]);
+  }
+
+  getActiveConnectionName(): string {
+    const conn = this.storage.connections().find((c) => c.id === this.activeConnectionId());
+    return conn?.name || "Unknown";
+  }
+
+  getActiveConnectionUri(): string {
+    return "";
   }
 
   async fetchSystemStatus() {
@@ -130,7 +155,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
     }
   }
 
-  toggleConnection(connId: string, event: Event) {
+  async toggleConnection(connId: string, event: Event) {
     event.stopPropagation();
     if (this.expandedConnections().has(connId)) {
       this.expandedConnections.update((set) => {
@@ -145,7 +170,10 @@ export class SidebarComponent implements OnInit, OnDestroy {
         return newSet;
       });
       this.activeConnectionId.set(connId);
-      this.connectionState.setActiveConnection(connId);
+      const conn = this.storage.connections().find((c) => c.id === connId);
+      if (conn) {
+        this.connectionState.setActiveConnection(conn);
+      }
       this.loadDatabases(connId);
       this.router.navigate(["/explorer"]);
     }
@@ -154,13 +182,17 @@ export class SidebarComponent implements OnInit, OnDestroy {
   toggleDatabase(node: TreeNode, event: Event) {
     event.stopPropagation();
     node.expanded = !node.expanded;
+    this.databases.update((dbs) => [...dbs]);
   }
 
   onCollectionClick(node: TreeNode) {
     if (node.type === "collection") {
       const connId = this.activeConnectionId();
       if (connId) {
-        this.connectionState.setActiveConnection(connId);
+        const conn = this.storage.connections().find((c) => c.id === connId);
+        if (conn) {
+          this.connectionState.setActiveConnection(conn);
+        }
       }
       this.activeCollection.set(node.name);
       this.collectionSelected.emit(node.name);
@@ -181,33 +213,34 @@ export class SidebarComponent implements OnInit, OnDestroy {
     return colorMap[status] || "bg-green-500";
   }
 
-  getCpuPercent(value: number): string {
-    if (value === null || value === undefined || isNaN(value)) return "0.0";
-    return value.toFixed(1);
+  getCpuPercent(): string {
+    const status = this.systemStatus();
+    if (!status) return "0%";
+    return status.cpu_usage.toFixed(1) + "%";
   }
 
-  getRamPercentValue(used: number, total: number): number {
-    if (!total || total === 0) return 0;
-    return (used / total) * 100;
+  getRamDisplay(): string {
+    const status = this.systemStatus();
+    if (!status) return "0/0";
+    return `${this.formatBytes(status.ram_used)} / ${this.formatBytes(status.ram_total)}`;
   }
 
-  formatCpu(value: number): string {
-    if (value === null || value === undefined || isNaN(value)) return "0.0";
-    return value.toFixed(1);
+  getDiskPercent(): string {
+    const status = this.systemStatus();
+    if (!status || !status.disk_total) return "0";
+    return ((status.disk_used / status.disk_total) * 100).toFixed(0);
   }
 
-  getDiskPercent(used: number, total: number): number {
-    if (!total || total === 0) return 0;
-    return (used / total) * 100;
+  getNetworkDisplay(): string {
+    const status = this.systemStatus();
+    if (!status) return "0";
+    return `${this.formatBytes(status.network_transmitted)}/s`;
   }
 
-  formatNetwork(received: number, transmitted: number): string {
-    const receivedStr = this.formatBytes(received);
-    const transmittedStr = this.formatBytes(transmitted);
-    return `↑ ${transmittedStr} / ↓ ${receivedStr}`;
-  }
-
-  formatUptime(seconds: number): string {
+  formatUptime(): string {
+    const status = this.systemStatus();
+    if (!status) return "0m";
+    const seconds = status.uptime;
     const days = Math.floor(seconds / 86400);
     const hours = Math.floor((seconds % 86400) / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
@@ -226,7 +259,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
   }
 
-  toggleStatsCollapse() {
+  toggleStats() {
     this.isStatsCollapsed.update((v) => !v);
   }
 

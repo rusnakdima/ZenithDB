@@ -3,11 +3,12 @@ import { Router, RouterLink, ActivatedRoute } from "@angular/router";
 import { DatabaseService } from "@shared/services/database.service";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { ConnectionHealth } from "@shared/models/connection.config";
+import { PageContainerComponent } from "@shared/components/page-container/page-container.component";
 
 @Component({
   selector: "app-connection-detail",
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, PageContainerComponent],
   templateUrl: "./connection-detail.component.html",
 })
 export class ConnectionDetailComponent implements OnInit {

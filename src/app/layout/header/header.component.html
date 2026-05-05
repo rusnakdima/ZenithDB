@@ -1,72 +1,30 @@
 <header class="app-header">
-  <div class="flex items-center gap-6">
-    <button class="flex cursor-pointer items-center gap-2" (click)="goHome()">
-      <div class="header-logo">
-        <mat-icon
-          fontIcon="settings"
-          class="inline-flex items-center justify-center text-xl!"
-        ></mat-icon>
-      </div>
-      <h1 class="header-title">Zenith<span class="header-title-accent">DB</span></h1>
-    </button>
-
-    <nav class="header-breadcrumb">
-      <a
-        routerLink="/connections"
-        class="header-breadcrumb-link transition-colors hover:text-emerald-500"
-      >
-        Connections
-      </a>
-      @if (connectionState.activeConnectionName()) {
-        <mat-icon
-          fontIcon="chevron_right"
-          class="mx-1 inline-flex items-center justify-center text-[8px] text-slate-500"
-          style="font-size: 8px; width: 8px; height: 8px"
-        ></mat-icon>
-        <a
-          [routerLink]="['/connections', connectionState.activeConnectionId()]"
-          class="header-breadcrumb-link transition-colors hover:text-emerald-500"
-        >
-          {{ connectionState.activeConnectionName() }}
-        </a>
-      }
-      @if (showExplorerBreadcrumb()) {
-        <mat-icon
-          fontIcon="chevron_right"
-          class="mx-1 inline-flex items-center justify-center text-[8px] text-slate-500"
-          style="font-size: 8px; width: 8px; height: 8px"
-        ></mat-icon>
-        <span class="header-breadcrumb-active">Explorer</span>
-      }
-    </nav>
+  <div class="flex items-center gap-3">
+    <span class="text-xs font-bold tracking-widest text-[var(--text-dim)] uppercase"
+      >Workspace</span
+    >
+    <mat-icon fontIcon="chevron_right" class="!text-xs !text-[var(--text-muted)]"></mat-icon>
+    <span class="text-xs font-black tracking-widest text-[var(--text-main)] uppercase">{{
+      getCurrentBreadcrumb()
+    }}</span>
   </div>
 
-  <div class="flex items-center gap-4">
-    <div class="header-tabs">
-      @for (tab of tabs; track tab.id) {
-        <button
-          class="header-tab transition-colors"
-          [class.header-tab-active]="activeTab() === tab.id"
-          [class.header-tab-link]="activeTab() !== tab.id"
-          (click)="setActiveTab(tab.id)"
-        >
-          {{ tab.label }}
-        </button>
-      }
+  <div class="flex items-center gap-6">
+    <div class="group relative">
+      <mat-icon
+        fontIcon="search"
+        class="absolute top-1/2 left-3 -translate-y-1/2 !text-xs !text-[var(--text-dim)]"
+      ></mat-icon>
+      <input
+        type="text"
+        placeholder="Search data, collections..."
+        class="w-64 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-card)] py-1.5 pr-4 pl-9 text-[11px] transition-all outline-none focus:border-[var(--accent)]/50"
+      />
     </div>
-
-    <div class="header-divider"></div>
-
-    <button
-      class="header-icon-btn text-lg"
-      (click)="toggleTheme()"
-      [title]="isDarkMode() ? 'Switch to light mode' : 'Switch to dark mode'"
+    <div
+      class="flex h-8 w-8 items-center justify-center rounded-full border border-[var(--border-subtle)] bg-[var(--bg-elevated)]"
     >
-      @if (isDarkMode()) {
-        <mat-icon fontIcon="light_mode" class="inline-flex items-center justify-center"></mat-icon>
-      } @else {
-        <mat-icon fontIcon="dark_mode" class="inline-flex items-center justify-center"></mat-icon>
-      }
-    </button>
+      <mat-icon fontIcon="person" class="!text-xs !text-[var(--text-dim)]"></mat-icon>
+    </div>
   </div>
 </header>

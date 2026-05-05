@@ -1,77 +1,142 @@
-<aside class="app-sidebar">
-  <div class="p-3">
-    <a routerLink="/connections/new" class="sidebar-connect-btn flex items-center gap-2">
-      <mat-icon fontIcon="link" class="inline-flex items-center justify-center text-xl!"></mat-icon>
-      Connect to...
-    </a>
-  </div>
+<div class="sidebar-layout">
+  <!-- Navigation Rail -->
+  <nav class="nav-rail">
+    <div class="nav-rail-logo">
+      <mat-icon fontIcon="bolt" class="!text-xl !text-black"></mat-icon>
+    </div>
 
-  <div class="sidebar-scroll">
-    <!-- Connections List -->
-    @if (storage.connections().length > 0) {
-      <div class="sidebar-section">
-        <div class="sidebar-section-header">
-          <span>Connections</span>
-          <mat-icon
-            fontIcon="dns"
-            class="inline-flex items-center justify-center text-xl!"
-          ></mat-icon>
+    <button
+      class="nav-rail-item"
+      [class.active]="activeView() === 'dashboard'"
+      (click)="setActiveView('dashboard')"
+      title="Dashboard"
+    >
+      <mat-icon fontIcon="dashboard" class="!text-xl"></mat-icon>
+    </button>
+
+    <button
+      class="nav-rail-item"
+      [class.active]="activeView() === 'explorer'"
+      (click)="setActiveView('explorer')"
+      title="Explorer"
+    >
+      <mat-icon fontIcon="folder" class="!text-xl"></mat-icon>
+    </button>
+
+    <button
+      class="nav-rail-item"
+      [class.active]="activeView() === 'workbench'"
+      (click)="setActiveView('workbench')"
+      title="Workbench"
+    >
+      <mat-icon fontIcon="terminal" class="!text-xl"></mat-icon>
+    </button>
+
+    <button
+      class="nav-rail-item mt-auto"
+      (click)="themeService.toggle()"
+      [title]="themeService.isDarkMode() ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
+    >
+      <mat-icon
+        [fontIcon]="themeService.isDarkMode() ? 'dark_mode' : 'light_mode'"
+        class="!text-xl"
+      ></mat-icon>
+    </button>
+  </nav>
+
+  <!-- Connections Sidebar -->
+  <aside class="app-sidebar">
+    <!-- Connections Header -->
+    @if (activeView() === "explorer") {
+      <div class="border-b border-[var(--border-subtle)] p-5">
+        <div class="mb-4 flex items-center justify-between">
+          <span class="text-[10px] font-black tracking-widest text-[var(--text-dim)] uppercase"
+            >Connections</span
+          >
+          <button
+            class="text-[var(--text-dim)] transition hover:text-[var(--accent)]"
+            (click)="openNewConnection()"
+          >
+            <mat-icon fontIcon="add" class="!text-xl"></mat-icon>
+          </button>
         </div>
-        <div class="sidebar-section-content">
-          @for (conn of storage.connections(); track conn.id) {
+
+        @if (activeConnectionId()) {
+          <div
+            class="group flex cursor-pointer items-center gap-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] p-3"
+          >
             <div
-              class="sidebar-connection-item"
-              [class.sidebar-connection-active]="activeConnectionId() === conn.id"
-            >
-              <div class="sidebar-connection-header" (click)="selectConnection(conn)">
-                <button class="sidebar-expand-btn" (click)="toggleConnection(conn.id, $event)">
-                  <mat-icon
-                    [fontIcon]="!isConnectionExpanded(conn.id) ? 'chevron_right' : 'expand_more'"
-                    class="inline-flex items-center justify-center text-xl!"
-                  ></mat-icon>
-                </button>
+              class="h-2 w-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]"
+            ></div>
+            <div class="flex-grow overflow-hidden">
+              <p class="truncate text-xs font-bold">{{ getActiveConnectionName() }}</p>
+              <p class="truncate text-[9px] text-[var(--text-dim)]">
+                {{ getActiveConnectionUri() }}
+              </p>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Explorer Tree View -->
+    @if (activeView() === "explorer") {
+      <div class="flex flex-grow flex-col gap-1 overflow-y-auto p-4">
+        @if (storage.connections().length > 0) {
+          @for (conn of storage.connections(); track conn.id) {
+            <div class="mb-2">
+              <div
+                class="tree-item flex items-center gap-2 p-2 text-xs font-bold text-[var(--text-dim)]"
+                [class.active]="activeConnectionId() === conn.id"
+                (click)="toggleConnection(conn.id, $event)"
+              >
+                <mat-icon
+                  [fontIcon]="!isConnectionExpanded(conn.id) ? 'chevron_right' : 'expand_more'"
+                  class="!text-xl"
+                ></mat-icon>
                 <mat-icon
                   [fontIcon]="providerUtils.getProviderIcon(conn.provider)"
-                  class="inline-flex items-center justify-center text-xl!"
+                  class="!text-xl text-[var(--accent)]/70"
                 ></mat-icon>
-                <span class="sidebar-connection-name">{{ conn.name }}</span>
+                <span>{{ conn.name }}</span>
               </div>
 
-              @if (isConnectionExpanded(conn.id)) {
-                <div class="sidebar-database-list">
-                  @if (loadingDatabases() && activeConnectionId() === conn.id) {
-                    <div class="sidebar-loading">
-                      <mat-icon
-                        fontIcon="sync"
-                        class="fa-spin inline-flex items-center justify-center text-xl!"
-                      ></mat-icon>
-                      Loading...
+              @if (isConnectionExpanded(conn.id) && activeConnectionId() === conn.id) {
+                <div class="mt-1 ml-4 space-y-1 border-l border-[var(--border-subtle)] pl-2">
+                  @if (loadingDatabases()) {
+                    <div class="p-2 text-[11px] text-[var(--text-dim)]">
+                      <mat-icon fontIcon="sync" class="fa-spin !text-xl"></mat-icon> Loading...
                     </div>
                   } @else if (databases().length > 0) {
                     @for (db of databases(); track db.name) {
-                      <div class="sidebar-database">
-                        <div class="sidebar-database-header" (click)="toggleDatabase(db, $event)">
+                      <div class="mb-1">
+                        <div
+                          class="tree-item flex items-center gap-2 p-1.5 text-[11px] text-[var(--text-dim)]"
+                          (click)="toggleDatabase(db, $event)"
+                        >
                           <mat-icon
                             [fontIcon]="!db.expanded ? 'chevron_right' : 'expand_more'"
-                            class="inline-flex items-center justify-center text-xl!"
+                            class="!text-xl"
                           ></mat-icon>
                           <mat-icon
                             fontIcon="storage"
-                            class="inline-flex items-center justify-center text-xl!"
+                            class="!text-xl text-[var(--accent)]/50"
                           ></mat-icon>
                           <span>{{ db.name }}</span>
                         </div>
                         @if (db.expanded && db.children) {
-                          <div class="sidebar-collections">
+                          <div class="ml-4 space-y-1 border-l border-[var(--border-subtle)] pl-2">
                             @for (col of db.children; track col.name) {
-                              <div class="sidebar-collection" (click)="onCollectionClick(col)">
-                                <mat-icon fontIcon="table_chart" class="text-xl!"></mat-icon>
+                              <div
+                                class="tree-item flex items-center gap-2 p-1.5 text-[11px] text-[var(--text-muted)]"
+                                [class.active]="activeCollection() === col.name"
+                                (click)="onCollectionClick(col)"
+                              >
+                                <mat-icon
+                                  fontIcon="table_chart"
+                                  class="!text-xl text-[var(--text-muted)]"
+                                ></mat-icon>
                                 <span>{{ col.name }}</span>
-                                @if (col.collection?.count !== undefined) {
-                                  <span class="sidebar-collection-count"
-                                    >({{ col.collection?.count }})</span
-                                  >
-                                }
                               </div>
                             }
                           </div>
@@ -79,114 +144,99 @@
                       </div>
                     }
                   } @else {
-                    <div class="sidebar-empty">No collections</div>
+                    <div class="p-2 text-[10px] text-[var(--text-muted)]">No collections</div>
                   }
                 </div>
               }
             </div>
           }
-        </div>
-      </div>
-    } @else {
-      <div class="sidebar-empty-state">
-        <mat-icon
-          fontIcon="link"
-          class="inline-flex items-center justify-center text-xl!"
-        ></mat-icon>
-        <p>No connections</p>
-        <a routerLink="/connections/new">Add Connection</a>
+        } @else {
+          <div class="sidebar-empty-state">
+            <mat-icon fontIcon="link_off" class="!mb-2 !text-2xl"></mat-icon>
+            <p>No connections</p>
+            <a routerLink="/connections/new">Add Connection</a>
+          </div>
+        }
       </div>
     }
-  </div>
 
-  <div class="sidebar-footer">
-    @if (systemStatus(); as status) {
-      <div class="sidebar-footer-header" (click)="toggleStatsCollapse()">
-        <div class="sidebar-footer-header-left">
-          <div class="sidebar-footer-dot" [class]="getStatusColor(status.status)"></div>
-          <span class="sidebar-footer-header-text">
-            System Stats: {{ status.status | titlecase }}
-          </span>
+    <!-- Dashboard Quick Links -->
+    @if (activeView() === "dashboard") {
+      <div class="p-5">
+        <span
+          class="mb-4 block text-[10px] font-black tracking-widest text-[var(--text-dim)] uppercase"
+          >Quick Reports</span
+        >
+        <div class="space-y-2">
+          <div
+            class="cursor-pointer rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-card)] p-3 text-xs font-bold transition hover:bg-[var(--bg-elevated)]"
+          >
+            Cluster Latency Report
+          </div>
+          <div
+            class="cursor-pointer rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-card)] p-3 text-xs font-bold transition hover:bg-[var(--bg-elevated)]"
+          >
+            Weekly Read/Write Loads
+          </div>
         </div>
-        <mat-icon
-          [fontIcon]="isStatsCollapsed() ? 'expand_more' : 'expand_less'"
-          class="inline-flex items-center justify-center text-xl!"
-        ></mat-icon>
       </div>
+    }
+
+    <!-- Workbench History -->
+    @if (activeView() === "workbench") {
+      <div class="p-5">
+        <span
+          class="mb-4 block text-[10px] font-black tracking-widest text-[var(--text-dim)] uppercase"
+          >Command History</span
+        >
+        <div class="mono space-y-2 text-[10px] text-[var(--text-dim)]">
+          <div class="truncate p-2">db.users.find().limit(10)</div>
+          <div class="truncate p-2">db.logs.aggregate(...)</div>
+        </div>
+      </div>
+    }
+
+    <!-- Bottom Section: Theme Toggle + System Stats -->
+    <div class="mt-auto border-t border-[var(--border-subtle)]">
+      <button
+        class="flex w-full items-center justify-between p-4 text-[var(--text-dim)] transition hover:text-[var(--text-main)]"
+        (click)="toggleStats()"
+      >
+        <span class="text-[10px] font-black tracking-widest uppercase">System Monitor</span>
+        <mat-icon
+          [fontIcon]="isStatsCollapsed() ? 'expand_less' : 'expand_more'"
+          class="!text-xl"
+        ></mat-icon>
+      </button>
+
       @if (!isStatsCollapsed()) {
-        <div class="sidebar-footer-stats-body">
-          <div class="sidebar-footer-stat-row">
-            <div class="sidebar-footer-stat-label">CPU</div>
-            <div class="sidebar-footer-stat-bar-container">
-              <div class="sidebar-footer-stat-bar">
-                <div
-                  class="sidebar-footer-stat-bar-fill cpu"
-                  [style.width.%]="status.cpu_usage"
-                ></div>
-              </div>
-              <div class="sidebar-footer-stat-value">{{ getCpuPercent(status.cpu_usage) }}%</div>
+        <div class="space-y-3 px-4 pb-4">
+          <div class="grid grid-cols-2 gap-2">
+            <div class="rounded-lg border border-[var(--border-subtle)] bg-black/50 p-2">
+              <p class="text-[8px] text-[var(--text-dim)] uppercase">CPU</p>
+              <p class="text-[11px] font-bold text-[var(--accent)]">{{ getCpuPercent() }}</p>
+            </div>
+            <div class="rounded-lg border border-[var(--border-subtle)] bg-black/50 p-2">
+              <p class="text-[8px] text-[var(--text-dim)] uppercase">RAM</p>
+              <p class="text-[11px] font-bold text-[var(--accent)]">{{ getRamDisplay() }}</p>
+            </div>
+            <div class="rounded-lg border border-[var(--border-subtle)] bg-black/50 p-2">
+              <p class="text-[8px] text-[var(--text-dim)] uppercase">Disk</p>
+              <p class="text-[11px] font-bold text-[var(--accent)]">{{ getDiskPercent() }}%</p>
+            </div>
+            <div class="rounded-lg border border-[var(--border-subtle)] bg-black/50 p-2">
+              <p class="text-[8px] text-[var(--text-dim)] uppercase">Network</p>
+              <p class="text-[11px] font-bold text-[var(--accent)]">{{ getNetworkDisplay() }}</p>
             </div>
           </div>
-          <div class="sidebar-footer-stat-row">
-            <div class="sidebar-footer-stat-label">RAM</div>
-            <div class="sidebar-footer-stat-bar-container">
-              <div class="sidebar-footer-stat-bar">
-                <div
-                  class="sidebar-footer-stat-bar-fill ram"
-                  [style.width.%]="getRamPercentValue(status.ram_used, status.ram_total)"
-                ></div>
-              </div>
-              <div class="sidebar-footer-stat-value">
-                {{ status.ram_used | formatBytes }} / {{ status.ram_total | formatBytes }}
-              </div>
-            </div>
-          </div>
-          <div class="sidebar-footer-stat-row">
-            <div class="sidebar-footer-stat-label">Disk</div>
-            <div class="sidebar-footer-stat-bar-container">
-              <div class="sidebar-footer-stat-bar">
-                <div
-                  class="sidebar-footer-stat-bar-fill disk"
-                  [style.width.%]="getDiskPercent(status.disk_used, status.disk_total)"
-                ></div>
-              </div>
-              <div class="sidebar-footer-stat-value">
-                {{ getDiskPercent(status.disk_used, status.disk_total) | number: "1.0-0" }}%
-              </div>
-            </div>
-          </div>
-          <div class="sidebar-footer-stat-row network">
-            <div class="sidebar-footer-stat-label">Network</div>
-            <div class="sidebar-footer-stat-bar-container">
-              <div class="network-stat">
-                <span class="network-icon text-green-500">↑</span>
-                <span class="sidebar-footer-stat-value">{{
-                  formatBytes(status.network_transmitted)
-                }}</span>
-              </div>
-              <div class="network-stat">
-                <span class="network-icon text-blue-500">↓</span>
-                <span class="sidebar-footer-stat-value">{{
-                  formatBytes(status.network_received)
-                }}</span>
-              </div>
-            </div>
-          </div>
-          <div class="sidebar-footer-stat-row">
-            <div class="sidebar-footer-stat-label">Uptime</div>
-            <div class="sidebar-footer-stat-bar-container">
-              <div class="sidebar-footer-stat-value">{{ formatUptime(status.uptime) }}</div>
-            </div>
+          <div
+            class="flex items-center justify-between rounded-lg border border-[var(--border-subtle)] bg-black/50 p-2"
+          >
+            <span class="text-[8px] text-[var(--text-dim)] uppercase">Uptime</span>
+            <span class="text-[11px] font-bold text-green-500">{{ formatUptime() }}</span>
           </div>
         </div>
       }
-    } @else {
-      <div class="sidebar-footer-header">
-        <div class="sidebar-footer-header-left">
-          <div class="sidebar-footer-dot bg-slate-500"></div>
-          <span class="sidebar-footer-header-text">Loading...</span>
-        </div>
-      </div>
-    }
-  </div>
-</aside>
+    </div>
+  </aside>
+</div>
