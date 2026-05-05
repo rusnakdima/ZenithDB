@@ -1,95 +1,64 @@
 <div class="fixed inset-0 z-40" (click)="onBackdropClick($event)">
   <div
-    class="inspector-drawer fixed top-0 right-0 z-50 flex h-full w-[380px] transform flex-col border-l border-slate-700 bg-slate-900 shadow-2xl transition-transform duration-300"
+    class="inspector-drawer fixed top-0 right-0 z-50 flex h-full w-[420px] transform flex-col border-l border-[var(--border-subtle)] bg-[var(--bg-sidebar)] shadow-2xl transition-transform duration-300"
     (click)="onDrawerClick($event)"
   >
     <div
-      class="drawer-header flex items-center justify-between border-b border-slate-700 bg-slate-800/50 px-4 py-3"
+      class="flex items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-5 py-4"
     >
-      <div class="flex items-center gap-2">
-        <svg
-          class="h-5 w-5 text-emerald-400"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-        >
-          <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
-        <h3 class="text-sm font-semibold text-slate-200">Document Detail</h3>
+      <div class="flex items-center gap-3">
+        <mat-icon fontIcon="visibility" class="!text-lg text-[var(--accent)]"></mat-icon>
+        <h3 class="text-sm font-black text-[var(--text-main)]">Document Detail</h3>
       </div>
-      <div class="flex items-center gap-2">
-        <span class="rounded bg-slate-800 px-2 py-1 font-mono text-xs text-slate-500">{{
-          documentId()
-        }}</span>
+      <div class="flex items-center gap-3">
+        <span
+          class="mono rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-card)] px-2 py-1 text-xs text-[var(--text-muted)]"
+        >
+          {{ documentId() }}
+        </span>
         <button
-          class="rounded p-1.5 text-slate-400 transition-colors hover:bg-slate-700 hover:text-slate-200"
+          class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-[var(--bg-card)] hover:text-[var(--text-main)]"
           (click)="onClose()"
         >
-          <svg
-            class="h-4 w-4"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path d="M6 18L18 6M6 6l12 12" />
-          </svg>
+          <mat-icon fontIcon="close" class="!text-base"></mat-icon>
         </button>
       </div>
     </div>
 
-    <div class="drawer-content flex-1 space-y-6 overflow-y-auto p-4">
+    <div class="drawer-content flex-1 space-y-6 overflow-y-auto p-5">
+      <!-- Actions Section -->
       <div class="section">
         <div class="mb-3 flex items-center justify-between">
-          <label class="text-xs font-bold tracking-wider text-slate-400 uppercase">Actions</label>
+          <label class="text-[10px] font-black tracking-widest text-[var(--text-dim)] uppercase"
+            >Actions</label
+          >
           <div class="flex items-center gap-1">
             <button
-              class="rounded p-1.5 text-slate-500 transition-colors hover:bg-slate-800 hover:text-emerald-400"
+              class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-[var(--bg-card)] hover:text-[var(--accent)]"
               title="Copy JSON"
               (click)="copyJson()"
             >
-              <svg
-                class="h-4 w-4"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-              </svg>
+              <mat-icon fontIcon="content_copy" class="!text-sm"></mat-icon>
             </button>
             <button
-              class="rounded p-1.5 text-slate-500 transition-colors hover:bg-slate-800 hover:text-emerald-400"
+              class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-[var(--bg-card)] hover:text-[var(--accent)]"
               title="Export JSON"
               (click)="exportDocument('json')"
             >
-              <svg
-                class="h-4 w-4"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
-              </svg>
+              <mat-icon fontIcon="download" class="!text-sm"></mat-icon>
             </button>
           </div>
         </div>
-        <div class="rounded-lg border border-slate-700/50 bg-slate-800/50 p-3">
-          <div class="mb-2 flex items-center gap-2">
-            <span class="text-xs text-slate-400">Export as:</span>
-          </div>
+        <div class="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] p-4">
           <div class="flex gap-2">
             <button
-              class="flex-1 rounded bg-slate-700 px-3 py-1.5 text-xs text-slate-300 transition-colors hover:bg-slate-600"
+              class="flex-1 rounded-lg bg-[var(--accent)] px-4 py-2.5 text-xs font-bold text-black transition-all hover:shadow-[0_0_20px_rgba(255,107,0,0.3)]"
               (click)="exportDocument('json')"
             >
               JSON
             </button>
             <button
-              class="flex-1 rounded bg-slate-700 px-3 py-1.5 text-xs text-slate-300 transition-colors hover:bg-slate-600"
+              class="flex-1 rounded-lg border border-[var(--border-visible)] bg-[var(--bg-elevated)] px-4 py-2.5 text-xs font-bold text-[var(--text-dim)] transition-all hover:text-[var(--text-main)]"
               (click)="exportDocument('csv')"
             >
               CSV
@@ -98,35 +67,29 @@
         </div>
       </div>
 
+      <!-- Internal Metadata Section -->
       <div class="section">
         <div class="mb-3 flex items-center justify-between">
-          <label class="text-xs font-bold tracking-wider text-slate-400 uppercase"
+          <label class="text-[10px] font-black tracking-widest text-[var(--text-dim)] uppercase"
             >Internal Metadata</label
           >
           <button
-            class="rounded p-1 text-slate-500 transition-colors hover:bg-slate-800 hover:text-emerald-400"
+            class="rounded-lg p-1.5 text-[var(--text-dim)] transition-all hover:bg-[var(--bg-card)] hover:text-[var(--accent)]"
             title="Copy metadata"
             (click)="copyJson()"
           >
-            <svg
-              class="h-4 w-4"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-              <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-            </svg>
+            <mat-icon fontIcon="content_copy" class="!text-xs"></mat-icon>
           </button>
         </div>
-        <div class="overflow-hidden rounded-lg border border-slate-700/50 bg-slate-800/50">
+        <div
+          class="overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)]"
+        >
           <table class="w-full text-sm">
             <tbody>
               @for (meta of metadata(); track meta.key) {
-                <tr class="border-b border-slate-700/50 last:border-b-0">
-                  <td class="px-3 py-2 font-mono text-xs text-slate-400">{{ meta.key }}</td>
-                  <td class="px-3 py-2 text-right font-mono text-xs text-slate-200">
+                <tr class="border-b border-[var(--border-subtle)] last:border-b-0">
+                  <td class="mono px-4 py-3 text-xs text-[var(--text-dim)]">{{ meta.key }}</td>
+                  <td class="mono px-4 py-3 text-right text-xs text-[var(--text-main)]">
                     {{ meta.value }}
                   </td>
                 </tr>
@@ -136,38 +99,30 @@
         </div>
       </div>
 
+      <!-- JSON Payload Section -->
       <div class="section">
         <div class="mb-3 flex items-center justify-between">
-          <label class="text-xs font-bold tracking-wider text-slate-400 uppercase"
+          <label class="text-[10px] font-black tracking-widest text-[var(--text-dim)] uppercase"
             >JSON Payload</label
           >
-          <div class="flex items-center gap-1">
-            @if (!isEditing()) {
+          @if (!isEditing()) {
+            <div class="flex items-center gap-1">
               <button
-                class="rounded p-1.5 text-slate-500 transition-colors hover:bg-slate-800 hover:text-emerald-400"
+                class="rounded-lg p-1.5 text-[var(--text-dim)] transition-all hover:bg-[var(--bg-card)] hover:text-[var(--accent)]"
                 title="Copy JSON"
                 (click)="copyJson()"
               >
-                <svg
-                  class="h-4 w-4"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                  <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-                </svg>
+                <mat-icon fontIcon="content_copy" class="!text-xs"></mat-icon>
               </button>
-            }
-          </div>
+            </div>
+          }
         </div>
 
         @if (isEditing()) {
-          <div class="space-y-2">
+          <div class="space-y-3">
             <textarea
-              class="h-80 w-full resize-none rounded-lg border bg-slate-800 p-3 font-mono text-sm text-emerald-400 focus:outline-none"
-              [class.border-emerald-500]="!jsonError()"
+              class="mono h-80 w-full resize-none rounded-xl border bg-[var(--bg-card)] p-4 text-sm text-[var(--accent)] focus:outline-none"
+              [class.border-[var(--accent)]]="!jsonError()"
               [class.border-red-500]="jsonError()"
               [(ngModel)]="editText"
               (input)="isValidJson()"
@@ -175,38 +130,20 @@
               spellcheck="false"
             ></textarea>
             @if (jsonError()) {
-              <div class="flex items-center gap-1 text-xs text-red-400">
-                <svg
-                  class="h-3 w-3"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <circle cx="12" cy="12" r="10" />
-                  <path d="M12 8v4M12 16h.01" />
-                </svg>
+              <div class="flex items-center gap-2 text-xs text-red-400">
+                <mat-icon fontIcon="error" class="!text-xs"></mat-icon>
                 {{ jsonError() }}
               </div>
             }
             <div class="flex items-center gap-2">
               <button
-                class="flex-1 rounded-md bg-emerald-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
+                class="flex-1 rounded-xl bg-[var(--accent)] px-4 py-2.5 text-sm font-bold text-black transition-all hover:shadow-[0_0_20px_rgba(255,107,0,0.3)] disabled:opacity-50"
                 [disabled]="!!jsonError() || isSaving()"
                 (click)="onSave()"
               >
                 @if (isSaving()) {
                   <span class="flex items-center justify-center gap-2">
-                    <svg
-                      class="h-4 w-4 animate-spin"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                    >
-                      <circle cx="12" cy="12" r="10" stroke-opacity="0.25" />
-                      <path d="M12 2a10 10 0 0110 10" stroke-opacity="1" />
-                    </svg>
+                    <mat-icon fontIcon="sync" class="fa-spin !text-sm"></mat-icon>
                     Saving...
                   </span>
                 } @else {
@@ -214,24 +151,14 @@
                 }
               </button>
               <button
-                class="rounded-md bg-slate-700 px-3 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-slate-600"
+                class="rounded-xl border border-[var(--border-visible)] bg-[var(--bg-elevated)] px-4 py-2.5 text-sm font-bold text-[var(--text-dim)] transition-all hover:text-[var(--text-main)]"
                 (click)="resetEdit()"
                 title="Reset to original"
               >
-                <svg
-                  class="h-4 w-4"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <path
-                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                  />
-                </svg>
+                <mat-icon fontIcon="restart_alt" class="!text-base"></mat-icon>
               </button>
               <button
-                class="rounded-md bg-slate-700 px-3 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-slate-600"
+                class="rounded-xl border border-[var(--border-visible)] bg-[var(--bg-elevated)] px-4 py-2.5 text-sm font-bold text-[var(--text-dim)] transition-all hover:text-[var(--text-main)]"
                 (click)="cancelEdit()"
               >
                 Cancel
@@ -239,16 +166,18 @@
             </div>
           </div>
         } @else {
-          <div class="overflow-hidden rounded-lg border border-slate-700/50 bg-slate-800/50">
-            <div class="json-display font-mono text-sm">
+          <div
+            class="overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)]"
+          >
+            <div class="json-display p-4">
               @for (line of formatJsonLines(jsonPayload()); track $index; let i = $index) {
-                <div class="json-line flex" [class.bg-slate-800/30]="i % 2 === 0">
+                <div class="json-line flex" [class.bg-[var(--bg-elevated)]]="i % 2 === 0">
                   <span
-                    class="json-line-num w-10 flex-shrink-0 pr-4 text-right text-xs text-slate-600 select-none"
+                    class="json-line-num w-10 flex-shrink-0 pr-4 text-right text-xs text-[var(--text-muted)] select-none"
                     >{{ i + 1 }}</span
                   >
                   <span
-                    class="json-line-content flex-1 text-slate-300"
+                    class="json-line-content flex-1 text-[var(--text-main)]"
                     [innerHTML]="highlightJsonLine(line)"
                   ></span>
                 </div>
@@ -256,52 +185,33 @@
             </div>
           </div>
           <button
-            class="mt-3 flex w-full items-center justify-center gap-2 rounded-md bg-slate-700 px-3 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-slate-600"
+            class="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--border-visible)] bg-[var(--bg-elevated)] px-4 py-3 text-sm font-bold text-[var(--text-dim)] transition-all hover:text-[var(--text-main)]"
             (click)="startEdit()"
           >
-            <svg
-              class="h-4 w-4"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
-              <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
-            </svg>
+            <mat-icon fontIcon="edit" class="!text-base"></mat-icon>
             Edit Document
           </button>
         }
       </div>
 
       @if (showDeleteConfirm()) {
-        <div class="section rounded-lg border border-red-900/50 bg-red-900/20 p-4">
+        <div class="section rounded-xl border border-red-900/30 bg-red-900/10 p-5">
           <div class="mb-3 flex items-center gap-2">
-            <svg
-              class="h-5 w-5 text-red-400"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-              />
-            </svg>
-            <span class="text-sm font-semibold text-red-400">Delete Document</span>
+            <mat-icon fontIcon="warning" class="!text-lg text-red-400"></mat-icon>
+            <span class="text-sm font-bold text-red-400">Delete Document</span>
           </div>
-          <p class="mb-4 text-sm text-slate-300">
+          <p class="mb-4 text-sm text-[var(--text-dim)]">
             Are you sure you want to permanently delete this document? This action cannot be undone.
           </p>
           <div class="flex items-center gap-2">
             <button
-              class="flex-1 rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-red-500"
+              class="flex-1 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-bold text-white transition-all hover:bg-red-500"
               (click)="confirmDelete()"
             >
               Delete Permanently
             </button>
             <button
-              class="rounded-md bg-slate-700 px-3 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-slate-600"
+              class="rounded-xl border border-[var(--border-visible)] bg-[var(--bg-elevated)] px-4 py-2.5 text-sm font-bold text-[var(--text-dim)] transition-all hover:text-[var(--text-main)]"
               (click)="cancelDelete()"
             >
               Cancel
@@ -311,40 +221,23 @@
       }
     </div>
 
-    <div class="drawer-footer border-t border-slate-700 bg-slate-800/50 px-4 py-3">
+    <div
+      class="drawer-footer border-t border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-5 py-4"
+    >
       @if (!isEditing() && !showDeleteConfirm()) {
         <div class="flex items-center gap-2">
           <button
-            class="flex flex-1 items-center justify-center gap-2 rounded-md bg-emerald-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-500"
+            class="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[var(--accent)] px-4 py-3 text-sm font-bold text-black transition-all hover:shadow-[0_0_20px_rgba(255,107,0,0.3)]"
             (click)="startEdit()"
           >
-            <svg
-              class="h-4 w-4"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
-              <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
-            </svg>
+            <mat-icon fontIcon="edit" class="!text-base"></mat-icon>
             Edit
           </button>
           <button
-            class="flex items-center justify-center gap-2 rounded-md border border-red-600/30 bg-red-600/20 px-3 py-2 text-sm font-medium text-red-400 transition-colors hover:bg-red-600/30"
+            class="flex items-center justify-center gap-2 rounded-xl border border-red-900/30 bg-red-600/20 px-4 py-3 text-sm font-bold text-red-400 transition-all hover:bg-red-600/30"
             (click)="onDelete()"
           >
-            <svg
-              class="h-4 w-4"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path
-                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-              />
-            </svg>
+            <mat-icon fontIcon="delete" class="!text-base"></mat-icon>
             Delete
           </button>
         </div>

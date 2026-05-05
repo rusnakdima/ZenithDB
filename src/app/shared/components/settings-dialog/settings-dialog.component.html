@@ -10,48 +10,11 @@
   <div class="flex h-[60vh] max-h-[60vh] flex-col">
     <div class="flex flex-1 overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
       <div class="w-48 border-r border-gray-200 p-4 dark:border-gray-700">
-        <nav class="space-y-1">
-          <button
-            class="w-full rounded-lg px-3 py-2 text-left text-sm transition-colors"
-            [class.bg-emerald-500/20-text-emerald-400]="activeTab() === 'general'"
-            [class.text-gray-500]="activeTab() !== 'general'"
-            [class.hover:bg-gray-100]="activeTab() !== 'general'"
-            [class.dark:text-gray-400-dark:hover:bg-gray-800]="activeTab() !== 'general'"
-            (click)="switchTab('general')"
-          >
-            General
-          </button>
-          <button
-            class="w-full rounded-lg px-3 py-2 text-left text-sm transition-colors"
-            [class.bg-emerald-500/20-text-emerald-400]="activeTab() === 'editor'"
-            [class.text-gray-500]="activeTab() !== 'editor'"
-            [class.hover:bg-gray-100]="activeTab() !== 'editor'"
-            [class.dark:text-gray-400-dark:hover:bg-gray-800]="activeTab() !== 'editor'"
-            (click)="switchTab('editor')"
-          >
-            Editor
-          </button>
-          <button
-            class="w-full rounded-lg px-3 py-2 text-left text-sm transition-colors"
-            [class.bg-emerald-500/20-text-emerald-400]="activeTab() === 'data'"
-            [class.text-gray-500]="activeTab() !== 'data'"
-            [class.hover:bg-gray-100]="activeTab() !== 'data'"
-            [class.dark:text-gray-400-dark:hover:bg-gray-800]="activeTab() !== 'data'"
-            (click)="switchTab('data')"
-          >
-            Data
-          </button>
-          <button
-            class="w-full rounded-lg px-3 py-2 text-left text-sm transition-colors"
-            [class.bg-emerald-500/20-text-emerald-400]="activeTab() === 'connections'"
-            [class.text-gray-500]="activeTab() !== 'connections'"
-            [class.hover:bg-gray-100]="activeTab() !== 'connections'"
-            [class.dark:text-gray-400-dark:hover:bg-gray-800]="activeTab() !== 'connections'"
-            (click)="switchTab('connections')"
-          >
-            Connections
-          </button>
-        </nav>
+        <app-tab-group
+          [tabs]="tabs"
+          [activeTab]="activeTab()"
+          (tabChange)="switchTab($event)"
+        ></app-tab-group>
       </div>
 
       <div class="flex-1 overflow-y-auto p-6">
@@ -84,26 +47,24 @@
             </div>
 
             <div class="flex items-center gap-3">
-              <input
-                type="checkbox"
+              <app-checkbox
                 id="startMinimized"
-                class="rounded border-gray-300 bg-white text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0 dark:border-gray-600 dark:bg-gray-700"
+                variant="gray"
                 [checked]="currentSettings.general.startMinimized"
-                (change)="updateGeneral({ startMinimized: $any($event.target).checked })"
-              />
+                (changed)="updateGeneral({ startMinimized: $event })"
+              ></app-checkbox>
               <label for="startMinimized" class="text-sm text-gray-700 dark:text-gray-300"
                 >Start minimized to tray</label
               >
             </div>
 
             <div class="flex items-center gap-3">
-              <input
-                type="checkbox"
+              <app-checkbox
                 id="checkUpdates"
-                class="rounded border-gray-300 bg-white text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0 dark:border-gray-600 dark:bg-gray-700"
+                variant="gray"
                 [checked]="currentSettings.general.checkUpdates"
-                (change)="updateGeneral({ checkUpdates: $any($event.target).checked })"
-              />
+                (changed)="updateGeneral({ checkUpdates: $event })"
+              ></app-checkbox>
               <label for="checkUpdates" class="text-sm text-gray-700 dark:text-gray-300"
                 >Check for updates on startup</label
               >
@@ -166,26 +127,24 @@
             </div>
 
             <div class="flex items-center gap-3">
-              <input
-                type="checkbox"
+              <app-checkbox
                 id="autoSave"
-                class="rounded border-gray-300 bg-white text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0 dark:border-gray-600 dark:bg-gray-700"
+                variant="gray"
                 [checked]="currentSettings.editor.autoSave"
-                (change)="updateEditor({ autoSave: $any($event.target).checked })"
-              />
+                (changed)="updateEditor({ autoSave: $event })"
+              ></app-checkbox>
               <label for="autoSave" class="text-sm text-gray-700 dark:text-gray-300"
                 >Auto-save editor content</label
               >
             </div>
 
             <div class="flex items-center gap-3">
-              <input
-                type="checkbox"
+              <app-checkbox
                 id="lineNumbers"
-                class="rounded border-gray-300 bg-white text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0 dark:border-gray-600 dark:bg-gray-700"
+                variant="gray"
                 [checked]="currentSettings.editor.lineNumbers"
-                (change)="updateEditor({ lineNumbers: $any($event.target).checked })"
-              />
+                (changed)="updateEditor({ lineNumbers: $event })"
+              ></app-checkbox>
               <label for="lineNumbers" class="text-sm text-gray-700 dark:text-gray-300"
                 >Show line numbers</label
               >
@@ -226,13 +185,12 @@
             </div>
 
             <div class="flex items-center gap-3">
-              <input
-                type="checkbox"
+              <app-checkbox
                 id="confirmBeforeDelete"
-                class="rounded border-gray-300 bg-white text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0 dark:border-gray-600 dark:bg-gray-700"
+                variant="gray"
                 [checked]="currentSettings.data.confirmBeforeDelete"
-                (change)="updateData({ confirmBeforeDelete: $any($event.target).checked })"
-              />
+                (changed)="updateData({ confirmBeforeDelete: $event })"
+              ></app-checkbox>
               <label for="confirmBeforeDelete" class="text-sm text-gray-700 dark:text-gray-300"
                 >Confirm before deleting data</label
               >
@@ -271,13 +229,12 @@
             </div>
 
             <div class="flex items-center gap-3">
-              <input
-                type="checkbox"
+              <app-checkbox
                 id="autoReconnect"
-                class="rounded border-gray-300 bg-white text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0 dark:border-gray-600 dark:bg-gray-700"
+                variant="gray"
                 [checked]="currentSettings.connections.autoReconnect"
-                (change)="updateConnections({ autoReconnect: $any($event.target).checked })"
-              />
+                (changed)="updateConnections({ autoReconnect: $event })"
+              ></app-checkbox>
               <label for="autoReconnect" class="text-sm text-gray-700 dark:text-gray-300"
                 >Auto-reconnect on connection loss</label
               >

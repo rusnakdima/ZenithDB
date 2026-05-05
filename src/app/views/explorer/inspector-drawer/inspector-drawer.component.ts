@@ -1,5 +1,6 @@
 import { Component, input, output, signal, computed, inject } from "@angular/core";
 import { FormsModule } from "@angular/forms";
+import { MatIconModule } from "@angular/material/icon";
 import { ToastService } from "@services/toast.service";
 import { ExportService } from "@shared/services/export.service";
 import { formatJsonLines, highlightJsonLine } from "@shared/utils/json.utils";
@@ -7,7 +8,7 @@ import { formatJsonLines, highlightJsonLine } from "@shared/utils/json.utils";
 @Component({
   selector: "app-inspector-drawer",
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, MatIconModule],
   templateUrl: "./inspector-drawer.component.html",
 })
 export class InspectorDrawerComponent {

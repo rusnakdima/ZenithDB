@@ -1,7 +1,8 @@
-import { Component, inject, signal, computed, OnInit } from "@angular/core";
+import { Component, inject, signal, computed, OnInit, output } from "@angular/core";
 import { Router, ActivatedRoute } from "@angular/router";
 import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
+import { ModalComponent } from "@shared/components/modal/modal.component";
 import { DatabaseService } from "@shared/services/database.service";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { ProviderUtils } from "@shared/utils/provider.utils";
@@ -24,10 +25,12 @@ interface ProviderOption {
 @Component({
   selector: "app-connection-form",
   standalone: true,
-  imports: [FormsModule, MatIconModule],
+  imports: [FormsModule, MatIconModule, ModalComponent],
   templateUrl: "./connection-form.component.html",
 })
 export class ConnectionFormComponent implements OnInit {
+  closed = output<void>();
+
   private db = inject(DatabaseService);
   private connState = inject(ConnectionStateService);
   private providerUtils = inject(ProviderUtils);
@@ -35,6 +38,7 @@ export class ConnectionFormComponent implements OnInit {
   route = inject(ActivatedRoute);
 
   editingId: string | null = null;
+  isEditing = signal(false);
 
   currentStep = signal<WizardStep>(1);
   provider: ProviderType = "json";
@@ -71,7 +75,7 @@ export class ConnectionFormComponent implements OnInit {
     { type: "mysql", label: "MySQL", icon: "storage", description: "MySQL relational DB" },
   ];
 
-  stepTitles = {
+  stepTitles: Record<WizardStep, string> = {
     1: "Choose Provider",
     2: "Connection Details",
     3: "Test & Save",
@@ -81,6 +85,7 @@ export class ConnectionFormComponent implements OnInit {
     const id = this.route.snapshot.paramMap.get("id");
     if (id && id !== "new") {
       this.editingId = id;
+      this.isEditing.set(true);
       this.loadConnectionForEdit(id);
     }
 
@@ -88,6 +93,11 @@ export class ConnectionFormComponent implements OnInit {
     if (duplicateId) {
       this.loadConnectionForDuplicate(duplicateId);
     }
+  }
+
+  onClose() {
+    this.closed.emit();
+    this.router.navigate(["/connections"]);
   }
 
   private async loadConnectionForEdit(id: string) {
@@ -211,7 +221,7 @@ export class ConnectionFormComponent implements OnInit {
         await this.db.deleteConnection(this.editingId);
       }
       await this.db.saveConnection(config);
-      this.router.navigate(["/connections"]);
+      this.onClose();
     } catch (e) {
       console.error("Save failed:", e);
     } finally {
@@ -267,7 +277,7 @@ export class ConnectionFormComponent implements OnInit {
   }
 
   cancel() {
-    this.router.navigate(["/connections"]);
+    this.onClose();
   }
 
   async browseFile(directory: boolean = false) {

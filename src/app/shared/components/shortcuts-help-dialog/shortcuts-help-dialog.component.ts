@@ -1,11 +1,12 @@
 import { Component, inject, HostListener } from "@angular/core";
 import { ModalComponent } from "@shared/components/modal/modal.component";
 import { KeyboardShortcutsService } from "@shared/services/keyboard-shortcuts.service";
+import { KbdBadgeComponent } from "@shared/components/kbd-badge/kbd-badge.component";
 
 @Component({
   selector: "app-shortcuts-help-dialog",
   standalone: true,
-  imports: [ModalComponent],
+  imports: [ModalComponent, KbdBadgeComponent],
   templateUrl: "./shortcuts-help-dialog.component.html",
 })
 export class ShortcutsHelpDialogComponent {

@@ -1,6 +1,8 @@
 import { Component, inject, input, signal, output, OnInit } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { ModalComponent } from "@shared/components/modal/modal.component";
+import { TabGroupComponent, TabItem } from "@shared/components/tab-group/tab-group.component";
+import { CheckboxComponent } from "@shared/components/checkbox/checkbox.component";
 import {
   SettingsService,
   AppSettings,
@@ -15,7 +17,7 @@ type SettingsTab = "general" | "editor" | "data" | "connections";
 @Component({
   selector: "app-settings-dialog",
   standalone: true,
-  imports: [FormsModule, ModalComponent],
+  imports: [FormsModule, ModalComponent, TabGroupComponent, CheckboxComponent],
   templateUrl: "./settings-dialog.component.html",
 })
 export class SettingsDialogComponent implements OnInit {
@@ -30,10 +32,12 @@ export class SettingsDialogComponent implements OnInit {
 
   settings = signal<AppSettings>(this.settingsService.currentSettings);
 
-  generalTab = signal<SettingsTab>("general");
-  editorTab = signal<SettingsTab>("editor");
-  dataTab = signal<SettingsTab>("data");
-  connectionsTab = signal<SettingsTab>("connections");
+  tabs: TabItem[] = [
+    { id: "general", label: "General" },
+    { id: "editor", label: "Editor" },
+    { id: "data", label: "Data" },
+    { id: "connections", label: "Connections" },
+  ];
 
   themeOptions: { value: ThemeSetting; label: string }[] = [
     { value: "dark", label: "Dark" },
@@ -52,8 +56,8 @@ export class SettingsDialogComponent implements OnInit {
     return this.settings();
   }
 
-  switchTab(tab: SettingsTab) {
-    this.activeTab.set(tab);
+  switchTab(tab: string) {
+    this.activeTab.set(tab as SettingsTab);
   }
 
   updateGeneralTheme(theme: ThemeSetting) {

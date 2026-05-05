@@ -9,6 +9,7 @@ import {
   HostListener,
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
+import { MatIconModule } from "@angular/material/icon";
 import { DatabaseService } from "@shared/services/database.service";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { ToastService } from "@services/toast.service";
@@ -30,7 +31,7 @@ interface QueryTab {
 @Component({
   selector: "app-workbench",
   standalone: true,
-  imports: [FormsModule, SqlEditorComponent, OutputConsoleComponent],
+  imports: [FormsModule, MatIconModule, SqlEditorComponent, OutputConsoleComponent],
   templateUrl: "./workbench.component.html",
 })
 export class WorkbenchComponent implements AfterViewInit {

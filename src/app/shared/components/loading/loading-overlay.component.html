@@ -10,19 +10,21 @@
     <div class="flex flex-col items-center gap-4 py-4">
       <div class="relative h-16 w-16">
         <div
-          class="absolute inset-0 animate-spin rounded-full border-4 border-emerald-500/20"
+          class="absolute inset-0 animate-spin rounded-full border-4 border-[var(--accent)]/20"
         ></div>
         <div
-          class="absolute inset-0 animate-spin rounded-full border-4 border-transparent border-t-emerald-500"
+          class="absolute inset-0 animate-spin rounded-full border-4 border-transparent border-t-[var(--accent)]"
           style="animation-delay: -0.15s"
         ></div>
         <div
-          class="absolute inset-3 animate-spin rounded-full border-4 border-transparent border-t-emerald-300/50"
+          class="absolute inset-3 animate-spin rounded-full border-4 border-transparent border-t-[var(--accent)]/50"
           style="animation-delay: -0.3s"
         ></div>
       </div>
       @if (loadingService.loadingMessage()) {
-        <p class="text-sm font-medium text-emerald-400">{{ loadingService.loadingMessage() }}</p>
+        <p class="text-sm font-medium text-[var(--accent)]">
+          {{ loadingService.loadingMessage() }}
+        </p>
       }
     </div>
   </app-modal>

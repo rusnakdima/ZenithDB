@@ -15,10 +15,7 @@
         @for (shortcut of navigationShortcuts; track shortcut.key) {
           <div class="flex items-center justify-between text-sm">
             <span class="text-gray-700 dark:text-gray-300">{{ shortcut.desc }}</span>
-            <kbd
-              class="rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 dark:bg-gray-700 dark:text-gray-200"
-              >{{ shortcut.key }}</kbd
-            >
+            <app-kbd-badge [shortcut]="shortcut.key"></app-kbd-badge>
           </div>
         }
       </div>
@@ -30,10 +27,7 @@
         @for (shortcut of editorShortcuts; track shortcut.key) {
           <div class="flex items-center justify-between text-sm">
             <span class="text-gray-700 dark:text-gray-300">{{ shortcut.desc }}</span>
-            <kbd
-              class="rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 dark:bg-gray-700 dark:text-gray-200"
-              >{{ shortcut.key }}</kbd
-            >
+            <app-kbd-badge [shortcut]="shortcut.key"></app-kbd-badge>
           </div>
         }
       </div>
@@ -46,45 +40,27 @@
       <div class="grid grid-cols-2 gap-4">
         <div class="flex items-center justify-between text-sm">
           <span class="text-gray-700 dark:text-gray-300">Navigate Cells</span>
-          <kbd
-            class="rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 dark:bg-gray-700 dark:text-gray-200"
-            >↑ ↓ ← →</kbd
-          >
+          <app-kbd-badge shortcut="↑ ↓ ← →"></app-kbd-badge>
         </div>
         <div class="flex items-center justify-between text-sm">
           <span class="text-gray-700 dark:text-gray-300">Edit Cell / Confirm</span>
-          <kbd
-            class="rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 dark:bg-gray-700 dark:text-gray-200"
-            >Enter</kbd
-          >
+          <app-kbd-badge shortcut="Enter"></app-kbd-badge>
         </div>
         <div class="flex items-center justify-between text-sm">
           <span class="text-gray-700 dark:text-gray-300">Next Cell</span>
-          <kbd
-            class="rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 dark:bg-gray-700 dark:text-gray-200"
-            >Tab</kbd
-          >
+          <app-kbd-badge shortcut="Tab"></app-kbd-badge>
         </div>
         <div class="flex items-center justify-between text-sm">
           <span class="text-gray-700 dark:text-gray-300">Cancel Edit</span>
-          <kbd
-            class="rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 dark:bg-gray-700 dark:text-gray-200"
-            >Esc</kbd
-          >
+          <app-kbd-badge shortcut="Esc"></app-kbd-badge>
         </div>
         <div class="flex items-center justify-between text-sm">
           <span class="text-gray-700 dark:text-gray-300">Delete Selected Rows</span>
-          <kbd
-            class="rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 dark:bg-gray-700 dark:text-gray-200"
-            >Shift+Del</kbd
-          >
+          <app-kbd-badge shortcut="Shift+Del"></app-kbd-badge>
         </div>
         <div class="flex items-center justify-between text-sm">
           <span class="text-gray-700 dark:text-gray-300">Select All</span>
-          <kbd
-            class="rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 dark:bg-gray-700 dark:text-gray-200"
-            >Ctrl+A</kbd
-          >
+          <app-kbd-badge shortcut="Ctrl+A"></app-kbd-badge>
         </div>
       </div>
     </div>

@@ -1,392 +1,345 @@
-<div class="connections-container">
-  <div class="connections-max-width" style="max-width: 52rem">
-    <div class="connections-header" style="margin-bottom: 1.5rem">
-      <div>
-        <h2 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-          New Connection
-        </h2>
-        <p class="mt-1 text-sm text-slate-500">Follow the steps to configure your database</p>
-      </div>
-      <button (click)="cancel()" class="connections-btn-secondary">Cancel</button>
-    </div>
-
-    <div class="form-card">
-      <div class="mb-8">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <div class="flex items-center">
-              <div
-                class="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-600 text-sm font-bold text-white transition-all"
-              >
-                @if (currentStep() > 1) {
-                  <mat-icon
-                    fontIcon="check"
-                    class="inline-flex items-center justify-center text-xl! text-xs"
-                  ></mat-icon>
-                } @else {
-                  1
-                }
-              </div>
-              <div class="h-1 w-8 bg-emerald-600 transition-all"></div>
-            </div>
-            <div class="flex items-center">
-              <div
-                class="flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold transition-all"
-                [class.bg-emerald-600]="currentStep() >= 2"
-                [class.text-white]="currentStep() >= 2"
-                [class.bg-slate-200]="currentStep() < 2"
-                [class.text-slate-500]="currentStep() < 2"
-                [class.dark:bg-slate-700]="currentStep() < 2"
-                [class.dark:text-slate-400]="currentStep() < 2"
-              >
-                @if (currentStep() > 2) {
-                  <mat-icon
-                    fontIcon="check"
-                    class="inline-flex items-center justify-center text-xl! text-xs"
-                  ></mat-icon>
-                } @else {
-                  2
-                }
-              </div>
-              <div
-                class="h-1 w-8 transition-all"
-                [class.bg-emerald-600]="currentStep() > 2"
-                [class.bg-slate-200]="currentStep() <= 2"
-                [class.dark:bg-slate-700]="currentStep() <= 2"
-              ></div>
-            </div>
-            <div class="flex items-center">
-              <div
-                class="flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold transition-all"
-                [class.bg-emerald-600]="currentStep() >= 3"
-                [class.text-white]="currentStep() >= 3"
-                [class.bg-slate-200]="currentStep() < 3"
-                [class.text-slate-500]="currentStep() < 3"
-                [class.dark:bg-slate-700]="currentStep() < 3"
-                [class.dark:text-slate-400]="currentStep() < 3"
-              >
-                3
-              </div>
-            </div>
-          </div>
-          <span class="text-sm font-medium text-slate-500">{{ stepTitles[currentStep()] }}</span>
-        </div>
-      </div>
-
-      @switch (currentStep()) {
-        @case (1) {
-          <div class="mb-6">
-            <label class="form-label">Select Provider</label>
-            <div class="grid grid-cols-2 gap-3 md:grid-cols-3">
-              @for (p of providers; track p.type) {
-                <button
-                  type="button"
-                  (click)="selectProvider(p.type)"
-                  class="flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-all"
-                  [class.border-emerald-500]="provider === p.type"
-                  [class.bg-emerald-50]="provider === p.type"
-                  [class.dark:bg-emerald-900/20]="provider === p.type"
-                  [class.border-slate-200]="provider !== p.type"
-                  [class.dark:border-slate-700]="provider !== p.type"
-                >
-                  <div
-                    class="flex h-12 w-12 items-center justify-center rounded-lg"
-                    [class.bg-emerald-100]="provider === p.type"
-                    [class.text-emerald-600]="provider === p.type"
-                    [class.bg-slate-100]="provider !== p.type"
-                    [class.text-slate-500]="provider !== p.type"
-                    [class.dark:bg-slate-800]="provider !== p.type"
-                    [class.dark:text-slate-400]="provider !== p.type"
-                  >
-                    <mat-icon
-                      [fontIcon]="p.icon"
-                      class="inline-flex items-center justify-center text-xl text-xl!"
-                    ></mat-icon>
-                  </div>
-                  <span class="text-sm font-medium text-slate-700 dark:text-slate-300">{{
-                    p.label
-                  }}</span>
-                </button>
+<app-modal
+  [open]="true"
+  [title]="isEditing() ? 'Edit Connection' : 'New Connection'"
+  size="md"
+  [showFooter]="false"
+  (closed)="onClose()"
+>
+  <div class="space-y-6">
+    <div class="mb-8">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <div class="flex items-center">
+            <div
+              class="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--accent)] text-sm font-bold text-black transition-all"
+            >
+              @if (currentStep() > 1) {
+                <mat-icon fontIcon="check" class="!text-xs"></mat-icon>
+              } @else {
+                1
               }
             </div>
-          </div>
-
-          <div class="flex justify-end">
-            <button
-              (click)="nextStep()"
-              [disabled]="!isStep1Valid()"
-              class="form-btn form-btn-primary"
-            >
-              Next
-              <mat-icon
-                fontIcon="arrow_forward"
-                class="ml-2 inline-flex items-center justify-center text-xl!"
-              ></mat-icon>
-            </button>
-          </div>
-        }
-        @case (2) {
-          <div class="space-y-5">
-            <div>
-              <label class="form-label">Connection Name</label>
-              <input type="text" [(ngModel)]="name" placeholder="My Database" class="form-input" />
-            </div>
-
-            @if (provider === "json") {
-              <div>
-                <label class="form-label">Folder Path</label>
-                <div class="flex gap-3">
-                  <input
-                    type="text"
-                    [(ngModel)]="path"
-                    placeholder="/path/to/json-databases"
-                    class="form-input"
-                  />
-                  <button type="button" (click)="browseFile(true)" class="form-btn form-btn-browse">
-                    Browse
-                  </button>
-                </div>
-              </div>
-            }
-
-            @if (provider === "mongo") {
-              <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div>
-                  <label class="form-label">Connection URI</label>
-                  <input
-                    type="text"
-                    [(ngModel)]="uri"
-                    placeholder="mongodb://localhost:27017"
-                    class="form-input"
-                  />
-                </div>
-                <div>
-                  <label class="form-label">Database Name</label>
-                  <input type="text" [(ngModel)]="database" placeholder="mydb" class="form-input" />
-                </div>
-              </div>
-            }
-
-            @if (provider === "redis") {
-              <div>
-                <label class="form-label">Connection URI</label>
-                <input
-                  type="text"
-                  [(ngModel)]="uri"
-                  placeholder="redis://localhost:6379"
-                  class="form-input"
-                />
-              </div>
-            }
-
-            @if (provider === "postgres") {
-              <div class="space-y-4">
-                <div>
-                  <label class="form-label">Connection URI</label>
-                  <input
-                    type="text"
-                    [(ngModel)]="uri"
-                    placeholder="postgres://user:pass@localhost:5432/db"
-                    class="form-input"
-                  />
-                </div>
-                <div class="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="ssl-toggle"
-                    [(ngModel)]="useSsl"
-                    class="h-4 w-4 rounded border-slate-300"
-                  />
-                  <label for="ssl-toggle" class="text-sm text-slate-600 dark:text-slate-400"
-                    >Use SSL/TLS</label
-                  >
-                </div>
-              </div>
-            }
-
-            @if (provider === "sqlite") {
-              <div>
-                <label class="form-label">Database File Path</label>
-                <div class="flex gap-3">
-                  <input
-                    type="text"
-                    [(ngModel)]="path"
-                    placeholder="/path/to/database.db"
-                    class="form-input"
-                  />
-                  <button type="button" (click)="browseFile(true)" class="form-btn form-btn-browse">
-                    Browse
-                  </button>
-                </div>
-              </div>
-            }
-
-            @if (provider === "mysql") {
-              <div>
-                <label class="form-label">Connection URI</label>
-                <input
-                  type="text"
-                  [(ngModel)]="uri"
-                  placeholder="mysql://user:pass@localhost:3306/db"
-                  class="form-input"
-                />
-              </div>
-            }
-          </div>
-
-          <div class="mt-6 flex justify-between">
-            <button (click)="prevStep()" class="form-btn form-btn-secondary">
-              <mat-icon
-                fontIcon="arrow_back"
-                class="mr-2 inline-flex items-center justify-center text-xl!"
-              ></mat-icon>
-              Back
-            </button>
-            <button
-              (click)="nextStep()"
-              [disabled]="!isStep2Valid()"
-              class="form-btn form-btn-primary"
-            >
-              Next
-              <mat-icon
-                fontIcon="arrow_forward"
-                class="ml-2 inline-flex items-center justify-center text-xl!"
-              ></mat-icon>
-            </button>
-          </div>
-        }
-        @case (3) {
-          <div class="space-y-5">
             <div
-              class="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/50"
+              class="h-1 w-8 transition-all"
+              [class.bg-[var(--accent)]]="currentStep() > 1"
+              [class.bg-slate-700]="currentStep() <= 1"
+            ></div>
+          </div>
+          <div class="flex items-center">
+            <div
+              class="flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold transition-all"
+              [class.bg-[var(--accent)]]="currentStep() >= 2"
+              [class.text-black]="currentStep() >= 2"
+              [class.bg-slate-700]="currentStep() < 2"
+              [class.text-slate-400]="currentStep() < 2"
             >
-              <h3 class="mb-3 text-sm font-semibold text-slate-700 dark:text-slate-300">
-                Connection Summary
-              </h3>
-              <div class="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span class="text-slate-500">Provider</span>
-                  <p class="font-medium text-slate-900 dark:text-white">
-                    <mat-icon
-                      [fontIcon]="getProviderIcon(provider)"
-                      class="mr-1 inline-flex items-center justify-center text-xl!"
-                    ></mat-icon>
-                    {{ provider }}
-                  </p>
-                </div>
-                <div>
-                  <span class="text-slate-500">Name</span>
-                  <p class="font-medium text-slate-900 dark:text-white">{{ name }}</p>
-                </div>
-                @if (path) {
-                  <div class="col-span-2">
-                    <span class="text-slate-500">File Path</span>
-                    <p class="font-mono text-xs text-slate-700 dark:text-slate-300">{{ path }}</p>
-                  </div>
-                }
-                @if (uri) {
-                  <div class="col-span-2">
-                    <span class="text-slate-500">Connection URI</span>
-                    <p class="font-mono text-xs text-slate-700 dark:text-slate-300">{{ uri }}</p>
-                  </div>
-                }
-                @if (database) {
-                  <div>
-                    <span class="text-slate-500">Database</span>
-                    <p class="font-medium text-slate-900 dark:text-white">{{ database }}</p>
-                  </div>
-                }
-              </div>
+              @if (currentStep() > 2) {
+                <mat-icon fontIcon="check" class="!text-xs"></mat-icon>
+              } @else {
+                2
+              }
             </div>
+            <div
+              class="h-1 w-8 transition-all"
+              [class.bg-[var(--accent)]]="currentStep() > 2"
+              [class.bg-slate-700]="currentStep() <= 2"
+            ></div>
+          </div>
+          <div class="flex items-center">
+            <div
+              class="flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold transition-all"
+              [class.bg-[var(--accent)]]="currentStep() >= 3"
+              [class.text-black]="currentStep() >= 3"
+              [class.bg-slate-700]="currentStep() < 3"
+              [class.text-slate-400]="currentStep() < 3"
+            >
+              3
+            </div>
+          </div>
+        </div>
+        <span class="text-sm font-medium text-[var(--text-dim)]">{{
+          stepTitles[currentStep()]
+        }}</span>
+      </div>
+    </div>
 
-            <div>
+    @switch (currentStep()) {
+      @case (1) {
+        <div class="mb-6">
+          <label class="form-label">Select Provider</label>
+          <div class="grid grid-cols-2 gap-3 md:grid-cols-3">
+            @for (p of providers; track p.type) {
               <button
                 type="button"
-                (click)="testConnection()"
-                [disabled]="testing()"
-                class="form-btn form-btn-secondary w-full"
+                (click)="selectProvider(p.type)"
+                class="flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-all"
+                [class.border-[var(--accent)]]="provider === p.type"
+                [class.bg-[var(--accent-muted)]]]="provider === p.type"
+                [class.border-slate-700]="provider !== p.type"
               >
-                @if (testing()) {
-                  <mat-icon
-                    fontIcon="sync"
-                    class="fa-spin mr-2 inline-flex items-center justify-center text-xl"
-                  ></mat-icon>
-                  Testing...
-                } @else {
-                  <mat-icon
-                    fontIcon="link"
-                    class="mr-2 inline-flex items-center justify-center text-xl"
-                  ></mat-icon>
-                  Test Connection
-                }
-              </button>
-            </div>
-
-            @if (testResult()) {
-              <div
-                class="form-result"
-                [class.form-result-success]="testResult()!.healthy"
-                [class.form-result-error]="!testResult()!.healthy"
-              >
-                <div class="flex items-start gap-3">
-                  <div class="mt-0.5">
-                    @if (testResult()!.healthy) {
-                      <mat-icon fontIcon="check" class="text-xl! text-emerald-500"></mat-icon>
-                    } @else {
-                      <mat-icon
-                        fontIcon="close"
-                        class="inline-flex items-center justify-center text-xl! text-red-500"
-                      ></mat-icon>
-                    }
-                  </div>
-                  <div>
-                    <p
-                      class="form-result-text"
-                      [class.form-result-text-success]="testResult()!.healthy"
-                      [class.form-result-text-error]="!testResult()!.healthy"
-                    >
-                      @if (testResult()!.healthy) {
-                        Connection successful!
-                      } @else {
-                        Connection failed: {{ testResult()!.message }}
-                      }
-                    </p>
-                  </div>
+                <div
+                  class="flex h-12 w-12 items-center justify-center rounded-lg"
+                  [class.bg-[var(--accent-muted)]]]="provider === p.type"
+                  [class.text-[var(--accent)]]]="provider === p.type"
+                  [class.bg-slate-800]="provider !== p.type"
+                  [class.text-slate-400]="provider !== p.type"
+                >
+                  <mat-icon [fontIcon]="p.icon" class="!text-xl"></mat-icon>
                 </div>
-              </div>
+                <span class="text-sm font-medium text-[var(--text-main)]">{{ p.label }}</span>
+              </button>
             }
           </div>
+        </div>
 
-          <div class="mt-6 flex justify-between">
-            <button (click)="prevStep()" class="form-btn form-btn-secondary">
-              <mat-icon
-                fontIcon="arrow_back"
-                class="mr-2 inline-flex items-center justify-center text-xl!"
-              ></mat-icon>
-              Back
-            </button>
+        <div class="flex justify-end gap-3">
+          <button
+            (click)="onClose()"
+            class="rounded-xl border border-[var(--border-visible)] bg-[var(--bg-elevated)] px-6 py-3 text-sm font-bold text-[var(--text-main)] transition-all hover:bg-[var(--bg-card)]"
+          >
+            Cancel
+          </button>
+          <button
+            (click)="nextStep()"
+            [disabled]="!isStep1Valid()"
+            class="rounded-xl bg-[var(--accent)] px-6 py-3 text-sm font-bold text-black transition-all hover:opacity-90 disabled:opacity-50"
+          >
+            Next
+            <mat-icon fontIcon="arrow_forward" class="ml-2 !text-base"></mat-icon>
+          </button>
+        </div>
+      }
+      @case (2) {
+        <div class="space-y-5">
+          <div>
+            <label class="form-label">Connection Name</label>
+            <input type="text" [(ngModel)]="name" placeholder="My Database" class="form-input" />
+          </div>
+
+          @if (provider === "json") {
+            <div>
+              <label class="form-label">Folder Path</label>
+              <div class="flex gap-3">
+                <input
+                  type="text"
+                  [(ngModel)]="path"
+                  placeholder="/path/to/json-databases"
+                  class="form-input flex-1"
+                />
+                <button type="button" (click)="browseFile(true)" class="form-btn form-btn-browse">
+                  Browse
+                </button>
+              </div>
+            </div>
+          }
+
+          @if (provider === "mongo") {
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div>
+                <label class="form-label">Connection URI</label>
+                <input
+                  type="text"
+                  [(ngModel)]="uri"
+                  placeholder="mongodb://localhost:27017"
+                  class="form-input"
+                />
+              </div>
+              <div>
+                <label class="form-label">Database Name</label>
+                <input type="text" [(ngModel)]="database" placeholder="mydb" class="form-input" />
+              </div>
+            </div>
+          }
+
+          @if (provider === "redis") {
+            <div>
+              <label class="form-label">Connection URI</label>
+              <input
+                type="text"
+                [(ngModel)]="uri"
+                placeholder="redis://localhost:6379"
+                class="form-input"
+              />
+            </div>
+          }
+
+          @if (provider === "postgres") {
+            <div class="space-y-4">
+              <div>
+                <label class="form-label">Connection URI</label>
+                <input
+                  type="text"
+                  [(ngModel)]="uri"
+                  placeholder="postgres://user:pass@localhost:5432/db"
+                  class="form-input"
+                />
+              </div>
+              <div class="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="ssl-toggle"
+                  [(ngModel)]="useSsl"
+                  class="h-4 w-4 rounded border-slate-600 bg-slate-800"
+                />
+                <label for="ssl-toggle" class="text-sm text-[var(--text-dim)]">Use SSL/TLS</label>
+              </div>
+            </div>
+          }
+
+          @if (provider === "sqlite") {
+            <div>
+              <label class="form-label">Database File Path</label>
+              <div class="flex gap-3">
+                <input
+                  type="text"
+                  [(ngModel)]="path"
+                  placeholder="/path/to/database.db"
+                  class="form-input flex-1"
+                />
+                <button type="button" (click)="browseFile(true)" class="form-btn form-btn-browse">
+                  Browse
+                </button>
+              </div>
+            </div>
+          }
+
+          @if (provider === "mysql") {
+            <div>
+              <label class="form-label">Connection URI</label>
+              <input
+                type="text"
+                [(ngModel)]="uri"
+                placeholder="mysql://user:pass@localhost:3306/db"
+                class="form-input"
+              />
+            </div>
+          }
+        </div>
+
+        <div class="mt-6 flex justify-between">
+          <button (click)="prevStep()" class="form-btn form-btn-secondary">
+            <mat-icon fontIcon="arrow_back" class="mr-2 !text-base"></mat-icon>
+            Back
+          </button>
+          <button
+            (click)="nextStep()"
+            [disabled]="!isStep2Valid()"
+            class="rounded-xl bg-[var(--accent)] px-6 py-3 text-sm font-bold text-black transition-all hover:opacity-90 disabled:opacity-50"
+          >
+            Next
+            <mat-icon fontIcon="arrow_forward" class="ml-2 !text-base"></mat-icon>
+          </button>
+        </div>
+      }
+      @case (3) {
+        <div class="space-y-5">
+          <div class="rounded-xl border border-[var(--border-visible)] bg-[var(--bg-elevated)] p-4">
+            <h3 class="mb-3 text-sm font-semibold text-[var(--text-main)]">Connection Summary</h3>
+            <div class="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span class="text-[var(--text-dim)]">Provider</span>
+                <p class="font-medium text-[var(--text-main)]">
+                  <mat-icon
+                    [fontIcon]="getProviderIcon(provider)"
+                    class="mr-1 !text-base"
+                  ></mat-icon>
+                  {{ provider }}
+                </p>
+              </div>
+              <div>
+                <span class="text-[var(--text-dim)]">Name</span>
+                <p class="font-medium text-[var(--text-main)]">{{ name }}</p>
+              </div>
+              @if (path) {
+                <div class="col-span-2">
+                  <span class="text-[var(--text-dim)]">File Path</span>
+                  <p class="font-mono text-xs text-[var(--text-dim)]">{{ path }}</p>
+                </div>
+              }
+              @if (uri) {
+                <div class="col-span-2">
+                  <span class="text-[var(--text-dim)]">Connection URI</span>
+                  <p class="font-mono text-xs text-[var(--text-dim)]">{{ uri }}</p>
+                </div>
+              }
+              @if (database) {
+                <div>
+                  <span class="text-[var(--text-dim)]">Database</span>
+                  <p class="font-medium text-[var(--text-main)]">{{ database }}</p>
+                </div>
+              }
+            </div>
+          </div>
+
+          <div>
             <button
-              (click)="save()"
-              [disabled]="!testResult()?.healthy || saving()"
-              class="form-btn form-btn-primary"
+              type="button"
+              (click)="testConnection()"
+              [disabled]="testing()"
+              class="w-full rounded-xl border border-[var(--border-visible)] bg-[var(--bg-elevated)] px-6 py-3 text-sm font-bold text-[var(--text-main)] transition-all hover:bg-[var(--bg-card)] disabled:opacity-50"
             >
-              @if (saving()) {
-                <mat-icon
-                  fontIcon="sync"
-                  class="fa-spin mr-2 inline-flex items-center justify-center text-xl!"
-                ></mat-icon>
-                Saving...
+              @if (testing()) {
+                <mat-icon fontIcon="sync" class="fa-spin mr-2 !text-base"></mat-icon>
+                Testing...
               } @else {
-                <mat-icon
-                  fontIcon="save"
-                  class="mr-2 inline-flex items-center justify-center text-xl!"
-                ></mat-icon>
-                Save Connection
+                <mat-icon fontIcon="link" class="mr-2 !text-base"></mat-icon>
+                Test Connection
               }
             </button>
           </div>
-        }
+
+          @if (testResult()) {
+            <div
+              class="flex items-center gap-3 rounded-xl border p-4"
+              [class]="
+                testResult()!.healthy
+                  ? 'border-emerald-800 bg-emerald-900/30'
+                  : 'border-red-800 bg-red-900/30'
+              "
+            >
+              <div class="mt-0.5">
+                @if (testResult()!.healthy) {
+                  <mat-icon fontIcon="check_circle" class="!text-xl text-green-500"></mat-icon>
+                } @else {
+                  <mat-icon fontIcon="error" class="!text-xl text-red-500"></mat-icon>
+                }
+              </div>
+              <div>
+                <p
+                  class="text-sm font-medium"
+                  [class]="testResult()!.healthy ? 'text-green-400' : 'text-red-400'"
+                >
+                  @if (testResult()!.healthy) {
+                    Connection successful!
+                  } @else {
+                    Connection failed: {{ testResult()!.message }}
+                  }
+                </p>
+              </div>
+            </div>
+          }
+        </div>
+
+        <div class="mt-6 flex justify-between">
+          <button (click)="prevStep()" class="form-btn form-btn-secondary">
+            <mat-icon fontIcon="arrow_back" class="mr-2 !text-base"></mat-icon>
+            Back
+          </button>
+          <button
+            (click)="save()"
+            [disabled]="!testResult()?.healthy || saving()"
+            class="rounded-xl bg-[var(--accent)] px-6 py-3 text-sm font-bold text-black transition-all hover:opacity-90 disabled:opacity-50"
+          >
+            @if (saving()) {
+              <mat-icon fontIcon="sync" class="fa-spin mr-2 !text-base"></mat-icon>
+              Saving...
+            } @else {
+              <mat-icon fontIcon="save" class="mr-2 !text-base"></mat-icon>
+              Save Connection
+            }
+          </button>
+        </div>
       }
-    </div>
+    }
   </div>
-</div>
+</app-modal>

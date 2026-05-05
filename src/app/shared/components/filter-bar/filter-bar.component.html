@@ -1,11 +1,13 @@
 <div
-  class="filter-bar flex items-center gap-4 border-b border-slate-800 bg-slate-900/80 px-4 py-3"
+  class="filter-bar flex items-center gap-4 border-b border-[var(--border-subtle)] bg-[var(--bg-sidebar)] px-4 py-3"
   (click)="closeDropdowns($event)"
 >
   <div
     class="filter-input-wrapper dropdown-container relative flex max-w-xl flex-1 items-center gap-2"
   >
-    <span class="text-xs font-semibold tracking-wider text-slate-500 uppercase">Filter</span>
+    <span class="text-xs font-semibold tracking-wider text-[var(--text-dim)] uppercase"
+      >Filter</span
+    >
     <input
       type="text"
       [value]="localFilter"
@@ -13,10 +15,10 @@
       (keyup.enter)="onApply()"
       (focus)="showHistory.set(false)"
       placeholder='{ "status": "active" }'
-      class="flex-1 rounded-md border bg-slate-800 px-3 py-2 font-mono text-sm transition-colors focus:outline-none"
-      [class.border-emerald-500]="isValidFilter()"
+      class="flex-1 rounded-md border bg-[var(--bg-input)] px-3 py-2 font-mono text-sm transition-colors focus:border-[var(--accent)] focus:outline-none"
+      [class.border-[var(--accent)]]="isValidFilter()"
       [class.border-red-500]="!isValidFilter()"
-      [class.text-green-400]="isValidFilter()"
+      [class.text-[var(--text-main)]]="isValidFilter()"
       [class.text-red-400]="!isValidFilter()"
     />
     @if (!isValidFilter()) {
@@ -24,44 +26,37 @@
     }
     <div class="dropdown-container relative">
       <button
-        class="rounded p-2 text-slate-400 transition-colors hover:bg-slate-800 hover:text-slate-300"
+        class="rounded p-2 text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--text-main)]"
         title="Filter history"
         (click)="toggleHistory(); $event.stopPropagation()"
       >
-        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
+        <mat-icon fontIcon="history" class="!text-xl"></mat-icon>
       </button>
       @if (showHistory()) {
         <div
-          class="absolute top-full left-0 z-50 mt-1 w-80 rounded-lg border border-slate-700 bg-slate-800 shadow-xl"
+          class="absolute top-full left-0 z-50 mt-1 w-80 rounded-lg border border-[var(--border-visible)] bg-[var(--bg-card)] shadow-xl"
         >
-          <div class="flex items-center justify-between border-b border-slate-700 p-2">
-            <span class="text-xs font-semibold text-slate-400">Recent Filters</span>
+          <div class="flex items-center justify-between border-b border-[var(--border-subtle)] p-2">
+            <span class="text-xs font-semibold text-[var(--text-dim)]">Recent Filters</span>
             @if (filterHistory().length > 0) {
-              <button class="text-xs text-slate-500 hover:text-red-400" (click)="clearHistory()">
+              <button
+                class="text-xs text-[var(--text-dim)] hover:text-red-400"
+                (click)="clearHistory()"
+              >
                 Clear all
               </button>
             }
           </div>
           @if (filterHistory().length === 0) {
-            <div class="p-4 text-center text-sm text-slate-500">No recent filters</div>
+            <div class="p-4 text-center text-sm text-[var(--text-dim)]">No recent filters</div>
           } @else {
             <div class="max-h-64 overflow-y-auto">
               @for (item of filterHistory(); track item) {
                 <button
-                  class="flex w-full items-center gap-2 px-3 py-2 text-left font-mono text-sm text-green-400 transition-colors hover:bg-slate-700/50"
+                  class="flex w-full items-center gap-2 px-3 py-2 text-left font-mono text-sm text-[var(--accent)] transition-colors hover:bg-[var(--bg-elevated)]"
                   (click)="useHistoryItem(item); $event.stopPropagation()"
                 >
-                  <svg
-                    class="h-3 w-3 text-slate-500"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+                  <mat-icon fontIcon="history" class="!text-xl text-[var(--text-muted)]"></mat-icon>
                   {{ item }}
                 </button>
               }
@@ -74,164 +69,94 @@
 
   <div class="filter-actions flex items-center gap-2">
     <button
-      class="rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
+      class="rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-medium text-black transition-colors hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-50"
       [disabled]="!isValidFilter()"
       (click)="onApply()"
     >
       Apply
     </button>
     <button
-      class="rounded-md bg-slate-700 px-4 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-slate-600"
+      class="rounded-md border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-4 py-2 text-sm font-medium text-[var(--text-main)] transition-colors hover:bg-[var(--bg-card)]"
       (click)="onClear()"
     >
       Clear
     </button>
   </div>
 
-  <div class="h-6 w-px bg-slate-700"></div>
+  <div class="h-6 w-px bg-[var(--border-subtle)]"></div>
 
   <div class="dropdown-container relative">
     <button
-      class="flex items-center gap-2 rounded-md bg-slate-700 px-3 py-2 text-sm text-slate-300 transition-colors hover:bg-slate-600"
+      class="flex items-center gap-2 rounded-md border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-2 text-sm text-[var(--text-main)] transition-colors hover:bg-[var(--bg-card)]"
       (click)="toggleExportMenu(); $event.stopPropagation()"
     >
-      <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-      </svg>
+      <mat-icon fontIcon="download" class="!text-xl"></mat-icon>
       Export
-      <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M6 9l6 6 6-6" />
-      </svg>
+      <mat-icon fontIcon="expand_more" class="!text-xl"></mat-icon>
     </button>
     @if (showExportMenu()) {
       <div
-        class="absolute top-full right-0 z-50 mt-1 w-40 rounded-lg border border-slate-700 bg-slate-800 shadow-xl"
+        class="absolute top-full right-0 z-50 mt-1 w-40 rounded-lg border border-[var(--border-visible)] bg-[var(--bg-card)] shadow-xl"
       >
         <button
-          class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-300 transition-colors hover:bg-slate-700/50"
+          class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-[var(--text-main)] transition-colors hover:bg-[var(--bg-elevated)]"
           (click)="onExport('csv'); $event.stopPropagation()"
         >
-          <svg
-            class="h-4 w-4 text-emerald-400"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-            <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" />
-          </svg>
+          <mat-icon fontIcon="table_chart" class="!text-xl text-[var(--accent)]"></mat-icon>
           Export CSV
         </button>
         <button
-          class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-300 transition-colors hover:bg-slate-700/50"
+          class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-[var(--text-main)] transition-colors hover:bg-[var(--bg-elevated)]"
           (click)="onExport('json'); $event.stopPropagation()"
         >
-          <svg
-            class="h-4 w-4 text-blue-400"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path d="M4 6h4v12H4V6zm12 0h4v12h-4V6zM8 4v16M16 4v16" />
-          </svg>
+          <mat-icon fontIcon="data_object" class="!text-xl text-blue-400"></mat-icon>
           Export JSON
         </button>
         <button
-          class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-300 transition-colors hover:bg-slate-700/50"
+          class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-[var(--text-main)] transition-colors hover:bg-[var(--bg-elevated)]"
           (click)="onExport('sql'); $event.stopPropagation()"
         >
-          <svg
-            class="h-4 w-4 text-amber-400"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path d="M4 7h16M4 12h10M4 17h6" />
-          </svg>
+          <mat-icon fontIcon="code" class="!text-xl text-amber-400"></mat-icon>
           Export SQL
         </button>
       </div>
     }
   </div>
 
-  <div class="h-6 w-px bg-slate-700"></div>
+  <div class="h-6 w-px bg-[var(--border-subtle)]"></div>
 
   <button
-    class="rounded bg-slate-700 p-2 text-slate-400 transition-colors hover:bg-slate-600 hover:text-slate-300"
+    class="rounded border border-[var(--border-subtle)] bg-[var(--bg-elevated)] p-2 text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-card)] hover:text-[var(--text-main)]"
     (click)="onRefresh()"
     title="Refresh"
   >
-    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path
-        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-      />
-    </svg>
+    <mat-icon fontIcon="refresh" class="!text-xl"></mat-icon>
   </button>
-
-  <div class="view-actions flex items-center gap-1">
-    <button
-      class="rounded p-2 transition-colors"
-      [class.bg-emerald-600]="viewMode === 'grid'"
-      [class.text-white]="viewMode === 'grid'"
-      [class.bg-slate-700]="viewMode !== 'grid'"
-      [class.text-slate-400]="viewMode !== 'grid'"
-      [class.hover:text-slate-300]="viewMode !== 'grid'"
-      (click)="onToggleView()"
-      title="Grid View"
-    >
-      <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M3 3h7v7H3zm11 0h7v7h-7zM3 14h7v7H3zm11 0h7v7h-7z" />
-      </svg>
-    </button>
-    <button
-      class="rounded p-2 transition-colors"
-      [class.bg-emerald-600]="viewMode === 'json'"
-      [class.text-white]="viewMode === 'json'"
-      [class.bg-slate-700]="viewMode !== 'json'"
-      [class.text-slate-400]="viewMode !== 'json'"
-      [class.hover:text-slate-300]="viewMode !== 'json'"
-      (click)="onToggleView()"
-      title="JSON View"
-    >
-      <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M4 6h4v12H4V6zm12 0h4v12h-4V6zM8 4v16M16 4v16" />
-      </svg>
-    </button>
-  </div>
 
   <div class="dropdown-container relative">
     <button
-      class="flex items-center gap-2 rounded-md bg-slate-700 px-3 py-2 text-sm text-slate-300 transition-colors hover:bg-slate-600"
+      class="flex items-center gap-2 rounded-md border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-2 text-sm text-[var(--text-main)] transition-colors hover:bg-[var(--bg-card)]"
       (click)="toggleColumnChooser(); $event.stopPropagation()"
     >
-      <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path
-          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-        />
-      </svg>
+      <mat-icon fontIcon="view_column" class="!text-xl"></mat-icon>
       Columns
-      <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M6 9l6 6 6-6" />
-      </svg>
+      <mat-icon fontIcon="expand_more" class="!text-xl"></mat-icon>
     </button>
     @if (showColumnChooser()) {
       <div
-        class="absolute top-full right-0 z-50 mt-1 w-56 rounded-lg border border-slate-700 bg-slate-800 shadow-xl"
+        class="absolute top-full right-0 z-50 mt-1 w-56 rounded-lg border border-[var(--border-visible)] bg-[var(--bg-card)] shadow-xl"
       >
-        <div class="flex items-center justify-between border-b border-slate-700 p-2">
-          <span class="text-xs font-semibold text-slate-400">Visible Columns</span>
+        <div class="flex items-center justify-between border-b border-[var(--border-subtle)] p-2">
+          <span class="text-xs font-semibold text-[var(--text-dim)]">Visible Columns</span>
           <div class="flex gap-2">
             <button
-              class="text-xs text-emerald-400 hover:text-emerald-300"
+              class="text-xs text-[var(--accent)] hover:text-[var(--accent-hover)]"
               (click)="selectAllColumns()"
             >
               All
             </button>
             <button
-              class="text-xs text-slate-500 hover:text-slate-300"
+              class="text-xs text-[var(--text-dim)] hover:text-[var(--text-main)]"
               (click)="deselectAllColumns()"
             >
               None
@@ -241,19 +166,19 @@
         <div class="max-h-64 overflow-y-auto p-2">
           @for (col of availableColumns; track col) {
             <label
-              class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 transition-colors hover:bg-slate-700/50"
+              class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 transition-colors hover:bg-[var(--bg-elevated)]"
             >
               <input
                 type="checkbox"
-                class="rounded border-slate-600 bg-slate-700 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0"
+                class="rounded border-[var(--border-visible)] bg-[var(--bg-input)] text-[var(--accent)] focus:ring-[var(--accent)] focus:ring-offset-0"
                 [checked]="selectedColumns().has(col)"
                 (change)="toggleColumn(col)"
               />
-              <span class="text-sm text-slate-300">{{ col }}</span>
+              <span class="text-sm text-[var(--text-main)]">{{ col }}</span>
             </label>
           }
           @if (availableColumns.length === 0) {
-            <div class="p-2 text-center text-sm text-slate-500">No columns available</div>
+            <div class="p-2 text-center text-sm text-[var(--text-dim)]">No columns available</div>
           }
         </div>
       </div>

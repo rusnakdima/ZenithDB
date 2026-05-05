@@ -1,11 +1,12 @@
 import { Component, Input, Output, EventEmitter, signal, computed, OnInit } from "@angular/core";
 import { FormsModule } from "@angular/forms";
+import { MatIconModule } from "@angular/material/icon";
 import { ToastService } from "@services/toast.service";
 
 @Component({
   selector: "app-filter-bar",
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, MatIconModule],
   templateUrl: "./filter-bar.component.html",
 })
 export class FilterBarComponent implements OnInit {
@@ -166,16 +167,19 @@ export class FilterBarComponent implements OnInit {
       }
       return newSet;
     });
+    this.columnsChange.emit(this.getSelectedColumns());
   }
 
   selectAllColumns() {
     const all = new Set<string>();
     this.availableColumns.forEach((c) => all.add(c));
     this.selectedColumns.set(all);
+    this.columnsChange.emit(this.getSelectedColumns());
   }
 
   deselectAllColumns() {
     this.selectedColumns.set(new Set());
+    this.columnsChange.emit([]);
   }
 
   getSelectedColumns(): string[] {

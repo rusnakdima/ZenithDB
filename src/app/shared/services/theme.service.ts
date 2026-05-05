@@ -2,15 +2,17 @@ import { Injectable, signal, computed, effect, Inject, PLATFORM_ID } from "@angu
 import { isPlatformBrowser } from "@angular/common";
 import { SettingsService } from "./settings.service";
 
+export type ThemeMode = "dark" | "light";
+
 @Injectable({ providedIn: "root" })
 export class ThemeService {
-  isDarkMode = computed(() => {
-    const theme = this.settingsService.currentSettings.general.theme;
-    if (theme === "system") {
-      return this.getSystemPreference();
-    }
-    return theme === "dark";
-  });
+  private _themeMode = signal<ThemeMode>("dark");
+
+  themeMode = this._themeMode.asReadonly();
+
+  isDarkMode = computed(() => this._themeMode() === "dark");
+
+  accentColor = computed(() => "var(--accent)");
 
   constructor(
     @Inject(PLATFORM_ID) private platformId: object,
@@ -18,15 +20,15 @@ export class ThemeService {
   ) {
     if (isPlatformBrowser(platformId)) {
       effect(() => {
-        this.applyTheme(this.isDarkMode());
+        this.applyTheme(this._themeMode());
       });
     }
   }
 
-  private applyTheme(dark: boolean): void {
+  private applyTheme(mode: ThemeMode): void {
     if (typeof document === "undefined") return;
     document.documentElement.classList.remove("dark", "light");
-    document.documentElement.classList.add(dark ? "dark" : "light");
+    document.documentElement.classList.add(mode);
   }
 
   getSystemPreference(): boolean {
@@ -34,7 +36,22 @@ export class ThemeService {
   }
 
   toggle(): void {
-    const currentDark = this.isDarkMode();
-    this.settingsService.updateGeneral({ theme: currentDark ? "light" : "dark" });
+    const newMode = this._themeMode() === "dark" ? "light" : "dark";
+    this._themeMode.set(newMode);
+    this.settingsService.updateGeneral({ theme: newMode });
+  }
+
+  setTheme(mode: ThemeMode): void {
+    this._themeMode.set(mode);
+    this.settingsService.updateGeneral({ theme: mode });
+  }
+
+  initFromSettings(): void {
+    const theme = this.settingsService.currentSettings.general.theme;
+    if (theme === "system") {
+      this._themeMode.set(this.getSystemPreference() ? "dark" : "light");
+    } else {
+      this._themeMode.set(theme as ThemeMode);
+    }
   }
 }
