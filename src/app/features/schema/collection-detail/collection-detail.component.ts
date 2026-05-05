@@ -11,6 +11,7 @@ import { SortableHeaderComponent } from "@shared/components/sortable-header/sort
 import { DataTypeBadgeComponent } from "@shared/components/data-type-badge/data-type-badge.component";
 import { PageContainerComponent } from "@shared/components/page-container/page-container.component";
 import { ModalComponent } from "@shared/components/modal/modal.component";
+import { CheckboxComponent } from "@shared/components/checkbox/checkbox.component";
 
 interface FieldInfo {
   name: string;
@@ -40,6 +41,7 @@ interface IndexInfo {
     DataTypeBadgeComponent,
     PageContainerComponent,
     ModalComponent,
+    CheckboxComponent,
   ],
   templateUrl: "./collection-detail.component.html",
 })
