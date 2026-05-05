@@ -12,11 +12,12 @@ import {
 import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
 import { ToastService } from "@services/toast.service";
+import { CheckboxComponent } from "@shared/components/checkbox/checkbox.component";
 
 @Component({
   selector: "app-filter-bar",
   standalone: true,
-  imports: [FormsModule, MatIconModule],
+  imports: [FormsModule, MatIconModule, CheckboxComponent],
   templateUrl: "./filter-bar.component.html",
 })
 export class FilterBarComponent implements OnInit, OnChanges {
