@@ -98,11 +98,9 @@
                 cdkDropListOrientation="horizontal"
               >
                 <th class="w-10 border-r border-b border-[var(--border-subtle)] p-3 text-center">
-                  <input
-                    type="checkbox"
-                    class="accent-[var(--accent)]"
+                  <app-checkbox
                     [checked]="allSelected"
-                    (change)="toggleSelectAll()"
+                    (changed)="toggleSelectAll()"
                   />
                 </th>
                 @for (col of columns; track col.name) {
@@ -144,11 +142,9 @@
                   (click)="onRowClick(row, $event)"
                 >
                   <td class="p-3 text-center" (click)="$event.stopPropagation()">
-                    <input
-                      type="checkbox"
-                      class="accent-[var(--accent)]"
+                    <app-checkbox
                       [checked]="isSelected(rowIndex)"
-                      (change)="toggleRow(rowIndex)"
+                      (changed)="toggleRow(rowIndex)"
                     />
                   </td>
                   @for (col of columns; track col.name) {
