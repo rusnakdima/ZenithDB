@@ -1,4 +1,5 @@
 use crate::commands::connection::ConnectionConfigEnum;
+use crate::commands::error_utils::ToStringError;
 use crate::commands::get_connection_entry;
 use crate::dispatch_provider;
 use nosql_orm::prelude::*;
@@ -16,7 +17,7 @@ pub struct RawResult {
 pub async fn create_collection(conn_id: &str, name: &str) -> Result<(), String> {
     let entry = get_connection_entry(conn_id).await?;
     dispatch_provider!(entry, provider => {
-        provider.create_collection(name, None).await.map_err(|e| e.to_string())
+        provider.create_collection(name, None).await.map_err_string()
     })
 }
 
@@ -24,7 +25,7 @@ pub async fn create_collection(conn_id: &str, name: &str) -> Result<(), String> 
 pub async fn drop_collection(conn_id: &str, name: &str) -> Result<(), String> {
     let entry = get_connection_entry(conn_id).await?;
     dispatch_provider!(entry, provider => {
-        provider.drop_collection(name).await.map_err(|e| e.to_string())
+        provider.drop_collection(name).await.map_err_string()
     })
 }
 
@@ -32,7 +33,7 @@ pub async fn drop_collection(conn_id: &str, name: &str) -> Result<(), String> {
 pub async fn execute_raw(conn_id: &str, sql: &str) -> Result<RawResult, String> {
     let entry = get_connection_entry(conn_id).await?;
     dispatch_provider!(entry, provider => {
-        let result = provider.execute_raw(sql, vec![]).await.map_err(|e| e.to_string())?;
+        let result = provider.execute_raw(sql, vec![]).await.map_err_string()?;
         Ok(RawResult {
             columns: result.columns,
             rows: result.rows,
@@ -50,18 +51,12 @@ pub async fn get_server_version(conn_id: &str) -> Result<String, String> {
         ConnectionConfigEnum::Redis { .. } => Ok("Redis".to_string()),
         ConnectionConfigEnum::Postgres { uri, .. } => {
             let provider = crate::commands::provider::create_postgres_provider(uri).await?;
-            provider
-                .get_server_version()
-                .await
-                .map_err(|e| e.to_string())
+            provider.get_server_version().await.map_err_string()
         }
         ConnectionConfigEnum::Sqlite { .. } => Ok("SQLite".to_string()),
         ConnectionConfigEnum::MySql { uri, .. } => {
             let provider = crate::commands::provider::create_mysql_provider(uri).await?;
-            provider
-                .get_server_version()
-                .await
-                .map_err(|e| e.to_string())
+            provider.get_server_version().await.map_err_string()
         }
     }
 }

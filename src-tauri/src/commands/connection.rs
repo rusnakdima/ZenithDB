@@ -70,7 +70,7 @@ pub struct ConnectionHealth {
 }
 
 impl ConnectionHealth {
-    pub fn ok(provider: &str) -> Self {
+    fn ok(provider: &str) -> Self {
         Self {
             healthy: true,
             provider: provider.to_string(),
@@ -78,7 +78,7 @@ impl ConnectionHealth {
             latency_ms: None,
         }
     }
-    pub fn err(msg: &str) -> Self {
+    fn err(msg: &str) -> Self {
         Self {
             healthy: false,
             provider: String::new(),
@@ -150,7 +150,13 @@ impl Default for ConnectionStore {
 }
 
 pub fn store() -> Arc<RwLock<ConnectionStore>> {
-    Arc::new(RwLock::new(ConnectionStore::load().unwrap_or_default()))
+    Arc::new(RwLock::new(ConnectionStore::load().unwrap_or_else(|e| {
+        eprintln!(
+            "WARNING: Failed to load connection store: {}, using empty store",
+            e
+        );
+        ConnectionStore::default()
+    })))
 }
 
 fn get_connection_type(config: &ConnectionConfig) -> &'static str {
@@ -187,7 +193,7 @@ pub async fn list_connections() -> Result<Vec<ConnectionSummary>, String> {
     let store = store.read().await;
     let mut summaries = Vec::new();
     for c in store.connections.iter() {
-        let status = check_connection_status(&c.config).await;
+        let status = health_status_from_config(&c.config).await;
         summaries.push(ConnectionSummary {
             id: c.id.clone(),
             name: c.config.name.clone(),
@@ -198,47 +204,64 @@ pub async fn list_connections() -> Result<Vec<ConnectionSummary>, String> {
     Ok(summaries)
 }
 
-async fn check_connection_status(config: &ConnectionConfig) -> String {
+async fn check_provider_health(config: &ConnectionConfig) -> ConnectionHealth {
     match &config.config {
         ConnectionConfigEnum::Json { path, .. } => match create_json_provider(path).await {
             Ok(p) => {
-                if p.health_check().await.unwrap_or(false) {
-                    "connected".to_string()
-                } else {
-                    "disconnected".to_string()
+                let healthy = p.health_check().await.unwrap_or(false);
+                ConnectionHealth {
+                    healthy,
+                    provider: "json".to_string(),
+                    server_version: Some("N/A".to_string()),
+                    latency_ms: None,
                 }
             }
-            Err(_) => "disconnected".to_string(),
+            Err(e) => ConnectionHealth::err(&e),
         },
         ConnectionConfigEnum::Mongo { uri, database, .. } => {
             match create_mongo_provider(uri, database).await {
-                Ok(_) => "connected".to_string(),
-                Err(_) => "disconnected".to_string(),
+                Ok(_) => ConnectionHealth::ok("mongo"),
+                Err(e) => ConnectionHealth::err(&e),
             }
         }
         ConnectionConfigEnum::Redis { uri, .. } => match create_redis_provider(uri).await {
             Ok(p) => {
-                if p.health_check().await.unwrap_or(false) {
-                    "connected".to_string()
-                } else {
-                    "disconnected".to_string()
+                let healthy = p.health_check().await.unwrap_or(false);
+                ConnectionHealth {
+                    healthy,
+                    provider: "redis".to_string(),
+                    server_version: Some("N/A".to_string()),
+                    latency_ms: None,
                 }
             }
-            Err(_) => "disconnected".to_string(),
+            Err(e) => ConnectionHealth::err(&e),
         },
         ConnectionConfigEnum::Postgres { uri, .. } => match create_postgres_provider(uri).await {
-            Ok(_) => "connected".to_string(),
-            Err(_) => "disconnected".to_string(),
+            Ok(_) => ConnectionHealth::ok("postgres"),
+            Err(e) => ConnectionHealth::err(&e),
         },
         ConnectionConfigEnum::Sqlite { path, .. } => match create_sqlite_provider(path).await {
-            Ok(_) => "connected".to_string(),
-            Err(_) => "disconnected".to_string(),
+            Ok(_) => ConnectionHealth::ok("sqlite"),
+            Err(e) => ConnectionHealth::err(&e),
         },
         ConnectionConfigEnum::MySql { uri, .. } => match create_mysql_provider(uri).await {
-            Ok(_) => "connected".to_string(),
-            Err(_) => "disconnected".to_string(),
+            Ok(_) => ConnectionHealth::ok("mysql"),
+            Err(e) => ConnectionHealth::err(&e),
         },
     }
+}
+
+fn health_to_status(health: &ConnectionHealth) -> String {
+    if health.healthy {
+        "connected".to_string()
+    } else {
+        "disconnected".to_string()
+    }
+}
+
+async fn health_status_from_config(config: &ConnectionConfig) -> String {
+    let health = check_provider_health(config).await;
+    health_to_status(&health)
 }
 
 #[tauri::command]
@@ -276,48 +299,5 @@ pub async fn get_connection(id: &str) -> Result<ConnectionConfigResult, String> 
 
 #[tauri::command]
 pub async fn test_connection(config: ConnectionConfig) -> Result<ConnectionHealth, String> {
-    match &config.config {
-        ConnectionConfigEnum::Json { path, .. } => match create_json_provider(path).await {
-            Ok(p) => {
-                let healthy = p.health_check().await.unwrap_or(false);
-                Ok(ConnectionHealth {
-                    healthy,
-                    provider: "json".to_string(),
-                    server_version: Some("N/A".to_string()),
-                    latency_ms: None,
-                })
-            }
-            Err(e) => Ok(ConnectionHealth::err(&e)),
-        },
-        ConnectionConfigEnum::Mongo { uri, database, .. } => {
-            match create_mongo_provider(uri, database).await {
-                Ok(_) => Ok(ConnectionHealth::ok("mongo")),
-                Err(e) => Ok(ConnectionHealth::err(&e)),
-            }
-        }
-        ConnectionConfigEnum::Redis { uri, .. } => match create_redis_provider(uri).await {
-            Ok(p) => {
-                let healthy = p.health_check().await.unwrap_or(false);
-                Ok(ConnectionHealth {
-                    healthy,
-                    provider: "redis".to_string(),
-                    server_version: Some("N/A".to_string()),
-                    latency_ms: None,
-                })
-            }
-            Err(e) => Ok(ConnectionHealth::err(&e)),
-        },
-        ConnectionConfigEnum::Postgres { uri, .. } => match create_postgres_provider(uri).await {
-            Ok(_) => Ok(ConnectionHealth::ok("postgres")),
-            Err(e) => Ok(ConnectionHealth::err(&e)),
-        },
-        ConnectionConfigEnum::Sqlite { path, .. } => match create_sqlite_provider(path).await {
-            Ok(_) => Ok(ConnectionHealth::ok("sqlite")),
-            Err(e) => Ok(ConnectionHealth::err(&e)),
-        },
-        ConnectionConfigEnum::MySql { uri, .. } => match create_mysql_provider(uri).await {
-            Ok(_) => Ok(ConnectionHealth::ok("mysql")),
-            Err(e) => Ok(ConnectionHealth::err(&e)),
-        },
-    }
+    Ok(check_provider_health(&config).await)
 }

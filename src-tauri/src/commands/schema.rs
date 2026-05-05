@@ -1,4 +1,5 @@
 use crate::commands::connection::ConnectionConfigEnum;
+use crate::commands::error_utils::ToStringError;
 use crate::commands::get_connection_entry;
 use crate::dispatch_provider;
 use nosql_orm::prelude::*;
@@ -49,9 +50,9 @@ pub async fn list_collections(conn_id: &str) -> Result<Vec<CollectionMeta>, Stri
             let path_obj = std::path::Path::new(path);
             if path_obj.is_dir() {
                 let collections: Vec<CollectionMeta> = std::fs::read_dir(path_obj)
-                    .map_err(|e| e.to_string())?
+                    .map_err_string()?
                     .filter_map(|e| e.ok())
-                    .filter(|e| e.path().extension().map_or(false, |ext| ext == "json"))
+                    .filter(|e| e.path().extension().is_some_and(|ext| ext == "json"))
                     .filter_map(|e| {
                         let file_path = e.path();
                         let name = e
@@ -82,7 +83,7 @@ pub async fn list_collections(conn_id: &str) -> Result<Vec<CollectionMeta>, Stri
         }
         _ => {
             dispatch_provider!(entry, provider => {
-                let collections = provider.list_collections().await.map_err(|e| e.to_string())?;
+                let collections = provider.list_collections().await.map_err_string()?;
                 Ok(collections
                     .into_iter()
                     .map(|c| CollectionMeta {
@@ -103,10 +104,10 @@ pub async fn describe_collection(
     let entry = get_connection_entry(conn_id).await?;
 
     let (schema, indexes) = dispatch_provider!(entry, provider => {
-        let schema = provider.describe_collection(collection).await.map_err(|e| e.to_string())?;
+        let schema = provider.describe_collection(collection).await.map_err_string()?;
         let indexes = nosql_orm::provider::SchemaIntrospection::list_indexes(&provider, collection)
             .await
-            .map_err(|e| e.to_string())?;
+            .map_err_string()?;
         Ok::<_, String>((schema, indexes))
     })?;
 
@@ -145,7 +146,7 @@ pub async fn get_collection_stats(
     let entry = get_connection_entry(conn_id).await?;
 
     let stats = dispatch_provider!(entry, provider => {
-        provider.get_collection_stats(collection).await.map_err(|e| e.to_string())
+        provider.get_collection_stats(collection).await.map_err_string()
     })?;
 
     Ok(CollectionStats {

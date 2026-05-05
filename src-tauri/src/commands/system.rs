@@ -42,7 +42,6 @@ pub fn get_system_status() -> Result<SystemMetrics, String> {
     sys.refresh_memory();
 
     let cpu_usage = sys.global_cpu_usage();
-    let cpu_usage = if cpu_usage.is_nan() { 0.0 } else { cpu_usage };
     let ram_used = sys.used_memory();
     let ram_total = sys.total_memory();
 

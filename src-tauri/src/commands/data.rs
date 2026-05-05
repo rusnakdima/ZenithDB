@@ -1,4 +1,5 @@
 use crate::commands::connection::ConnectionConfigEnum;
+use crate::commands::error_utils::ToStringError;
 use crate::commands::get_connection_entry;
 use crate::dispatch_provider;
 use nosql_orm::prelude::*;
@@ -23,7 +24,7 @@ pub struct QueryResult {
 
 fn parse_filter(filter_val: Option<Value>) -> Result<Option<Filter>, String> {
     match filter_val {
-        Some(val) => Filter::from_json(&val).map_err(|e| e.to_string()).map(Some),
+        Some(val) => Filter::from_json(&val).map_err_string().map(Some),
         None => Ok(None),
     }
 }
@@ -42,11 +43,11 @@ pub async fn query_data(
     let sort_asc = query.direction.as_deref() != Some("desc");
 
     let (data, total) = dispatch_provider!(entry, provider => {
-        let total = provider.count(collection, filter.as_ref()).await.map_err(|e| e.to_string())?;
+        let total = provider.count(collection, filter.as_ref()).await.map_err_string()?;
         let data = provider
             .find_many(collection, filter.as_ref(), skip, limit, sort_by, sort_asc)
             .await
-            .map_err(|e| e.to_string())?;
+            .map_err_string()?;
         Ok::<_, String>((data, total))
     })?;
 
@@ -68,11 +69,11 @@ pub async fn save_row(conn_id: &str, collection: &str, data: Value) -> Result<Va
     let entry = get_connection_entry(conn_id).await?;
     dispatch_provider!(entry, provider => {
         if let Some(id) = data.get("id").and_then(|v| v.as_str()) {
-            if provider.exists(collection, id).await.map_err(|e| e.to_string())? {
-                return provider.update(collection, id, data.clone()).await.map_err(|e| e.to_string());
+            if provider.exists(collection, id).await.map_err_string()? {
+                return provider.update(collection, id, data.clone()).await.map_err_string();
             }
         }
-        provider.insert(collection, data).await.map_err(|e| e.to_string())
+        provider.insert(collection, data).await.map_err_string()
     })
 }
 
@@ -80,7 +81,7 @@ pub async fn save_row(conn_id: &str, collection: &str, data: Value) -> Result<Va
 pub async fn delete_row(conn_id: &str, collection: &str, id: &str) -> Result<(), String> {
     let entry = get_connection_entry(conn_id).await?;
     dispatch_provider!(entry, provider => {
-        provider.delete(collection, id).await.map_err(|e| e.to_string())?;
+        provider.delete(collection, id).await.map_err_string()?;
         Ok(())
     })
 }
