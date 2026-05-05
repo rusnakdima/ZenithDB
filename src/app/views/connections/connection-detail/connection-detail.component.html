@@ -6,13 +6,13 @@
           routerLink="/connections"
           class="text-[var(--text-dim)] transition-colors hover:text-[var(--accent)]"
         >
-          <mat-icon fontIcon="arrow_back" class="!text-xl"></mat-icon>
+          <mat-icon fontIcon="arrow_back" class="h-5! w-5! text-xl!" />
         </a>
         <div>
           <h2
             class="flex items-center gap-3 text-2xl font-bold tracking-tight text-[var(--text-main)]"
           >
-            <mat-icon [fontIcon]="providerIcon()" class="!text-xl text-[var(--accent)]"></mat-icon>
+            <mat-icon [fontIcon]="providerIcon()" class="h-5! w-5! text-xl! text-[var(--accent)]" />
             {{ connectionName() || "Connection Details" }}
           </h2>
           <p class="mt-1 text-sm text-[var(--text-dim)]">{{ provider() | titlecase }} connection</p>
@@ -22,7 +22,7 @@
         [routerLink]="['/connections', connectionId(), 'edit']"
         class="form-btn form-btn-secondary"
       >
-        <mat-icon fontIcon="edit" class="mr-2 !text-base"></mat-icon>
+        <mat-icon fontIcon="edit" class="mr-2 h-5! w-5! text-xl!" />
         Edit
       </a>
     </div>
@@ -65,7 +65,6 @@
                 </span>
               </div>
             </div>
-            <app-status-badge [status]="connectionStatus" />
           </div>
         </div>
 
@@ -75,7 +74,7 @@
               >Server Version</span
             >
             <div class="mt-3 flex items-center gap-2">
-              <mat-icon fontIcon="code" class="!text-xl text-[var(--accent)]"></mat-icon>
+              <mat-icon fontIcon="code" class="h-5! w-5! text-xl! text-[var(--accent)]" />
               <span class="font-mono text-lg text-[var(--text-main)]">{{ serverVersion() }}</span>
             </div>
           </div>
@@ -86,7 +85,7 @@
             >Collections</span
           >
           <div class="mt-3 flex items-center gap-2">
-            <mat-icon fontIcon="storage" class="!text-xl text-[var(--accent)]"></mat-icon>
+            <mat-icon fontIcon="storage" class="h-5! w-5! text-xl! text-[var(--accent)]" />
             <span class="font-mono text-lg text-[var(--text-main)]">{{
               collections().length
             }}</span>
@@ -101,19 +100,19 @@
           class="form-btn form-btn-secondary"
         >
           @if (testing()) {
-            <mat-icon fontIcon="sync" class="fa-spin mr-2 !text-base"></mat-icon> Testing...
+            <mat-icon fontIcon="sync" class="mr-2 h-5! w-5! text-xl!" /> Testing...
           } @else {
-            <mat-icon fontIcon="link" class="mr-2 !text-base"></mat-icon> Test Connection
+            <mat-icon fontIcon="link" class="mr-2 h-5! w-5! text-xl!" /> Test Connection
           }
         </button>
 
         <button (click)="refresh()" class="form-btn form-btn-secondary">
-          <mat-icon fontIcon="refresh" class="mr-2 !text-base"></mat-icon>
+          <mat-icon fontIcon="refresh" class="mr-2 h-5! w-5! text-xl!" />
           Refresh
         </button>
 
         <a routerLink="/explorer" class="form-btn form-btn-primary">
-          <mat-icon fontIcon="search" class="mr-2 !text-base"></mat-icon>
+          <mat-icon fontIcon="search" class="mr-2 h-5! w-5! text-xl!" />
           Explore
         </a>
 
@@ -121,7 +120,7 @@
           (click)="deleteConnection()"
           class="ml-auto rounded-xl border border-red-900/50 bg-red-900/20 px-4 py-3 text-sm font-medium text-red-400 transition-colors hover:bg-red-900/30"
         >
-          <mat-icon fontIcon="delete" class="mr-2 !text-base"></mat-icon>
+          <mat-icon fontIcon="delete" class="mr-2 h-5! w-5! text-xl!" />
           Delete
         </button>
       </div>

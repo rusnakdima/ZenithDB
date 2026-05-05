@@ -1,13 +1,12 @@
-import { Component, input, output } from "@angular/core";
-import { MatCheckboxModule } from "@angular/material/checkbox";
+import { Component, input, output, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 
-export type CheckboxVariant = "emerald" | "gray";
+export type CheckboxVariant = "accent" | "gray";
 
 @Component({
   selector: "app-checkbox",
   standalone: true,
-  imports: [MatCheckboxModule, FormsModule],
+  imports: [FormsModule],
   templateUrl: "./checkbox.component.html",
   styleUrl: "./checkbox.component.css",
 })
@@ -16,7 +15,7 @@ export class CheckboxComponent {
   checked = input<boolean>(false);
   disabled = input<boolean>(false);
   label = input<string>("");
-  variant = input<CheckboxVariant>("emerald");
+  variant = input<CheckboxVariant>("accent");
 
   changed = output<boolean>();
 

@@ -29,16 +29,24 @@ export class InspectorDrawerComponent {
 
   documentId = computed(() => {
     const doc = this.document();
-    return doc?._id || doc?.id || "Unknown";
+    return doc?.["_id"] || doc?.["id"] || "Unknown";
   });
 
   metadata = computed(() => {
     const doc = this.document();
     if (!doc) return [];
     return [
-      { key: "_id", value: doc._id || doc.id || "N/A", isInternal: true },
-      { key: "_createdAt", value: doc._createdAt || doc.createdAt || "N/A", isInternal: true },
-      { key: "_updatedAt", value: doc._updatedAt || doc.updatedAt || "N/A", isInternal: true },
+      { key: "_id", value: doc["_id"] || doc["id"] || "N/A", isInternal: true },
+      {
+        key: "_createdAt",
+        value: doc["_createdAt"] || doc["createdAt"] || "N/A",
+        isInternal: true,
+      },
+      {
+        key: "_updatedAt",
+        value: doc["_updatedAt"] || doc["updatedAt"] || "N/A",
+        isInternal: true,
+      },
     ];
   });
 

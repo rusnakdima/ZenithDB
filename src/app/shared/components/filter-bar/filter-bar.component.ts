@@ -23,6 +23,7 @@ export class FilterBarComponent implements OnInit, OnChanges {
   @Input() filter = "";
   @Input() viewMode: "grid" | "json" = "grid";
   @Input() availableColumns: string[] = [];
+  @Input() disabledColumns: string[] = [];
 
   @Output() filterChange = new EventEmitter<string>();
   @Output() apply = new EventEmitter<void>();
@@ -40,9 +41,26 @@ export class FilterBarComponent implements OnInit, OnChanges {
   selectedColumns = signal<Set<string>>(new Set());
   isValidFilter = signal(true);
   filterError = signal("");
+  showAutocomplete = signal(false);
+  autocompleteFiltered = signal<string[]>([]);
+  selectedAutocompleteIndex = signal(-1);
 
   private readonly STORAGE_KEY = "zenithdb_filter_history";
   private readonly MAX_HISTORY = 10;
+
+  private readonly OPERATORS = [
+    "eq",
+    "neq",
+    "gt",
+    "gte",
+    "lt",
+    "lte",
+    "contains",
+    "startsWith",
+    "endsWith",
+    "in",
+    "notIn",
+  ];
 
   ngOnInit() {
     this.loadHistory();
@@ -64,19 +82,87 @@ export class FilterBarComponent implements OnInit, OnChanges {
       if (stored) {
         this.filterHistory.set(JSON.parse(stored));
       }
-    } catch {}
+    } catch (e) {
+      console.error("Failed to load filter history, continuing with defaults:", e);
+    }
   }
 
   saveHistory() {
     try {
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.filterHistory()));
-    } catch {}
+    } catch (e) {
+      console.error("Failed to save filter history:", e);
+    }
   }
 
   onFilterInput(value: string) {
     this.localFilter = value;
     this.filterChange.emit(value);
     this.validateFilter(value);
+    this.updateAutocomplete(value);
+  }
+
+  private updateAutocomplete(value: string): void {
+    const quoteCount = (value.match(/"/g) || []).length;
+    if (quoteCount < 2) {
+      this.showAutocomplete.set(false);
+      return;
+    }
+
+    const lastQuoteIndex = value.lastIndexOf('"');
+    const afterLastQuote = value.substring(lastQuoteIndex + 1);
+    const lastPart = afterLastQuote.split(/[,\s:]/).pop() || "";
+    const query = lastPart.toLowerCase();
+
+    if (this.availableColumns.length > 0) {
+      this.showHistory.set(false);
+      const filtered = this.availableColumns.filter((col) => col.toLowerCase().includes(query));
+      this.autocompleteFiltered.set(filtered.slice(0, 10));
+      this.showAutocomplete.set(filtered.length > 0);
+      this.selectedAutocompleteIndex.set(-1);
+    } else {
+      this.showAutocomplete.set(false);
+    }
+  }
+
+  onAutocompleteKeydown(event: KeyboardEvent): void {
+    if (!this.showAutocomplete()) return;
+
+    const items = this.autocompleteFiltered();
+
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      this.selectedAutocompleteIndex.update((i) => Math.min(i + 1, items.length - 1));
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      this.selectedAutocompleteIndex.update((i) => Math.max(i - 1, -1));
+    } else if (event.key === "Enter" || event.key === "Tab") {
+      event.preventDefault();
+      if (this.selectedAutocompleteIndex() >= 0) {
+        this.selectAutocomplete(items[this.selectedAutocompleteIndex()]);
+      }
+    } else if (event.key === "Escape") {
+      this.showAutocomplete.set(false);
+    }
+  }
+
+  selectAutocomplete(field: string): void {
+    const value = this.localFilter;
+    const quoteCount = (value.match(/"/g) || []).length;
+    if (quoteCount < 2) return;
+
+    const lastQuoteIndex = value.lastIndexOf('"');
+    const beforeQuote = value.substring(0, lastQuoteIndex + 1);
+    const afterQuote = value.substring(lastQuoteIndex + 1);
+
+    const match = afterQuote.match(/[,\s:]*$/);
+    const prefix = match ? match[0] : "";
+    const afterPrefix = afterQuote.substring(prefix.length);
+
+    this.localFilter = beforeQuote + prefix + field + afterPrefix + " ";
+    this.filterChange.emit(this.localFilter);
+    this.showAutocomplete.set(false);
+    this.selectedAutocompleteIndex.set(-1);
   }
 
   validateFilter(value: string) {
@@ -177,6 +263,8 @@ export class FilterBarComponent implements OnInit, OnChanges {
   }
 
   toggleColumn(col: string) {
+    console.log("[FilterBar] toggleColumn called:", col, "disabled:", this.isColumnDisabled(col));
+    if (this.isColumnDisabled(col)) return;
     this.selectedColumns.update((selected) => {
       const newSet = new Set(selected);
       if (newSet.has(col)) {
@@ -186,7 +274,12 @@ export class FilterBarComponent implements OnInit, OnChanges {
       }
       return newSet;
     });
+    console.log("[FilterBar] emitting columnsChange with:", this.getSelectedColumns());
     this.columnsChange.emit(this.getSelectedColumns());
+  }
+
+  isColumnDisabled(col: string): boolean {
+    return this.disabledColumns.includes(col);
   }
 
   selectAllColumns() {
@@ -211,6 +304,7 @@ export class FilterBarComponent implements OnInit, OnChanges {
       this.showHistory.set(false);
       this.showExportMenu.set(false);
       this.showColumnChooser.set(false);
+      this.showAutocomplete.set(false);
     }
   }
 }

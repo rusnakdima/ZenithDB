@@ -14,7 +14,7 @@
               class="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--accent)] text-sm font-bold text-black transition-all"
             >
               @if (currentStep() > 1) {
-                <mat-icon fontIcon="check" class="!text-xs"></mat-icon>
+                <mat-icon fontIcon="check" class="h-4! w-4! text-2xl!" />
               } @else {
                 1
               }
@@ -34,7 +34,7 @@
               [class.text-slate-400]="currentStep() < 2"
             >
               @if (currentStep() > 2) {
-                <mat-icon fontIcon="check" class="!text-xs"></mat-icon>
+                <mat-icon fontIcon="check" class="h-4! w-4! text-2xl!" />
               } @else {
                 2
               }
@@ -84,7 +84,7 @@
                   [class.bg-slate-800]="provider !== p.type"
                   [class.text-slate-400]="provider !== p.type"
                 >
-                  <mat-icon [fontIcon]="p.icon" class="!text-xl"></mat-icon>
+                  <mat-icon [fontIcon]="p.icon" class="h-6! w-6! text-2xl!" />
                 </div>
                 <span class="text-sm font-medium text-[var(--text-main)]">{{ p.label }}</span>
               </button>
@@ -105,7 +105,7 @@
             class="rounded-xl bg-[var(--accent)] px-6 py-3 text-sm font-bold text-black transition-all hover:opacity-90 disabled:opacity-50"
           >
             Next
-            <mat-icon fontIcon="arrow_forward" class="ml-2 !text-base"></mat-icon>
+            <mat-icon fontIcon="arrow_forward" class="ml-2 h-5! w-5! text-2xl!" />
           </button>
         </div>
       }
@@ -218,7 +218,7 @@
 
         <div class="mt-6 flex justify-between">
           <button (click)="prevStep()" class="form-btn form-btn-secondary">
-            <mat-icon fontIcon="arrow_back" class="mr-2 !text-base"></mat-icon>
+            <mat-icon fontIcon="arrow_back" class="mr-2 h-5! w-5! text-2xl!" />
             Back
           </button>
           <button
@@ -227,7 +227,7 @@
             class="rounded-xl bg-[var(--accent)] px-6 py-3 text-sm font-bold text-black transition-all hover:opacity-90 disabled:opacity-50"
           >
             Next
-            <mat-icon fontIcon="arrow_forward" class="ml-2 !text-base"></mat-icon>
+            <mat-icon fontIcon="arrow_forward" class="ml-2 h-5! w-5! text-2xl!" />
           </button>
         </div>
       }
@@ -241,8 +241,8 @@
                 <p class="font-medium text-[var(--text-main)]">
                   <mat-icon
                     [fontIcon]="getProviderIcon(provider)"
-                    class="mr-1 !text-base"
-                  ></mat-icon>
+                    class="mr-1 h-5! w-5! text-2xl!"
+                  />
                   {{ provider }}
                 </p>
               </div>
@@ -279,10 +279,10 @@
               class="w-full rounded-xl border border-[var(--border-visible)] bg-[var(--bg-elevated)] px-6 py-3 text-sm font-bold text-[var(--text-main)] transition-all hover:bg-[var(--bg-card)] disabled:opacity-50"
             >
               @if (testing()) {
-                <mat-icon fontIcon="sync" class="fa-spin mr-2 !text-base"></mat-icon>
+                <mat-icon fontIcon="sync" class="mr-2 h-5! w-5! text-2xl!" />
                 Testing...
               } @else {
-                <mat-icon fontIcon="link" class="mr-2 !text-base"></mat-icon>
+                <mat-icon fontIcon="link" class="mr-2 h-5! w-5! text-2xl!" />
                 Test Connection
               }
             </button>
@@ -299,9 +299,9 @@
             >
               <div class="mt-0.5">
                 @if (testResult()!.healthy) {
-                  <mat-icon fontIcon="check_circle" class="!text-xl text-green-500"></mat-icon>
+                  <mat-icon fontIcon="check_circle" class="h-6! w-6! text-2xl! text-green-500" />
                 } @else {
-                  <mat-icon fontIcon="error" class="!text-xl text-red-500"></mat-icon>
+                  <mat-icon fontIcon="error" class="h-6! w-6! text-2xl! text-red-500" />
                 }
               </div>
               <div>
@@ -322,7 +322,7 @@
 
         <div class="mt-6 flex justify-between">
           <button (click)="prevStep()" class="form-btn form-btn-secondary">
-            <mat-icon fontIcon="arrow_back" class="mr-2 !text-base"></mat-icon>
+            <mat-icon fontIcon="arrow_back" class="mr-2 h-5! w-5! text-2xl!" />
             Back
           </button>
           <button
@@ -331,10 +331,10 @@
             class="rounded-xl bg-[var(--accent)] px-6 py-3 text-sm font-bold text-black transition-all hover:opacity-90 disabled:opacity-50"
           >
             @if (saving()) {
-              <mat-icon fontIcon="sync" class="fa-spin mr-2 !text-base"></mat-icon>
+              <mat-icon fontIcon="sync" class="mr-2 h-5! w-5! text-2xl!" />
               Saving...
             } @else {
-              <mat-icon fontIcon="save" class="mr-2 !text-base"></mat-icon>
+              <mat-icon fontIcon="save" class="mr-2 h-5! w-5! text-2xl!" />
               Save Connection
             }
           </button>

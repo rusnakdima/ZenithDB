@@ -1,6 +1,8 @@
 import { Injectable } from "@angular/core";
 
-export type ProviderType = "json" | "mongo" | "redis" | "postgres" | "sqlite" | "mysql";
+import { ProviderType } from "@shared/models/provider.model";
+
+export type { ProviderType };
 
 const ICON_MAP: Record<ProviderType, string> = {
   json: "description",

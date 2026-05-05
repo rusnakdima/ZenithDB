@@ -1,4 +1,4 @@
-import { Injectable, signal, NgZone, inject } from "@angular/core";
+import { Injectable, signal, NgZone, inject, DestroyRef } from "@angular/core";
 import { Router } from "@angular/router";
 import {
   SHORTCUT_CONFIG,
@@ -6,11 +6,13 @@ import {
   parseKeyEvent,
   ShortcutCategory,
 } from "./keyboard-shortcuts.models";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 
 @Injectable({ providedIn: "root" })
 export class KeyboardShortcutsService {
   private router = inject(Router);
   private zone = inject(NgZone);
+  private destroyRef = inject(DestroyRef);
 
   private listeners = new Map<string, Set<(event: KeyboardEvent) => void>>();
   private enabled = signal(true);
@@ -33,27 +35,36 @@ export class KeyboardShortcutsService {
     "duplicate-line": () => document.dispatchEvent(new CustomEvent("zenith:duplicate-line")),
   };
 
+  private boundHandler: ((event: KeyboardEvent) => void) | null = null;
+
   constructor() {
     this.initGlobalListener();
+    this.destroyRef.onDestroy(() => {
+      if (this.boundHandler) {
+        document.removeEventListener("keydown", this.boundHandler);
+        this.boundHandler = null;
+      }
+    });
   }
 
   private initGlobalListener(): void {
+    this.boundHandler = (event: KeyboardEvent) => {
+      if (!this.enabled()) return;
+      if (this.shouldIgnoreEvent(event)) return;
+
+      const action = this.matchShortcut(event);
+      if (action) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        this.zone.run(() => {
+          this.dispatchAction(action, event);
+          this.notifyListeners(action, event);
+        });
+      }
+    };
     this.zone.runOutsideAngular(() => {
-      document.addEventListener("keydown", (event: KeyboardEvent) => {
-        if (!this.enabled()) return;
-        if (this.shouldIgnoreEvent(event)) return;
-
-        const action = this.matchShortcut(event);
-        if (action) {
-          event.preventDefault();
-          event.stopPropagation();
-
-          this.zone.run(() => {
-            this.dispatchAction(action, event);
-            this.notifyListeners(action, event);
-          });
-        }
-      });
+      document.addEventListener("keydown", this.boundHandler!);
     });
   }
 

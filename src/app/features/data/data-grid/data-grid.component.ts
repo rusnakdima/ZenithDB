@@ -1,6 +1,7 @@
 import {
   Component,
   OnInit,
+  OnDestroy,
   inject,
   Input,
   Output,
@@ -13,13 +14,16 @@ import {
 import { CdkDragDrop, CdkDrag, CdkDropList, moveItemInArray } from "@angular/cdk/drag-drop";
 import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
+import { DataProviderService } from "@shared/services/data-provider.service";
 import { DatabaseService } from "@shared/services/database.service";
 import { ToastService } from "@services/toast.service";
 import { ExportService } from "@shared/services/export.service";
-import { JsonHighlighterService } from "@shared/services/json-highlighter.service";
-import { ColumnInfo } from "@shared/models/connection.config";
+import { ColumnInfo, RowData, FilterExpression } from "@shared/models/connection.config";
+import { formatJsonLines, highlightJsonLine } from "@shared/utils/json.utils";
 import { DataTypeBadgeComponent } from "@shared/components/data-type-badge/data-type-badge.component";
 import { SortableHeaderComponent } from "@shared/components/sortable-header/sortable-header.component";
+import { PaginationComponent } from "@shared/components/pagination/pagination.component";
+import { withErrorHandling } from "@shared/utils/error-handler.utils";
 
 @Component({
   selector: "app-data-grid",
@@ -29,12 +33,18 @@ import { SortableHeaderComponent } from "@shared/components/sortable-header/sort
     MatIconModule,
     DataTypeBadgeComponent,
     SortableHeaderComponent,
+    PaginationComponent,
     CdkDrag,
     CdkDropList,
   ],
   templateUrl: "./data-grid.component.html",
 })
-export class DataGridComponent implements OnInit, OnChanges {
+export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
+  private isResizingInProgress = false;
+  private resizeMoveHandler: ((e: MouseEvent) => void) | null = null;
+  private resizeUpHandler: (() => void) | null = null;
+  protected readonly MAX_PAGE_SIZE = 1000;
+
   @Input() collectionName = "";
   @Input() filter = "";
   @Input() page = 0;
@@ -42,14 +52,18 @@ export class DataGridComponent implements OnInit, OnChanges {
   @Input() showInspector = false;
   @Input() viewMode: "grid" | "json" = "grid";
   @Input() inputVisibleColumns: string[] = [];
-  @Output() documentClick = new EventEmitter<any>();
+  @Input() reloadTrigger = 0;
+  @Output() documentClick = new EventEmitter<RowData>();
   @Output() pageChange = new EventEmitter<number>();
   @Output() viewModeChange = new EventEmitter<"grid" | "json">();
+
+  dataTruncated = false;
 
   private lastCollectionName = "";
   private lastFilter = "";
   private lastPageNum = -1;
   private lastPageSizeNum = -1;
+  private lastReloadTrigger = 0;
 
   ngOnChanges(changes: SimpleChanges) {
     if (!this.collectionName) return;
@@ -59,8 +73,20 @@ export class DataGridComponent implements OnInit, OnChanges {
     const pageChanged = changes["page"]?.currentValue !== this.lastPageNum;
     const pageSizeChanged = changes["pageSize"]?.currentValue !== this.lastPageSizeNum;
     const visibleColumnsChanged = changes["inputVisibleColumns"]?.currentValue !== undefined;
+    const reloadTriggerChanged = changes["reloadTrigger"]?.currentValue !== this.lastReloadTrigger;
+
+    console.log("[DataGrid] ngOnChanges called", {
+      collectionChanged,
+      filterChanged,
+      pageChanged,
+      pageSizeChanged,
+      visibleColumnsChanged,
+      reloadTriggerChanged,
+      inputVisibleColumns: this.inputVisibleColumns,
+    });
 
     if (collectionChanged) {
+      console.log("[DataGrid] collectionChanged, calling loadColumns() and loadData()");
       this.lastCollectionName = this.collectionName;
       this.lastFilter = this.filter;
       this.lastPageNum = this.page;
@@ -68,6 +94,7 @@ export class DataGridComponent implements OnInit, OnChanges {
       this.loadColumns();
       this.loadData();
     } else if (filterChanged || pageChanged || pageSizeChanged) {
+      console.log("[DataGrid] filter/page/pageSize changed, calling loadData()");
       this.lastFilter = this.filter;
       this.lastPageNum = this.page;
       this.lastPageSizeNum = this.pageSize;
@@ -75,15 +102,19 @@ export class DataGridComponent implements OnInit, OnChanges {
     }
 
     if (visibleColumnsChanged) {
+      console.log("[DataGrid] visibleColumnsChanged, updating local state only");
       this.visibleColumns.set(new Set(this.inputVisibleColumns));
       this.columnOrder.set([...this.inputVisibleColumns]);
-      if (!collectionChanged && !filterChanged && !pageChanged && !pageSizeChanged) {
-        this.loadData();
-      }
+    }
+
+    if (reloadTriggerChanged) {
+      console.log("[DataGrid] reloadTriggerChanged, calling loadData()");
+      this.lastReloadTrigger = this.reloadTrigger;
+      this.loadData();
     }
   }
 
-  data: any[] = [];
+  data: RowData[] = [];
   columns: ColumnInfo[] = [];
   total = 0;
   loading = false;
@@ -102,22 +133,13 @@ export class DataGridComponent implements OnInit, OnChanges {
   columnWidths = signal<Record<string, number>>({});
 
   private db = inject(DatabaseService);
+  private dataProvider = inject(DataProviderService);
   private toast = inject(ToastService);
   private exportService = inject(ExportService);
-  private jsonHighlighter = inject(JsonHighlighterService);
 
   showExportMenu = signal(false);
   exportFormat = signal<"csv" | "json" | "jsonl" | "sql" | "markdown">("csv");
 
-  get totalPages() {
-    return Math.ceil(this.total / this.pageSize);
-  }
-  get hasNextPage() {
-    return this.page < this.totalPages - 1;
-  }
-  get hasPrevPage() {
-    return this.page > 0;
-  }
   get allSelected() {
     return this.data.length > 0 && this.selectedRows().size === this.data.length;
   }
@@ -162,33 +184,44 @@ export class DataGridComponent implements OnInit, OnChanges {
   }
 
   async loadData() {
+    console.log("[DataGrid] loadData() START", {
+      collection: this.collectionName,
+      filter: this.filter,
+      page: this.page,
+      pageSize: this.pageSize,
+    });
     this.loading = true;
     this.error = "";
     try {
-      let filterObj: any = undefined;
+      let filterObj: FilterExpression | undefined;
       if (this.filter) {
         try {
-          filterObj = JSON.parse(this.filter);
+          filterObj = JSON.parse(this.filter) as FilterExpression;
         } catch {
           this.error = "Invalid filter JSON";
           this.loading = false;
           return;
         }
       }
+      console.log("[DataGrid] loadData() calling db.queryData");
+      const effectiveLimit = Math.min(this.pageSize, this.MAX_PAGE_SIZE);
       const result = await this.db.queryData(this.collectionName, {
         filter: filterObj,
         order_by: this.sortColumn() || undefined,
         direction: this.sortDirection(),
         skip: this.page * this.pageSize,
-        limit: this.pageSize,
+        limit: effectiveLimit,
       });
-      this.data = result.data;
+      console.log("[DataGrid] loadData() got result, data length:", result.data.length);
+      this.dataTruncated = result.data.length === effectiveLimit && result.total > effectiveLimit;
+      this.data = result.data as RowData[];
       this.total = result.total;
-    } catch (e: any) {
-      this.error = e.message || "Failed to load data";
+    } catch (e) {
+      this.error = (e as Error).message || "Failed to load data";
       this.toast.error(this.error);
     } finally {
       this.loading = false;
+      console.log("[DataGrid] loadData() END");
     }
   }
 
@@ -197,7 +230,9 @@ export class DataGridComponent implements OnInit, OnChanges {
       const schema = await this.db.describeCollection(this.collectionName);
       this.columns = schema.columns;
       this.initColumnWidths();
-    } catch {}
+    } catch (e) {
+      console.error("Failed to load columns:", e);
+    }
   }
 
   async nextPage() {
@@ -219,7 +254,7 @@ export class DataGridComponent implements OnInit, OnChanges {
   }
 
   async lastPage() {
-    this.page = this.totalPages - 1;
+    this.page = Math.ceil(this.total / this.pageSize) - 1;
     this.pageChange.emit(this.page);
     await this.loadData();
   }
@@ -241,7 +276,7 @@ export class DataGridComponent implements OnInit, OnChanges {
     this.loadData();
   }
 
-  startEdit(rowIndex: number, col: string, value: any) {
+  startEdit(rowIndex: number, col: string, value: unknown) {
     this.editingCell = { row: rowIndex, col };
     this.editValue = String(value ?? "");
   }
@@ -250,13 +285,13 @@ export class DataGridComponent implements OnInit, OnChanges {
     if (!this.editingCell) return;
     const { row, col } = this.editingCell;
     const rowData = { ...this.data[row], [col]: this.editValue };
-    try {
-      await this.db.saveRow(this.collectionName, rowData);
+    const result = await withErrorHandling(() => this.db.saveRow(this.collectionName, rowData), {
+      toast: true,
+      toastSuccess: "Cell updated",
+      errorMessage: "Failed to update cell",
+    });
+    if (result.success) {
       this.data[row] = rowData;
-      this.toast.success("Cell updated");
-    } catch (e: any) {
-      this.error = e.message;
-      this.toast.error("Failed to update cell");
     }
     this.editingCell = null;
     this.editValue = "";
@@ -267,8 +302,8 @@ export class DataGridComponent implements OnInit, OnChanges {
     this.editValue = "";
   }
 
-  async deleteRow(row: any) {
-    const id = row._id || row.id;
+  async deleteRow(row: RowData) {
+    const id = (row["_id"] || row["id"]) as string;
     if (!id) return;
     this.toast.show({
       type: "warning",
@@ -280,7 +315,7 @@ export class DataGridComponent implements OnInit, OnChanges {
             await this.db.deleteRow(this.collectionName, id);
             this.toast.success("Row deleted");
             await this.loadData();
-          } catch (e: any) {
+          } catch {
             this.toast.error("Failed to delete row");
           }
         },
@@ -288,7 +323,7 @@ export class DataGridComponent implements OnInit, OnChanges {
     });
   }
 
-  onRowClick(row: any, event: MouseEvent) {
+  onRowClick(row: RowData, event: MouseEvent) {
     const target = event.target as HTMLElement;
     if (target.tagName === "INPUT" && (target as HTMLInputElement).type === "checkbox") {
       return;
@@ -321,22 +356,39 @@ export class DataGridComponent implements OnInit, OnChanges {
   onColumnResizeStart(col: string, event: MouseEvent) {
     event.preventDefault();
     this.resizingColumn.set(col);
+    this.isResizingInProgress = true;
     const startX = event.clientX;
     const startWidth = this.columnWidths()[col] || 150;
 
-    const onMove = (e: MouseEvent) => {
+    this.resizeMoveHandler = (e: MouseEvent) => {
       const newWidth = Math.max(80, startWidth + (e.clientX - startX));
       this.columnWidths.update((w) => ({ ...w, [col]: newWidth }));
     };
 
-    const onUp = () => {
+    const upHandler = () => {
       this.resizingColumn.set(null);
-      document.removeEventListener("mousemove", onMove);
-      document.removeEventListener("mouseup", onUp);
+      this.isResizingInProgress = false;
+      if (this.resizeMoveHandler) {
+        document.removeEventListener("mousemove", this.resizeMoveHandler);
+      }
+      document.removeEventListener("mouseup", upHandler);
+      this.resizeMoveHandler = null;
+      this.resizeUpHandler = null;
     };
+    this.resizeUpHandler = upHandler;
 
-    document.addEventListener("mousemove", onMove);
-    document.addEventListener("mouseup", onUp);
+    document.addEventListener("mousemove", this.resizeMoveHandler);
+    document.addEventListener("mouseup", this.resizeUpHandler);
+  }
+
+  ngOnDestroy() {
+    if (this.isResizingInProgress && this.resizeMoveHandler && this.resizeUpHandler) {
+      document.removeEventListener("mousemove", this.resizeMoveHandler);
+      document.removeEventListener("mouseup", this.resizeUpHandler);
+      this.resizeMoveHandler = null;
+      this.resizeUpHandler = null;
+      this.isResizingInProgress = false;
+    }
   }
 
   toggleColumnMenu() {
@@ -369,20 +421,26 @@ export class DataGridComponent implements OnInit, OnChanges {
     this.visibleColumns.set(visible);
   }
 
-  async duplicateRow(row: any) {
+  async duplicateRow(row: RowData) {
     const { _id, id, ...rest } = row;
-    const newRow = { ...rest };
+    const newRow = { ...rest } as RowData;
     try {
       await this.db.saveRow(this.collectionName, newRow);
       this.toast.success("Row duplicated");
       await this.loadData();
-    } catch (e: any) {
+    } catch (e) {
       this.toast.error("Failed to duplicate row");
     }
   }
 
-  viewJson(row: any) {
+  viewJson(row: RowData) {
     this.documentClick.emit(row);
+  }
+
+  onPageChange(newPage: number) {
+    this.page = newPage;
+    this.pageChange.emit(this.page);
+    this.loadData();
   }
 
   changePageSize(size: number) {
@@ -396,26 +454,25 @@ export class DataGridComponent implements OnInit, OnChanges {
     return this.editingCell?.row === rowIndex && this.editingCell?.col === col;
   }
 
-  formatValue(value: any): string {
+  formatValue(value: unknown): string {
     if (value === null || value === undefined) return "null";
     if (typeof value === "object") return JSON.stringify(value);
     return String(value);
   }
 
-  formatJsonLines(obj: any): string[] {
-    const json = JSON.stringify(obj, null, 2);
-    return json.split("\n");
+  trackByRow(index: number, row: RowData): string {
+    return String(row["_id"] || row["id"] || index);
+  }
+
+  formatJsonLines(obj: unknown): string[] {
+    return formatJsonLines(JSON.stringify(obj, null, 2));
   }
 
   highlightJsonLine(line: string): string {
-    return this.jsonHighlighter.highlightJsonLine(line);
+    return highlightJsonLine(line);
   }
 
-  trackByRow(index: number, row: any): string {
-    return row._id || row.id || String(index);
-  }
-
-  getSelectedData(): any[] {
+  getSelectedData(): RowData[] {
     const selected = Array.from(this.selectedRows());
     return selected.map((i) => this.data[i]);
   }
@@ -426,8 +483,8 @@ export class DataGridComponent implements OnInit, OnChanges {
 
     try {
       await this.exportService.export({ format, filename }, dataToExport);
-    } catch (error: any) {
-      if (error.message !== "Export cancelled") {
+    } catch (error) {
+      if ((error as Error).message !== "Export cancelled") {
         this.toast.error("Export failed");
       }
     }

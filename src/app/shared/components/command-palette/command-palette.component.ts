@@ -7,12 +7,13 @@ import {
   ViewChild,
   ElementRef,
   HostListener,
+  OnDestroy,
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { Router } from "@angular/router";
 
 import { ModalComponent } from "../modal/modal.component";
-import { fromEvent } from "rxjs";
+import { fromEvent, Subscription } from "rxjs";
 import { filter } from "rxjs/operators";
 
 interface Command {
@@ -30,7 +31,7 @@ interface Command {
   imports: [FormsModule, ModalComponent],
   templateUrl: "./command-palette.component.html",
 })
-export class CommandPaletteComponent implements AfterViewInit {
+export class CommandPaletteComponent implements AfterViewInit, OnDestroy {
   @ViewChild("searchInput") searchInput!: ElementRef<HTMLInputElement>;
 
   visible = signal(false);
@@ -41,6 +42,7 @@ export class CommandPaletteComponent implements AfterViewInit {
   private router = inject(Router);
   private recentKey = "zenith_recent_commands";
   private maxRecent = 5;
+  private subscriptions: Subscription[] = [];
 
   private allCommands: Command[] = [
     {
@@ -167,18 +169,29 @@ export class CommandPaletteComponent implements AfterViewInit {
   ngAfterViewInit(): void {}
 
   private setupEventListeners(): void {
-    fromEvent<KeyboardEvent>(document, "keydown")
-      .pipe(filter((e) => (e.ctrlKey || e.metaKey) && e.key === "p"))
-      .subscribe((e) => {
-        e.preventDefault();
-        this.toggle();
-      });
+    this.subscriptions.push(
+      fromEvent<KeyboardEvent>(document, "keydown")
+        .pipe(filter((e) => (e.ctrlKey || e.metaKey) && e.key === "p"))
+        .subscribe((e) => {
+          e.preventDefault();
+          this.toggle();
+        })
+    );
 
-    fromEvent<KeyboardEvent>(document, "keydown")
-      .pipe(filter((e) => e.key === "Escape" && this.visible()))
-      .subscribe(() => this.hide());
+    this.subscriptions.push(
+      fromEvent<KeyboardEvent>(document, "keydown")
+        .pipe(filter((e) => e.key === "Escape" && this.visible()))
+        .subscribe(() => this.hide())
+    );
 
-    fromEvent(document, "zenith:toggle-command-palette").subscribe(() => this.toggle());
+    this.subscriptions.push(
+      fromEvent(document, "zenith:toggle-command-palette").subscribe(() => this.toggle())
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.forEach((sub) => sub.unsubscribe());
+    this.subscriptions = [];
   }
 
   @HostListener("document:keydown", ["$event"])
@@ -195,7 +208,9 @@ export class CommandPaletteComponent implements AfterViewInit {
       if (stored) {
         this.recentCommands.set(JSON.parse(stored));
       }
-    } catch {}
+    } catch (e) {
+      console.error("Failed to load recent commands, continuing with defaults:", e);
+    }
   }
 
   private saveRecentCommand(id: string): void {
@@ -204,7 +219,9 @@ export class CommandPaletteComponent implements AfterViewInit {
     this.recentCommands.set(recent.slice(0, this.maxRecent));
     try {
       localStorage.setItem(this.recentKey, JSON.stringify(this.recentCommands()));
-    } catch {}
+    } catch (e) {
+      console.error("Failed to save recent command:", e);
+    }
   }
 
   toggle(): void {

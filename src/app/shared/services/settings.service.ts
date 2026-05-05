@@ -139,7 +139,9 @@ export class SettingsService {
         const parsed = JSON.parse(stored);
         return this.mergeWithDefaults(parsed);
       }
-    } catch {}
+    } catch (e) {
+      console.error("Failed to load settings, continuing with defaults:", e);
+    }
     return structuredClone(DEFAULT_SETTINGS);
   }
 

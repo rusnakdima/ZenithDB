@@ -6,6 +6,7 @@ import { DatabaseService } from "@shared/services/database.service";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { StorageService } from "@services/core/storage.service";
 import { ConnectionSummary } from "@shared/models/connection.config";
+import { withErrorHandling } from "@shared/utils/error-handler.utils";
 
 @Component({
   selector: "app-connections",
@@ -23,9 +24,11 @@ export class ConnectionsComponent implements OnInit {
   connections = computed(() => this.storage.connections());
 
   async ngOnInit() {
-    this.loading.set(true);
-    await this.db.listConnections();
-    this.loading.set(false);
+    await withErrorHandling(() => this.db.listConnections(), {
+      loading: this.loading,
+      toast: true,
+      errorMessage: "Failed to load connections",
+    });
   }
 
   onConnect(connection: ConnectionSummary): void {
@@ -35,7 +38,10 @@ export class ConnectionsComponent implements OnInit {
 
   async onDelete(connection: ConnectionSummary): Promise<void> {
     if (confirm(`Delete connection "${connection.name}"?`)) {
-      await this.db.deleteConnection(connection.id);
+      await withErrorHandling(() => this.db.deleteConnection(connection.id), {
+        toast: true,
+        toastSuccess: "Connection deleted",
+      });
     }
   }
 

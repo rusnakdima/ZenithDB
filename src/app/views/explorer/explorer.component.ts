@@ -1,18 +1,28 @@
 import { Component, signal, computed, inject, OnInit, OnDestroy } from "@angular/core";
 import { Router, ActivatedRoute } from "@angular/router";
 import { Subscription } from "rxjs";
+import { ScrollingModule } from "@angular/cdk/scrolling";
 import { MatIconModule } from "@angular/material/icon";
 import { DataGridComponent } from "@features/data/data-grid/data-grid.component";
 import { SchemaTreeComponent } from "@features/schema/schema-tree/schema-tree.component";
 import { FilterBarComponent } from "@shared/components/filter-bar/filter-bar.component";
 import { DatabaseService } from "@shared/services/database.service";
+import { DataProviderService } from "@shared/services/data-provider.service";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { ToastService } from "@services/toast.service";
 import { ExportService } from "@shared/services/export.service";
-import { CollectionMeta, CollectionStats } from "@shared/models/connection.config";
+import {
+  CollectionMeta,
+  CollectionStats,
+  ColumnInfo,
+  RowData,
+  FilterExpression,
+} from "@shared/models/connection.config";
 import { FormatBytesPipe } from "@shared/pipes/format-bytes.pipe";
 import { formatJsonLines, highlightJsonLine } from "@shared/utils/json.utils";
 import { InspectorDrawerComponent } from "./inspector-drawer/inspector-drawer.component";
+import { PaginationComponent } from "@shared/components/pagination/pagination.component";
+import { withErrorHandling } from "@shared/utils/error-handler.utils";
 
 type ViewTab = "table" | "tree" | "json";
 type SplitMode = "none" | "horizontal" | "vertical";
@@ -26,17 +36,20 @@ interface Tab {
   selector: "app-explorer",
   standalone: true,
   imports: [
+    ScrollingModule,
     MatIconModule,
     DataGridComponent,
     SchemaTreeComponent,
     FilterBarComponent,
     InspectorDrawerComponent,
     FormatBytesPipe,
+    PaginationComponent,
   ],
   templateUrl: "./explorer.component.html",
 })
 export class ExplorerComponent implements OnInit, OnDestroy {
   private db = inject(DatabaseService);
+  private dataProvider = inject(DataProviderService);
   private connectionState = inject(ConnectionStateService);
   private toast = inject(ToastService);
   private exportService = inject(ExportService);
@@ -48,21 +61,23 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   activeCollection = signal<string>("");
   stats = signal<CollectionStats | null>(null);
   collections = signal<CollectionMeta[]>([]);
-  inspectorDocument = signal<any>(null);
+  inspectorDocument = signal<RowData | null>(null);
   showInspector = signal(false);
 
   filterText = signal("");
   page = signal(0);
   pageSize = signal(50);
+  private reloadCounter = signal(0);
   total = signal(0);
   loading = signal(false);
 
   viewTab = signal<ViewTab>("table");
   splitMode = signal<SplitMode>("none");
   availableColumns = signal<string[]>([]);
+  availableColumnsMeta = signal<ColumnInfo[]>([]);
   selectedColumns = signal<string[]>([]);
   showCollectionSelector = signal(false);
-  fullJsonData = signal<any[]>([]);
+  fullJsonData = signal<RowData[]>([]);
   jsonLoading = signal(false);
 
   viewTabs: { id: ViewTab; label: string }[] = [
@@ -110,22 +125,23 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   }
 
   async loadCollections(selectedCollection?: string | null) {
-    try {
-      const cols = await this.db.listCollections();
-      this.collections.set(cols);
-      if (cols.length > 0) {
-        const collectionToSelect =
-          selectedCollection && cols.some((c) => c.name === selectedCollection)
-            ? selectedCollection
-            : cols[0].name;
-        this.activeCollection.set(collectionToSelect);
-        this.activeTabs.set([{ name: collectionToSelect, collection: collectionToSelect }]);
-        await this.loadStats();
-        await this.loadColumns();
-      }
-    } catch (e: any) {
-      this.toast.error("Failed to load collections");
-      this.loading.set(false);
+    const result = await withErrorHandling(() => this.db.listCollections(), {
+      loading: this.loading,
+      errorMessage: "Failed to load collections",
+    });
+    if (!result.success) return;
+
+    const cols = result.data!;
+    this.collections.set(cols);
+    if (cols.length > 0) {
+      const collectionToSelect =
+        selectedCollection && cols.some((c) => c.name === selectedCollection)
+          ? selectedCollection
+          : cols[0].name;
+      this.activeCollection.set(collectionToSelect);
+      this.activeTabs.set([{ name: collectionToSelect, collection: collectionToSelect }]);
+      await this.loadStats();
+      await this.loadColumns();
     }
   }
 
@@ -149,9 +165,11 @@ export class ExplorerComponent implements OnInit, OnDestroy {
       const schema = await this.db.describeCollection(collection);
       const cols = schema.columns.map((c) => c.name);
       this.availableColumns.set(cols);
+      this.availableColumnsMeta.set(schema.columns);
       this.selectedColumns.set([...cols]);
     } catch {
       this.availableColumns.set([]);
+      this.availableColumnsMeta.set([]);
       this.selectedColumns.set([]);
     }
   }
@@ -162,8 +180,8 @@ export class ExplorerComponent implements OnInit, OnDestroy {
       const result = await this.db.queryData(this.activeCollection(), {
         limit: 10000,
       });
-      this.fullJsonData.set(result.data);
-    } catch (e: any) {
+      this.fullJsonData.set(result.data as RowData[]);
+    } catch {
       this.toast.error("Failed to load JSON data");
     } finally {
       this.jsonLoading.set(false);
@@ -230,6 +248,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   }
 
   onFilterApply() {
+    this.reloadCounter.update((c) => c + 1);
     this.page.set(0);
   }
 
@@ -239,6 +258,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   }
 
   onRefresh() {
+    this.reloadCounter.update((c) => c + 1);
     this.page.set(0);
     this.loadStats();
     if (this.viewTab() === "json") {
@@ -256,10 +276,10 @@ export class ExplorerComponent implements OnInit, OnDestroy {
 
   async onExport(format: "csv" | "json" | "sql") {
     try {
-      let filterObj: any = undefined;
+      let filterObj: FilterExpression | undefined;
       if (this.filterText()) {
         try {
-          filterObj = JSON.parse(this.filterText());
+          filterObj = JSON.parse(this.filterText()) as FilterExpression;
         } catch {
           this.toast.error("Invalid filter JSON");
           return;
@@ -274,13 +294,21 @@ export class ExplorerComponent implements OnInit, OnDestroy {
       const filename = `${this.activeCollection()}_export`;
 
       await this.exportService.export({ format: exportFormat, filename }, result.data);
-    } catch (e: any) {
-      this.toast.error("Export failed: " + e.message);
+    } catch (e) {
+      this.toast.error("Export failed: " + (e as Error).message);
     }
   }
 
   onColumnsChange(columns: string[]) {
+    console.log("[Explorer] onColumnsChange called with:", columns);
     this.selectedColumns.set(columns);
+    console.log("[Explorer] selectedColumns now:", this.selectedColumns());
+  }
+
+  getDisabledColumns(): string[] {
+    return this.availableColumnsMeta()
+      .filter((col) => col.is_primary_key)
+      .map((col) => col.name);
   }
 
   onTreeCollectionSelect(collection: string) {
@@ -288,7 +316,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
     this.selectViewTab("table");
   }
 
-  openInspector(doc: any) {
+  openInspector(doc: RowData) {
     this.inspectorDocument.set(doc);
     this.showInspector.set(true);
   }
@@ -298,26 +326,28 @@ export class ExplorerComponent implements OnInit, OnDestroy {
     this.inspectorDocument.set(null);
   }
 
-  async saveDocument(doc: any) {
-    try {
-      await this.db.saveRow(this.activeCollection(), doc);
-      this.toast.success("Document saved");
+  async saveDocument(doc: RowData) {
+    const result = await withErrorHandling(() => this.db.saveRow(this.activeCollection(), doc), {
+      toast: true,
+      toastSuccess: "Document saved",
+      errorMessage: "Failed to save document",
+    });
+    if (result.success) {
       this.closeInspector();
-    } catch (e: any) {
-      this.toast.error("Failed to save document: " + e.message);
     }
   }
 
-  async deleteDocument(doc: any) {
-    const id = doc._id || doc.id;
+  async deleteDocument(doc: RowData) {
+    const id = (doc["_id"] || doc["id"]) as string;
     if (!id) return;
-    try {
-      await this.db.deleteRow(this.activeCollection(), id);
-      this.toast.success("Document deleted");
+    const result = await withErrorHandling(() => this.db.deleteRow(this.activeCollection(), id), {
+      toast: true,
+      toastSuccess: "Document deleted",
+      errorMessage: "Failed to delete document",
+    });
+    if (result.success) {
       this.closeInspector();
       await this.loadStats();
-    } catch (e: any) {
-      this.toast.error("Failed to delete document: " + e.message);
     }
   }
 
@@ -325,29 +355,9 @@ export class ExplorerComponent implements OnInit, OnDestroy {
     this.page.set(newPage);
   }
 
-  async nextPage() {
-    this.page.update((p) => p + 1);
-  }
-
-  async prevPage() {
-    this.page.update((p) => Math.max(0, p - 1));
-  }
-
-  async changePageSize(size: number) {
+  onPageSizeChange(size: number) {
     this.pageSize.set(size);
     this.page.set(0);
-  }
-
-  get totalPages() {
-    return Math.ceil(this.total() / this.pageSize());
-  }
-
-  get hasNextPage() {
-    return this.page() < this.totalPages - 1;
-  }
-
-  get hasPrevPage() {
-    return this.page() > 0;
   }
 
   formatDocumentCount(count: number): string {
@@ -372,11 +382,18 @@ export class ExplorerComponent implements OnInit, OnDestroy {
       });
   }
 
-  formatJsonLines(obj: any): string[] {
-    return formatJsonLines(JSON.stringify(obj, null, 2));
+  getReloadTrigger(): number {
+    return this.reloadCounter();
   }
 
-  highlightJsonLine(line: string): string {
-    return highlightJsonLine(line);
+  formatJsonLinesFn = (obj: unknown): string[] => formatJsonLines(JSON.stringify(obj, null, 2));
+  highlightJsonLineFn = highlightJsonLine;
+  trackByIndex = (index: number): number => index;
+
+  handleDelete() {
+    const doc = this.inspectorDocument();
+    if (doc) {
+      this.deleteDocument(doc);
+    }
   }
 }

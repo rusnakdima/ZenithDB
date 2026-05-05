@@ -1,26 +1,32 @@
 <label
-  class="group flex cursor-pointer items-center gap-3 select-none"
-  [class.opacity-50]="disabled()"
-  [class.cursor-not-allowed]="disabled()"
-  [attr.for]="id()"
+  class="custom-checkbox group flex cursor-pointer items-center gap-3 select-none"
+  [class.checkbox-accent]="variant() === 'accent'"
+  [class.checkbox-gray]="variant() === 'gray'"
+  [class.disabled]="disabled()"
 >
-  <div class="relative">
-    <mat-checkbox
-      [checked]="checked()"
-      [disabled]="disabled()"
-      (change)="onChange($event.checked)"
-      [color]="variant() === 'emerald' ? 'primary' : 'warn'"
-      class="custom-checkbox"
-      [class.checkbox-emerald]="variant() === 'emerald'"
-      [class.checkbox-gray]="variant() === 'gray'"
-      disableRipple
-    >
-    </mat-checkbox>
+  <input
+    type="checkbox"
+    [id]="id()"
+    [checked]="checked()"
+    [disabled]="disabled()"
+    (change)="onChange($event.target.checked)"
+    class="peer sr-only"
+  />
+  <div class="checkbox-box">
+    <div class="checkbox-inner">
+      <svg class="checkmark" viewBox="0 0 14 12" fill="none">
+        <path
+          d="M1 6L5 10L13 2"
+          stroke="currentColor"
+          stroke-width="2.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+    </div>
   </div>
   @if (label()) {
-    <span
-      class="text-sm text-slate-300 transition-colors duration-150 group-hover:text-white dark:text-slate-200"
-    >
+    <span class="checkbox-label">
       {{ label() }}
     </span>
   }

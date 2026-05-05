@@ -1,4 +1,4 @@
-import { Injectable, inject, signal, computed } from "@angular/core";
+import { Injectable, inject, signal, computed, DestroyRef } from "@angular/core";
 import { HttpErrorResponse } from "@angular/common/http";
 import { ToastService } from "@services/toast.service";
 import { LoadingService } from "@shared/services/loading.service";
@@ -17,6 +17,7 @@ import {
 export class ErrorHandlerService {
   private toastService = inject(ToastService);
   private loadingService = inject(LoadingService);
+  private destroyRef = inject(DestroyRef);
 
   private errorsSignal = signal<AppError[]>([]);
   private logsSignal = signal<ErrorLogEntry[]>([]);
@@ -27,8 +28,14 @@ export class ErrorHandlerService {
   readonly isOnline = computed(() => this.isOnlineSignal());
 
   constructor() {
-    window.addEventListener("online", () => this.isOnlineSignal.set(true));
-    window.addEventListener("offline", () => this.isOnlineSignal.set(false));
+    const boundOnline = () => this.isOnlineSignal.set(true);
+    const boundOffline = () => this.isOnlineSignal.set(false);
+    window.addEventListener("online", boundOnline);
+    window.addEventListener("offline", boundOffline);
+    this.destroyRef.onDestroy(() => {
+      window.removeEventListener("online", boundOnline);
+      window.removeEventListener("offline", boundOffline);
+    });
   }
 
   handleError(error: unknown, context?: string): AppError {

@@ -1,6 +1,7 @@
 import { Injectable, inject } from "@angular/core";
 import { invoke } from "@tauri-apps/api/core";
 import { StorageService } from "@services/core/storage.service";
+import { ToastService } from "@services/toast.service";
 import {
   ConnectionSummary,
   ConnectionConfig,
@@ -14,6 +15,8 @@ import {
   QueryResult,
   RawResult,
   SystemMetrics,
+  RowData,
+  FilterExpression,
 } from "@shared/models/connection.config";
 
 export interface CrudOptions {
@@ -21,15 +24,19 @@ export interface CrudOptions {
   connId?: string;
   collection?: string;
   id?: string;
-  filter?: any;
+  filter?: FilterExpression;
   limit?: number;
   offset?: number;
 }
 
 @Injectable({ providedIn: "root" })
 export class ApiProvider {
+  private readonly MAX_RESPONSE_SIZE_MB = 10;
+  private readonly MAX_RESPONSE_SIZE_BYTES = this.MAX_RESPONSE_SIZE_MB * 1024 * 1024;
+
   private storage = inject(StorageService);
   private abortController: AbortController | null = null;
+  private toastService: ToastService | null = null;
 
   private getAbortSignal(): AbortSignal {
     this.abortController?.abort();
@@ -39,6 +46,29 @@ export class ApiProvider {
 
   cancelPendingRequests(): void {
     this.abortController?.abort();
+  }
+
+  private getToastService(): ToastService {
+    if (!this.toastService) {
+      this.toastService = inject(ToastService);
+    }
+    return this.toastService;
+  }
+
+  private checkResponseSize(data: unknown): { truncated: boolean; message?: string } {
+    try {
+      const jsonStr = JSON.stringify(data);
+      const sizeBytes = new Blob([jsonStr]).size;
+      if (sizeBytes > this.MAX_RESPONSE_SIZE_BYTES) {
+        return {
+          truncated: true,
+          message: `Response size (${(sizeBytes / (1024 * 1024)).toFixed(1)}MB) exceeds ${this.MAX_RESPONSE_SIZE_MB}MB limit. Data may be truncated.`,
+        };
+      }
+    } catch {
+      return { truncated: false };
+    }
+    return { truncated: false };
   }
 
   async listConnections(): Promise<ConnectionSummary[]> {
@@ -150,7 +180,15 @@ export class ApiProvider {
         query: params,
         options: { signal: this.getAbortSignal() },
       });
-      this.storage.setCollectionData(collection, result.data, result.total);
+      const sizeCheck = this.checkResponseSize(result.data);
+      if (sizeCheck.truncated) {
+        this.getToastService().warning(sizeCheck.message!);
+        const maxItems = Math.floor(this.MAX_RESPONSE_SIZE_BYTES / 500);
+        if (result.data.length > maxItems) {
+          result.data = result.data.slice(0, maxItems);
+        }
+      }
+      this.storage.setCollectionData(collection, result.data as RowData[], result.total);
       return result;
     } catch (e) {
       if (e instanceof Error && e.name === "AbortError") throw new Error("Operation cancelled");
@@ -158,9 +196,9 @@ export class ApiProvider {
     }
   }
 
-  async saveRow(connId: string, collection: string, data: any): Promise<any> {
+  async saveRow(connId: string, collection: string, data: RowData): Promise<RowData | null> {
     try {
-      const result = await invoke<any>("save_row", {
+      const result = await invoke<RowData>("save_row", {
         connId,
         collection,
         data,

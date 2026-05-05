@@ -1,15 +1,17 @@
 import { Injectable, signal, computed } from "@angular/core";
 import { BaseStorageService } from "./base-storage.service";
 import {
+  ColumnInfo,
   ConnectionSummary,
   CollectionMeta,
   CollectionSchema,
   SystemMetrics,
+  RowData,
 } from "@shared/models/connection.config";
 
 export interface CollectionData {
   name: string;
-  data: any[];
+  data: RowData[];
   count: number;
 }
 
@@ -19,7 +21,22 @@ export interface CachedItem<T> {
   ttl?: number;
 }
 
+export interface CachedCollectionData {
+  data: any[];
+  total: number;
+  columns: ColumnInfo[];
+  cachedAt: number;
+  queryParams: {
+    filter?: any;
+    page?: number;
+    pageSize?: number;
+    order_by?: string;
+    direction?: string;
+  };
+}
+
 const MAX_CACHE_SIZE = 100;
+const MAX_COLLECTION_DATA_SIZE = 10000;
 
 @Injectable({ providedIn: "root" })
 export class StorageService extends BaseStorageService {
@@ -30,6 +47,7 @@ export class StorageService extends BaseStorageService {
   );
   private readonly activeConnectionSignal = signal<string | null>(null);
   private readonly systemMetricsSignal = signal<SystemMetrics | null>(null);
+  private readonly collectionDataCache = signal<Map<string, CachedCollectionData>>(new Map());
 
   readonly connections = this.connectionsSignal.asReadonly();
   readonly collections = this.collectionsSignal.asReadonly();
@@ -83,7 +101,7 @@ export class StorageService extends BaseStorageService {
     this.collectionsSignal.set(collections);
   }
 
-  getCollectionData(name: string): any[] | undefined {
+  getCollectionData(name: string): RowData[] | undefined {
     const cached = this.collectionDataSignal().get(name);
     if (!cached) return undefined;
     if (cached.ttl && Date.now() - cached.timestamp > cached.ttl) {
@@ -93,7 +111,7 @@ export class StorageService extends BaseStorageService {
     return cached.data.data;
   }
 
-  setCollectionData(name: string, data: any[], count: number, ttl?: number) {
+  setCollectionData(name: string, data: RowData[], count: number, ttl?: number) {
     this.collectionDataSignal.update((map) => {
       const newMap = new Map(map);
       if (newMap.size >= MAX_CACHE_SIZE) {
@@ -102,12 +120,19 @@ export class StorageService extends BaseStorageService {
         )[0][0];
         newMap.delete(oldestKey);
       }
-      newMap.set(name, { data: { name, data, count }, timestamp: Date.now(), ttl });
+      const truncatedData =
+        data.length > MAX_COLLECTION_DATA_SIZE ? data.slice(0, MAX_COLLECTION_DATA_SIZE) : data;
+      const truncatedCount = data.length > MAX_COLLECTION_DATA_SIZE ? data.length : count;
+      newMap.set(name, {
+        data: { name, data: truncatedData, count: truncatedCount },
+        timestamp: Date.now(),
+        ttl,
+      });
       return newMap;
     });
   }
 
-  updateCollectionData(name: string, data: any[]) {
+  updateCollectionData(name: string, data: RowData[]) {
     this.collectionDataSignal.update((map) => {
       const newMap = new Map(map);
       const existing = newMap.get(name);
@@ -121,7 +146,7 @@ export class StorageService extends BaseStorageService {
     });
   }
 
-  addToCollectionData(name: string, item: any) {
+  addToCollectionData(name: string, item: RowData) {
     this.collectionDataSignal.update((map) => {
       const newMap = new Map(map);
       const existing = newMap.get(name);
@@ -144,7 +169,7 @@ export class StorageService extends BaseStorageService {
       const newMap = new Map(map);
       const existing = newMap.get(collectionName);
       if (existing) {
-        const filteredData = existing.data.data.filter((d: any) => d.id !== id);
+        const filteredData = existing.data.data.filter((d) => (d as RowData)["id"] !== id);
         newMap.set(collectionName, {
           ...existing,
           data: { ...existing.data, data: filteredData, count: filteredData.length },

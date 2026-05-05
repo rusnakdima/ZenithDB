@@ -1,9 +1,19 @@
-import { Component, inject, OnInit, signal, computed, Output, EventEmitter } from "@angular/core";
+import {
+  Component,
+  inject,
+  OnInit,
+  OnDestroy,
+  signal,
+  computed,
+  Output,
+  EventEmitter,
+} from "@angular/core";
 import { Router, RouterLink, ActivatedRoute } from "@angular/router";
 import { FormsModule } from "@angular/forms";
 import { DatabaseService } from "@shared/services/database.service";
 import { ToastService } from "@services/toast.service";
 import { SkeletonLoaderComponent } from "@shared/components/loading/skeleton-loader.component";
+import { CollectionMeta, ColumnInfo } from "@shared/models/connection.config";
 
 interface TreeNode {
   name: string;
@@ -34,7 +44,7 @@ interface ContextMenu {
   imports: [RouterLink, FormsModule, SkeletonLoaderComponent],
   templateUrl: "./schema-tree.component.html",
 })
-export class SchemaTreeComponent implements OnInit {
+export class SchemaTreeComponent implements OnInit, OnDestroy {
   collections = signal<TreeNode[]>([]);
   filteredCollections = signal<TreeNode[]>([]);
   expanded = signal<Set<string>>(new Set());
@@ -55,10 +65,18 @@ export class SchemaTreeComponent implements OnInit {
   private toast = inject(ToastService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private boundCloseContextMenu: (() => void) | null = null;
 
   ngOnInit() {
     this.loadCollections();
-    document.addEventListener("click", () => this.closeContextMenu());
+    this.boundCloseContextMenu = () => this.closeContextMenu();
+    document.addEventListener("click", this.boundCloseContextMenu);
+  }
+
+  ngOnDestroy(): void {
+    if (this.boundCloseContextMenu) {
+      document.removeEventListener("click", this.boundCloseContextMenu);
+    }
   }
 
   async loadCollections() {
@@ -67,7 +85,7 @@ export class SchemaTreeComponent implements OnInit {
     try {
       const cols = await this.db.listCollections();
       this.collections.set(
-        cols.map((c: any) => ({
+        cols.map((c: CollectionMeta) => ({
           name: c.name,
           type: "collection" as const,
           count: c.count,
@@ -76,8 +94,8 @@ export class SchemaTreeComponent implements OnInit {
         }))
       );
       this.applyFilter();
-    } catch (e: any) {
-      this.error.set(e.message || "Failed to load collections");
+    } catch {
+      this.error.set("Failed to load collections");
       this.toast.error(this.error());
     } finally {
       this.loading.set(false);
@@ -88,14 +106,14 @@ export class SchemaTreeComponent implements OnInit {
     if (collection.fields && collection.fields.length > 0) return;
     try {
       const schema = await this.db.describeCollection(collection.name);
-      collection.fields = schema.columns.map((col: any) => ({
+      collection.fields = schema.columns.map((col: ColumnInfo) => ({
         name: col.name,
         dataType: col.data_type,
         nullable: col.nullable,
         isPrimaryKey: col.is_primary_key,
       }));
       this.collections.update((cols) => [...cols]);
-    } catch (e: any) {
+    } catch {
       this.toast.error(`Failed to load fields for ${collection.name}`);
     }
   }
@@ -161,8 +179,8 @@ export class SchemaTreeComponent implements OnInit {
       this.toast.success(`Collection "${name}" created`);
       this.showNewCollectionModal.set(false);
       this.loadCollections();
-    } catch (e: any) {
-      this.toast.error(e.message || "Failed to create collection");
+    } catch {
+      this.toast.error("Failed to create collection");
     }
   }
 
@@ -190,8 +208,8 @@ export class SchemaTreeComponent implements OnInit {
       this.toast.success(`Renamed to "${newName}"`);
       this.renamingCollection.set(null);
       this.loadCollections();
-    } catch (e: any) {
-      this.toast.error(e.message || "Failed to rename collection");
+    } catch {
+      this.toast.error("Failed to rename collection");
     }
   }
 
@@ -210,8 +228,8 @@ export class SchemaTreeComponent implements OnInit {
           this.router.navigate(["/schema"]);
         }
         this.loadCollections();
-      } catch (e: any) {
-        this.toast.error(e.message || "Failed to drop collection");
+      } catch {
+        this.toast.error("Failed to drop collection");
       }
     }
   }

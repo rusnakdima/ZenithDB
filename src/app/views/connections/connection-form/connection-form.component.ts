@@ -11,8 +11,7 @@ import {
   ConnectionHealth,
   ConnectionSummary,
 } from "@shared/models/connection.config";
-
-type ProviderType = "json" | "mongo" | "redis" | "postgres" | "sqlite" | "mysql";
+import { ProviderType } from "@shared/models/provider.model";
 type WizardStep = 1 | 2 | 3;
 
 interface ProviderOption {

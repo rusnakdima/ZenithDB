@@ -17,16 +17,7 @@ import { ExportService } from "@shared/services/export.service";
 import { RawResult } from "@shared/models/connection.config";
 import { formatSQL } from "@shared/utils";
 
-interface QueryTab {
-  id: string;
-  name: string;
-  query: string;
-  results: RawResult | null;
-  error: string;
-  loading: boolean;
-  modified: boolean;
-  executionTime: number;
-}
+import { QueryTab } from "@shared/models/query.model";
 
 interface HistoryItem {
   id: string;

@@ -140,3 +140,7 @@ export interface SystemMetrics {
   uptime: number;
   status: string;
 }
+
+export type RowData = Record<string, unknown>;
+
+export type CollectionDataType = unknown[];

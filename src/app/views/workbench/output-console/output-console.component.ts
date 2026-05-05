@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, signal, computed } from "@angular/core";
+import { Component, Input, Output, EventEmitter, signal, computed, OnDestroy } from "@angular/core";
 import { JsonPipe, DatePipe } from "@angular/common";
 import { RawResult } from "@shared/models/connection.config";
 
@@ -17,7 +17,7 @@ interface LogEntry {
   imports: [JsonPipe, DatePipe],
   templateUrl: "./output-console.component.html",
 })
-export class OutputConsoleComponent {
+export class OutputConsoleComponent implements OnDestroy {
   @Input() results: RawResult | null = null;
   @Input() loading = false;
   @Input() error = "";
@@ -104,5 +104,9 @@ export class OutputConsoleComponent {
 
   trackByIndex(index: number) {
     return index;
+  }
+
+  ngOnDestroy() {
+    this.isResizing = false;
   }
 }

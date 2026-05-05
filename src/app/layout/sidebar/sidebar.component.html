@@ -2,7 +2,7 @@
   <!-- Navigation Rail -->
   <nav class="nav-rail">
     <div class="nav-rail-logo">
-      <mat-icon fontIcon="bolt" class="!text-xl !text-black"></mat-icon>
+      <mat-icon fontIcon="bolt" class="h-6! w-6! text-xl! !text-black" />
     </div>
 
     <button
@@ -11,7 +11,7 @@
       (click)="setActiveView('dashboard')"
       title="Dashboard"
     >
-      <mat-icon fontIcon="dashboard" class="!text-xl"></mat-icon>
+      <mat-icon fontIcon="dashboard" class="h-5! w-5! text-xl!" />
     </button>
 
     <button
@@ -20,7 +20,7 @@
       (click)="setActiveView('explorer')"
       title="Explorer"
     >
-      <mat-icon fontIcon="folder" class="!text-xl"></mat-icon>
+      <mat-icon fontIcon="folder" class="h-5! w-5! text-xl!" />
     </button>
 
     <button
@@ -29,7 +29,7 @@
       (click)="setActiveView('workbench')"
       title="Workbench"
     >
-      <mat-icon fontIcon="terminal" class="!text-xl"></mat-icon>
+      <mat-icon fontIcon="terminal" class="h-5! w-5! text-xl!" />
     </button>
 
     <button
@@ -39,8 +39,8 @@
     >
       <mat-icon
         [fontIcon]="themeService.isDarkMode() ? 'dark_mode' : 'light_mode'"
-        class="!text-xl"
-      ></mat-icon>
+        class="h-5! w-5! text-xl!"
+      />
     </button>
   </nav>
 
@@ -57,7 +57,7 @@
             class="text-[var(--text-dim)] transition hover:text-[var(--accent)]"
             (click)="openNewConnection()"
           >
-            <mat-icon fontIcon="add" class="!text-xl"></mat-icon>
+            <mat-icon fontIcon="add" class="h-5! w-5! text-xl!" />
           </button>
         </div>
 
@@ -70,9 +70,6 @@
             ></div>
             <div class="flex-grow overflow-hidden">
               <p class="truncate text-xs font-bold">{{ getActiveConnectionName() }}</p>
-              <p class="truncate text-[9px] text-[var(--text-dim)]">
-                {{ getActiveConnectionUri() }}
-              </p>
             </div>
           </div>
         }
@@ -92,12 +89,12 @@
               >
                 <mat-icon
                   [fontIcon]="!isConnectionExpanded(conn.id) ? 'chevron_right' : 'expand_more'"
-                  class="!text-xl"
-                ></mat-icon>
+                  class="h-5! w-5! text-xl!"
+                />
                 <mat-icon
                   [fontIcon]="providerUtils.getProviderIcon(conn.provider)"
-                  class="!text-xl text-[var(--accent)]/70"
-                ></mat-icon>
+                  class="h-5! w-5! text-xl! text-[var(--accent)]/70"
+                />
                 <span>{{ conn.name }}</span>
               </div>
 
@@ -105,7 +102,7 @@
                 <div class="mt-1 ml-4 space-y-1 border-l border-[var(--border-subtle)] pl-2">
                   @if (loadingDatabases()) {
                     <div class="p-2 text-[11px] text-[var(--text-dim)]">
-                      <mat-icon fontIcon="sync" class="fa-spin !text-xl"></mat-icon> Loading...
+                      <mat-icon fontIcon="sync" class="h-5! w-5! text-xl!" /> Loading...
                     </div>
                   } @else if (databases().length > 0) {
                     @for (db of databases(); track db.name) {
@@ -116,12 +113,12 @@
                         >
                           <mat-icon
                             [fontIcon]="!db.expanded ? 'chevron_right' : 'expand_more'"
-                            class="!text-xl"
-                          ></mat-icon>
+                            class="h-5! w-5! text-xl!"
+                          />
                           <mat-icon
                             fontIcon="storage"
-                            class="!text-xl text-[var(--accent)]/50"
-                          ></mat-icon>
+                            class="h-5! w-5! text-xl! text-[var(--accent)]/50"
+                          />
                           <span>{{ db.name }}</span>
                         </div>
                         @if (db.expanded && db.children) {
@@ -134,8 +131,8 @@
                               >
                                 <mat-icon
                                   fontIcon="table_chart"
-                                  class="!text-xl text-[var(--text-muted)]"
-                                ></mat-icon>
+                                  class="h-5! w-5! text-xl! text-[var(--text-muted)]"
+                                />
                                 <span>{{ col.name }}</span>
                               </div>
                             }
@@ -152,7 +149,7 @@
           }
         } @else {
           <div class="sidebar-empty-state">
-            <mat-icon fontIcon="link_off" class="!mb-2 !text-2xl"></mat-icon>
+            <mat-icon fontIcon="link_off" class="mb-2 h-12! w-12! text-xl!" />
             <p>No connections</p>
             <a routerLink="/connections/new">Add Connection</a>
           </div>
@@ -205,8 +202,8 @@
         <span class="text-[10px] font-black tracking-widest uppercase">System Monitor</span>
         <mat-icon
           [fontIcon]="isStatsCollapsed() ? 'expand_less' : 'expand_more'"
-          class="!text-xl"
-        ></mat-icon>
+          class="h-5! w-5! text-xl!"
+        />
       </button>
 
       @if (!isStatsCollapsed()) {

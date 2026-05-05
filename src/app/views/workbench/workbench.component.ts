@@ -7,6 +7,7 @@ import {
   ElementRef,
   AfterViewInit,
   HostListener,
+  OnDestroy,
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
@@ -17,16 +18,7 @@ import { RawResult } from "@shared/models/connection.config";
 import { SqlEditorComponent } from "./sql-editor/sql-editor.component";
 import { OutputConsoleComponent } from "./output-console/output-console.component";
 
-interface QueryTab {
-  id: string;
-  name: string;
-  query: string;
-  results: RawResult | null;
-  error: string;
-  loading: boolean;
-  modified: boolean;
-  executionTime: number;
-}
+import { QueryTab } from "@shared/models/query.model";
 
 @Component({
   selector: "app-workbench",
@@ -34,7 +26,7 @@ interface QueryTab {
   imports: [FormsModule, MatIconModule, SqlEditorComponent, OutputConsoleComponent],
   templateUrl: "./workbench.component.html",
 })
-export class WorkbenchComponent implements AfterViewInit {
+export class WorkbenchComponent implements AfterViewInit, OnDestroy {
   protected db = inject(DatabaseService);
   protected connState = inject(ConnectionStateService);
   protected toast = inject(ToastService);
@@ -279,5 +271,9 @@ export class WorkbenchComponent implements AfterViewInit {
 
   trackByTabId(_: number, tab: QueryTab) {
     return tab.id;
+  }
+
+  ngOnDestroy() {
+    this.isResizing = false;
   }
 }

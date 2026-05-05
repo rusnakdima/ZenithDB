@@ -8,7 +8,9 @@ export abstract class HistoryManager<T> {
       if (stored) {
         return JSON.parse(stored);
       }
-    } catch {}
+    } catch (e) {
+      console.error("Failed to load history:", e);
+    }
     return [];
   }
 
@@ -16,7 +18,9 @@ export abstract class HistoryManager<T> {
     try {
       const trimmed = history.slice(0, this.MAX_ITEMS);
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(trimmed));
-    } catch {}
+    } catch (e) {
+      console.error("Failed to save history:", e);
+    }
   }
 
   addItem(history: T[], item: T, isEqual?: (a: T, b: T) => boolean): T[] {

@@ -12,8 +12,8 @@
     <div class="card-icon-box">
       <mat-icon
         [fontIcon]="providerUtils.getProviderIcon(connection().provider)"
-        class="!text-xl"
-      ></mat-icon>
+        class="h-5! w-5! text-xl!"
+      />
     </div>
     <div class="card-status-area">
       <div class="card-status-row">
@@ -44,21 +44,21 @@
       class="rounded-lg bg-[var(--bg-elevated)] p-2 text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-card)] hover:text-[var(--text-main)]"
       title="Edit"
     >
-      <mat-icon fontIcon="edit" class="!text-xl"></mat-icon>
+      <mat-icon fontIcon="edit" class="h-5! w-5! text-xl!" />
     </button>
     <button
       (click)="onDuplicate($event)"
       class="rounded-lg bg-[var(--bg-elevated)] p-2 text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-card)] hover:text-[var(--text-main)]"
       title="Duplicate"
     >
-      <mat-icon fontIcon="content_copy" class="!text-xl"></mat-icon>
+      <mat-icon fontIcon="content_copy" class="h-5! w-5! text-xl!" />
     </button>
     <button
       (click)="onDelete($event)"
       class="rounded-lg bg-red-500/10 p-2 text-red-500 transition-colors hover:bg-red-500/20"
       title="Delete"
     >
-      <mat-icon fontIcon="delete" class="!text-xl"></mat-icon>
+      <mat-icon fontIcon="delete" class="h-5! w-5! text-xl!" />
     </button>
   </div>
 </div>

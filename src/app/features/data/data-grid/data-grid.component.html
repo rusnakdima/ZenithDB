@@ -3,11 +3,23 @@
     <div
       class="m-4 flex items-center gap-2 rounded-xl border border-red-900/50 bg-red-900/20 px-4 py-3 text-red-400"
     >
-      <mat-icon fontIcon="error" class="!text-lg"></mat-icon>
+      <mat-icon fontIcon="error" class="h-5! w-5! text-2xl!" />
       <span>{{ error }}</span>
       <button class="ml-auto text-red-400 hover:text-red-300" (click)="error = ''">
-        <mat-icon fontIcon="close" class="!text-sm"></mat-icon>
+        <mat-icon fontIcon="close" class="h-4! w-4! text-2xl!" />
       </button>
+    </div>
+  }
+
+  @if (dataTruncated) {
+    <div
+      class="m-4 flex items-center gap-2 rounded-xl border border-amber-900/50 bg-amber-900/20 px-4 py-3 text-amber-400"
+    >
+      <mat-icon fontIcon="warning" class="h-5! w-5! text-2xl!" />
+      <span
+        >Data is truncated due to size limits. Only the first {{ MAX_PAGE_SIZE }} rows are
+        shown.</span
+      >
     </div>
   }
 
@@ -22,7 +34,7 @@
           </div>
         } @else if (data.length === 0) {
           <div class="flex h-full flex-col items-center justify-center text-[var(--text-dim)]">
-            <mat-icon fontIcon="inbox" class="mb-4 !text-6xl opacity-50"></mat-icon>
+            <mat-icon fontIcon="inbox" class="mb-4 h-12! w-12! text-2xl! opacity-50" />
             <p class="text-lg font-bold">No documents found</p>
             <p class="mt-1 text-sm text-[var(--text-muted)]">This collection is empty</p>
           </div>
@@ -41,7 +53,7 @@
                       class="flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs text-[var(--text-dim)] transition-all hover:bg-[var(--bg-card)] hover:text-[var(--accent)]"
                       (click)="viewJson(row)"
                     >
-                      <mat-icon fontIcon="visibility" class="!text-sm"></mat-icon>
+                      <mat-icon fontIcon="visibility" class="h-4! w-4! text-2xl!" />
                       Inspect
                     </button>
                   </div>
@@ -72,7 +84,7 @@
           </div>
         } @else if (data.length === 0) {
           <div class="flex h-full flex-col items-center justify-center text-[var(--text-dim)]">
-            <mat-icon fontIcon="table_chart" class="mb-4 !text-6xl opacity-50"></mat-icon>
+            <mat-icon fontIcon="table_chart" class="mb-4 h-12! w-12! text-2xl! opacity-50" />
             <p class="text-lg font-bold">No data in this collection</p>
             <p class="mt-1 text-sm text-[var(--text-muted)]">Try adjusting your filter</p>
           </div>
@@ -172,28 +184,28 @@
                         title="Edit"
                         (click)="viewJson(row)"
                       >
-                        <mat-icon fontIcon="edit" class="!text-base"></mat-icon>
+                        <mat-icon fontIcon="edit" class="h-4! w-4! text-2xl!" />
                       </button>
                       <button
                         class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-[var(--bg-elevated)] hover:text-amber-400"
                         title="Duplicate"
                         (click)="duplicateRow(row)"
                       >
-                        <mat-icon fontIcon="content_copy" class="!text-base"></mat-icon>
+                        <mat-icon fontIcon="content_copy" class="h-4! w-4! text-2xl!" />
                       </button>
                       <button
                         class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-[var(--bg-elevated)] hover:text-blue-400"
                         title="View JSON"
                         (click)="viewJson(row)"
                       >
-                        <mat-icon fontIcon="data_object" class="!text-base"></mat-icon>
+                        <mat-icon fontIcon="data_object" class="h-4! w-4! text-2xl!" />
                       </button>
                       <button
                         class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-red-900/20 hover:text-red-400"
                         title="Delete"
                         (click)="deleteRow(row)"
                       >
-                        <mat-icon fontIcon="delete" class="!text-base"></mat-icon>
+                        <mat-icon fontIcon="delete" class="h-4! w-4! text-2xl!" />
                       </button>
                     </div>
                   </td>
@@ -206,112 +218,12 @@
     }
   </div>
 
-  <div
-    class="pagination-footer flex flex-shrink-0 items-center justify-between border-t border-[var(--border-subtle)] bg-[var(--bg-sidebar)] px-6 py-3"
-  >
-    <div class="flex items-center gap-6">
-      <span class="text-sm text-[var(--text-dim)]">
-        Showing <span class="font-bold text-[var(--accent)]">{{ startIndex }}</span
-        >-<span class="font-bold text-[var(--accent)]">{{ endIndex }}</span> of
-        <span class="font-bold text-[var(--accent)]">{{ total }}</span>
-      </span>
-      <div class="flex items-center gap-3">
-        <span class="text-xs text-[var(--text-muted)]">Rows per page:</span>
-        <select
-          class="cursor-pointer rounded-lg border border-[var(--border-visible)] bg-[var(--bg-card)] px-3 py-1.5 text-sm text-[var(--text-main)] focus:border-[var(--accent)] focus:outline-none"
-          [value]="pageSize"
-          (change)="changePageSize(+$any($event.target).value)"
-        >
-          <option value="10">10</option>
-          <option value="25">25</option>
-          <option value="50">50</option>
-          <option value="100">100</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="flex items-center gap-2">
-      <div class="relative">
-        <button
-          class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-[var(--bg-card)] hover:text-[var(--accent)]"
-          title="Export"
-          (click)="toggleExportMenu()"
-        >
-          <mat-icon fontIcon="download" class="!text-base"></mat-icon>
-        </button>
-        @if (showExportMenu()) {
-          <div
-            class="absolute right-0 bottom-full z-50 mb-2 w-44 rounded-xl border border-[var(--border-visible)] bg-[var(--bg-card)] py-1 shadow-xl"
-          >
-            <button
-              class="w-full px-4 py-2.5 text-left text-sm text-[var(--text-dim)] hover:bg-[var(--bg-elevated)] hover:text-[var(--accent)]"
-              (click)="exportData('csv')"
-            >
-              Export CSV
-            </button>
-            <button
-              class="w-full px-4 py-2.5 text-left text-sm text-[var(--text-dim)] hover:bg-[var(--bg-elevated)] hover:text-[var(--accent)]"
-              (click)="exportData('json')"
-            >
-              Export JSON
-            </button>
-            <button
-              class="w-full px-4 py-2.5 text-left text-sm text-[var(--text-dim)] hover:bg-[var(--bg-elevated)] hover:text-[var(--accent)]"
-              (click)="exportData('jsonl')"
-            >
-              Export JSONL
-            </button>
-            <button
-              class="w-full px-4 py-2.5 text-left text-sm text-[var(--text-dim)] hover:bg-[var(--bg-elevated)] hover:text-[var(--accent)]"
-              (click)="exportData('sql')"
-            >
-              Export SQL
-            </button>
-            <button
-              class="w-full px-4 py-2.5 text-left text-sm text-[var(--text-dim)] hover:bg-[var(--bg-elevated)] hover:text-[var(--accent)]"
-              (click)="exportData('markdown')"
-            >
-              Export Markdown
-            </button>
-          </div>
-        }
-      </div>
-
-      <button
-        class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-[var(--bg-card)] hover:text-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-30"
-        [disabled]="!hasPrevPage"
-        (click)="firstPage()"
-        title="First page"
-      >
-        <mat-icon fontIcon="first_page" class="!text-base"></mat-icon>
-      </button>
-      <button
-        class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-[var(--bg-card)] hover:text-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-30"
-        [disabled]="!hasPrevPage"
-        (click)="prevPage()"
-        title="Previous page"
-      >
-        <mat-icon fontIcon="chevron_left" class="!text-base"></mat-icon>
-      </button>
-      <span class="px-3 text-sm text-[var(--text-dim)]"
-        >Page {{ page + 1 }} of {{ totalPages || 1 }}</span
-      >
-      <button
-        class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-[var(--bg-card)] hover:text-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-30"
-        [disabled]="!hasNextPage"
-        (click)="nextPage()"
-        title="Next page"
-      >
-        <mat-icon fontIcon="chevron_right" class="!text-base"></mat-icon>
-      </button>
-      <button
-        class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-[var(--bg-card)] hover:text-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-30"
-        [disabled]="!hasNextPage"
-        (click)="lastPage()"
-        title="Last page"
-      >
-        <mat-icon fontIcon="last_page" class="!text-base"></mat-icon>
-      </button>
-    </div>
-  </div>
+  <app-pagination
+    class="flex flex-shrink-0"
+    [totalItems]="total"
+    [currentPage]="page"
+    [pageSize]="pageSize"
+    (pageChange)="onPageChange($event)"
+    (pageSizeChange)="changePageSize($event)"
+  ></app-pagination>
 </div>

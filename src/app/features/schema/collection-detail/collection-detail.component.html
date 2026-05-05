@@ -5,7 +5,7 @@
         routerLink="/schema"
         class="rounded-lg p-2 text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--text-main)]"
       >
-        <mat-icon fontIcon="arrow_back" class="!text-xl"></mat-icon>
+        <mat-icon fontIcon="arrow_back" class="h-6! w-6! text-2xl!" />
       </a>
       <h1 class="text-xl font-bold text-[var(--text-main)]">{{ collectionName }}</h1>
       <span
@@ -19,7 +19,7 @@
         (click)="viewData()"
         class="inline-flex items-center gap-2 rounded-xl bg-[var(--accent)] px-4 py-2.5 text-sm font-bold text-black transition-all hover:opacity-90"
       >
-        <mat-icon fontIcon="table_chart" class="!text-base"></mat-icon>
+        <mat-icon fontIcon="table_chart" class="h-5! w-5! text-2xl!" />
         View Data
       </button>
     </div>
@@ -80,7 +80,7 @@
             (click)="openAddFieldModal()"
             class="inline-flex items-center gap-1.5 rounded-lg bg-[var(--bg-elevated)] px-3 py-1.5 text-sm text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-card)] hover:text-[var(--accent)]"
           >
-            <mat-icon fontIcon="add" class="!text-base"></mat-icon>
+            <mat-icon fontIcon="add" class="h-5! w-5! text-2xl!" />
             Add Field
           </button>
         </div>
@@ -153,13 +153,13 @@
                         (click)="saveEditField(field)"
                         class="rounded p-1 text-[var(--accent)] hover:bg-[var(--bg-elevated)]"
                       >
-                        <mat-icon fontIcon="check" class="!text-base"></mat-icon>
+                        <mat-icon fontIcon="check" class="h-5! w-5! text-2xl!" />
                       </button>
                       <button
                         (click)="cancelEditField()"
                         class="rounded p-1 text-[var(--text-dim)] hover:bg-[var(--bg-elevated)] hover:text-[var(--text-main)]"
                       >
-                        <mat-icon fontIcon="close" class="!text-base"></mat-icon>
+                        <mat-icon fontIcon="close" class="h-5! w-5! text-2xl!" />
                       </button>
                     </div>
                   } @else {
@@ -170,13 +170,13 @@
                           (click)="deleteField()"
                           class="rounded p-1 text-red-400 hover:bg-red-500/20"
                         >
-                          <mat-icon fontIcon="check" class="!text-base"></mat-icon>
+                          <mat-icon fontIcon="check" class="h-5! w-5! text-2xl!" />
                         </button>
                         <button
                           (click)="cancelDeleteField()"
                           class="rounded p-1 text-[var(--text-dim)] hover:bg-[var(--bg-elevated)]"
                         >
-                          <mat-icon fontIcon="close" class="!text-base"></mat-icon>
+                          <mat-icon fontIcon="close" class="h-5! w-5! text-2xl!" />
                         </button>
                       </div>
                     } @else {
@@ -196,7 +196,7 @@
                       class="rounded p-1 text-[var(--text-dim)] transition-colors hover:bg-red-500/20 hover:text-red-400"
                       title="Delete field"
                     >
-                      <mat-icon fontIcon="delete" class="!text-base"></mat-icon>
+                      <mat-icon fontIcon="delete" class="h-5! w-5! text-2xl!" />
                     </button>
                   }
                 </td>
@@ -225,7 +225,7 @@
             (click)="openCreateIndexModal()"
             class="inline-flex items-center gap-1.5 rounded-lg bg-[var(--bg-elevated)] px-3 py-1.5 text-sm text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-card)] hover:text-[var(--accent)]"
           >
-            <mat-icon fontIcon="add" class="!text-base"></mat-icon>
+            <mat-icon fontIcon="add" class="h-5! w-5! text-2xl!" />
             Create Index
           </button>
         </div>
@@ -234,7 +234,7 @@
             <div class="flex items-center justify-between px-4 py-3">
               <div class="flex items-center gap-3">
                 <div class="flex items-center gap-2">
-                  <mat-icon fontIcon="storage" class="!text-base text-[var(--text-dim)]"></mat-icon>
+                  <mat-icon fontIcon="storage" class="h-5! w-5! text-2xl! text-[var(--text-dim)]" />
                   <span class="font-mono text-sm text-[var(--text-main)]">{{ index.name }}</span>
                 </div>
                 <div class="flex items-center gap-1">
@@ -256,7 +256,7 @@
                 class="rounded p-1 text-[var(--text-dim)] transition-colors hover:bg-red-500/20 hover:text-red-400"
                 title="Drop index"
               >
-                <mat-icon fontIcon="delete" class="!text-base"></mat-icon>
+                <mat-icon fontIcon="delete" class="h-5! w-5! text-2xl!" />
               </button>
             </div>
           } @empty {
@@ -273,21 +273,21 @@
             (click)="viewData()"
             class="inline-flex items-center gap-2 rounded-xl bg-[var(--accent)] px-4 py-2.5 text-sm font-bold text-black transition-all hover:opacity-90"
           >
-            <mat-icon fontIcon="table_chart" class="!text-base"></mat-icon>
+            <mat-icon fontIcon="table_chart" class="h-5! w-5! text-2xl!" />
             View Data
           </button>
           <button
             (click)="exportSchema('json')"
             class="inline-flex items-center gap-2 rounded-xl border border-[var(--border-visible)] bg-[var(--bg-elevated)] px-4 py-2.5 text-sm font-medium text-[var(--text-main)] transition-colors hover:border-[var(--accent)] hover:bg-[var(--bg-card)]"
           >
-            <mat-icon fontIcon="download" class="!text-base"></mat-icon>
+            <mat-icon fontIcon="download" class="h-5! w-5! text-2xl!" />
             Export JSON
           </button>
           <button
             (click)="exportSchema('csv')"
             class="inline-flex items-center gap-2 rounded-xl border border-[var(--border-visible)] bg-[var(--bg-elevated)] px-4 py-2.5 text-sm font-medium text-[var(--text-main)] transition-colors hover:border-[var(--accent)] hover:bg-[var(--bg-card)]"
           >
-            <mat-icon fontIcon="table_chart" class="!text-base"></mat-icon>
+            <mat-icon fontIcon="table_chart" class="h-5! w-5! text-2xl!" />
             Export CSV
           </button>
         </div>
@@ -295,7 +295,7 @@
           (click)="openDeleteCollectionConfirm()"
           class="inline-flex items-center gap-2 rounded-xl border border-red-900/50 bg-red-900/20 px-4 py-2.5 text-sm font-medium text-red-400 transition-colors hover:bg-red-900/30"
         >
-          <mat-icon fontIcon="delete" class="!text-base"></mat-icon>
+          <mat-icon fontIcon="delete" class="h-5! w-5! text-2xl!" />
           Delete Collection
         </button>
       </div>
@@ -416,7 +416,7 @@
   <app-modal [open]="true" title="" size="sm" (closed)="cancelDeleteCollection()">
     <div class="flex items-center gap-3">
       <div class="flex h-10 w-10 items-center justify-center rounded-full bg-red-500/20">
-        <mat-icon fontIcon="warning" class="!text-xl text-red-400"></mat-icon>
+        <mat-icon fontIcon="warning" class="h-6! w-6! text-2xl! text-red-400" />
       </div>
       <div>
         <h3 class="text-lg font-semibold text-[var(--text-main)]">Delete Collection</h3>

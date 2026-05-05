@@ -94,10 +94,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
     return conn?.name || "Unknown";
   }
 
-  getActiveConnectionUri(): string {
-    return "";
-  }
-
   async fetchSystemStatus() {
     try {
       const metrics = await this.databaseService.getSystemStatus();
@@ -276,17 +272,5 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   hideContextMenu() {
     this.contextMenu.set({ show: false, x: 0, y: 0, node: null });
-  }
-
-  refreshNode() {
-    this.hideContextMenu();
-  }
-
-  newCollection() {
-    this.hideContextMenu();
-  }
-
-  dropCollection() {
-    this.hideContextMenu();
   }
 }

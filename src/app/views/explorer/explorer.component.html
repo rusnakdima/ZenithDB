@@ -11,13 +11,13 @@
         [class.text-[var(--text-dim)]]="activeCollection() !== tab.collection"
         (click)="selectTab(tab.collection)"
       >
-        <mat-icon fontIcon="table_chart" class="!text-xl"></mat-icon>
+        <mat-icon fontIcon="table_chart" class="h-5! w-5! text-xl!" />
         <span class="text-sm font-medium">{{ tab.name }}</span>
         <button
           class="close-tab rounded p-0.5 transition-colors hover:bg-[var(--bg-elevated)]"
           (click)="closeTab(tab.collection); $event.stopPropagation()"
         >
-          <mat-icon fontIcon="close" class="!text-xl"></mat-icon>
+          <mat-icon fontIcon="close" class="h-5! w-5! text-xl!" />
         </button>
       </div>
     }
@@ -26,18 +26,18 @@
         class="add-tab-btn rounded p-2 text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--accent)]"
         (click)="toggleCollectionSelector()"
       >
-        <mat-icon fontIcon="add" class="!text-xl"></mat-icon>
+        <mat-icon fontIcon="add" class="h-5! w-5! text-xl!" />
       </button>
       @if (showCollectionSelector()) {
         <div
-          class="absolute top-full left-0 z-50 mt-1 max-h-64 w-56 overflow-y-auto rounded-lg border border-[var(--border-visible)] bg-[var(--bg-card)] shadow-xl"
+          class="absolute left-0 z-[100] mt-1 max-h-64 w-56 overflow-y-auto rounded-lg border border-[var(--border-visible)] bg-[var(--bg-card)] shadow-xl"
         >
           @for (col of collections(); track col.name) {
             <button
               class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-[var(--text-main)] transition-colors hover:bg-[var(--bg-elevated)]"
               (click)="selectCollectionFromDropdown(col.name)"
             >
-              <mat-icon fontIcon="table_chart" class="!text-xl"></mat-icon>
+              <mat-icon fontIcon="table_chart" class="h-5! w-5! text-xl!" />
               {{ col.name }}
             </button>
           }
@@ -52,6 +52,7 @@
   <app-filter-bar
     [filter]="filterText()"
     [availableColumns]="availableColumns()"
+    [disabledColumns]="getDisabledColumns()"
     [viewMode]="'grid'"
     (filterChange)="onFilterChange($event)"
     (apply)="onFilterApply()"
@@ -92,7 +93,7 @@
           (click)="setSplitMode(mode.id)"
           [title]="mode.label"
         >
-          <mat-icon [fontIcon]="mode.icon" class="!text-xl"></mat-icon>
+          <mat-icon [fontIcon]="mode.icon" class="h-5! w-5! text-xl!" />
         </button>
       }
     </div>
@@ -112,11 +113,11 @@
     <div class="flex items-center gap-4 text-sm text-[var(--text-dim)]">
       @if (stats()) {
         <span class="flex items-center gap-1.5">
-          <mat-icon fontIcon="format_align_left" class="!text-xl"></mat-icon>
+          <mat-icon fontIcon="format_align_left" class="h-5! w-5! text-xl!" />
           {{ stats()!.size_bytes | formatBytes }}
         </span>
         <span class="flex items-center gap-1.5">
-          <mat-icon fontIcon="grid_view" class="!text-xl"></mat-icon>
+          <mat-icon fontIcon="grid_view" class="h-5! w-5! text-xl!" />
           {{ formatDocumentCount(stats()!.document_count) }} Docs
         </span>
       }
@@ -136,6 +137,7 @@
               [showInspector]="showInspector()"
               [viewMode]="'grid'"
               [inputVisibleColumns]="selectedColumns()"
+              [reloadTrigger]="getReloadTrigger()"
               (documentClick)="openInspector($event)"
               (pageChange)="onPageChange($event)"
               (viewModeChange)="selectViewTab('json')"
@@ -153,6 +155,7 @@
                 [showInspector]="showInspector()"
                 [viewMode]="'grid'"
                 [inputVisibleColumns]="selectedColumns()"
+                [reloadTrigger]="getReloadTrigger()"
                 (documentClick)="openInspector($event)"
                 (pageChange)="onPageChange($event)"
                 (viewModeChange)="selectViewTab('json')"
@@ -167,6 +170,7 @@
                 [showInspector]="showInspector()"
                 [viewMode]="'grid'"
                 [inputVisibleColumns]="selectedColumns()"
+                [reloadTrigger]="getReloadTrigger()"
                 (documentClick)="openInspector($event)"
                 (pageChange)="onPageChange($event)"
                 (viewModeChange)="selectViewTab('json')"
@@ -185,6 +189,7 @@
                 [showInspector]="showInspector()"
                 [viewMode]="'grid'"
                 [inputVisibleColumns]="selectedColumns()"
+                [reloadTrigger]="getReloadTrigger()"
                 (documentClick)="openInspector($event)"
                 (pageChange)="onPageChange($event)"
                 (viewModeChange)="selectViewTab('json')"
@@ -199,6 +204,7 @@
                 [showInspector]="showInspector()"
                 [viewMode]="'grid'"
                 [inputVisibleColumns]="selectedColumns()"
+                [reloadTrigger]="getReloadTrigger()"
                 (documentClick)="openInspector($event)"
                 (pageChange)="onPageChange($event)"
                 (viewModeChange)="selectViewTab('json')"
@@ -228,14 +234,14 @@
                 class="flex items-center gap-2 rounded border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-1.5 text-sm text-[var(--text-main)] transition-colors hover:bg-[var(--bg-card)]"
                 (click)="loadFullJsonData()"
               >
-                <mat-icon fontIcon="refresh" class="!text-xl"></mat-icon>
+                <mat-icon fontIcon="refresh" class="h-5! w-5! text-xl!" />
                 Refresh
               </button>
               <button
                 class="flex items-center gap-2 rounded bg-[var(--accent)] px-3 py-1.5 text-sm font-bold text-black transition-colors hover:bg-[var(--accent-hover)]"
                 (click)="copyJsonToClipboard()"
               >
-                <mat-icon fontIcon="content_copy" class="!text-xl"></mat-icon>
+                <mat-icon fontIcon="content_copy" class="h-5! w-5! text-xl!" />
                 Copy to Clipboard
               </button>
             </div>
@@ -249,49 +255,52 @@
               </div>
             } @else if (fullJsonData().length === 0) {
               <div class="flex h-full flex-col items-center justify-center text-[var(--text-dim)]">
-                <mat-icon fontIcon="download" class="!mb-2 !text-2xl"></mat-icon>
+                <mat-icon fontIcon="download" class="mb-2 h-12! w-12! text-xl!" />
                 <p class="text-lg font-bold">No documents found</p>
                 <p class="text-sm text-[var(--text-muted)]">This collection is empty</p>
               </div>
             } @else {
-              <div class="json-content p-4">
-                @for (doc of fullJsonData(); track $index; let docIndex = $index) {
+              <cdk-virtual-scroll-viewport itemSize="200" class="json-content h-full p-4">
+                <div
+                  *cdkVirtualFor="
+                    let doc of fullJsonData();
+                    let docIndex = index;
+                    trackBy: trackByIndex
+                  "
+                  class="json-document mb-4 overflow-hidden rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-card)]"
+                >
                   <div
-                    class="json-document mb-4 overflow-hidden rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-card)]"
+                    class="flex items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--bg-sidebar)] px-4 py-2"
                   >
-                    <div
-                      class="flex items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--bg-sidebar)] px-4 py-2"
+                    <span class="mono text-sm text-[var(--text-dim)]"
+                      >Document {{ docIndex + 1 }}</span
                     >
-                      <span class="mono text-sm text-[var(--text-dim)]"
-                        >Document {{ docIndex + 1 }}</span
-                      >
-                      <button
-                        class="flex items-center gap-1 rounded px-2 py-1 text-xs text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--accent)]"
-                        (click)="openInspector(doc)"
-                      >
-                        <mat-icon fontIcon="visibility" class="!text-xl"></mat-icon>
-                        Inspect
-                      </button>
-                    </div>
-                    <div class="json-body p-4">
-                      @for (line of formatJsonLines(doc); track $index; let lineIndex = $index) {
-                        <div
-                          class="json-line mono flex text-sm leading-relaxed hover:bg-[var(--bg-elevated)]"
-                        >
-                          <span
-                            class="json-line-num w-10 flex-shrink-0 pr-4 text-right text-xs text-[var(--text-muted)] select-none"
-                            >{{ lineIndex + 1 }}</span
-                          >
-                          <span
-                            class="json-line-content"
-                            [innerHTML]="highlightJsonLine(line)"
-                          ></span>
-                        </div>
-                      }
-                    </div>
+                    <button
+                      class="flex items-center gap-1 rounded px-2 py-1 text-xs text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--accent)]"
+                      (click)="openInspector(doc)"
+                    >
+                      <mat-icon fontIcon="visibility" class="h-5! w-5! text-xl!" />
+                      Inspect
+                    </button>
                   </div>
-                }
-              </div>
+                  <div class="json-body p-4">
+                    @for (line of formatJsonLinesFn(doc); track $index; let lineIndex = $index) {
+                      <div
+                        class="json-line mono flex text-sm leading-relaxed hover:bg-[var(--bg-elevated)]"
+                      >
+                        <span
+                          class="json-line-num w-10 flex-shrink-0 pr-4 text-right text-xs text-[var(--text-muted)] select-none"
+                          >{{ lineIndex + 1 }}</span
+                        >
+                        <span
+                          class="json-line-content"
+                          [innerHTML]="highlightJsonLineFn(line)"
+                        ></span>
+                      </div>
+                    }
+                  </div>
+                </div>
+              </cdk-virtual-scroll-viewport>
             }
           </div>
         </div>
@@ -304,7 +313,7 @@
       [document]="inspectorDocument()!"
       (close)="closeInspector()"
       (save)="saveDocument($event)"
-      (delete)="deleteDocument($event)"
+      (delete)="deleteDocument(inspectorDocument()!)"
     ></app-inspector-drawer>
   }
 </div>
