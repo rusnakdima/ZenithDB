@@ -114,7 +114,11 @@
         } @else {
           <table class="data-table w-full border-collapse">
             <thead class="sticky top-0 z-10 bg-slate-900/95 backdrop-blur-sm">
-              <tr>
+              <tr
+                cdkDropList
+                (cdkDropListDropped)="onColumnDrop($event)"
+                cdkDropListOrientation="horizontal"
+              >
                 <th class="w-10 border-r border-b border-slate-700 p-2 text-center">
                   <input
                     type="checkbox"
@@ -126,7 +130,8 @@
                 @for (col of columns; track col.name) {
                   @if (visibleColumnsList().includes(col.name)) {
                     <th
-                      class="relative border-r border-b border-slate-700 p-2 text-left text-xs font-bold tracking-wider text-slate-400 uppercase select-none"
+                      class="relative cursor-move border-r border-b border-slate-700 p-2 text-left text-xs font-bold tracking-wider text-slate-400 uppercase select-none"
+                      cdkDrag
                       [style.width.px]="columnWidths()[col.name]"
                     >
                       <div class="flex items-center gap-1">

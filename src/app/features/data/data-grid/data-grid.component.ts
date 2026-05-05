@@ -10,6 +10,7 @@ import {
   OnChanges,
   SimpleChanges,
 } from "@angular/core";
+import { CdkDragDrop, CdkDrag, CdkDropList, moveItemInArray } from "@angular/cdk/drag-drop";
 import { FormsModule } from "@angular/forms";
 import { DatabaseService } from "@shared/services/database.service";
 import { ToastService } from "@services/toast.service";
@@ -22,7 +23,7 @@ import { SortableHeaderComponent } from "@shared/components/sortable-header/sort
 @Component({
   selector: "app-data-grid",
   standalone: true,
-  imports: [FormsModule, DataTypeBadgeComponent, SortableHeaderComponent],
+  imports: [FormsModule, DataTypeBadgeComponent, SortableHeaderComponent, CdkDrag, CdkDropList],
   templateUrl: "./data-grid.component.html",
 })
 export class DataGridComponent implements OnInit, OnChanges {
@@ -83,6 +84,7 @@ export class DataGridComponent implements OnInit, OnChanges {
 
   selectedRows = signal<Set<number>>(new Set());
   visibleColumns = signal<Set<string>>(new Set());
+  columnOrder = signal<string[]>([]);
   showColumnMenu = signal(false);
   resizingColumn = signal<string | null>(null);
   columnWidths = signal<Record<string, number>>({});
@@ -117,8 +119,18 @@ export class DataGridComponent implements OnInit, OnChanges {
   visibleColumnsList = computed(() => {
     const all = this.columns.map((c) => c.name);
     const visible = this.visibleColumns();
-    if (visible.size === 0) return all;
-    return all.filter((c) => visible.has(c));
+    const order = this.columnOrder();
+    if (visible.size === 0 && order.length === 0) return all;
+    if (visible.size === 0 && order.length > 0) return order;
+    let filtered = all.filter((c) => visible.has(c));
+    if (order.length > 0) {
+      const orderedFiltered = order.filter((c) => visible.has(c));
+      filtered.forEach((c) => {
+        if (!orderedFiltered.includes(c)) orderedFiltered.push(c);
+      });
+      return orderedFiltered;
+    }
+    return filtered;
   });
 
   async ngOnInit() {
@@ -131,10 +143,13 @@ export class DataGridComponent implements OnInit, OnChanges {
 
   initColumnWidths() {
     const widths: Record<string, number> = {};
+    const order: string[] = [];
     this.columns.forEach((c) => {
       widths[c.name] = 150;
+      order.push(c.name);
     });
     this.columnWidths.set(widths);
+    this.columnOrder.set(order);
     const visible = new Set<string>();
     this.columns.forEach((c) => visible.add(c.name));
     this.visibleColumns.set(visible);
@@ -329,9 +344,17 @@ export class DataGridComponent implements OnInit, OnChanges {
         newSet.delete(col);
       } else {
         newSet.add(col);
+        this.columnOrder.update((order) => [...order.filter((c) => c !== col), col]);
       }
       return newSet;
     });
+  }
+
+  onColumnDrop(event: CdkDragDrop<string[]>) {
+    if (event.previousIndex === event.currentIndex) return;
+    const currentOrder = [...this.columnOrder()];
+    moveItemInArray(currentOrder, event.previousIndex, event.currentIndex);
+    this.columnOrder.set(currentOrder);
   }
 
   showAllColumns() {
