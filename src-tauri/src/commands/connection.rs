@@ -64,14 +64,16 @@ pub struct ConnectionSummary {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConnectionHealth {
     pub healthy: bool,
+    pub provider: String,
     pub server_version: Option<String>,
     pub latency_ms: Option<u64>,
 }
 
 impl ConnectionHealth {
-    pub fn ok() -> Self {
+    pub fn ok(provider: &str) -> Self {
         Self {
             healthy: true,
+            provider: provider.to_string(),
             server_version: None,
             latency_ms: None,
         }
@@ -79,6 +81,7 @@ impl ConnectionHealth {
     pub fn err(msg: &str) -> Self {
         Self {
             healthy: false,
+            provider: String::new(),
             server_version: Some(msg.to_string()),
             latency_ms: None,
         }
@@ -279,6 +282,7 @@ pub async fn test_connection(config: ConnectionConfig) -> Result<ConnectionHealt
                 let healthy = p.health_check().await.unwrap_or(false);
                 Ok(ConnectionHealth {
                     healthy,
+                    provider: "json".to_string(),
                     server_version: Some("N/A".to_string()),
                     latency_ms: None,
                 })
@@ -287,7 +291,7 @@ pub async fn test_connection(config: ConnectionConfig) -> Result<ConnectionHealt
         },
         ConnectionConfigEnum::Mongo { uri, database, .. } => {
             match create_mongo_provider(uri, database).await {
-                Ok(_) => Ok(ConnectionHealth::ok()),
+                Ok(_) => Ok(ConnectionHealth::ok("mongo")),
                 Err(e) => Ok(ConnectionHealth::err(&e)),
             }
         }
@@ -296,6 +300,7 @@ pub async fn test_connection(config: ConnectionConfig) -> Result<ConnectionHealt
                 let healthy = p.health_check().await.unwrap_or(false);
                 Ok(ConnectionHealth {
                     healthy,
+                    provider: "redis".to_string(),
                     server_version: Some("N/A".to_string()),
                     latency_ms: None,
                 })
@@ -303,15 +308,15 @@ pub async fn test_connection(config: ConnectionConfig) -> Result<ConnectionHealt
             Err(e) => Ok(ConnectionHealth::err(&e)),
         },
         ConnectionConfigEnum::Postgres { uri, .. } => match create_postgres_provider(uri).await {
-            Ok(_) => Ok(ConnectionHealth::ok()),
+            Ok(_) => Ok(ConnectionHealth::ok("postgres")),
             Err(e) => Ok(ConnectionHealth::err(&e)),
         },
         ConnectionConfigEnum::Sqlite { path, .. } => match create_sqlite_provider(path).await {
-            Ok(_) => Ok(ConnectionHealth::ok()),
+            Ok(_) => Ok(ConnectionHealth::ok("sqlite")),
             Err(e) => Ok(ConnectionHealth::err(&e)),
         },
         ConnectionConfigEnum::MySql { uri, .. } => match create_mysql_provider(uri).await {
-            Ok(_) => Ok(ConnectionHealth::ok()),
+            Ok(_) => Ok(ConnectionHealth::ok("mysql")),
             Err(e) => Ok(ConnectionHealth::err(&e)),
         },
     }

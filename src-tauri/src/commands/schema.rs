@@ -53,12 +53,26 @@ pub async fn list_collections(conn_id: &str) -> Result<Vec<CollectionMeta>, Stri
                     .filter_map(|e| e.ok())
                     .filter(|e| e.path().extension().map_or(false, |ext| ext == "json"))
                     .filter_map(|e| {
+                        let file_path = e.path();
                         let name = e
                             .file_name()
                             .into_string()
                             .ok()
                             .map(|n| n.trim_end_matches(".json").to_string())?;
-                        Some(CollectionMeta { name, count: 0 })
+                        let count = std::fs::read_to_string(&file_path)
+                            .ok()
+                            .and_then(|content| {
+                                serde_json::from_str::<serde_json::Value>(&content).ok()
+                            })
+                            .map(|v| {
+                                if let Some(arr) = v.as_array() {
+                                    arr.len() as u64
+                                } else {
+                                    1
+                                }
+                            })
+                            .unwrap_or(0);
+                        Some(CollectionMeta { name, count })
                     })
                     .collect();
                 Ok(collections)

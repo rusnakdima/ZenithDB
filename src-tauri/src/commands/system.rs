@@ -21,6 +21,9 @@ fn calculate_status(cpu_usage: f32, ram_used: u64, ram_total: u64) -> String {
         0.0
     };
 
+    let cpu_usage = if cpu_usage.is_nan() { 0.0 } else { cpu_usage };
+    let ram_usage = if ram_usage.is_nan() { 0.0 } else { ram_usage };
+
     let max_usage = cpu_usage.max(ram_usage);
 
     if max_usage >= 90.0 {
@@ -35,9 +38,11 @@ fn calculate_status(cpu_usage: f32, ram_used: u64, ram_total: u64) -> String {
 #[tauri::command]
 pub fn get_system_status() -> Result<SystemMetrics, String> {
     let mut sys = System::new_all();
-    sys.refresh_all();
+    sys.refresh_cpu_all();
+    sys.refresh_memory();
 
     let cpu_usage = sys.global_cpu_usage();
+    let cpu_usage = if cpu_usage.is_nan() { 0.0 } else { cpu_usage };
     let ram_used = sys.used_memory();
     let ram_total = sys.total_memory();
 
