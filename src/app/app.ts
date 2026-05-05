@@ -1,4 +1,4 @@
-import { Component, inject, signal, HostBinding, OnInit } from "@angular/core";
+import { Component, inject, signal, HostBinding, OnInit, OnDestroy } from "@angular/core";
 import { RouterOutlet } from "@angular/router";
 import { CommonModule } from "@angular/common";
 import { CommandPaletteComponent } from "@shared/components/command-palette/command-palette.component";
@@ -30,7 +30,10 @@ import { filter, map } from "rxjs/operators";
   ],
   templateUrl: "./app.html",
 })
-export class AppComponent implements OnInit {
+export class AppComponent implements OnInit, OnDestroy {
+  private boundToggleTheme: (() => void) | null = null;
+  private boundToggleCommandPalette: (() => void) | null = null;
+  private boundCloseTopModal: (() => void) | null = null;
   connectionState = inject(ConnectionStateService);
   shortcutsService = inject(KeyboardShortcutsService);
   dialogService = inject(DialogService);
@@ -72,16 +75,26 @@ export class AppComponent implements OnInit {
   ngOnInit(): void {
     this.themeService.initFromSettings();
 
-    document.addEventListener("zenith:toggle-theme", () => {
-      this.themeService.toggle();
-    });
-
-    document.addEventListener("zenith:toggle-command-palette", () => {
+    this.boundToggleTheme = () => this.themeService.toggle();
+    this.boundToggleCommandPalette = () => {
       document.querySelector("app-command-palette")?.setAttribute("data-toggle", "");
-    });
+    };
+    this.boundCloseTopModal = () => this.shortcutsService.shortcutsHelpVisible.set(false);
 
-    document.addEventListener("zenith:close-top-modal", () => {
-      this.shortcutsService.shortcutsHelpVisible.set(false);
-    });
+    document.addEventListener("zenith:toggle-theme", this.boundToggleTheme);
+    document.addEventListener("zenith:toggle-command-palette", this.boundToggleCommandPalette);
+    document.addEventListener("zenith:close-top-modal", this.boundCloseTopModal);
+  }
+
+  ngOnDestroy(): void {
+    if (this.boundToggleTheme) {
+      document.removeEventListener("zenith:toggle-theme", this.boundToggleTheme);
+    }
+    if (this.boundToggleCommandPalette) {
+      document.removeEventListener("zenith:toggle-command-palette", this.boundToggleCommandPalette);
+    }
+    if (this.boundCloseTopModal) {
+      document.removeEventListener("zenith:close-top-modal", this.boundCloseTopModal);
+    }
   }
 }

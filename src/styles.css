@@ -1,11 +1,13 @@
 @import "tailwindcss";
+@import "flowbite/dist/flowbite.css";
 @import "material-icons/iconfont/material-icons.css";
 
 @variant dark (&:where(.dark, .dark *));
 @variant light (&:where(.light, .light *));
 
 .mat-icon {
-  @apply inline-flex h-auto w-auto items-center justify-center align-middle leading-none text-inherit;
+  @apply inline-flex items-center justify-center align-middle leading-none text-inherit;
+  flex-shrink: 0;
 }
 
 :root {
@@ -251,7 +253,11 @@ html.light {
   }
 
   .layout-content {
-    @apply flex min-h-0 flex-1 flex-row;
+    @apply flex min-h-0 flex-1 flex-row overflow-visible;
+  }
+
+  .app-main {
+    @apply relative z-0 flex min-h-0 flex-1 flex-col overflow-hidden transition-colors duration-200;
   }
 
   .app-header {
@@ -319,7 +325,7 @@ html.light {
   }
 
   .app-sidebar {
-    @apply flex w-64 flex-shrink-0 flex-col overflow-hidden border-r border-[var(--border-subtle)] bg-[var(--bg-sidebar)];
+    @apply relative z-0 flex w-64 flex-shrink-0 flex-col overflow-hidden border-r border-[var(--border-subtle)] bg-[var(--bg-sidebar)];
   }
 
   .sidebar-layout {
