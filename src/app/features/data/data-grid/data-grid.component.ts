@@ -35,6 +35,7 @@ import { withErrorHandling } from "@shared/utils/error-handler.utils";
     DataTypeBadgeComponent,
     SortableHeaderComponent,
     PaginationComponent,
+    CheckboxComponent,
     CdkDrag,
     CdkDropList,
   ],
