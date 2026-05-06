@@ -6,7 +6,6 @@ import {
   ElementRef,
   OnInit,
   OnDestroy,
-  HostListener,
   inject,
 } from "@angular/core";
 import { CommonModule } from "@angular/common";
@@ -65,13 +64,6 @@ export class ModalComponent implements OnInit, OnDestroy {
       this.openModal();
     } else {
       this.closeModal();
-    }
-  }
-
-  @HostListener("document:keydown.escape")
-  onEscapeKey(): void {
-    if (this.closeOnEscape() && this.open()) {
-      this.onClose();
     }
   }
 
