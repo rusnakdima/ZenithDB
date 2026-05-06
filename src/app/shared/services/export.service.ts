@@ -4,19 +4,19 @@ import { writeTextFile } from "@tauri-apps/plugin-fs";
 import { ToastService } from "@services/toast.service";
 import { LoadingService } from "@shared/services/loading.service";
 
-export interface FileFilter {
+type FileFilter = {
   name: string;
   extensions: string[];
-}
+};
 
-export type ExportFormat = "csv" | "json" | "jsonl" | "sql" | "markdown";
+type ExportFormat = "csv" | "json" | "jsonl" | "sql" | "markdown";
 
-export interface ExportOptions {
+type ExportOptions = {
   format: ExportFormat;
   filename: string;
   includeHeaders?: boolean;
   tableName?: string;
-}
+};
 
 @Injectable({ providedIn: "root" })
 export class ExportService {

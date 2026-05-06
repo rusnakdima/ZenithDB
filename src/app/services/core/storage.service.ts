@@ -4,9 +4,8 @@ import {
   ColumnInfo,
   ConnectionSummary,
   CollectionMeta,
-  CollectionSchema,
-  SystemMetrics,
   RowData,
+  SystemMetrics,
 } from "@shared/models/connection.config";
 
 export interface CollectionData {
@@ -68,13 +67,6 @@ export class StorageService extends BaseStorageService {
 
   removeConnection(id: string) {
     this.connectionsSignal.update((conns) => conns.filter((c) => c.id !== id));
-  }
-
-  setActiveConnection(id: string | null) {
-    if (!id) {
-      this.collectionsSignal.set([]);
-      this.collectionDataSignal.set(new Map());
-    }
   }
 
   setCollections(collections: CollectionMeta[]) {

@@ -4,7 +4,7 @@ import {
   inject,
   signal,
   OnInit,
-  OnDestroy,
+  DestroyRef,
   effect,
   computed,
 } from "@angular/core";
@@ -38,9 +38,10 @@ interface TreeNode {
   imports: [RouterLink, MatIconModule],
   templateUrl: "./sidebar.component.html",
 })
-export class SidebarComponent implements OnInit, OnDestroy {
+export class SidebarComponent implements OnInit {
   providerUtils = inject(ProviderUtils);
   private router = inject(Router);
+  private destroyRef = inject(DestroyRef);
   connectionState = inject(ConnectionStateService);
   databaseService = inject(DatabaseService);
   storage = inject(StorageService);
@@ -75,10 +76,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
   isAtExplorer = computed(() => /^\/connections\/[^/]+\/explorer$/.test(this.currentUrl()));
   isAtQuery = computed(() => this.currentUrl().startsWith("/query"));
 
-  private _activeConnectionId = signal<string | null>(null);
   activeConnectionId = computed(() => {
-    const urlId = this._activeConnectionId();
-    if (urlId) return urlId;
     const match = this.currentUrl().match(/^\/connections\/([^/]+)/);
     return match ? match[1] : null;
   });
@@ -95,10 +93,10 @@ export class SidebarComponent implements OnInit, OnDestroy {
     this.statusSubscription = interval(5000).subscribe(() => {
       this.fetchSystemStatus();
     });
-  }
 
-  ngOnDestroy() {
-    this.statusSubscription?.unsubscribe();
+    this.destroyRef.onDestroy(() => {
+      this.statusSubscription?.unsubscribe();
+    });
   }
 
   navigateToWorkbench() {
@@ -136,7 +134,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
   }
 
   async selectConnection(conn: ConnectionSummary) {
-    this._activeConnectionId.set(conn.id);
     this.connectionState.setActiveConnection(conn);
     this.router.navigate(["/connections", conn.id]);
     this.loadDatabases(conn.id);
@@ -193,7 +190,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
         newSet.add(connId);
         return newSet;
       });
-      this._activeConnectionId.set(connId);
       const conn = this.storage.connections().find((c) => c.id === connId);
       if (conn) {
         this.connectionState.setActiveConnection(conn);
@@ -222,15 +218,9 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   onCollectionClick(node: TreeNode) {
     if (node.type === "collection") {
-      const connId = this.activeConnectionId();
-      if (connId) {
-        const conn = this.storage.connections().find((c) => c.id === connId);
-        if (conn) {
-          this.connectionState.setActiveConnection(conn);
-        }
-      }
       this.activeCollection.set(node.name);
       this.collectionSelected.emit(node.name);
+      const connId = this.activeConnectionId();
       if (connId) {
         this.router.navigate(["/connections", connId, "explorer"], {
           queryParams: { collection: node.name },
@@ -299,11 +289,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
   }
 
   formatBytes(bytes: number): string {
-    if (bytes === 0) return "0 B";
-    const k = 1024;
-    const sizes = ["B", "KB", "MB", "GB", "TB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
+    return this.providerUtils.formatBytes(bytes);
   }
 
   toggleStats() {

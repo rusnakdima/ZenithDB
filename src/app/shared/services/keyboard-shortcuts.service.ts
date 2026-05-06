@@ -81,9 +81,9 @@ export class KeyboardShortcutsService {
 
   private matchShortcut(event: KeyboardEvent): string | null {
     for (const [action, config] of Object.entries(SHORTCUT_CONFIG)) {
-      const hasCtrl = config.modifiers?.includes("ctrl");
-      const hasShift = config.modifiers?.includes("shift");
-      const hasMeta = config.modifiers?.includes("meta");
+      const hasCtrl = config["modifiers"]?.includes("ctrl");
+      const hasShift = config["modifiers"]?.includes("shift");
+      const hasMeta = config["modifiers"]?.includes("meta");
 
       const wantCtrlOrMeta = hasCtrl || hasMeta;
       const hasCtrlOrMeta = event.ctrlKey || event.metaKey;
@@ -121,7 +121,7 @@ export class KeyboardShortcutsService {
     };
 
     for (const [action, config] of Object.entries(SHORTCUT_CONFIG)) {
-      const display = formatShortcut(config.key, config.modifiers);
+      const display = formatShortcut(config["key"], config["modifiers"]);
       result[config.category].push({ key: display, desc: config.description });
     }
 

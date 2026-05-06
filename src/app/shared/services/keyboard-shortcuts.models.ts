@@ -1,11 +1,11 @@
 export type ShortcutCategory = "navigation" | "actions" | "editor" | "table";
 
-export interface Shortcut {
+type Shortcut = {
   key: string;
   description: string;
   category: ShortcutCategory;
   modifiers?: ("ctrl" | "meta" | "shift" | "alt")[];
-}
+};
 
 export const SHORTCUT_CONFIG: Record<string, Shortcut> = {
   "new-connection": {

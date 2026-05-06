@@ -54,10 +54,8 @@ export class TabService {
   }
 
   updateQuery(query: string): void {
-    const tab = this.activeTab();
-    if (!tab) return;
-    this.tabsSignal.set(
-      this.tabs().map((t) => (t.id === tab.id ? { ...t, query, modified: true } : t))
+    this.tabsSignal.update((tabs) =>
+      tabs.map((t) => (t.id === this.activeTabIdSignal() ? { ...t, query, modified: true } : t))
     );
   }
 
@@ -66,9 +64,9 @@ export class TabService {
   }
 
   updateActiveTab(updates: Partial<QueryTab>): void {
-    const tab = this.activeTab();
-    if (!tab) return;
-    this.tabsSignal.set(this.tabs().map((t) => (t.id === tab.id ? { ...t, ...updates } : t)));
+    this.tabsSignal.update((tabs) =>
+      tabs.map((t) => (t.id === this.activeTabIdSignal() ? { ...t, ...updates } : t))
+    );
   }
 
   updateAllTabs(updates: Partial<QueryTab>): void {

@@ -1,11 +1,11 @@
 import { Injectable, signal, computed, type Signal } from "@angular/core";
 
-export interface ValidationRule<T = unknown> {
+interface ValidationRule<T = unknown> {
   validate: (value: T) => boolean;
   message: string;
 }
 
-export interface FieldValidator<T = unknown> {
+interface FieldValidator<T = unknown> {
   errors: Signal<Record<string, string>>;
   touched: Signal<boolean>;
   dirty: Signal<boolean>;

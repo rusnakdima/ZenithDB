@@ -241,7 +241,6 @@ export class ApiProvider {
           result.data = result.data.slice(0, maxItems);
         }
       }
-      this.storage.setCollectionData(collection, result.data as RowData[], result.total);
       return result;
     } catch (e) {
       if (e instanceof Error && e.name === "AbortError") throw new Error("Operation cancelled");
@@ -258,7 +257,6 @@ export class ApiProvider {
         data,
         options: { signal: this.getAbortSignal() },
       });
-      this.storage.addToCollectionData(collection, result);
       return result;
     } catch (e) {
       if (e instanceof Error && e.name === "AbortError") return null;
@@ -275,7 +273,6 @@ export class ApiProvider {
         id,
         options: { signal: this.getAbortSignal() },
       });
-      this.storage.removeFromCollectionData(collection, id);
     } catch (e) {
       if (e instanceof Error && e.name === "AbortError") return;
       this.errorHandler.handleError(e, "deleteRow");
@@ -305,7 +302,6 @@ export class ApiProvider {
         name,
         options: { signal: this.getAbortSignal() },
       });
-      this.storage.clearCollectionData(name);
       await this.listCollections(connId);
     } catch (e) {
       if (e instanceof Error && e.name === "AbortError") return;

@@ -1,12 +1,12 @@
 import { Injectable } from "@angular/core";
 
-export interface JsonHighlightClasses {
+type JsonHighlightClasses = {
   key?: string;
   string?: string;
   number?: string;
   boolean?: string;
   null?: string;
-}
+};
 
 const DEFAULT_CLASSES: JsonHighlightClasses = {
   key: "json-key",

@@ -1,35 +1,35 @@
 import { Injectable, signal, effect } from "@angular/core";
 
-export type ThemeSetting = "dark" | "light" | "system";
-export type TabSize = 2 | 4 | 8;
+type ThemeSetting = "dark" | "light" | "system";
+type TabSize = 2 | 4 | 8;
 
-export interface GeneralSettings {
+interface GeneralSettings {
   theme: ThemeSetting;
   language: string;
   startMinimized: boolean;
   checkUpdates: boolean;
 }
 
-export interface EditorSettings {
+interface EditorSettings {
   fontSize: number;
   tabSize: TabSize;
   autoSave: boolean;
   lineNumbers: boolean;
 }
 
-export interface DataSettings {
+interface DataSettings {
   defaultPageSize: number;
   confirmBeforeDelete: boolean;
   maxRows: number;
 }
 
-export interface ConnectionSettings {
+interface ConnectionSettings {
   connectionTimeout: number;
   maxConcurrent: number;
   autoReconnect: boolean;
 }
 
-export interface AppSettings {
+interface AppSettings {
   general: GeneralSettings;
   editor: EditorSettings;
   data: DataSettings;
