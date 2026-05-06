@@ -134,20 +134,55 @@
           }
 
           @if (provider === "mongo") {
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div class="space-y-4">
               <div>
                 <label class="form-label">Connection URI</label>
                 <input
                   type="text"
                   [(ngModel)]="uri"
+                  (ngModelChange)="onUriChange()"
                   placeholder="mongodb://localhost:27017"
                   class="form-input"
                 />
               </div>
-              <div>
-                <label class="form-label">Database Name</label>
-                <input type="text" [(ngModel)]="database" placeholder="mydb" class="form-input" />
-              </div>
+              @if (loadingDatabases()) {
+                <div class="flex items-center gap-2 text-sm text-[var(--text-dim)]">
+                  <mat-icon fontIcon="sync" class="h-5! w-5! text-xl!" />
+                  Loading databases...
+                </div>
+              }
+              @if (availableDatabases().length > 0) {
+                <div>
+                  <label class="form-label">Select Databases</label>
+                  <div
+                    class="max-h-40 space-y-1 overflow-y-auto rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] p-2"
+                  >
+                    @for (db of availableDatabases(); track db.name) {
+                      <app-checkbox
+                        [checked]="isDatabaseSelected(db.name)"
+                        [label]="db.name"
+                        (changed)="onDatabaseCheckboxChange($event, db.name)"
+                      />
+                    }
+                  </div>
+                  @if (selectedDatabases().length > 0) {
+                    <p class="mt-2 text-xs text-[var(--text-dim)]">
+                      Selected: {{ selectedDatabases().join(", ") }}
+                    </p>
+                  }
+                </div>
+              }
+              @if (
+                !loadingDatabases() &&
+                availableDatabases().length === 0 &&
+                uri.length > 10 &&
+                databasesLoaded()
+              ) {
+                <div>
+                  <label class="form-label">Database Name</label>
+                  <input type="text" [(ngModel)]="database" placeholder="mydb" class="form-input" />
+                </div>
+              }
             </div>
           }
 
@@ -170,10 +205,38 @@
                 <input
                   type="text"
                   [(ngModel)]="uri"
-                  placeholder="postgres://user:pass@localhost:5432/db"
+                  (ngModelChange)="onUriChange()"
+                  placeholder="postgres://user:pass@localhost:5432"
                   class="form-input"
                 />
               </div>
+              @if (loadingDatabases()) {
+                <div class="flex items-center gap-2 text-sm text-[var(--text-dim)]">
+                  <mat-icon fontIcon="sync" class="h-5! w-5! text-xl!" />
+                  Loading databases...
+                </div>
+              }
+              @if (availableDatabases().length > 0) {
+                <div>
+                  <label class="form-label">Select Databases</label>
+                  <div
+                    class="max-h-40 space-y-1 overflow-y-auto rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] p-2"
+                  >
+                    @for (db of availableDatabases(); track db.name) {
+                      <app-checkbox
+                        [checked]="isDatabaseSelected(db.name)"
+                        [label]="db.name"
+                        (changed)="onDatabaseCheckboxChange($event, db.name)"
+                      />
+                    }
+                  </div>
+                  @if (selectedDatabases().length > 0) {
+                    <p class="mt-2 text-xs text-[var(--text-dim)]">
+                      Selected: {{ selectedDatabases().join(", ") }}
+                    </p>
+                  }
+                </div>
+              }
               <div class="flex items-center gap-2">
                 <app-checkbox [checked]="useSsl" (changed)="useSsl = $event" />
                 <label for="ssl-toggle" class="text-sm text-[var(--text-dim)]">Use SSL/TLS</label>
@@ -199,14 +262,44 @@
           }
 
           @if (provider === "mysql") {
-            <div>
-              <label class="form-label">Connection URI</label>
-              <input
-                type="text"
-                [(ngModel)]="uri"
-                placeholder="mysql://user:pass@localhost:3306/db"
-                class="form-input"
-              />
+            <div class="space-y-4">
+              <div>
+                <label class="form-label">Connection URI</label>
+                <input
+                  type="text"
+                  [(ngModel)]="uri"
+                  (ngModelChange)="onUriChange()"
+                  placeholder="mysql://user:pass@localhost:3306"
+                  class="form-input"
+                />
+              </div>
+              @if (loadingDatabases()) {
+                <div class="flex items-center gap-2 text-sm text-[var(--text-dim)]">
+                  <mat-icon fontIcon="sync" class="h-5! w-5! text-xl!" />
+                  Loading databases...
+                </div>
+              }
+              @if (availableDatabases().length > 0) {
+                <div>
+                  <label class="form-label">Select Databases</label>
+                  <div
+                    class="max-h-40 space-y-1 overflow-y-auto rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] p-2"
+                  >
+                    @for (db of availableDatabases(); track db.name) {
+                      <app-checkbox
+                        [checked]="isDatabaseSelected(db.name)"
+                        [label]="db.name"
+                        (changed)="onDatabaseCheckboxChange($event, db.name)"
+                      />
+                    }
+                  </div>
+                  @if (selectedDatabases().length > 0) {
+                    <p class="mt-2 text-xs text-[var(--text-dim)]">
+                      Selected: {{ selectedDatabases().join(", ") }}
+                    </p>
+                  }
+                </div>
+              }
             </div>
           }
         </div>
@@ -283,7 +376,7 @@
             </button>
           </div>
 
-          @if (testResult()) {
+          @if (testResult()!.healthy) {
             <div
               class="flex items-center gap-3 rounded-xl border p-4"
               [class]="

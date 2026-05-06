@@ -11,6 +11,7 @@ import {
   ConnectionConfig,
   ConnectionHealth,
   ConnectionSummary,
+  DatabaseMeta,
 } from "@shared/models/connection.config";
 import { ProviderType } from "@shared/models/provider.model";
 type WizardStep = 1 | 2 | 3;
@@ -55,6 +56,10 @@ export class ConnectionFormComponent implements OnInit {
   testResult = signal<ConnectionHealth | null>(null);
   testing = signal(false);
   saving = signal(false);
+  availableDatabases = signal<DatabaseMeta[]>([]);
+  loadingDatabases = signal(false);
+  selectedDatabases = signal<string[]>([]);
+  databasesLoaded = signal(false);
 
   providers: ProviderOption[] = [
     { type: "json", label: "JSON", icon: "description", description: "Local JSON file storage" },
@@ -122,6 +127,12 @@ export class ConnectionFormComponent implements OnInit {
           this.uri = innerConfig.uri || "";
           break;
       }
+      if (this.provider === "postgres" || this.provider === "mysql" || this.provider === "mongo") {
+        if (this.database) {
+          this.selectedDatabases.set(this.database.split(",").map((d) => d.trim()));
+        }
+        setTimeout(() => this.onUriChange(), 100);
+      }
     } catch (e) {
       console.error("Failed to load connection:", e);
     }
@@ -147,6 +158,12 @@ export class ConnectionFormComponent implements OnInit {
         case "MySql":
           this.uri = innerConfig.uri || "";
           break;
+      }
+      if (this.provider === "postgres" || this.provider === "mysql" || this.provider === "mongo") {
+        if (this.database) {
+          this.selectedDatabases.set(this.database.split(",").map((d) => d.trim()));
+        }
+        setTimeout(() => this.onUriChange(), 100);
       }
     } catch (e) {
       console.error("Failed to load connection:", e);
@@ -186,6 +203,9 @@ export class ConnectionFormComponent implements OnInit {
     this.username = "";
     this.password = "";
     this.useSsl = false;
+    this.availableDatabases.set([]);
+    this.selectedDatabases.set([]);
+    this.databasesLoaded.set(false);
   }
 
   nextStep() {
@@ -198,6 +218,53 @@ export class ConnectionFormComponent implements OnInit {
     if (this.currentStep() > 1) {
       this.currentStep.update((s) => (s - 1) as WizardStep);
     }
+  }
+
+  async onUriChange() {
+    if (
+      (this.provider === "postgres" || this.provider === "mysql" || this.provider === "mongo") &&
+      this.uri &&
+      this.uri.length > 10
+    ) {
+      this.availableDatabases.set([]);
+      this.selectedDatabases.set([]);
+      this.loadingDatabases.set(true);
+      this.databasesLoaded.set(false);
+      try {
+        const dbs = await this.db.listDatabasesForUri(this.provider, this.uri);
+        this.availableDatabases.set(dbs);
+        this.databasesLoaded.set(true);
+      } catch (e) {
+        console.error("Failed to load databases:", e);
+      } finally {
+        this.loadingDatabases.set(false);
+      }
+    }
+  }
+
+  toggleDatabase(dbName: string) {
+    const current = this.selectedDatabases();
+    if (current.includes(dbName)) {
+      this.selectedDatabases.set(current.filter((n) => n !== dbName));
+    } else {
+      this.selectedDatabases.set([...current, dbName]);
+    }
+    this.database = this.selectedDatabases().join(",");
+  }
+
+  onDatabaseCheckboxChange(event: boolean, dbName: string) {
+    if (event) {
+      if (!this.selectedDatabases().includes(dbName)) {
+        this.selectedDatabases.set([...this.selectedDatabases(), dbName]);
+      }
+    } else {
+      this.selectedDatabases.set(this.selectedDatabases().filter((n) => n !== dbName));
+    }
+    this.database = this.selectedDatabases().join(",");
+  }
+
+  isDatabaseSelected(dbName: string): boolean {
+    return this.selectedDatabases().includes(dbName);
   }
 
   async testConnection() {
