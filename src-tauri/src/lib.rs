@@ -7,6 +7,7 @@ use commands::connection::{
 use commands::data::{delete_row, query_data, save_row};
 use commands::schema::{
     create_database, describe_collection, get_collection_stats, list_collections, list_databases,
+    list_databases_for_uri,
 };
 use commands::system::get_system_status;
 
@@ -24,6 +25,7 @@ pub fn run() {
             get_connection,
             list_collections,
             list_databases,
+            list_databases_for_uri,
             create_database,
             describe_collection,
             get_collection_stats,

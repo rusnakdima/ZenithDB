@@ -267,3 +267,81 @@ pub async fn get_collection_stats(
         index_count: stats.index_count,
     })
 }
+
+#[tauri::command]
+pub async fn list_databases_for_uri(
+    provider_type: &str,
+    uri: &str,
+) -> Result<Vec<DatabaseMeta>, String> {
+    match provider_type {
+        "postgres" => {
+            let provider = crate::commands::provider::create_postgres_provider(uri).await?;
+            let result = provider
+                .execute_raw(
+                    "SELECT datname FROM pg_database WHERE datistemplate = false",
+                    vec![],
+                )
+                .await
+                .map_err_string()?;
+            let mut dbs = Vec::new();
+            for row in result.rows {
+                if let Some(name) = row.first().and_then(|v| v.as_str()) {
+                    dbs.push(DatabaseMeta {
+                        name: name.to_string(),
+                        size_bytes: None,
+                        table_count: None,
+                    });
+                }
+            }
+            Ok(dbs)
+        }
+        "mysql" => {
+            let provider = crate::commands::provider::create_mysql_provider(uri).await?;
+            let result = provider
+                .execute_raw("SHOW DATABASES", vec![])
+                .await
+                .map_err_string()?;
+            let mut dbs = Vec::new();
+            for row in result.rows {
+                if let Some(name) = row.first().and_then(|v| v.as_str()) {
+                    dbs.push(DatabaseMeta {
+                        name: name.to_string(),
+                        size_bytes: None,
+                        table_count: None,
+                    });
+                }
+            }
+            Ok(dbs)
+        }
+        "mongodb" => {
+            let provider = crate::commands::provider::create_mongo_provider(uri, "admin").await?;
+            let result = provider
+                .execute_raw("listDatabases", vec![])
+                .await
+                .map_err_string()?;
+            let mut dbs = Vec::new();
+            for row in result.rows {
+                if let Some(doc) = row.get(0).and_then(|v| v.as_object()) {
+                    if let Some(name) = doc.get("name").and_then(|v| v.as_str()) {
+                        dbs.push(DatabaseMeta {
+                            name: name.to_string(),
+                            size_bytes: None,
+                            table_count: None,
+                        });
+                    }
+                }
+            }
+            Ok(dbs)
+        }
+        "redis" => Ok(vec![DatabaseMeta {
+            name: "default".to_string(),
+            size_bytes: None,
+            table_count: None,
+        }]),
+        _ => Ok(vec![DatabaseMeta {
+            name: "default".to_string(),
+            size_bytes: None,
+            table_count: None,
+        }]),
+    }
+}
