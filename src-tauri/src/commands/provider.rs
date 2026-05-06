@@ -1,50 +1,50 @@
 use crate::commands::error_utils::ToStringError;
 
 pub async fn create_json_provider(
-    path: &str,
+  path: &str,
 ) -> Result<nosql_orm::providers::JsonProvider, String> {
-    nosql_orm::providers::JsonProvider::new(path)
-        .await
-        .map_err_string()
+  nosql_orm::providers::JsonProvider::new(path)
+    .await
+    .map_err_string()
 }
 
 pub async fn create_mongo_provider(
-    uri: &str,
-    database: &str,
+  uri: &str,
+  database: &str,
 ) -> Result<nosql_orm::providers::MongoProvider, String> {
-    nosql_orm::providers::MongoProvider::connect(uri, database)
-        .await
-        .map_err_string()
+  nosql_orm::providers::MongoProvider::connect(uri, database)
+    .await
+    .map_err_string()
 }
 
 pub async fn create_redis_provider(
-    uri: &str,
+  uri: &str,
 ) -> Result<nosql_orm::providers::RedisProvider, String> {
-    nosql_orm::providers::RedisProvider::new(uri)
-        .await
-        .map_err_string()
+  nosql_orm::providers::RedisProvider::new(uri)
+    .await
+    .map_err_string()
 }
 
 pub async fn create_postgres_provider(
-    uri: &str,
+  uri: &str,
 ) -> Result<nosql_orm::providers::sql::PostgresProvider, String> {
-    nosql_orm::providers::sql::PostgresProvider::connect(uri)
-        .await
-        .map_err_string()
+  nosql_orm::providers::sql::PostgresProvider::connect(uri)
+    .await
+    .map_err_string()
 }
 
 pub async fn create_sqlite_provider(
-    path: &str,
+  path: &str,
 ) -> Result<nosql_orm::providers::sql::SqliteProvider, String> {
-    nosql_orm::providers::sql::SqliteProvider::connect(path)
-        .await
-        .map_err_string()
+  nosql_orm::providers::sql::SqliteProvider::connect(path)
+    .await
+    .map_err_string()
 }
 
 pub async fn create_mysql_provider(
-    uri: &str,
+  uri: &str,
 ) -> Result<nosql_orm::providers::sql::MySqlProvider, String> {
-    nosql_orm::providers::sql::MySqlProvider::connect(uri)
-        .await
-        .map_err_string()
+  nosql_orm::providers::sql::MySqlProvider::connect(uri)
+    .await
+    .map_err_string()
 }
