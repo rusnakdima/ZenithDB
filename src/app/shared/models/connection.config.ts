@@ -51,12 +51,6 @@ export type FilterOperator =
   | "or"
   | "not";
 
-export interface FilterCondition {
-  field: string;
-  operator: FilterOperator;
-  value?: unknown;
-}
-
 export interface FilterExpression {
   and?: FilterExpression[];
   or?: FilterExpression[];
@@ -148,5 +142,3 @@ export interface SystemMetrics {
 }
 
 export type RowData = Record<string, unknown>;
-
-export type CollectionDataType = unknown[];
