@@ -4,6 +4,7 @@ import { TitleCasePipe } from "@angular/common";
 import { MatIconModule } from "@angular/material/icon";
 import { DatabaseService } from "@shared/services/database.service";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
+import { ProviderUtils } from "@shared/utils/provider.utils";
 import { CollectionMeta, ConnectionSummary } from "@shared/models/connection.config";
 import { Subscription } from "rxjs";
 
@@ -16,6 +17,7 @@ import { Subscription } from "rxjs";
 export class DatabaseDetailComponent implements OnInit, OnDestroy {
   private db = inject(DatabaseService);
   private connState = inject(ConnectionStateService);
+  providerUtils = inject(ProviderUtils);
   route = inject(ActivatedRoute);
   router = inject(Router);
 
@@ -49,25 +51,14 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy {
         await this.loadCollections();
       }
     });
-
-    this.updateProviderIcon();
   }
 
   ngOnDestroy() {
     this.routeSub?.unsubscribe();
   }
 
-  private updateProviderIcon() {
-    const p = this.provider()?.toLowerCase() || "";
-    if (p.includes("json")) {
-      return "description";
-    }
-    if (p.includes("mongo")) return "eco";
-    if (p.includes("postgres")) return "storage";
-    if (p.includes("redis")) return "flash_on";
-    if (p.includes("mysql")) return "storage";
-    if (p.includes("sqlite")) return "insert_drive_file";
-    return "dns";
+  getProviderIcon(): string {
+    return this.providerUtils.getProviderIcon(this.provider() || "");
   }
 
   async loadCollections() {

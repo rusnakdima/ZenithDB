@@ -5,6 +5,7 @@ import { MatIconModule } from "@angular/material/icon";
 import { FormsModule } from "@angular/forms";
 import { DatabaseService } from "@shared/services/database.service";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
+import { ProviderUtils } from "@shared/utils/provider.utils";
 import {
   ConnectionHealth,
   CollectionMeta,
@@ -29,6 +30,7 @@ interface DbNode {
 export class ConnectionDetailComponent implements OnInit, OnDestroy {
   private db = inject(DatabaseService);
   private connState = inject(ConnectionStateService);
+  providerUtils = inject(ProviderUtils);
   route = inject(ActivatedRoute);
   router = inject(Router);
 
@@ -88,14 +90,7 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
   }
 
   private updateProviderIcon() {
-    const p = this.provider()?.toLowerCase() || "";
-    if (p.includes("mongo")) this.providerIcon.set("eco");
-    else if (p.includes("postgres")) this.providerIcon.set("storage");
-    else if (p.includes("redis")) this.providerIcon.set("flash_on");
-    else if (p.includes("mysql")) this.providerIcon.set("storage");
-    else if (p.includes("sqlite")) this.providerIcon.set("insert_drive_file");
-    else if (p.includes("json")) this.providerIcon.set("description");
-    else this.providerIcon.set("dns");
+    this.providerIcon.set(this.providerUtils.getProviderIcon(this.provider() || ""));
   }
 
   async loadConnectionDetails() {

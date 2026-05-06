@@ -1,4 +1,4 @@
-import { Component, signal, computed, inject, OnInit, OnDestroy, effect } from "@angular/core";
+import { Component, signal, computed, inject, OnInit, OnDestroy } from "@angular/core";
 import { Router, ActivatedRoute, NavigationEnd } from "@angular/router";
 import { Subscription } from "rxjs";
 import { filter } from "rxjs/operators";

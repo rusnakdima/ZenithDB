@@ -34,7 +34,7 @@ export class ConnectionFormComponent implements OnInit {
 
   private db = inject(DatabaseService);
   private connState = inject(ConnectionStateService);
-  private providerUtils = inject(ProviderUtils);
+  providerUtils = inject(ProviderUtils);
   router = inject(Router);
   route = inject(ActivatedRoute);
 
@@ -388,17 +388,5 @@ export class ConnectionFormComponent implements OnInit {
     } catch (e) {
       console.error("File dialog error:", e);
     }
-  }
-
-  getProviderIcon(provider: ProviderType): string {
-    const iconMap: Record<ProviderType, string> = {
-      json: "description",
-      mongo: "eco",
-      redis: "flash_on",
-      postgres: "storage",
-      sqlite: "insert_drive_file",
-      mysql: "storage",
-    };
-    return iconMap[provider] || "dns";
   }
 }
