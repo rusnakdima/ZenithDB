@@ -6,16 +6,16 @@ import {
   OnInit,
   OnDestroy,
   effect,
-  Injector,
-  runInInjectionContext,
+  computed,
 } from "@angular/core";
-import { Router, RouterLink } from "@angular/router";
+import { Router, RouterLink, NavigationEnd } from "@angular/router";
 import { MatIconModule } from "@angular/material/icon";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { DatabaseService } from "@shared/services/database.service";
 import { StorageService } from "@services/core/storage.service";
 import { CollectionMeta, SystemMetrics, ConnectionSummary } from "@shared/models/connection.config";
 import { interval, Subscription } from "rxjs";
+import { filter } from "rxjs/operators";
 import { ProviderUtils } from "@shared/utils/provider.utils";
 import { ThemeService } from "@shared/services/theme.service";
 
@@ -34,7 +34,6 @@ interface TreeNode {
   templateUrl: "./sidebar.component.html",
 })
 export class SidebarComponent implements OnInit, OnDestroy {
-  private injector = inject(Injector);
   providerUtils = inject(ProviderUtils);
   private router = inject(Router);
   connectionState = inject(ConnectionStateService);
@@ -43,15 +42,14 @@ export class SidebarComponent implements OnInit, OnDestroy {
   themeService = inject(ThemeService);
   collectionSelected = output<string>();
 
-  activeView = signal<"dashboard" | "explorer" | "workbench">("explorer");
   isStatsCollapsed = signal(true);
   searchQuery = signal("");
   activeCollection = signal<string | null>(null);
   systemStatus = signal<SystemMetrics | null>(null);
-  activeConnectionId = signal<string | null>(null);
   databases = signal<TreeNode[]>([]);
   expandedConnections = signal<Set<string>>(new Set());
   loadingDatabases = signal(false);
+  currentUrl = signal("");
 
   private statusSubscription: Subscription | null = null;
 
@@ -62,9 +60,33 @@ export class SidebarComponent implements OnInit, OnDestroy {
     node: null,
   });
 
+  isAtConnections = computed(
+    () => this.currentUrl() === "/connections" || this.currentUrl() === "/connections/"
+  );
+  isAtConnectionPage = computed(
+    () =>
+      /^\/connections\/[^/]+$/.test(this.currentUrl()) && !this.currentUrl().endsWith("/explorer")
+  );
+  isAtExplorer = computed(() => /^\/connections\/[^/]+\/explorer$/.test(this.currentUrl()));
+  isAtQuery = computed(() => this.currentUrl().startsWith("/query"));
+
+  private _activeConnectionId = signal<string | null>(null);
+  activeConnectionId = computed(() => {
+    const urlId = this._activeConnectionId();
+    if (urlId) return urlId;
+    const match = this.currentUrl().match(/^\/connections\/([^/]+)/);
+    return match ? match[1] : null;
+  });
+
   ngOnInit() {
     this.fetchSystemStatus();
     this.fetchConnections();
+
+    this.router.events.pipe(filter((e) => e instanceof NavigationEnd)).subscribe((e: any) => {
+      this.currentUrl.set(e.urlAfterRedirects);
+    });
+    this.currentUrl.set(this.router.url);
+
     this.statusSubscription = interval(5000).subscribe(() => {
       this.fetchSystemStatus();
     });
@@ -74,15 +96,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
     this.statusSubscription?.unsubscribe();
   }
 
-  setActiveView(view: "dashboard" | "explorer" | "workbench") {
-    this.activeView.set(view);
-    if (view === "explorer") {
-      this.router.navigate(["/connections"]);
-    } else if (view === "dashboard") {
-      this.router.navigate(["/"]);
-    } else if (view === "workbench") {
-      this.router.navigate(["/query"]);
-    }
+  navigateToWorkbench() {
+    this.router.navigate(["/query"]);
   }
 
   openNewConnection() {
@@ -112,22 +127,19 @@ export class SidebarComponent implements OnInit, OnDestroy {
   }
 
   async selectConnection(conn: ConnectionSummary) {
-    this.activeConnectionId.set(conn.id);
+    this._activeConnectionId.set(conn.id);
     this.connectionState.setActiveConnection(conn);
-
-    if (!this.expandedConnections().has(conn.id)) {
-      this.expandedConnections.update((set) => {
-        const newSet = new Set(set);
-        newSet.add(conn.id);
-        return newSet;
-      });
-    }
-    await this.loadDatabases(conn.id);
     this.router.navigate(["/connections", conn.id]);
   }
 
+  async selectConnectionById(connId: string) {
+    const conn = this.storage.connections().find((c) => c.id === connId);
+    if (conn) {
+      this.selectConnection(conn);
+    }
+  }
+
   async loadDatabases(connId: string) {
-    if (this.activeConnectionId() !== connId) return;
     this.loadingDatabases.set(true);
     try {
       const collections = await this.databaseService.listCollections();
@@ -165,13 +177,12 @@ export class SidebarComponent implements OnInit, OnDestroy {
         newSet.add(connId);
         return newSet;
       });
-      this.activeConnectionId.set(connId);
+      this._activeConnectionId.set(connId);
       const conn = this.storage.connections().find((c) => c.id === connId);
       if (conn) {
         this.connectionState.setActiveConnection(conn);
       }
       this.loadDatabases(connId);
-      this.router.navigate(["/explorer"]);
     }
   }
 
@@ -192,7 +203,19 @@ export class SidebarComponent implements OnInit, OnDestroy {
       }
       this.activeCollection.set(node.name);
       this.collectionSelected.emit(node.name);
-      this.router.navigate(["/explorer"], { queryParams: { collection: node.name } });
+      if (connId) {
+        this.router.navigate(["/connections", connId, "explorer"], {
+          queryParams: { collection: node.name },
+        });
+      }
+    }
+  }
+
+  onDatabaseClick(node: TreeNode, event: Event) {
+    event.stopPropagation();
+    const connId = this.activeConnectionId();
+    if (connId) {
+      this.router.navigate(["/connections", connId]);
     }
   }
 
@@ -272,5 +295,35 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   hideContextMenu() {
     this.contextMenu.set({ show: false, x: 0, y: 0, node: null });
+  }
+
+  onRefreshClick() {
+    const node = this.contextMenu().node;
+    if (node?.type === "collection" && node.collection) {
+    }
+    this.hideContextMenu();
+  }
+
+  onBrowseDataClick() {
+    const node = this.contextMenu().node;
+    if (node?.type === "collection") {
+      this.onCollectionClick(node);
+    }
+    this.hideContextMenu();
+  }
+
+  onCollectionDetailsClick() {
+    const node = this.contextMenu().node;
+    if (node?.type === "collection" && node.collection) {
+      this.router.navigate(["/connections", this.activeConnectionId()]);
+    }
+    this.hideContextMenu();
+  }
+
+  onDeleteClick() {
+    const node = this.contextMenu().node;
+    if (node?.type === "collection" && node.collection) {
+    }
+    this.hideContextMenu();
   }
 }
