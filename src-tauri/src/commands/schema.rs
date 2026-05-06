@@ -47,35 +47,9 @@ pub async fn list_collections(conn_id: &str) -> Result<Vec<CollectionMeta>, Stri
 
     match &entry.config.config {
         ConnectionConfigEnum::Json { path, .. } => {
-            let path_obj = std::path::Path::new(path);
+            let path_obj = std::path::Path::new(path).to_path_buf();
             if path_obj.is_dir() {
-                let collections: Vec<CollectionMeta> = std::fs::read_dir(path_obj)
-                    .map_err_string()?
-                    .filter_map(|e| e.ok())
-                    .filter(|e| e.path().extension().is_some_and(|ext| ext == "json"))
-                    .filter_map(|e| {
-                        let file_path = e.path();
-                        let name = e
-                            .file_name()
-                            .into_string()
-                            .ok()
-                            .map(|n| n.trim_end_matches(".json").to_string())?;
-                        let count = std::fs::read_to_string(&file_path)
-                            .ok()
-                            .and_then(|content| {
-                                serde_json::from_str::<serde_json::Value>(&content).ok()
-                            })
-                            .map(|v| {
-                                if let Some(arr) = v.as_array() {
-                                    arr.len() as u64
-                                } else {
-                                    1
-                                }
-                            })
-                            .unwrap_or(0);
-                        Some(CollectionMeta { name, count })
-                    })
-                    .collect();
+                let collections = list_json_collections(path_obj).await?;
                 Ok(collections)
             } else {
                 Ok(Vec::new())
@@ -94,6 +68,44 @@ pub async fn list_collections(conn_id: &str) -> Result<Vec<CollectionMeta>, Stri
             })
         }
     }
+}
+
+async fn list_json_collections(
+    path_obj: std::path::PathBuf,
+) -> Result<Vec<CollectionMeta>, String> {
+    let mut entries = tokio::fs::read_dir(&path_obj).await.map_err_string()?;
+
+    let mut collections: Vec<CollectionMeta> = Vec::new();
+
+    while let Some(entry) = entries.next_entry().await.map_err_string()? {
+        let file_path = entry.path();
+        if file_path.extension().is_some_and(|ext| ext == "json") {
+            let name = entry
+                .file_name()
+                .into_string()
+                .ok()
+                .map(|n| n.trim_end_matches(".json").to_string());
+
+            if let Some(name) = name {
+                let count = tokio::fs::read_to_string(&file_path)
+                    .await
+                    .ok()
+                    .and_then(|content| serde_json::from_str::<serde_json::Value>(&content).ok())
+                    .map(|v| {
+                        if let Some(arr) = v.as_array() {
+                            arr.len() as u64
+                        } else {
+                            1
+                        }
+                    })
+                    .unwrap_or(0);
+
+                collections.push(CollectionMeta { name, count });
+            }
+        }
+    }
+
+    Ok(collections)
 }
 
 #[tauri::command]
