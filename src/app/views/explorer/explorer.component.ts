@@ -1,6 +1,7 @@
-import { Component, signal, computed, inject, OnInit, OnDestroy } from "@angular/core";
-import { Router, ActivatedRoute } from "@angular/router";
+import { Component, signal, computed, inject, OnInit, OnDestroy, effect } from "@angular/core";
+import { Router, ActivatedRoute, NavigationEnd } from "@angular/router";
 import { Subscription } from "rxjs";
+import { filter } from "rxjs/operators";
 import { ScrollingModule } from "@angular/cdk/scrolling";
 import { MatIconModule } from "@angular/material/icon";
 import { DataGridComponent } from "@features/data/data-grid/data-grid.component";
@@ -9,6 +10,7 @@ import { FilterBarComponent } from "@shared/components/filter-bar/filter-bar.com
 import { DatabaseService } from "@shared/services/database.service";
 import { DataProviderService } from "@shared/services/data-provider.service";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
+import { StorageService } from "@services/core/storage.service";
 import { ToastService } from "@services/toast.service";
 import { ExportService } from "@shared/services/export.service";
 import {
@@ -51,11 +53,13 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   private db = inject(DatabaseService);
   private dataProvider = inject(DataProviderService);
   private connectionState = inject(ConnectionStateService);
+  private storage = inject(StorageService);
   private toast = inject(ToastService);
   private exportService = inject(ExportService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private queryParamsSub: Subscription | null = null;
+  private routeSub: Subscription | null = null;
 
   activeTabs = signal<Tab[]>([]);
   activeCollection = signal<string>("");
@@ -80,6 +84,8 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   fullJsonData = signal<RowData[]>([]);
   jsonLoading = signal(false);
 
+  private currentConnectionId: string | null = null;
+
   viewTabs: { id: ViewTab; label: string }[] = [
     { id: "table", label: "Table View" },
     { id: "tree", label: "Tree View" },
@@ -98,7 +104,39 @@ export class ExplorerComponent implements OnInit, OnDestroy {
       this.splitMode.set(savedSplitMode);
     }
 
-    if (!this.connectionState.activeConnectionId()) {
+    this.routeSub = this.router.events.pipe(
+      filter((e) => e instanceof NavigationEnd)
+    ).subscribe((e: any) => {
+      this.handleRouteChange();
+    });
+
+    this.handleRouteChange();
+
+    this.queryParamsSub = this.route.queryParams.subscribe((params) => {
+      const collection = params["collection"];
+      if (collection && collection !== this.activeCollection()) {
+        this.addTab(collection);
+      }
+    });
+  }
+
+  ngOnDestroy() {
+    this.queryParamsSub?.unsubscribe();
+    this.routeSub?.unsubscribe();
+  }
+
+  private async handleRouteChange() {
+    const segments = this.router.url.split("/").filter((s) => s);
+    const connIdIndex = segments.indexOf("connections");
+    if (connIdIndex !== -1 && segments[connIdIndex + 1]) {
+      this.currentConnectionId = segments[connIdIndex + 1];
+      const conn = this.storage.connections().find((c) => c.id === this.currentConnectionId);
+      if (conn) {
+        this.connectionState.setActiveConnection(conn);
+      }
+    }
+
+    if (!this.currentConnectionId) {
       this.router.navigate(["/connections"]);
       return;
     }
@@ -111,17 +149,6 @@ export class ExplorerComponent implements OnInit, OnDestroy {
     } finally {
       this.loading.set(false);
     }
-
-    this.queryParamsSub = this.route.queryParams.subscribe((params) => {
-      const collection = params["collection"];
-      if (collection && collection !== this.activeCollection()) {
-        this.addTab(collection);
-      }
-    });
-  }
-
-  ngOnDestroy() {
-    this.queryParamsSub?.unsubscribe();
   }
 
   async loadCollections(selectedCollection?: string | null) {
@@ -241,6 +268,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   selectCollectionFromDropdown(collection: string) {
     this.addTab(collection);
     this.showCollectionSelector.set(false);
+    this.loadColumns();
   }
 
   onFilterChange(filter: string) {
@@ -314,14 +342,18 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   onTreeCollectionSelect(collection: string) {
     this.addTab(collection);
     this.selectViewTab("table");
+    this.loadColumns();
   }
 
   openInspector(doc: RowData) {
+    console.log("[Explorer] openInspector called", { doc: doc["_id"] || doc["id"] });
     this.inspectorDocument.set(doc);
     this.showInspector.set(true);
+    console.log("[Explorer] Signals set - showInspector:", this.showInspector(), "inspectorDocument:", !!this.inspectorDocument());
   }
 
   closeInspector() {
+    console.log("[Explorer] closeInspector called");
     this.showInspector.set(false);
     this.inspectorDocument.set(null);
   }

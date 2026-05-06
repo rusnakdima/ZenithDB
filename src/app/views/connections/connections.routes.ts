@@ -8,4 +8,11 @@ export const connectionsRoutes: Routes = [
   { path: "new", component: ConnectionFormComponent },
   { path: ":id", component: ConnectionDetailComponent },
   { path: ":id/edit", component: ConnectionFormComponent },
+  {
+    path: ":id/explorer",
+    loadComponent: () =>
+      import("../../views/explorer/explorer.component").then(
+        (m) => m.ExplorerComponent
+      ),
+  },
 ];

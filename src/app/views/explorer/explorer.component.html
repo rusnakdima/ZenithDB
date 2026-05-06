@@ -11,13 +11,13 @@
         [class.text-[var(--text-dim)]]="activeCollection() !== tab.collection"
         (click)="selectTab(tab.collection)"
       >
-        <mat-icon fontIcon="table_chart" class="h-5! w-5! text-xl!" />
+        <mat-icon fontIcon="table_chart" class="w-5! h-6! text-xl!" />
         <span class="text-sm font-medium">{{ tab.name }}</span>
         <button
           class="close-tab rounded p-0.5 transition-colors hover:bg-[var(--bg-elevated)]"
           (click)="closeTab(tab.collection); $event.stopPropagation()"
         >
-          <mat-icon fontIcon="close" class="h-5! w-5! text-xl!" />
+          <mat-icon fontIcon="close" class="w-5! h-6! text-xl!" />
         </button>
       </div>
     }
@@ -26,7 +26,7 @@
         class="add-tab-btn rounded p-2 text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--accent)]"
         (click)="toggleCollectionSelector()"
       >
-        <mat-icon fontIcon="add" class="h-5! w-5! text-xl!" />
+        <mat-icon fontIcon="add" class="w-5! h-6! text-xl!" />
       </button>
       @if (showCollectionSelector()) {
         <div
@@ -37,7 +37,7 @@
               class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-[var(--text-main)] transition-colors hover:bg-[var(--bg-elevated)]"
               (click)="selectCollectionFromDropdown(col.name)"
             >
-              <mat-icon fontIcon="table_chart" class="h-5! w-5! text-xl!" />
+              <mat-icon fontIcon="table_chart" class="w-5! h-6! text-xl!" />
               {{ col.name }}
             </button>
           }
@@ -51,7 +51,7 @@
 
   <app-filter-bar
     [filter]="filterText()"
-    [availableColumns]="availableColumns()"
+    [availableColumns]="availableColumnsMeta()"
     [disabledColumns]="getDisabledColumns()"
     [viewMode]="'grid'"
     (filterChange)="onFilterChange($event)"
@@ -93,7 +93,7 @@
           (click)="setSplitMode(mode.id)"
           [title]="mode.label"
         >
-          <mat-icon [fontIcon]="mode.icon" class="h-5! w-5! text-xl!" />
+          <mat-icon [fontIcon]="mode.icon" class="w-5! h-6! text-xl!" />
         </button>
       }
     </div>
@@ -113,40 +113,39 @@
     <div class="flex items-center gap-4 text-sm text-[var(--text-dim)]">
       @if (stats()) {
         <span class="flex items-center gap-1.5">
-          <mat-icon fontIcon="format_align_left" class="h-5! w-5! text-xl!" />
+          <mat-icon fontIcon="format_align_left" class="w-5! h-6! text-xl!" />
           {{ stats()!.size_bytes | formatBytes }}
         </span>
         <span class="flex items-center gap-1.5">
-          <mat-icon fontIcon="grid_view" class="h-5! w-5! text-xl!" />
+          <mat-icon fontIcon="grid_view" class="w-5! h-6! text-xl!" />
           {{ formatDocumentCount(stats()!.document_count) }} Docs
         </span>
       }
     </div>
   </div>
 
-  <div class="min-h-0 flex-1 overflow-y-auto">
+  <div class="min-h-0 flex-1 overflow-hidden">
     @switch (viewTab()) {
       @case ("table") {
         @if (splitMode() === "none") {
-          <div class="h-full overflow-auto">
-            <app-data-grid
-              [collectionName]="activeCollection()"
-              [filter]="filterText()"
-              [page]="page()"
-              [pageSize]="pageSize()"
-              [showInspector]="showInspector()"
-              [viewMode]="'grid'"
-              [inputVisibleColumns]="selectedColumns()"
-              [reloadTrigger]="getReloadTrigger()"
-              (documentClick)="openInspector($event)"
-              (pageChange)="onPageChange($event)"
-              (viewModeChange)="selectViewTab('json')"
-            ></app-data-grid>
-          </div>
+          <app-data-grid
+            [collectionName]="activeCollection()"
+            [filter]="filterText()"
+            [page]="page()"
+            [pageSize]="pageSize()"
+            [showInspector]="showInspector()"
+            [viewMode]="'grid'"
+            [inputVisibleColumns]="selectedColumns()"
+            [columns]="availableColumnsMeta()"
+            [reloadTrigger]="getReloadTrigger()"
+            (documentClick)="openInspector($event)"
+            (pageChange)="onPageChange($event)"
+            (viewModeChange)="selectViewTab('json')"
+          ></app-data-grid>
         }
         @if (splitMode() === "horizontal") {
           <div class="flex h-full flex-row">
-            <div class="w-1/2 overflow-auto">
+            <div class="w-1/2">
               <app-data-grid
                 [collectionName]="activeCollection()"
                 [filter]="filterText()"
@@ -155,13 +154,14 @@
                 [showInspector]="showInspector()"
                 [viewMode]="'grid'"
                 [inputVisibleColumns]="selectedColumns()"
+                [columns]="availableColumnsMeta()"
                 [reloadTrigger]="getReloadTrigger()"
                 (documentClick)="openInspector($event)"
                 (pageChange)="onPageChange($event)"
                 (viewModeChange)="selectViewTab('json')"
               ></app-data-grid>
             </div>
-            <div class="w-1/2 overflow-auto">
+            <div class="w-1/2">
               <app-data-grid
                 [collectionName]="activeCollection()"
                 [filter]="filterText()"
@@ -170,6 +170,7 @@
                 [showInspector]="showInspector()"
                 [viewMode]="'grid'"
                 [inputVisibleColumns]="selectedColumns()"
+                [columns]="availableColumnsMeta()"
                 [reloadTrigger]="getReloadTrigger()"
                 (documentClick)="openInspector($event)"
                 (pageChange)="onPageChange($event)"
@@ -180,7 +181,7 @@
         }
         @if (splitMode() === "vertical") {
           <div class="flex h-full flex-col">
-            <div class="h-1/2 overflow-auto">
+            <div class="h-1/2">
               <app-data-grid
                 [collectionName]="activeCollection()"
                 [filter]="filterText()"
@@ -189,13 +190,14 @@
                 [showInspector]="showInspector()"
                 [viewMode]="'grid'"
                 [inputVisibleColumns]="selectedColumns()"
+                [columns]="availableColumnsMeta()"
                 [reloadTrigger]="getReloadTrigger()"
                 (documentClick)="openInspector($event)"
                 (pageChange)="onPageChange($event)"
                 (viewModeChange)="selectViewTab('json')"
               ></app-data-grid>
             </div>
-            <div class="h-1/2 overflow-auto">
+            <div class="h-1/2">
               <app-data-grid
                 [collectionName]="activeCollection()"
                 [filter]="filterText()"
@@ -204,6 +206,7 @@
                 [showInspector]="showInspector()"
                 [viewMode]="'grid'"
                 [inputVisibleColumns]="selectedColumns()"
+                [columns]="availableColumnsMeta()"
                 [reloadTrigger]="getReloadTrigger()"
                 (documentClick)="openInspector($event)"
                 (pageChange)="onPageChange($event)"
@@ -230,18 +233,12 @@
               >
             </div>
             <div class="flex items-center gap-2">
-              <button
-                class="flex items-center gap-2 rounded border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-1.5 text-sm text-[var(--text-main)] transition-colors hover:bg-[var(--bg-card)]"
-                (click)="loadFullJsonData()"
-              >
-                <mat-icon fontIcon="refresh" class="h-5! w-5! text-xl!" />
-                Refresh
-              </button>
+
               <button
                 class="flex items-center gap-2 rounded bg-[var(--accent)] px-3 py-1.5 text-sm font-bold text-black transition-colors hover:bg-[var(--accent-hover)]"
                 (click)="copyJsonToClipboard()"
               >
-                <mat-icon fontIcon="content_copy" class="h-5! w-5! text-xl!" />
+                <mat-icon fontIcon="content_copy" class="w-5! h-6! text-xl!" />
                 Copy to Clipboard
               </button>
             </div>
@@ -279,7 +276,7 @@
                       class="flex items-center gap-1 rounded px-2 py-1 text-xs text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--accent)]"
                       (click)="openInspector(doc)"
                     >
-                      <mat-icon fontIcon="visibility" class="h-5! w-5! text-xl!" />
+                      <mat-icon fontIcon="visibility" class="w-5! h-6! text-xl!" />
                       Inspect
                     </button>
                   </div>
