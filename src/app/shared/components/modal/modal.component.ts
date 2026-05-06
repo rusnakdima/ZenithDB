@@ -40,6 +40,8 @@ export class ModalComponent implements OnInit, OnDestroy {
 
   private elementRef = inject(ElementRef);
   private previousActiveElement: HTMLElement | null = null;
+  private openedTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  private closedTimeoutId: ReturnType<typeof setTimeout> | null = null;
   private escapeKeyHandler = (event: KeyboardEvent) => {
     if (event.key === "Escape" && this.closeOnEscape() && this.open()) {
       this.onClose();
@@ -53,6 +55,8 @@ export class ModalComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    if (this.openedTimeoutId) clearTimeout(this.openedTimeoutId);
+    if (this.closedTimeoutId) clearTimeout(this.closedTimeoutId);
     this.cleanup();
   }
 
@@ -72,13 +76,19 @@ export class ModalComponent implements OnInit, OnDestroy {
   }
 
   openModal(): void {
+    if (this.openedTimeoutId) {
+      clearTimeout(this.openedTimeoutId);
+      this.openedTimeoutId = null;
+    }
+
     this.previousActiveElement = document.activeElement as HTMLElement;
     this.isVisible.set(true);
     this.isAnimating.set(true);
     document.body.style.overflow = "hidden";
     document.addEventListener("keydown", this.escapeKeyHandler);
 
-    setTimeout(() => {
+    this.openedTimeoutId = setTimeout(() => {
+      this.openedTimeoutId = null;
       this.isAnimating.set(false);
       this.opened.emit();
       this.trapFocus();
@@ -86,11 +96,17 @@ export class ModalComponent implements OnInit, OnDestroy {
   }
 
   closeModal(): void {
+    if (this.openedTimeoutId) {
+      clearTimeout(this.openedTimeoutId);
+      this.openedTimeoutId = null;
+    }
+
     this.isAnimating.set(true);
     document.body.style.overflow = "";
     document.removeEventListener("keydown", this.escapeKeyHandler);
 
-    setTimeout(() => {
+    this.closedTimeoutId = setTimeout(() => {
+      this.closedTimeoutId = null;
       this.isVisible.set(false);
       this.isAnimating.set(false);
       this.closed.emit();

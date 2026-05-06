@@ -24,7 +24,7 @@
     />
     @if (showAutocomplete() && autocompleteFiltered().length > 0) {
       <div
-        class="absolute top-full left-12 z-[100] mt-1 w-64 rounded-lg border border-[var(--border-visible)] bg-[var(--bg-card)] shadow-xl"
+        class="dropdown-container absolute top-full left-12 z-[100] mt-1 w-64 rounded-lg border border-[var(--border-visible)] bg-[var(--bg-card)] shadow-xl"
       >
         <div class="max-h-48 overflow-y-auto">
           @for (col of autocompleteFiltered(); track col; let i = $index) {
@@ -35,7 +35,10 @@
               [class.text-[var(--text-main)]]="i !== selectedAutocompleteIndex()"
               (click)="selectAutocomplete(col)"
             >
-              <mat-icon fontIcon="label" class="!text-lg text-[var(--text-muted)]"></mat-icon>
+              <mat-icon
+                fontIcon="label"
+                class="h-6! w-5! text-xl! text-[var(--text-muted)]"
+              ></mat-icon>
               {{ col }}
             </button>
           }
@@ -51,7 +54,7 @@
         title="Filter history"
         (click)="toggleHistory(); $event.stopPropagation()"
       >
-        <mat-icon fontIcon="history" class="!text-xl"></mat-icon>
+        <mat-icon fontIcon="history" class="h-6! w-5! text-xl!"></mat-icon>
       </button>
       @if (showHistory()) {
         <div
@@ -77,7 +80,10 @@
                   class="flex w-full items-center gap-2 px-3 py-2 text-left font-mono text-sm text-[var(--accent)] transition-colors hover:bg-[var(--bg-elevated)]"
                   (click)="useHistoryItem(item); $event.stopPropagation()"
                 >
-                  <mat-icon fontIcon="history" class="!text-xl text-[var(--text-muted)]"></mat-icon>
+                  <mat-icon
+                    fontIcon="history"
+                    class="h-6! w-5! text-xl! text-[var(--text-muted)]"
+                  ></mat-icon>
                   {{ item }}
                 </button>
               }
@@ -111,9 +117,9 @@
       class="flex items-center gap-2 rounded-md border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-2 text-sm text-[var(--text-main)] transition-colors hover:bg-[var(--bg-card)]"
       (click)="toggleExportMenu(); $event.stopPropagation()"
     >
-      <mat-icon fontIcon="download" class="!text-xl"></mat-icon>
+      <mat-icon fontIcon="download" class="h-6! w-5! text-xl!"></mat-icon>
       Export
-      <mat-icon fontIcon="expand_more" class="!text-xl"></mat-icon>
+      <mat-icon fontIcon="expand_more" class="h-6! w-5! text-xl!"></mat-icon>
     </button>
     @if (showExportMenu()) {
       <div
@@ -123,21 +129,24 @@
           class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-[var(--text-main)] transition-colors hover:bg-[var(--bg-elevated)]"
           (click)="onExport('csv'); $event.stopPropagation()"
         >
-          <mat-icon fontIcon="table_chart" class="!text-xl text-[var(--accent)]"></mat-icon>
+          <mat-icon
+            fontIcon="table_chart"
+            class="h-6! w-5! text-xl! text-[var(--accent)]"
+          ></mat-icon>
           Export CSV
         </button>
         <button
           class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-[var(--text-main)] transition-colors hover:bg-[var(--bg-elevated)]"
           (click)="onExport('json'); $event.stopPropagation()"
         >
-          <mat-icon fontIcon="data_object" class="!text-xl text-blue-400"></mat-icon>
+          <mat-icon fontIcon="data_object" class="h-6! w-5! text-xl! text-blue-400"></mat-icon>
           Export JSON
         </button>
         <button
           class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-[var(--text-main)] transition-colors hover:bg-[var(--bg-elevated)]"
           (click)="onExport('sql'); $event.stopPropagation()"
         >
-          <mat-icon fontIcon="code" class="!text-xl text-amber-400"></mat-icon>
+          <mat-icon fontIcon="code" class="h-6! w-5! text-xl! text-amber-400"></mat-icon>
           Export SQL
         </button>
       </div>
@@ -151,7 +160,7 @@
     (click)="onRefresh()"
     title="Refresh"
   >
-    <mat-icon fontIcon="refresh" class="!text-xl"></mat-icon>
+    <mat-icon fontIcon="refresh" class="h-6! w-5! text-xl!"></mat-icon>
   </button>
 
   <div class="dropdown-container relative overflow-visible">
@@ -159,9 +168,9 @@
       class="flex items-center gap-2 rounded-md border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-2 text-sm text-[var(--text-main)] transition-colors hover:bg-[var(--bg-card)]"
       (click)="toggleColumnChooser(); $event.stopPropagation()"
     >
-      <mat-icon fontIcon="view_column" class="!text-xl"></mat-icon>
+      <mat-icon fontIcon="view_column" class="h-6! w-5! text-xl!"></mat-icon>
       Columns
-      <mat-icon fontIcon="expand_more" class="!text-xl"></mat-icon>
+      <mat-icon fontIcon="expand_more" class="h-6! w-5! text-xl!"></mat-icon>
     </button>
     @if (showColumnChooser()) {
       <div
@@ -190,11 +199,11 @@
               class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 transition-colors hover:bg-[var(--bg-elevated)]"
             >
               <app-checkbox
-                [checked]="selectedColumns().has(col)"
-                [disabled]="isColumnDisabled(col)"
-                (changed)="toggleColumn(col)"
+                [checked]="selectedColumns().has(col.name)"
+                [disabled]="isColumnDisabled(col.name)"
+                (changed)="toggleColumn(col.name)"
               />
-              <span class="text-sm text-[var(--text-main)]">{{ col }}</span>
+              <span class="text-sm text-[var(--text-main)]">{{ col.name }}</span>
             </label>
           }
           @if (availableColumns.length === 0) {

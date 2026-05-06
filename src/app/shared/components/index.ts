@@ -9,4 +9,6 @@ export * from "./settings-dialog/settings-dialog.component";
 export * from "./shortcuts-help-dialog/shortcuts-help-dialog.component";
 export * from "./status-badge/status-badge.component";
 export * from "./data-type-badge/data-type-badge.component";
+export * from "./error-boundary/error-boundary.component";
+
 export * from "./sortable-header/sortable-header.component";

@@ -7,7 +7,7 @@ import { MatIconModule } from "@angular/material/icon";
   imports: [MatIconModule],
   template: `
     <div
-      class="flex items-center justify-between border-t border-[var(--border-subtle)] bg-[var(--bg-sidebar)] px-6 py-3"
+      class="flex w-full items-center justify-between border-t border-[var(--border-subtle)] bg-[var(--bg-sidebar)] px-6 py-3"
     >
       <div class="flex items-center gap-6">
         <span class="text-sm text-[var(--text-dim)]">

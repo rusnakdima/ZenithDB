@@ -11,6 +11,8 @@ import {
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { Router } from "@angular/router";
+import { CommonModule } from "@angular/common";
+import { MatIconModule } from "@angular/material/icon";
 
 import { ModalComponent } from "../modal/modal.component";
 import { fromEvent, Subscription } from "rxjs";
@@ -20,15 +22,21 @@ interface Command {
   id: string;
   icon: string;
   text: string;
+  description?: string;
   shortcut?: string;
   action: string;
   type: "navigation" | "action";
 }
 
+interface CommandGroup {
+  category: string;
+  items: Command[];
+}
+
 @Component({
   selector: "app-command-palette",
   standalone: true,
-  imports: [FormsModule, ModalComponent],
+  imports: [FormsModule, CommonModule, MatIconModule],
   templateUrl: "./command-palette.component.html",
 })
 export class CommandPaletteComponent implements AfterViewInit, OnDestroy {
@@ -47,96 +55,109 @@ export class CommandPaletteComponent implements AfterViewInit, OnDestroy {
   private allCommands: Command[] = [
     {
       id: "nav-connections",
-      icon: "fa-plug",
+      icon: "share",
       text: "Go to Connections",
+      description: "View all database connections",
       shortcut: "Ctrl+P",
       action: "/connections",
       type: "navigation",
     },
     {
+      id: "nav-explorer",
+      icon: "folder",
+      text: "Go to Explorer",
+      description: "Browse collection data",
+      shortcut: "Ctrl+G → E",
+      action: "/explorer",
+      type: "navigation",
+    },
+    {
       id: "nav-schema",
-      icon: "fa-table",
+      icon: "table_chart",
       text: "Go to Schema",
+      description: "View database schema",
       shortcut: "Ctrl+G → S",
-      action: "/schema",
+      action: "/connections/:id/schema",
       type: "navigation",
     },
     {
       id: "nav-query",
-      icon: "fa-terminal",
+      icon: "terminal",
       text: "Go to Query Editor",
+      description: "Execute SQL queries",
       shortcut: "Ctrl+G → Q",
       action: "/query",
       type: "navigation",
     },
     {
       id: "nav-workbench",
-      icon: "fa-laptop",
+      icon: "laptop",
       text: "Go to Workbench",
+      description: "Database workbench",
       shortcut: "Ctrl+G → W",
       action: "/workbench",
       type: "navigation",
     },
     {
-      id: "nav-explorer",
-      icon: "fa-folder-tree",
-      text: "Go to Explorer",
-      shortcut: "Ctrl+G → E",
-      action: "/explorer",
-      type: "navigation",
-    },
-    {
       id: "action-new-connection",
-      icon: "fa-plus",
+      icon: "add_circle",
       text: "New Connection",
+      description: "Add a new database connection",
       shortcut: "Ctrl+N",
       action: "new-connection",
       type: "action",
     },
     {
+      id: "action-connection-manager",
+      icon: "share",
+      text: "Connection Manager",
+      description: "Manage active connections",
+      shortcut: "Ctrl+Shift+C",
+      action: "open-connection-modal",
+      type: "action",
+    },
+    {
       id: "action-run-query",
-      icon: "fa-play",
+      icon: "play_arrow",
       text: "Run Selected Query",
+      description: "Execute current query",
       shortcut: "Ctrl+Enter",
       action: "run-query",
       type: "action",
     },
     {
       id: "action-format-sql",
-      icon: "fa-align-left",
+      icon: "format_align_left",
       text: "Format SQL",
+      description: "Format query text",
       shortcut: "Ctrl+Shift+F",
       action: "format-sql",
       type: "action",
     },
     {
       id: "action-clear-editor",
-      icon: "fa-eraser",
+      icon: "delete_sweep",
       text: "Clear Editor",
+      description: "Clear query editor",
       shortcut: "Ctrl+L",
       action: "clear-editor",
       type: "action",
     },
     {
       id: "action-toggle-theme",
-      icon: "fa-circle-half-stroke",
+      icon: "brightness_6",
       text: "Toggle Theme",
+      description: "Switch between light and dark mode",
       action: "toggle-theme",
       type: "action",
     },
     {
       id: "action-show-shortcuts",
-      icon: "fa-keyboard",
+      icon: "keyboard",
       text: "Show Keyboard Shortcuts",
+      description: "View all shortcuts",
       shortcut: "Ctrl+/",
       action: "show-shortcuts",
-      type: "action",
-    },
-    {
-      id: "action-export",
-      icon: "fa-download",
-      text: "Export Current View",
-      action: "export",
       type: "action",
     },
   ];
@@ -147,9 +168,9 @@ export class CommandPaletteComponent implements AfterViewInit, OnDestroy {
 
     let commands = this.allCommands.filter((cmd) => {
       if (!q) return true;
-      const text = cmd.text.toLowerCase();
-      const words = q.split(" ").filter(Boolean);
-      return words.every((word) => text.includes(word));
+      const textMatch = this.fuzzyMatch(cmd.text.toLowerCase(), q);
+      const descMatch = cmd.description && this.fuzzyMatch(cmd.description.toLowerCase(), q);
+      return textMatch || descMatch;
     });
 
     if (recent.length > 0 && !q) {
@@ -159,6 +180,40 @@ export class CommandPaletteComponent implements AfterViewInit, OnDestroy {
     }
 
     return commands;
+  });
+
+  groupedCommands = computed<CommandGroup[]>(() => {
+    const items = this.filteredCommands();
+    const groups: { [key: string]: Command[] } = {
+      recent: [],
+      navigation: [],
+      action: [],
+    };
+
+    const recent = this.recentCommands();
+
+    items.forEach((item) => {
+      if (recent.includes(item.id) && !this.query()) {
+        groups["recent"].push(item);
+      } else if (item.type === "navigation") {
+        groups["navigation"].push(item);
+      } else {
+        groups["action"].push(item);
+      }
+    });
+
+    const categoryLabels: { [key: string]: string } = {
+      recent: "Recent",
+      navigation: "Pages",
+      action: "Actions",
+    };
+
+    return Object.entries(groups)
+      .filter(([_, items]) => items.length > 0)
+      .map(([category, items]) => ({
+        category: categoryLabels[category] || category,
+        items,
+      }));
   });
 
   constructor() {
@@ -171,7 +226,7 @@ export class CommandPaletteComponent implements AfterViewInit, OnDestroy {
   private setupEventListeners(): void {
     this.subscriptions.push(
       fromEvent<KeyboardEvent>(document, "keydown")
-        .pipe(filter((e) => (e.ctrlKey || e.metaKey) && e.key === "p"))
+        .pipe(filter((e) => e.key === "F1"))
         .subscribe((e) => {
           e.preventDefault();
           this.toggle();
@@ -196,10 +251,26 @@ export class CommandPaletteComponent implements AfterViewInit, OnDestroy {
 
   @HostListener("document:keydown", ["$event"])
   handleKeydown(event: KeyboardEvent): void {
-    if ((event.ctrlKey || event.metaKey) && event.key === "p") {
+    if (event.key === "F1") {
       event.preventDefault();
       this.toggle();
     }
+  }
+
+  private fuzzyMatch(text: string, pattern: string): boolean {
+    if (pattern.length === 0) return true;
+    if (pattern.length > text.length) return false;
+
+    const patternChars = pattern.split("");
+    let patternIdx = 0;
+
+    for (let i = 0; i < text.length && patternIdx < patternChars.length; i++) {
+      if (text[i] === patternChars[patternIdx]) {
+        patternIdx++;
+      }
+    }
+
+    return patternIdx === patternChars.length;
   }
 
   private loadRecentCommands(): void {
@@ -251,8 +322,8 @@ export class CommandPaletteComponent implements AfterViewInit, OnDestroy {
   }
 
   onKeydown(event: KeyboardEvent): void {
-    const commands = this.filteredCommands();
-    const len = commands.length;
+    const flatItems = this.filteredCommands();
+    const len = flatItems.length;
 
     switch (event.key) {
       case "ArrowDown":
@@ -265,8 +336,8 @@ export class CommandPaletteComponent implements AfterViewInit, OnDestroy {
         break;
       case "Enter":
         event.preventDefault();
-        if (commands.length > 0) {
-          this.execute(commands[this.selectedIndex()]);
+        if (flatItems.length > 0) {
+          this.execute(flatItems[this.selectedIndex()]);
         }
         break;
       case "Escape":
@@ -280,6 +351,10 @@ export class CommandPaletteComponent implements AfterViewInit, OnDestroy {
     this.selectedIndex.set(index);
   }
 
+  selectItemByMouse(index: number): void {
+    this.selectedIndex.set(index);
+  }
+
   execute(command: Command): void {
     if (!command) return;
 
@@ -288,14 +363,24 @@ export class CommandPaletteComponent implements AfterViewInit, OnDestroy {
 
     switch (command.action) {
       case "/connections":
-      case "/schema":
+      case "/explorer":
       case "/query":
       case "/workbench":
-      case "/explorer":
         this.router.navigate([command.action]);
+        break;
+      case "/connections/:id/schema":
+        const connId = this.getActiveConnectionId();
+        if (connId) {
+          this.router.navigate(["/connections", connId, "schema"]);
+        } else {
+          this.router.navigate(["/connections"]);
+        }
         break;
       case "new-connection":
         this.router.navigate(["/connections/new"]);
+        break;
+      case "open-connection-modal":
+        document.dispatchEvent(new CustomEvent("zenith:open-connection-modal"));
         break;
       case "run-query":
         document.dispatchEvent(new CustomEvent("zenith:run-query"));
@@ -312,10 +397,12 @@ export class CommandPaletteComponent implements AfterViewInit, OnDestroy {
       case "show-shortcuts":
         document.dispatchEvent(new CustomEvent("zenith:show-shortcuts"));
         break;
-      case "export":
-        document.dispatchEvent(new CustomEvent("zenith:export-view"));
-        break;
     }
+  }
+
+  private getActiveConnectionId(): string | null {
+    const connId = (window as any).__zenith_active_connection_id;
+    return connId || null;
   }
 
   isRecentCommand(id: string): boolean {
@@ -323,6 +410,14 @@ export class CommandPaletteComponent implements AfterViewInit, OnDestroy {
   }
 
   getCommandTypeIcon(type: "navigation" | "action"): string {
-    return type === "navigation" ? "fa-chevron-right text-[10px]" : "fa-unity text-[10px]";
+    return type === "navigation" ? "chevron_right" : "flash_on";
+  }
+
+  getGlobalIndex(groupIndex: number, itemIndex: number): number {
+    let idx = 0;
+    for (let g = 0; g < groupIndex; g++) {
+      idx += this.groupedCommands()[g]?.items.length || 0;
+    }
+    return idx + itemIndex;
   }
 }

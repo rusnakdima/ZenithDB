@@ -7,7 +7,9 @@ import {
   computed,
   OnInit,
   OnChanges,
+  OnDestroy,
   SimpleChanges,
+  HostListener,
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
@@ -20,10 +22,10 @@ import { CheckboxComponent } from "@shared/components/checkbox/checkbox.componen
   imports: [FormsModule, MatIconModule, CheckboxComponent],
   templateUrl: "./filter-bar.component.html",
 })
-export class FilterBarComponent implements OnInit, OnChanges {
+export class FilterBarComponent implements OnInit, OnChanges, OnDestroy {
   @Input() filter = "";
   @Input() viewMode: "grid" | "json" = "grid";
-  @Input() availableColumns: string[] = [];
+  @Input() availableColumns: { name: string; data_type: string }[] = [];
   @Input() disabledColumns: string[] = [];
 
   @Output() filterChange = new EventEmitter<string>();
@@ -48,6 +50,9 @@ export class FilterBarComponent implements OnInit, OnChanges {
 
   private readonly STORAGE_KEY = "zenithdb_filter_history";
   private readonly MAX_HISTORY = 10;
+  private readonly FILTER_DEBOUNCE_MS = 300;
+  private filterDebounceTimeout: ReturnType<typeof setTimeout> | null = null;
+  private autocompleteTimeout: ReturnType<typeof setTimeout> | null = null;
 
   private readonly OPERATORS = [
     "eq",
@@ -63,6 +68,11 @@ export class FilterBarComponent implements OnInit, OnChanges {
     "notIn",
   ];
 
+  @HostListener("document:click", ["$event"])
+  onDocumentClick(event: MouseEvent) {
+    this.closeDropdowns(event);
+  }
+
   ngOnInit() {
     this.loadHistory();
     this.localFilter = this.filter;
@@ -71,7 +81,7 @@ export class FilterBarComponent implements OnInit, OnChanges {
   ngOnChanges(changes: SimpleChanges) {
     if (changes["availableColumns"] && this.availableColumns.length > 0) {
       const all = new Set<string>();
-      this.availableColumns.forEach((c) => all.add(c));
+      this.availableColumns.forEach((c) => all.add(c.name));
       this.selectedColumns.set(all);
       this.columnsChange.emit(this.getSelectedColumns());
     }
@@ -98,29 +108,42 @@ export class FilterBarComponent implements OnInit, OnChanges {
 
   onFilterInput(value: string) {
     this.localFilter = value;
-    this.filterChange.emit(value);
     this.validateFilter(value);
-    this.updateAutocomplete(value);
+
+    if (this.autocompleteTimeout) {
+      clearTimeout(this.autocompleteTimeout);
+    }
+
+    this.autocompleteTimeout = setTimeout(() => {
+      this.updateAutocompleteSuggestions(value);
+    }, 200);
+
+    if (this.filterDebounceTimeout) {
+      clearTimeout(this.filterDebounceTimeout);
+    }
+
+    this.filterDebounceTimeout = setTimeout(() => {
+      this.filterChange.emit(value);
+    }, this.FILTER_DEBOUNCE_MS);
   }
 
-  private updateAutocomplete(value: string): void {
-    const quoteCount = (value.match(/"/g) || []).length;
-    if (quoteCount < 2) {
+  private updateAutocompleteSuggestions(value: string): void {
+    if (!value.trim()) {
       this.showAutocomplete.set(false);
       return;
     }
 
-    const lastQuoteIndex = value.lastIndexOf('"');
-    const afterLastQuote = value.substring(lastQuoteIndex + 1);
-    const lastPart = afterLastQuote.split(/[,\s:]/).pop() || "";
-    const query = lastPart.toLowerCase();
+    const parts = value.split(/[\s:]+/);
+    const lastPart = parts[parts.length - 1].toLowerCase();
 
-    if (this.availableColumns.length > 0) {
-      this.showHistory.set(false);
-      const filtered = this.availableColumns.filter((col) => col.toLowerCase().includes(query));
-      this.autocompleteFiltered.set(filtered.slice(0, 10));
-      this.showAutocomplete.set(filtered.length > 0);
-      this.selectedAutocompleteIndex.set(-1);
+    if (lastPart.length > 0) {
+      const suggestions = this.availableColumns
+        .filter((col) => col.name.toLowerCase().includes(lastPart))
+        .slice(0, 10)
+        .map((col) => `${col.name} (${col.data_type})`);
+
+      this.autocompleteFiltered.set(suggestions);
+      this.showAutocomplete.set(suggestions.length > 0);
     } else {
       this.showAutocomplete.set(false);
     }
@@ -149,18 +172,15 @@ export class FilterBarComponent implements OnInit, OnChanges {
 
   selectAutocomplete(field: string): void {
     const value = this.localFilter;
-    const quoteCount = (value.match(/"/g) || []).length;
-    if (quoteCount < 2) return;
+    const lastSpaceIndex = value.lastIndexOf(" ");
+    const beforeSpace = lastSpaceIndex >= 0 ? value.substring(0, lastSpaceIndex + 1) : "";
+    const afterSpace = lastSpaceIndex >= 0 ? value.substring(lastSpaceIndex + 1) : value;
 
-    const lastQuoteIndex = value.lastIndexOf('"');
-    const beforeQuote = value.substring(0, lastQuoteIndex + 1);
-    const afterQuote = value.substring(lastQuoteIndex + 1);
+    const match = afterSpace.match(/^([\s:]*)/);
+    const prefix = match ? match[1] : "";
+    const afterPrefix = afterSpace.substring(prefix.length);
 
-    const match = afterQuote.match(/[,\s:]*$/);
-    const prefix = match ? match[0] : "";
-    const afterPrefix = afterQuote.substring(prefix.length);
-
-    this.localFilter = beforeQuote + prefix + field + afterPrefix + " ";
+    this.localFilter = beforeSpace + prefix + field + afterPrefix + " ";
     this.filterChange.emit(this.localFilter);
     this.showAutocomplete.set(false);
     this.selectedAutocompleteIndex.set(-1);
@@ -285,7 +305,7 @@ export class FilterBarComponent implements OnInit, OnChanges {
 
   selectAllColumns() {
     const all = new Set<string>();
-    this.availableColumns.forEach((c) => all.add(c));
+    this.availableColumns.forEach((c) => all.add(c.name));
     this.selectedColumns.set(all);
     this.columnsChange.emit(this.getSelectedColumns());
   }
@@ -297,6 +317,15 @@ export class FilterBarComponent implements OnInit, OnChanges {
 
   getSelectedColumns(): string[] {
     return Array.from(this.selectedColumns());
+  }
+
+  ngOnDestroy() {
+    if (this.filterDebounceTimeout) {
+      clearTimeout(this.filterDebounceTimeout);
+    }
+    if (this.autocompleteTimeout) {
+      clearTimeout(this.autocompleteTimeout);
+    }
   }
 
   closeDropdowns(event: MouseEvent) {
