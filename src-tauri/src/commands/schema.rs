@@ -73,29 +73,65 @@ pub async fn list_databases(conn_id: &str) -> Result<Vec<DatabaseMeta>, String> 
   let entry = get_connection_entry(conn_id).await?;
 
   match &entry.config.config {
-        ConnectionConfigEnum::Json { .. } => {
-            Ok(vec![DatabaseMeta::from_name("default")])
+    ConnectionConfigEnum::Json { path, behavior, .. } => {
+      let path_obj = std::path::Path::new(path).to_path_buf();
+      if !path_obj.is_dir() {
+        return Ok(Vec::new());
+      }
+
+      match behavior.as_str() {
+        "files_as_collections" => Ok(vec![DatabaseMeta {
+          name: "root".to_string(),
+          size_bytes: None,
+          table_count: None,
+        }]),
+        "folders_as_databases" | "mixed" => {
+          let databases = list_json_databases(path_obj.clone(), behavior.as_str()).await?;
+          if databases.is_empty() {
+            let folder_name = path_obj
+              .file_name()
+              .and_then(|n| n.to_str())
+              .unwrap_or("root")
+              .to_string();
+            let count = count_json_files_in_dir(&path_obj).await;
+            Ok(vec![DatabaseMeta {
+              name: folder_name,
+              size_bytes: None,
+              table_count: Some(count),
+            }])
+          } else {
+            Ok(databases)
+          }
         }
-        ConnectionConfigEnum::Sqlite { .. } => {
-            Ok(vec![DatabaseMeta::from_name("default")])
+        _ => {
+          let databases = list_json_databases(path_obj.clone(), "folders_as_databases").await?;
+          Ok(databases)
         }
-        ConnectionConfigEnum::Redis { .. } => {
-            Ok(vec![DatabaseMeta::from_name("default")])
-        }
-        ConnectionConfigEnum::Mongo { .. } => {
-            Err("MongoDB automatically creates databases when you first insert data. Use the mongo shell to list databases.".to_string())
-        }
-        ConnectionConfigEnum::Postgres { uri, .. } => {
-            let provider = crate::commands::provider::create_postgres_provider(uri).await?;
-            let result = provider.execute_raw("SELECT datname FROM pg_database WHERE datistemplate = false", vec![]).await.map_err_string()?;
-            Ok(parse_database_rows(&result.rows))
-        }
-        ConnectionConfigEnum::MySql { uri, .. } => {
-            let provider = crate::commands::provider::create_mysql_provider(uri).await?;
-            let result = provider.execute_raw("SHOW DATABASES", vec![]).await.map_err_string()?;
-            Ok(parse_database_rows(&result.rows))
-        }
+      }
     }
+    ConnectionConfigEnum::Sqlite { .. } => Ok(vec![DatabaseMeta::from_name("default")]),
+    ConnectionConfigEnum::Redis { .. } => Ok(vec![DatabaseMeta::from_name("default")]),
+    ConnectionConfigEnum::Mongo { .. } => Ok(vec![]),
+    ConnectionConfigEnum::Postgres { uri, .. } => {
+      let provider = crate::commands::provider::create_postgres_provider(uri).await?;
+      let result = provider
+        .execute_raw(
+          "SELECT datname FROM pg_database WHERE datistemplate = false",
+          vec![],
+        )
+        .await
+        .map_err_string()?;
+      Ok(parse_database_rows(&result.rows))
+    }
+    ConnectionConfigEnum::MySql { uri, .. } => {
+      let provider = crate::commands::provider::create_mysql_provider(uri).await?;
+      let result = provider
+        .execute_raw("SHOW DATABASES", vec![])
+        .await
+        .map_err_string()?;
+      Ok(parse_database_rows(&result.rows))
+    }
+  }
 }
 
 #[tauri::command]
@@ -129,17 +165,59 @@ pub async fn create_database(conn_id: &str, name: &str) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub async fn list_collections(conn_id: &str) -> Result<Vec<CollectionMeta>, String> {
+pub async fn list_collections(
+  conn_id: &str,
+  db_name: Option<String>,
+) -> Result<Vec<CollectionMeta>, String> {
   let entry = get_connection_entry(conn_id).await?;
 
   match &entry.config.config {
-    ConnectionConfigEnum::Json { path, .. } => {
+    ConnectionConfigEnum::Json { path, behavior, .. } => {
       let path_obj = std::path::Path::new(path).to_path_buf();
-      if path_obj.is_dir() {
-        let collections = list_json_collections(path_obj).await?;
-        Ok(collections)
-      } else {
-        Ok(Vec::new())
+      if !path_obj.is_dir() {
+        return Ok(Vec::new());
+      }
+
+      match behavior.as_str() {
+        "files_as_collections" => {
+          let collections = list_json_collections(path_obj).await?;
+          Ok(collections)
+        }
+        "folders_as_databases" => {
+          if let Some(db) = db_name {
+            let folder_name = path_obj.file_name().and_then(|n| n.to_str()).unwrap_or("");
+
+            let collections = if db == folder_name {
+              list_json_collections(path_obj).await?
+            } else {
+              let db_path = path_obj.join(&db);
+              list_json_collections(db_path).await?
+            };
+            Ok(collections)
+          } else {
+            let all_collections = list_all_json_collections_recursive(path_obj).await?;
+            Ok(all_collections)
+          }
+        }
+        "mixed" => {
+          if let Some(db) = db_name {
+            if db == "root" {
+              let collections = list_json_collections(path_obj).await?;
+              Ok(collections)
+            } else {
+              let db_path = path_obj.join(&db);
+              let collections = list_json_collections(db_path).await?;
+              Ok(collections)
+            }
+          } else {
+            let collections = list_json_collections(path_obj).await?;
+            Ok(collections)
+          }
+        }
+        _ => {
+          let collections = list_json_collections(path_obj).await?;
+          Ok(collections)
+        }
       }
     }
     _ => {
@@ -155,6 +233,118 @@ pub async fn list_collections(conn_id: &str) -> Result<Vec<CollectionMeta>, Stri
       })
     }
   }
+}
+
+async fn list_json_databases(
+  path_obj: std::path::PathBuf,
+  behavior: &str,
+) -> Result<Vec<DatabaseMeta>, String> {
+  let mut entries = tokio::fs::read_dir(&path_obj).await.map_err_string()?;
+  let mut databases: Vec<DatabaseMeta> = Vec::new();
+
+  while let Some(entry) = entries.next_entry().await.map_err_string()? {
+    let entry_path = entry.path();
+    if entry_path.is_dir() {
+      let name = entry.file_name().into_string().unwrap_or_default();
+
+      let collection_count = count_json_files_in_dir(&entry_path).await;
+
+      databases.push(DatabaseMeta {
+        name,
+        size_bytes: None,
+        table_count: Some(collection_count),
+      });
+    } else if behavior == "mixed" && entry_path.extension().is_some_and(|ext| ext == "json") {
+      let has_root = databases.iter().any(|d| d.name == "root");
+      if !has_root {
+        databases.insert(
+          0,
+          DatabaseMeta {
+            name: "root".to_string(),
+            size_bytes: None,
+            table_count: None,
+          },
+        );
+      }
+    }
+  }
+
+  if behavior == "mixed" {
+    if !databases.iter().any(|d| d.name == "root") {
+      let root_count = count_json_files_in_dir(&path_obj).await;
+      databases.push(DatabaseMeta {
+        name: "root".to_string(),
+        size_bytes: None,
+        table_count: Some(root_count),
+      });
+    }
+  }
+
+  databases.sort_by(|a, b| a.name.cmp(&b.name));
+  Ok(databases)
+}
+
+async fn count_json_files_in_dir(path: &std::path::Path) -> u64 {
+  let mut entries = match tokio::fs::read_dir(path).await {
+    Ok(e) => e,
+    Err(_) => return 0,
+  };
+
+  let mut count = 0u64;
+  while let Ok(Some(entry)) = entries.next_entry().await {
+    if entry.path().extension().is_some_and(|ext| ext == "json") {
+      count += 1;
+    }
+  }
+  count
+}
+
+async fn list_all_json_collections_recursive(
+  path_obj: std::path::PathBuf,
+) -> Result<Vec<CollectionMeta>, String> {
+  let mut collections: Vec<CollectionMeta> = Vec::new();
+  let mut dirs_to_scan: Vec<std::path::PathBuf> = vec![path_obj];
+
+  while let Some(current_dir) = dirs_to_scan.pop() {
+    let mut entries = match tokio::fs::read_dir(&current_dir).await {
+      Ok(e) => e,
+      Err(_) => continue,
+    };
+
+    while let Some(entry) = entries.next_entry().await.map_err_string()? {
+      let entry_path = entry.path();
+
+      if entry_path.is_dir() {
+        dirs_to_scan.push(entry_path);
+      } else if entry_path.extension().is_some_and(|ext| ext == "json") {
+        let name = entry
+          .file_name()
+          .into_string()
+          .ok()
+          .map(|n| n.trim_end_matches(".json").to_string());
+
+        if let Some(name) = name {
+          let count = match tokio::fs::read_to_string(&entry_path).await {
+            Ok(content) => match serde_json::from_str::<serde_json::Value>(&content) {
+              Ok(v) => {
+                if let Some(arr) = v.as_array() {
+                  arr.len() as u64
+                } else {
+                  1
+                }
+              }
+              Err(_) => 0,
+            },
+            Err(_) => 0,
+          };
+
+          collections.push(CollectionMeta { name, count });
+        }
+      }
+    }
+  }
+
+  Ok(collections)
 }
 
 async fn list_json_collections(

@@ -15,6 +15,8 @@ pub enum ConnectionConfigEnum {
   Json {
     name: String,
     path: String,
+    #[serde(default = "default_json_behavior")]
+    behavior: String,
   },
   Mongo {
     name: String,
@@ -37,6 +39,10 @@ pub enum ConnectionConfigEnum {
     name: String,
     uri: String,
   },
+}
+
+fn default_json_behavior() -> String {
+  "folders_as_databases".to_string()
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -221,7 +227,23 @@ async fn check_provider_health(config: &ConnectionConfig) -> ConnectionHealth {
     },
     ConnectionConfigEnum::Mongo { uri, database, .. } => {
       match create_mongo_provider(uri, database).await {
-        Ok(_) => ConnectionHealth::ok("mongo"),
+        Ok(p) => {
+          let healthy = match p.health_check().await {
+            Ok(h) => h,
+            Err(_) => match p.list_collections().await {
+              Ok(_) => true,
+              Err(e) => {
+                eprintln!("Health check failed: {}", e);
+                false
+              }
+            },
+          };
+          if healthy {
+            ConnectionHealth::ok("mongo")
+          } else {
+            ConnectionHealth::err("mongo: health check failed")
+          }
+        }
         Err(e) => ConnectionHealth::err(&e),
       }
     }
@@ -243,16 +265,25 @@ async fn check_provider_health(config: &ConnectionConfig) -> ConnectionHealth {
       Err(e) => ConnectionHealth::err(&e),
     },
     ConnectionConfigEnum::Postgres { uri, .. } => match create_postgres_provider(uri).await {
-      Ok(_) => ConnectionHealth::ok("postgres"),
-      Err(e) => ConnectionHealth::err(&e),
+      Ok(p) => match p.execute_raw("SELECT 1", vec![]).await {
+        Ok(_) => ConnectionHealth::ok("postgres"),
+        Err(e) => ConnectionHealth::err(&format!("postgres: {}", e)),
+      },
+      Err(e) => ConnectionHealth::err(&format!("postgres: {}", e)),
     },
     ConnectionConfigEnum::Sqlite { path, .. } => match create_sqlite_provider(path).await {
-      Ok(_) => ConnectionHealth::ok("sqlite"),
-      Err(e) => ConnectionHealth::err(&e),
+      Ok(p) => match p.execute_raw("SELECT 1", vec![]).await {
+        Ok(_) => ConnectionHealth::ok("sqlite"),
+        Err(e) => ConnectionHealth::err(&format!("sqlite: {}", e)),
+      },
+      Err(e) => ConnectionHealth::err(&format!("sqlite: {}", e)),
     },
     ConnectionConfigEnum::MySql { uri, .. } => match create_mysql_provider(uri).await {
-      Ok(_) => ConnectionHealth::ok("mysql"),
-      Err(e) => ConnectionHealth::err(&e),
+      Ok(p) => match p.execute_raw("SELECT 1", vec![]).await {
+        Ok(_) => ConnectionHealth::ok("mysql"),
+        Err(e) => ConnectionHealth::err(&format!("mysql: {}", e)),
+      },
+      Err(e) => ConnectionHealth::err(&format!("mysql: {}", e)),
     },
   }
 }
