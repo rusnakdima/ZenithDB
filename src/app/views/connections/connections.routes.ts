@@ -11,8 +11,6 @@ export const connectionsRoutes: Routes = [
   {
     path: ":id/explorer",
     loadComponent: () =>
-      import("../../views/explorer/explorer.component").then(
-        (m) => m.ExplorerComponent
-      ),
+      import("../../views/explorer/explorer.component").then((m) => m.ExplorerComponent),
   },
 ];

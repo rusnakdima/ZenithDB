@@ -111,11 +111,6 @@
           Refresh
         </button>
 
-        <a routerLink="/explorer" class="form-btn form-btn-primary">
-          <mat-icon fontIcon="search" class="mr-2 h-5! w-5! text-xl!" />
-          Explore
-        </a>
-
         <button
           (click)="deleteConnection()"
           class="ml-auto rounded-xl border border-red-900/50 bg-red-900/20 px-4 py-3 text-sm font-medium text-red-400 transition-colors hover:bg-red-900/30"
@@ -125,45 +120,74 @@
         </button>
       </div>
 
-      @if (collections().length > 0) {
+      @if (showCreateDb()) {
+        <div class="mt-6 rounded-xl border border-[var(--border-visible)] bg-[var(--bg-card)] p-4">
+          <h4 class="mb-3 text-sm font-semibold text-[var(--text-main)]">Create New Database</h4>
+          <div class="flex gap-3">
+            <input
+              type="text"
+              [(ngModel)]="newDbName"
+              placeholder="database_name"
+              class="flex-1 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-2 text-sm text-[var(--text-main)] placeholder-[var(--text-muted)] focus:border-[var(--accent)] focus:outline-none"
+            />
+            <button
+              (click)="createDatabase()"
+              [disabled]="creatingDb()"
+              class="form-btn form-btn-primary"
+            >
+              @if (creatingDb()) {
+                <mat-icon fontIcon="sync" class="mr-2 h-5! w-5! text-xl!" /> Creating...
+              } @else {
+                <mat-icon fontIcon="add" class="mr-2 h-5! w-5! text-xl!" /> Create
+              }
+            </button>
+            <button (click)="showCreateDb.set(false)" class="form-btn form-btn-secondary">
+              Cancel
+            </button>
+          </div>
+        </div>
+      }
+
+      @if (getDbList().length > 0) {
         <div class="mt-8">
-          <h3 class="mb-4 text-lg font-semibold text-[var(--text-main)]">Collections</h3>
-          <div
-            class="overflow-hidden rounded-xl border border-[var(--border-visible)] bg-[var(--bg-card)]"
-          >
-            <table class="w-full">
-              <thead class="bg-[var(--bg-elevated)]">
-                <tr>
-                  <th
-                    class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-[var(--text-dim)] uppercase"
+          <div class="mb-4 flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-[var(--text-main)]">Databases</h3>
+            <button (click)="showCreateDb.set(true)" class="form-btn form-btn-secondary text-xs">
+              <mat-icon fontIcon="add" class="mr-1 h-4! w-4! text-xl!" />
+              Create Database
+            </button>
+          </div>
+          <div class="space-y-2">
+            @for (db of getDbList(); track db) {
+              <div class="rounded-xl border border-[var(--border-visible)] bg-[var(--bg-card)] p-4">
+                <div class="mb-3 flex items-center gap-3">
+                  <mat-icon fontIcon="storage" class="h-5! w-5! text-xl! text-[var(--accent)]/70" />
+                  <span class="font-medium text-[var(--text-main)]">{{ db }}</span>
+                  <span class="text-xs text-[var(--text-muted)]"
+                    >{{ getCollectionsForDb(db).length }} collections</span
                   >
-                    Name
-                  </th>
-                  <th
-                    class="px-4 py-3 text-right text-xs font-semibold tracking-wider text-[var(--text-dim)] uppercase"
-                  >
-                    Documents
-                  </th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-[var(--border-subtle)]">
-                @for (collection of collections(); track collection.name) {
-                  <tr
-                    class="cursor-pointer transition-colors hover:bg-[var(--bg-elevated)]"
-                    (click)="openCollection(collection.name)"
-                  >
-                    <td class="px-4 py-3">
-                      <span class="font-medium text-[var(--text-main)]">{{ collection.name }}</span>
-                    </td>
-                    <td class="px-4 py-3 text-right">
-                      <span class="font-mono text-sm text-[var(--text-dim)]">{{
-                        collection.count
-                      }}</span>
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
+                </div>
+                <table class="w-full">
+                  <tbody class="divide-y divide-[var(--border-subtle)]">
+                    @for (col of getCollectionsForDb(db); track col.name) {
+                      <tr
+                        class="cursor-pointer transition-colors hover:bg-[var(--bg-elevated)]"
+                        (click)="openCollection(col.name)"
+                      >
+                        <td class="px-4 py-3">
+                          <span class="font-medium text-[var(--text-main)]">{{ col.name }}</span>
+                        </td>
+                        <td class="px-4 py-3 text-right">
+                          <span class="font-mono text-sm text-[var(--text-dim)]">{{
+                            col.count
+                          }}</span>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
           </div>
         </div>
       }

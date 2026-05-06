@@ -1,7 +1,8 @@
-import { Component, inject, signal, OnInit } from "@angular/core";
+import { Component, inject, signal, OnInit, OnDestroy } from "@angular/core";
 import { Router, RouterLink, ActivatedRoute } from "@angular/router";
 import { TitleCasePipe } from "@angular/common";
 import { MatIconModule } from "@angular/material/icon";
+import { FormsModule } from "@angular/forms";
 import { DatabaseService } from "@shared/services/database.service";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import {
@@ -11,14 +12,21 @@ import {
   ConnectionConfig,
 } from "@shared/models/connection.config";
 import { StatusBadgeComponent } from "@shared/components/status-badge/status-badge.component";
+import { Subscription } from "rxjs";
+
+interface DbNode {
+  name: string;
+  expanded: boolean;
+  collections: CollectionMeta[];
+}
 
 @Component({
   selector: "app-connection-detail",
   standalone: true,
-  imports: [RouterLink, StatusBadgeComponent, TitleCasePipe, MatIconModule],
+  imports: [RouterLink, StatusBadgeComponent, TitleCasePipe, MatIconModule, FormsModule],
   templateUrl: "./connection-detail.component.html",
 })
-export class ConnectionDetailComponent implements OnInit {
+export class ConnectionDetailComponent implements OnInit, OnDestroy {
   private db = inject(DatabaseService);
   private connState = inject(ConnectionStateService);
   route = inject(ActivatedRoute);
@@ -30,38 +38,53 @@ export class ConnectionDetailComponent implements OnInit {
   serverVersion = signal<string | null>(null);
   health = signal<ConnectionHealth | null>(null);
   collections = signal<CollectionMeta[]>([]);
+  databases = signal<DbNode[]>([]);
   loading = signal(true);
   testing = signal(false);
   fullConfig = signal<any>(null);
+  showCreateDb = signal(false);
+  newDbName = "";
+  creatingDb = signal(false);
 
   providerIcon = signal("dns");
 
+  private routeSub: Subscription | null = null;
+
   async ngOnInit() {
-    const id = this.route.snapshot.paramMap.get("id");
-    if (id && id !== "new") {
-      this.connectionId.set(id);
-      const connections = await this.db.listConnections();
-      const conn = connections.find((c) => c.id === id);
-      if (conn) {
-        this.connectionName.set(conn.name);
-        this.provider.set(conn.provider);
-        this.connState.setActiveConnection(conn);
-        try {
-          const fullConn = await this.db.getConnection(id);
-          this.fullConfig.set(fullConn);
-        } catch (e) {
-          console.error("Failed to load full config:", e);
+    this.routeSub = this.route.paramMap.subscribe(async (params) => {
+      const id = params.get("id");
+      if (id && id !== "new") {
+        this.connectionId.set(id);
+        const connections = await this.db.listConnections();
+        const conn = connections.find((c) => c.id === id);
+        if (conn) {
+          this.connectionName.set(conn.name);
+          this.provider.set(conn.provider);
+          this.connState.setActiveConnection(conn);
+          try {
+            const fullConn = await this.db.getConnection(id);
+            this.fullConfig.set(fullConn);
+          } catch (e) {
+            console.error("Failed to load full config:", e);
+          }
         }
+      } else {
+        this.connectionId.set(this.connState.activeConnectionId());
+        this.connectionName.set(this.connState.activeConnectionName());
+        this.provider.set(this.connState.activeProvider());
+        this.fullConfig.set(this.connState.activeConnectionConfig());
       }
-    } else {
-      this.connectionId.set(this.connState.activeConnectionId());
-      this.connectionName.set(this.connState.activeConnectionName());
-      this.provider.set(this.connState.activeProvider());
-      this.fullConfig.set(this.connState.activeConnectionConfig());
-    }
+
+      this.updateProviderIcon();
+      await this.loadConnectionDetails();
+    });
 
     this.updateProviderIcon();
     await this.loadConnectionDetails();
+  }
+
+  ngOnDestroy() {
+    this.routeSub?.unsubscribe();
   }
 
   private updateProviderIcon() {
@@ -141,6 +164,46 @@ export class ConnectionDetailComponent implements OnInit {
   }
 
   openCollection(collectionName: string) {
-    this.router.navigate(["/explorer"], { queryParams: { collection: collectionName } });
+    const connId = this.connectionId();
+    if (connId) {
+      this.router.navigate(["/connections", connId, "explorer"], {
+        queryParams: { collection: collectionName },
+      });
+    }
+  }
+
+  getCollectionsForDb(dbName: string): CollectionMeta[] {
+    return this.collections().filter(
+      (c) => c.name.startsWith(dbName + ".") || c.name.split(".")[0] === dbName
+    );
+  }
+
+  getDbList(): string[] {
+    const colls = this.collections();
+    const dbs = new Set<string>();
+    colls.forEach((c) => {
+      const parts = c.name.split(".");
+      if (parts.length > 1) {
+        dbs.add(parts[0]);
+      } else {
+        dbs.add("default");
+      }
+    });
+    return Array.from(dbs);
+  }
+
+  async createDatabase() {
+    if (!this.newDbName.trim()) return;
+    this.creatingDb.set(true);
+    try {
+      await this.db.createDatabase(this.newDbName.trim());
+      this.newDbName = "";
+      this.showCreateDb.set(false);
+      await this.loadConnectionDetails();
+    } catch (e) {
+      console.error("Failed to create database:", e);
+    } finally {
+      this.creatingDb.set(false);
+    }
   }
 }

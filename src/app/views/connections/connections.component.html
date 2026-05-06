@@ -10,13 +10,13 @@
         </p>
       </div>
       <a routerLink="/connections/new" class="connections-btn">
-        <mat-icon fontIcon="add" class="w-5! h-6! text-xl!" /> New Connection
+        <mat-icon fontIcon="add" class="h-6! w-5! text-xl!" /> New Connection
       </a>
     </div>
 
     @if (loading()) {
       <div class="flex items-center justify-center gap-3 py-12 text-[var(--text-dim)]">
-        <mat-icon fontIcon="sync" class="w-5! h-6! text-xl!" />
+        <mat-icon fontIcon="sync" class="h-6! w-5! text-xl!" />
         <span>Loading connections...</span>
       </div>
     }
@@ -29,7 +29,7 @@
         <h3 class="empty-title">No Connections Yet</h3>
         <p class="empty-description">Create your first database connection to get started.</p>
         <a routerLink="/connections/new" class="connections-btn">
-          <mat-icon fontIcon="add" class="w-5! h-6! text-xl!" /> Create Connection
+          <mat-icon fontIcon="add" class="h-6! w-5! text-xl!" /> Create Connection
         </a>
       </div>
     }
