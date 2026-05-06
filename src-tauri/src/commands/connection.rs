@@ -6,8 +6,6 @@ use nosql_orm::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
-use std::sync::Arc;
-use tokio::sync::RwLock;
 
 pub type ConnectionId = String;
 
@@ -149,16 +147,6 @@ impl Default for ConnectionStore {
   }
 }
 
-pub fn store() -> Arc<RwLock<ConnectionStore>> {
-  Arc::new(RwLock::new(ConnectionStore::load().unwrap_or_else(|e| {
-    eprintln!(
-      "WARNING: Failed to load connection store: {}, using empty store",
-      e
-    );
-    ConnectionStore::default()
-  })))
-}
-
 fn get_connection_type(config: &ConnectionConfig) -> &'static str {
   match config.config {
     ConnectionConfigEnum::Json { .. } => "json",
@@ -178,19 +166,27 @@ pub async fn save_connection(config: ConnectionConfig) -> Result<ConnectionId, S
     config,
   };
 
-  let store = store();
-  {
-    let mut store = store.write().await;
-    store.add_connection(entry);
-    store.save()?;
-  }
+  let mut store = ConnectionStore::load().unwrap_or_else(|e| {
+    eprintln!(
+      "WARNING: Failed to load connection store: {}, using empty store",
+      e
+    );
+    ConnectionStore::default()
+  });
+  store.add_connection(entry);
+  store.save()?;
   Ok(id)
 }
 
 #[tauri::command]
 pub async fn list_connections() -> Result<Vec<ConnectionSummary>, String> {
-  let store = store();
-  let store = store.read().await;
+  let store = ConnectionStore::load().unwrap_or_else(|e| {
+    eprintln!(
+      "WARNING: Failed to load connection store: {}, using empty store",
+      e
+    );
+    ConnectionStore::default()
+  });
   let mut summaries = Vec::new();
   for c in store.connections.iter() {
     let status = health_status_from_config(&c.config).await;
@@ -208,7 +204,13 @@ async fn check_provider_health(config: &ConnectionConfig) -> ConnectionHealth {
   match &config.config {
     ConnectionConfigEnum::Json { path, .. } => match create_json_provider(path).await {
       Ok(p) => {
-        let healthy = p.health_check().await.unwrap_or(false);
+        let healthy = match p.health_check().await {
+          Ok(h) => h,
+          Err(e) => {
+            eprintln!("Health check failed: {}", e);
+            false
+          }
+        };
         if healthy {
           ConnectionHealth::ok("json")
         } else {
@@ -225,7 +227,13 @@ async fn check_provider_health(config: &ConnectionConfig) -> ConnectionHealth {
     }
     ConnectionConfigEnum::Redis { uri, .. } => match create_redis_provider(uri).await {
       Ok(p) => {
-        let healthy = p.health_check().await.unwrap_or(false);
+        let healthy = match p.health_check().await {
+          Ok(h) => h,
+          Err(e) => {
+            eprintln!("Health check failed: {}", e);
+            false
+          }
+        };
         if healthy {
           ConnectionHealth::ok("redis")
         } else {
@@ -260,14 +268,17 @@ async fn health_status_from_config(config: &ConnectionConfig) -> String {
 
 #[tauri::command]
 pub async fn delete_connection(id: &str) -> Result<(), String> {
-  let store = store();
-  {
-    let mut store = store.write().await;
-    if store.remove_connection(id) {
-      store.save()?;
-    } else {
-      return Err(format!("Connection {} not found", id));
-    }
+  let mut store = ConnectionStore::load().unwrap_or_else(|e| {
+    eprintln!(
+      "WARNING: Failed to load connection store: {}, using empty store",
+      e
+    );
+    ConnectionStore::default()
+  });
+  if store.remove_connection(id) {
+    store.save()?;
+  } else {
+    return Err(format!("Connection {} not found", id));
   }
   Ok(())
 }
@@ -280,8 +291,13 @@ pub struct ConnectionConfigResult {
 
 #[tauri::command]
 pub async fn get_connection(id: &str) -> Result<ConnectionConfigResult, String> {
-  let store = store();
-  let store = store.read().await;
+  let store = ConnectionStore::load().unwrap_or_else(|e| {
+    eprintln!(
+      "WARNING: Failed to load connection store: {}, using empty store",
+      e
+    );
+    ConnectionStore::default()
+  });
   let entry = store
     .find_by_id(id)
     .ok_or_else(|| format!("Connection {} not found", id))?;

@@ -8,11 +8,8 @@ pub mod provider;
 pub mod schema;
 pub mod system;
 
-pub use connection::store;
-
 pub async fn get_connection_entry(conn_id: &str) -> Result<ConnectionEntry, String> {
-  let store = store();
-  let store = store.read().await;
+  let store = connection::ConnectionStore::load().map_err(|e| e.to_string())?;
   store
     .find_by_id(conn_id)
     .cloned()
