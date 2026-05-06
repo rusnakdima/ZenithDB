@@ -1,48 +1,29 @@
-<div class="flex h-full flex-col border-r border-slate-800 bg-slate-900">
-  <div class="flex items-center justify-between border-b border-slate-800 px-4 py-3">
-    <h2 class="text-sm font-semibold tracking-wider text-slate-400 uppercase">Collections</h2>
+<div class="flex h-full flex-col border-r border-[var(--border-subtle)] bg-[var(--bg-sidebar)]">
+  <div class="flex items-center justify-between border-b border-[var(--border-subtle)] px-4 py-3">
+    <h2 class="text-xs font-semibold tracking-wider text-[var(--text-dim)] uppercase">
+      Collections
+    </h2>
     <button
       (click)="refresh()"
-      class="rounded p-1 transition-colors hover:bg-slate-800"
+      class="rounded p-1 transition-colors hover:bg-[var(--bg-elevated)]"
       title="Refresh"
     >
-      <svg
-        class="h-4 w-4 text-slate-500 hover:text-slate-300"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-        ></path>
-      </svg>
+      <mat-icon fontIcon="refresh" class="h-6! w-5! text-xl! text-[var(--text-dim)]"></mat-icon>
     </button>
   </div>
 
-  <div class="border-b border-slate-800 px-3 py-2">
+  <div class="border-b border-[var(--border-subtle)] px-3 py-2">
     <div class="relative">
-      <svg
-        class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-500"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-        ></path>
-      </svg>
+      <mat-icon
+        fontIcon="search"
+        class="absolute top-1/2 left-3 h-6! w-5! -translate-y-1/2 text-xl! text-[var(--text-muted)]"
+      ></mat-icon>
       <input
         type="text"
         [value]="searchQuery()"
         (input)="setFilter($any($event.target).value)"
         placeholder="Search collections..."
-        class="w-full rounded-lg border border-slate-700 bg-slate-800 py-2 pr-4 pl-10 text-sm text-slate-200 placeholder-slate-500 focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] focus:outline-none"
+        class="w-full rounded-md border border-[var(--border-subtle)] bg-[var(--bg-input)] py-2 pr-4 pl-10 text-sm text-[var(--text-main)] placeholder-[var(--text-muted)] focus:border-[var(--accent)] focus:outline-none"
       />
     </div>
   </div>
@@ -53,19 +34,7 @@
     </div>
   } @else if (error()) {
     <div class="flex flex-col items-center justify-center px-4 py-8 text-center">
-      <svg
-        class="mb-3 h-10 w-10 text-red-500/60"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="1.5"
-          d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-        ></path>
-      </svg>
+      <mat-icon fontIcon="error" class="mb-3 h-6! w-5! text-xl! text-red-400"></mat-icon>
       <p class="mb-3 text-sm text-red-400">Failed to load schema</p>
       <button
         (click)="loadCollections()"
@@ -76,20 +45,11 @@
     </div>
   } @else if (filteredCollections().length === 0) {
     <div class="flex flex-1 flex-col items-center justify-center py-8 text-center">
-      <svg
-        class="mb-3 h-12 w-12 text-slate-600"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="1.5"
-          d="M3 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"
-        ></path>
-      </svg>
-      <p class="text-sm font-medium text-slate-400">
+      <mat-icon
+        fontIcon="database"
+        class="mb-3 h-6! w-5! text-xl! text-[var(--text-muted)]"
+      ></mat-icon>
+      <p class="text-sm font-medium text-[var(--text-main)]">
         @if (searchQuery()) {
           No collections match "{{ searchQuery() }}"
         } @else {
@@ -97,21 +57,14 @@
         }
       </p>
       @if (!searchQuery()) {
-        <p class="mt-1 mb-3 text-xs text-slate-500">
+        <p class="mt-1 mb-3 text-xs text-[var(--text-dim)]">
           Get started by creating your first collection
         </p>
         <button
           (click)="openNewCollectionModal()"
-          class="inline-flex items-center gap-1.5 rounded-lg bg-[var(--accent)] px-3 py-2 text-sm text-white transition-colors hover:opacity-90"
+          class="inline-flex items-center gap-1.5 rounded-lg bg-[var(--accent)] px-3 py-2 text-sm text-black transition-colors hover:opacity-90"
         >
-          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M12 4v16m8-8H4"
-            ></path>
-          </svg>
+          <mat-icon fontIcon="add" class="h-6! w-5! text-xl! text-black"></mat-icon>
           Create your first collection
         </button>
       }
@@ -121,96 +74,61 @@
       @for (col of filteredCollections(); track col.name) {
         <div (click)="selectCollection(col)">
           @if (renamingCollection() === col.name) {
-            <div class="flex items-center gap-2 rounded-lg bg-slate-800 px-3 py-2">
-              <svg
-                class="h-4 w-4 flex-shrink-0 text-slate-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7"
-                ></path>
-              </svg>
+            <div class="flex items-center gap-2 rounded-lg bg-[var(--bg-elevated)] px-3 py-2">
+              <mat-icon
+                fontIcon="table_chart"
+                class="h-6! w-5! flex-shrink-0 text-xl! text-[var(--text-dim)]"
+              ></mat-icon>
               <input
                 type="text"
                 [(ngModel)]="renameValue"
                 (keyup.enter)="confirmRename()"
                 (keyup.escape)="cancelRename()"
                 (blur)="confirmRename()"
-                class="flex-1 rounded bg-slate-900 px-2 py-1 text-sm text-slate-200 focus:ring-1 focus:ring-[var(--accent)] focus:outline-none"
+                class="flex-1 rounded bg-[var(--bg-input)] px-2 py-1 text-sm text-[var(--text-main)] focus:ring-1 focus:ring-[var(--accent)] focus:outline-none"
                 autofocus
               />
             </div>
           } @else {
             <div
               class="group flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 transition-colors"
-              [class.bg-slate-800]="selectedCollection() === col.name"
-              [class.text-white]="selectedCollection() === col.name"
-              [class.hover:bg-slate-800]="selectedCollection() !== col.name"
-              [class.text-slate-300]="selectedCollection() !== col.name"
+              [class.bg-[var(--bg-elevated)]]="selectedCollection() === col.name"
+              [class.text-[var(--text-main)]]="selectedCollection() === col.name"
+              [class.hover:bg-[var(--bg-elevated)]]="selectedCollection() !== col.name"
+              [class.text-[var(--text-main)]]="selectedCollection() !== col.name"
               (click)="toggleExpand(col.name, $event)"
               (contextmenu)="onContextMenu($event, col)"
             >
-              <svg
-                class="h-4 w-4 flex-shrink-0 text-slate-600 group-hover:text-slate-400"
+              <mat-icon
+                fontIcon="table_chart"
+                class="h-6! w-5! flex-shrink-0 text-xl! text-[var(--text-dim)] group-hover:text-[var(--text-main)]"
                 [class.text-[var(--accent)]]="selectedCollection() === col.name"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"
-                ></path>
-              </svg>
+              ></mat-icon>
               <span class="flex-1 truncate text-sm">{{ col.name }}</span>
-              <span class="text-xs text-slate-500">{{ col.count || 0 }}</span>
-              <svg
-                class="h-3 w-3 flex-shrink-0 text-slate-600 transition-transform duration-200"
+              <span class="text-xs text-[var(--text-dim)]">{{ col.count || 0 }}</span>
+              <mat-icon
+                fontIcon="chevron_right"
+                class="h-6! w-5! flex-shrink-0 text-xl! text-[var(--text-dim)] transition-transform duration-200"
                 [class.rotate-90]="isExpanded(col.name)"
                 [class.text-[var(--accent)]]="isExpanded(col.name)"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 5l7 7-7 7"
-                ></path>
-              </svg>
+              ></mat-icon>
             </div>
           }
 
           @if (isExpanded(col.name)) {
-            <div class="mt-1 ml-4 space-y-1 border-l border-slate-700 pl-3">
+            <div class="mt-1 ml-4 space-y-1 border-l border-[var(--border-subtle)] pl-3">
               @if (col.fields && col.fields.length > 0) {
                 @for (field of col.fields; track field.name) {
-                  <div class="flex items-center gap-2 rounded px-3 py-1.5 text-sm text-slate-500">
-                    <svg
-                      class="h-3 w-3 flex-shrink-0"
-                      [class]="getFieldTypeIcon(field.dataType)"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"
-                      ></path>
-                    </svg>
+                  <div
+                    class="flex items-center gap-2 rounded px-3 py-1.5 text-sm text-[var(--text-dim)]"
+                  >
+                    <mat-icon
+                      fontIcon="label"
+                      class="h-6! w-5! flex-shrink-0 text-xl! text-[var(--text-muted)]"
+                    ></mat-icon>
                     <span class="font-mono text-xs">{{ field.name }}</span>
                     <span
-                      class="rounded bg-slate-800 px-1.5 py-0.5 text-xs"
+                      class="rounded bg-[var(--bg-elevated)] px-1.5 py-0.5 text-xs"
                       [class]="getFieldTypeIcon(field.dataType)"
                     >
                       {{ field.dataType }}
@@ -221,14 +139,14 @@
                       </span>
                     }
                     @if (field.nullable) {
-                      <span class="text-xs text-slate-600">?</span>
+                      <span class="text-xs text-[var(--text-muted)]">?</span>
                     }
                   </div>
                 }
               } @else {
-                <div class="flex items-center gap-2 px-3 py-1.5 text-sm text-slate-600">
+                <div class="flex items-center gap-2 px-3 py-1.5 text-sm text-[var(--text-dim)]">
                   <div
-                    class="h-3 w-3 animate-spin rounded-full border border-slate-600 border-t-transparent"
+                    class="h-3 w-3 animate-spin rounded-full border border-[var(--border-subtle)] border-t-transparent"
                   ></div>
                   Loading fields...
                 </div>
@@ -236,42 +154,24 @@
 
               <a
                 [routerLink]="['/data', col.name]"
-                class="flex items-center gap-2 rounded px-3 py-1.5 text-sm text-slate-500 transition-colors hover:bg-slate-800 hover:text-slate-300"
+                class="flex items-center gap-2 rounded px-3 py-1.5 text-sm text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--text-main)]"
                 (click)="$event.stopPropagation()"
               >
-                <svg
-                  class="h-3 w-3 flex-shrink-0"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
-                  ></path>
-                </svg>
+                <mat-icon
+                  fontIcon="table_chart"
+                  class="h-6! w-5! flex-shrink-0 text-xl! text-[var(--text-muted)]"
+                ></mat-icon>
                 Browse Data
               </a>
               <a
                 [routerLink]="['/schema', col.name]"
-                class="flex items-center gap-2 rounded px-3 py-1.5 text-sm text-slate-500 transition-colors hover:bg-slate-800 hover:text-slate-300"
+                class="flex items-center gap-2 rounded px-3 py-1.5 text-sm text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--text-main)]"
                 (click)="$event.stopPropagation()"
               >
-                <svg
-                  class="h-3 w-3 flex-shrink-0"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  ></path>
-                </svg>
+                <mat-icon
+                  fontIcon="info"
+                  class="h-6! w-5! flex-shrink-0 text-xl! text-[var(--text-muted)]"
+                ></mat-icon>
                 Details
               </a>
             </div>
@@ -284,71 +184,37 @@
 
 @if (contextMenu().show) {
   <div
-    class="fixed z-50 min-w-[160px] rounded-lg border border-slate-700 bg-slate-800 py-1 shadow-xl"
+    class="fixed z-50 min-w-[160px] rounded-lg border border-[var(--border-visible)] bg-[var(--bg-card)] py-1 shadow-xl"
     [style.left.px]="contextMenu().x"
     [style.top.px]="contextMenu().y"
   >
     <button
-      class="flex w-full items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:bg-slate-700"
+      class="flex w-full items-center gap-2 px-3 py-2 text-sm text-[var(--text-main)] hover:bg-[var(--bg-elevated)]"
       (click)="refresh()"
     >
-      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-        ></path>
-      </svg>
+      <mat-icon fontIcon="refresh" class="h-6! w-5! text-xl! text-[var(--text-dim)]"></mat-icon>
       Refresh
     </button>
     <button
-      class="flex w-full items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:bg-slate-700"
+      class="flex w-full items-center gap-2 px-3 py-2 text-sm text-[var(--text-main)] hover:bg-[var(--bg-elevated)]"
       (click)="openNewCollectionModal()"
     >
-      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M12 4v16m8-8H4"
-        ></path>
-      </svg>
+      <mat-icon fontIcon="add" class="h-6! w-5! text-xl! text-[var(--text-dim)]"></mat-icon>
       New Collection
     </button>
     <button
-      class="flex w-full items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:bg-slate-700"
+      class="flex w-full items-center gap-2 px-3 py-2 text-sm text-[var(--text-main)] hover:bg-[var(--bg-elevated)]"
       (click)="startRename(contextMenu().node!)"
     >
-      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"
-        ></path>
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"
-        ></path>
-      </svg>
+      <mat-icon fontIcon="edit" class="h-6! w-5! text-xl! text-[var(--text-dim)]"></mat-icon>
       Rename
     </button>
-    <div class="my-1 border-t border-slate-700"></div>
+    <div class="my-1 border-t border-[var(--border-subtle)]"></div>
     <button
-      class="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-slate-700"
+      class="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-[var(--bg-elevated)]"
       (click)="dropCollection(contextMenu().node!)"
     >
-      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-        ></path>
-      </svg>
+      <mat-icon fontIcon="delete" class="h-6! w-5! text-xl! text-red-400"></mat-icon>
       Drop Collection
     </button>
   </div>
@@ -356,13 +222,15 @@
 
 @if (showNewCollectionModal()) {
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-    <div class="w-full max-w-md rounded-xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
-      <h3 class="mb-4 text-lg font-semibold text-white">Create New Collection</h3>
+    <div
+      class="w-full max-w-md rounded-xl border border-[var(--border-visible)] bg-[var(--bg-card)] p-6 shadow-2xl"
+    >
+      <h3 class="mb-4 text-lg font-semibold text-[var(--text-main)]">Create New Collection</h3>
       <input
         type="text"
         [(ngModel)]="newCollectionName"
         placeholder="Collection name"
-        class="mb-4 w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] focus:outline-none"
+        class="mb-4 w-full rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-input)] px-4 py-2.5 text-sm text-[var(--text-main)] placeholder-[var(--text-muted)] focus:border-[var(--accent)] focus:outline-none"
         (keyup.enter)="createCollection()"
         (keyup.escape)="closeNewCollectionModal()"
         autofocus
@@ -370,13 +238,13 @@
       <div class="flex justify-end gap-3">
         <button
           (click)="closeNewCollectionModal()"
-          class="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800"
+          class="rounded-lg border border-[var(--border-subtle)] px-4 py-2 text-sm text-[var(--text-main)] hover:bg-[var(--bg-elevated)]"
         >
           Cancel
         </button>
         <button
           (click)="createCollection()"
-          class="rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+          class="rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-black hover:opacity-90"
         >
           Create
         </button>

@@ -12,6 +12,8 @@ import { Router, RouterLink, ActivatedRoute } from "@angular/router";
 import { FormsModule } from "@angular/forms";
 import { DatabaseService } from "@shared/services/database.service";
 import { ToastService } from "@services/toast.service";
+import { ConnectionStateService } from "@shared/services/connection-state.service";
+import { MatIconModule } from "@angular/material/icon";
 import { SkeletonLoaderComponent } from "@shared/components/loading/skeleton-loader.component";
 import { CollectionMeta, ColumnInfo } from "@shared/models/connection.config";
 
@@ -41,7 +43,7 @@ interface ContextMenu {
 @Component({
   selector: "app-schema-tree",
   standalone: true,
-  imports: [RouterLink, FormsModule, SkeletonLoaderComponent],
+  imports: [RouterLink, FormsModule, MatIconModule, SkeletonLoaderComponent],
   templateUrl: "./schema-tree.component.html",
 })
 export class SchemaTreeComponent implements OnInit, OnDestroy {
@@ -65,6 +67,7 @@ export class SchemaTreeComponent implements OnInit, OnDestroy {
   private toast = inject(ToastService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private connectionState = inject(ConnectionStateService);
   private boundCloseContextMenu: (() => void) | null = null;
 
   ngOnInit() {
@@ -225,7 +228,8 @@ export class SchemaTreeComponent implements OnInit, OnDestroy {
         this.toast.success(`Collection "${node.name}" dropped`);
         if (this.selectedCollection() === node.name) {
           this.selectedCollection.set(null);
-          this.router.navigate(["/schema"]);
+          const connId = this.connectionState.activeConnectionId();
+          this.router.navigate(connId ? ["/connections", connId, "explorer"] : ["/connections"]);
         }
         this.loadCollections();
       } catch {
@@ -235,11 +239,17 @@ export class SchemaTreeComponent implements OnInit, OnDestroy {
   }
 
   viewData(collection: TreeNode) {
-    this.router.navigate(["/data", collection.name]);
+    const connId = this.connectionState.activeConnectionId();
+    if (connId) {
+      this.router.navigate(["/connections", connId, "data", collection.name]);
+    }
   }
 
   viewDetails(collection: TreeNode) {
-    this.router.navigate(["/schema", collection.name]);
+    const connId = this.connectionState.activeConnectionId();
+    if (connId) {
+      this.router.navigate(["/connections", connId, "schema", collection.name]);
+    }
   }
 
   setFilter(query: string) {

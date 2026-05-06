@@ -1,12 +1,12 @@
-<div class="data-grid-container flex h-full flex-col">
+<div class="data-grid-container flex h-full w-full flex-col">
   @if (error) {
     <div
       class="m-4 flex items-center gap-2 rounded-xl border border-red-900/50 bg-red-900/20 px-4 py-3 text-red-400"
     >
-      <mat-icon fontIcon="error" class="h-5! w-5! text-2xl!" />
+      <mat-icon fontIcon="error" class="h-6! w-5! text-xl!" />
       <span>{{ error }}</span>
       <button class="ml-auto text-red-400 hover:text-red-300" (click)="error = ''">
-        <mat-icon fontIcon="close" class="h-4! w-4! text-2xl!" />
+        <mat-icon fontIcon="close" class="h-6! w-5! text-xl!" />
       </button>
     </div>
   }
@@ -15,7 +15,7 @@
     <div
       class="m-4 flex items-center gap-2 rounded-xl border border-amber-900/50 bg-amber-900/20 px-4 py-3 text-amber-400"
     >
-      <mat-icon fontIcon="warning" class="h-5! w-5! text-2xl!" />
+      <mat-icon fontIcon="warning" class="h-6! w-5! text-xl!" />
       <span
         >Data is truncated due to size limits. Only the first {{ MAX_PAGE_SIZE }} rows are
         shown.</span
@@ -25,7 +25,7 @@
 
   <div class="flex-1 overflow-auto p-6">
     @if (viewMode === "json") {
-      <div class="json-view-container h-full">
+      <div class="json-view-container h-full p-6">
         @if (loading) {
           <div class="flex h-full items-center justify-center">
             <div
@@ -34,7 +34,7 @@
           </div>
         } @else if (data.length === 0) {
           <div class="flex h-full flex-col items-center justify-center text-[var(--text-dim)]">
-            <mat-icon fontIcon="inbox" class="mb-4 h-12! w-12! text-2xl! opacity-50" />
+            <mat-icon fontIcon="inbox" class="mb-4 h-12! w-12! text-xl! opacity-50" />
             <p class="text-lg font-bold">No documents found</p>
             <p class="mt-1 text-sm text-[var(--text-muted)]">This collection is empty</p>
           </div>
@@ -53,7 +53,7 @@
                       class="flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs text-[var(--text-dim)] transition-all hover:bg-[var(--bg-card)] hover:text-[var(--accent)]"
                       (click)="viewJson(row)"
                     >
-                      <mat-icon fontIcon="visibility" class="h-4! w-4! text-2xl!" />
+                      <mat-icon fontIcon="visibility" class="h-6! w-5! text-xl!" />
                       Inspect
                     </button>
                   </div>
@@ -75,7 +75,7 @@
         }
       </div>
     } @else {
-      <div class="table-container">
+      <div class="table-container w-full">
         @if (loading) {
           <div class="flex h-full items-center justify-center">
             <div
@@ -84,7 +84,7 @@
           </div>
         } @else if (data.length === 0) {
           <div class="flex h-full flex-col items-center justify-center text-[var(--text-dim)]">
-            <mat-icon fontIcon="table_chart" class="mb-4 h-12! w-12! text-2xl! opacity-50" />
+            <mat-icon fontIcon="table_chart" class="mb-4 h-12! w-12! text-xl! opacity-50" />
             <p class="text-lg font-bold">No data in this collection</p>
             <p class="mt-1 text-sm text-[var(--text-muted)]">Try adjusting your filter</p>
           </div>
@@ -177,28 +177,28 @@
                         title="Edit"
                         (click)="viewJson(row)"
                       >
-                        <mat-icon fontIcon="edit" class="h-4! w-4! text-2xl!" />
+                        <mat-icon fontIcon="edit" class="h-6! w-5! text-xl!" />
                       </button>
                       <button
                         class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-[var(--bg-elevated)] hover:text-amber-400"
                         title="Duplicate"
                         (click)="duplicateRow(row)"
                       >
-                        <mat-icon fontIcon="content_copy" class="h-4! w-4! text-2xl!" />
+                        <mat-icon fontIcon="content_copy" class="h-6! w-5! text-xl!" />
                       </button>
                       <button
                         class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-[var(--bg-elevated)] hover:text-blue-400"
                         title="View JSON"
                         (click)="viewJson(row)"
                       >
-                        <mat-icon fontIcon="data_object" class="h-4! w-4! text-2xl!" />
+                        <mat-icon fontIcon="data_object" class="h-6! w-5! text-xl!" />
                       </button>
                       <button
                         class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-red-900/20 hover:text-red-400"
                         title="Delete"
                         (click)="deleteRow(row)"
                       >
-                        <mat-icon fontIcon="delete" class="h-4! w-4! text-2xl!" />
+                        <mat-icon fontIcon="delete" class="h-6! w-5! text-xl!" />
                       </button>
                     </div>
                   </td>

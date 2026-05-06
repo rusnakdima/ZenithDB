@@ -5,6 +5,7 @@ import { MatIconModule } from "@angular/material/icon";
 import { DatabaseService } from "@shared/services/database.service";
 import { ToastService } from "@services/toast.service";
 import { ExportService } from "@shared/services/export.service";
+import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { SkeletonLoaderComponent } from "@shared/components/loading/skeleton-loader.component";
 import { FormatBytesPipe } from "@shared/pipes/format-bytes.pipe";
 import { SortableHeaderComponent } from "@shared/components/sortable-header/sortable-header.component";
@@ -75,8 +76,9 @@ export class CollectionDetailComponent implements OnInit {
   private db = inject(DatabaseService);
   private toast = inject(ToastService);
   private exportService = inject(ExportService);
-  private route = inject(ActivatedRoute);
+  private connectionState = inject(ConnectionStateService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
   async ngOnInit() {
     this.collectionName = this.route.snapshot.paramMap.get("collection") || "";
@@ -139,7 +141,6 @@ export class CollectionDetailComponent implements OnInit {
       this.toast.warning("Field name is required");
       return;
     }
-    // TODO: Backend API needed - db.addField(this.collectionName, this.newField)
     this.toast.info("Add field functionality requires backend support");
     this.closeAddFieldModal();
   }
@@ -167,7 +168,6 @@ export class CollectionDetailComponent implements OnInit {
   async deleteField() {
     const fieldName = this.deletingField();
     if (!fieldName) return;
-    // TODO: Backend API needed - db.deleteField(this.collectionName, fieldName)
     this.toast.info("Delete field functionality requires backend support");
     this.deletingField.set(null);
   }
@@ -194,7 +194,6 @@ export class CollectionDetailComponent implements OnInit {
       this.toast.warning("Select at least one column");
       return;
     }
-    // TODO: Backend API needed - db.createIndex(this.collectionName, this.newIndex)
     this.toast.info("Create index functionality requires backend support");
     this.closeCreateIndexModal();
   }
@@ -214,7 +213,6 @@ export class CollectionDetailComponent implements OnInit {
   async deleteIndex() {
     const indexName = this.deletingIndex();
     if (!indexName) return;
-    // TODO: Backend API needed - db.deleteIndex(this.collectionName, indexName)
     this.toast.info("Delete index functionality requires backend support");
     this.deletingIndex.set(null);
   }
@@ -224,7 +222,10 @@ export class CollectionDetailComponent implements OnInit {
   }
 
   viewData() {
-    this.router.navigate(["/data", this.collectionName]);
+    const connId = this.connectionState.activeConnectionId();
+    if (connId) {
+      this.router.navigate(["/connections", connId, "data", this.collectionName]);
+    }
   }
 
   exportSchema(format: "json" | "csv") {
@@ -265,7 +266,8 @@ export class CollectionDetailComponent implements OnInit {
     try {
       await this.db.dropCollection(this.collectionName);
       this.toast.success(`Collection "${this.collectionName}" deleted`);
-      this.router.navigate(["/schema"]);
+      const connId = this.connectionState.activeConnectionId();
+      this.router.navigate(connId ? ["/connections", connId, "explorer"] : ["/connections"]);
     } catch (e: any) {
       this.toast.error(e.message || "Failed to delete collection");
       this.showDeleteCollectionConfirm.set(false);
