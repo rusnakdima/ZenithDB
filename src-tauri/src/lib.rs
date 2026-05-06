@@ -5,7 +5,9 @@ use commands::connection::{
     delete_connection, get_connection, list_connections, save_connection, test_connection,
 };
 use commands::data::{delete_row, query_data, save_row};
-use commands::schema::{describe_collection, get_collection_stats, list_collections};
+use commands::schema::{
+    create_database, describe_collection, get_collection_stats, list_collections, list_databases,
+};
 use commands::system::get_system_status;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -21,6 +23,8 @@ pub fn run() {
             test_connection,
             get_connection,
             list_collections,
+            list_databases,
+            create_database,
             describe_collection,
             get_collection_stats,
             query_data,

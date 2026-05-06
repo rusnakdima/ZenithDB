@@ -41,6 +41,105 @@ pub struct CollectionStats {
     pub index_count: u64,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DatabaseMeta {
+    pub name: String,
+    pub size_bytes: Option<u64>,
+    pub table_count: Option<u64>,
+}
+
+#[tauri::command]
+pub async fn list_databases(conn_id: &str) -> Result<Vec<DatabaseMeta>, String> {
+    let entry = get_connection_entry(conn_id).await?;
+
+    match &entry.config.config {
+        ConnectionConfigEnum::Json { .. } => {
+            Ok(vec![DatabaseMeta {
+                name: "default".to_string(),
+                size_bytes: None,
+                table_count: None,
+            }])
+        }
+        ConnectionConfigEnum::Sqlite { .. } => {
+            Ok(vec![DatabaseMeta {
+                name: "default".to_string(),
+                size_bytes: None,
+                table_count: None,
+            }])
+        }
+        ConnectionConfigEnum::Redis { .. } => {
+            Ok(vec![DatabaseMeta {
+                name: "default".to_string(),
+                size_bytes: None,
+                table_count: None,
+            }])
+        }
+        ConnectionConfigEnum::Mongo { .. } => {
+            Err("MongoDB automatically creates databases when you first insert data. Use the mongo shell to list databases.".to_string())
+        }
+        ConnectionConfigEnum::Postgres { uri, .. } => {
+            let provider = crate::commands::provider::create_postgres_provider(uri).await?;
+            let result = provider.execute_raw("SELECT datname FROM pg_database WHERE datistemplate = false", vec![]).await.map_err_string()?;
+            let mut dbs = Vec::new();
+            for row in result.rows {
+                if let Some(name) = row.first().and_then(|v| v.as_str()) {
+                    dbs.push(DatabaseMeta {
+                        name: name.to_string(),
+                        size_bytes: None,
+                        table_count: None,
+                    });
+                }
+            }
+            Ok(dbs)
+        }
+        ConnectionConfigEnum::MySql { uri, .. } => {
+            let provider = crate::commands::provider::create_mysql_provider(uri).await?;
+            let result = provider.execute_raw("SHOW DATABASES", vec![]).await.map_err_string()?;
+            let mut dbs = Vec::new();
+            for row in result.rows {
+                if let Some(name) = row.first().and_then(|v| v.as_str()) {
+                    dbs.push(DatabaseMeta {
+                        name: name.to_string(),
+                        size_bytes: None,
+                        table_count: None,
+                    });
+                }
+            }
+            Ok(dbs)
+        }
+    }
+}
+
+#[tauri::command]
+pub async fn create_database(conn_id: &str, name: &str) -> Result<(), String> {
+    let entry = get_connection_entry(conn_id).await?;
+
+    match &entry.config.config {
+        ConnectionConfigEnum::Sqlite { .. } => {
+            Err("SQLite does not support creating databases. Create a new connection with a different file path.".to_string())
+        }
+        ConnectionConfigEnum::Json { .. } => {
+            Err("JSON provider does not support creating databases.".to_string())
+        }
+        ConnectionConfigEnum::Redis { .. } => {
+            Err("Redis does not support creating databases.".to_string())
+        }
+        ConnectionConfigEnum::Mongo { .. } => {
+            Err("Creating databases is not supported via this interface. Connect to the MongoDB server and use the mongo shell to create databases.".to_string())
+        }
+        ConnectionConfigEnum::Postgres { uri, .. } => {
+            let provider = crate::commands::provider::create_postgres_provider(uri).await?;
+            provider.execute_raw(&format!("CREATE DATABASE \"{}\"", name), vec![]).await.map_err_string()?;
+            Ok(())
+        }
+        ConnectionConfigEnum::MySql { uri, .. } => {
+            let provider = crate::commands::provider::create_mysql_provider(uri).await?;
+            provider.execute_raw(&format!("CREATE DATABASE IF NOT EXISTS `{}`", name), vec![]).await.map_err_string()?;
+            Ok(())
+        }
+    }
+}
+
 #[tauri::command]
 pub async fn list_collections(conn_id: &str) -> Result<Vec<CollectionMeta>, String> {
     let entry = get_connection_entry(conn_id).await?;
