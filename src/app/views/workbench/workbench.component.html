@@ -13,7 +13,7 @@
             class="h-4 w-4 animate-spin rounded-full border-2 border-black border-t-transparent"
           ></div>
         } @else {
-          <mat-icon fontIcon="play_arrow" class="w-5! h-6! text-xl!" />
+          <mat-icon fontIcon="play_arrow" class="h-6! w-5! text-xl!" />
         }
         Run
         <span class="text-xs font-medium text-black/60">Ctrl+Enter</span>
@@ -22,19 +22,19 @@
         (click)="runAllTabs()"
         class="rounded-lg px-3 py-2 text-sm font-medium text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--text-main)]"
       >
-        <mat-icon fontIcon="sync" class="w-5! h-6! text-xl!" />
+        <mat-icon fontIcon="sync" class="h-6! w-5! text-xl!" />
       </button>
       <button
         (click)="formatAllSQL()"
         class="rounded-lg px-3 py-2 text-sm font-medium text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--text-main)]"
       >
-        <mat-icon fontIcon="format_align_left" class="w-5! h-6! text-xl!" />
+        <mat-icon fontIcon="format_align_left" class="h-6! w-5! text-xl!" />
       </button>
       <button
         (click)="clearEditor()"
         class="rounded-lg px-3 py-2 text-sm font-medium text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--text-main)]"
       >
-        <mat-icon fontIcon="delete" class="w-5! h-6! text-xl!" />
+        <mat-icon fontIcon="delete" class="h-6! w-5! text-xl!" />
       </button>
     </div>
 
@@ -73,7 +73,7 @@
               (click)="closeTab(tab.id, $event)"
               class="ml-1 opacity-0 transition-opacity group-hover:opacity-100"
             >
-              <mat-icon fontIcon="close" class="w-5! h-6! text-xl!" />
+              <mat-icon fontIcon="close" class="h-6! w-5! text-xl!" />
             </span>
           }
         </button>
@@ -82,7 +82,7 @@
         (click)="addTab()"
         class="rounded p-1.5 text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--text-main)]"
       >
-        <mat-icon fontIcon="add" class="w-5! h-6! text-xl!" />
+        <mat-icon fontIcon="add" class="h-6! w-5! text-xl!" />
       </button>
     </div>
   </div>

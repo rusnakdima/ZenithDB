@@ -104,11 +104,11 @@ export class ExplorerComponent implements OnInit, OnDestroy {
       this.splitMode.set(savedSplitMode);
     }
 
-    this.routeSub = this.router.events.pipe(
-      filter((e) => e instanceof NavigationEnd)
-    ).subscribe((e: any) => {
-      this.handleRouteChange();
-    });
+    this.routeSub = this.router.events
+      .pipe(filter((e) => e instanceof NavigationEnd))
+      .subscribe((e: any) => {
+        this.handleRouteChange();
+      });
 
     this.handleRouteChange();
 
@@ -349,7 +349,12 @@ export class ExplorerComponent implements OnInit, OnDestroy {
     console.log("[Explorer] openInspector called", { doc: doc["_id"] || doc["id"] });
     this.inspectorDocument.set(doc);
     this.showInspector.set(true);
-    console.log("[Explorer] Signals set - showInspector:", this.showInspector(), "inspectorDocument:", !!this.inspectorDocument());
+    console.log(
+      "[Explorer] Signals set - showInspector:",
+      this.showInspector(),
+      "inspectorDocument:",
+      !!this.inspectorDocument()
+    );
   }
 
   closeInspector() {
