@@ -58,19 +58,16 @@ export class DatabaseService {
     );
   }
 
-  async listCollections(): Promise<CollectionMeta[]> {
-    const connId = this.connectionState.activeConnectionId();
-    return withConnectionAndLoading(
-      connId,
-      this.loadingService,
-      "Loading collections...",
-      (connId) => this.api.listCollections(connId)
+  async listCollections(connId?: string, dbName?: string): Promise<CollectionMeta[]> {
+    const id = connId || this.connectionState.activeConnectionId();
+    return withConnectionAndLoading(id, this.loadingService, "Loading collections...", (connId) =>
+      this.api.listCollections(connId, dbName)
     );
   }
 
-  async listDatabases(): Promise<DatabaseMeta[]> {
-    const connId = this.connectionState.activeConnectionId();
-    return withConnectionAndLoading(connId, this.loadingService, "Loading databases...", (connId) =>
+  async listDatabases(connId?: string): Promise<DatabaseMeta[]> {
+    const id = connId || this.connectionState.activeConnectionId();
+    return withConnectionAndLoading(id, this.loadingService, "Loading databases...", (connId) =>
       this.api.listDatabases(connId)
     );
   }

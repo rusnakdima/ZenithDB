@@ -32,6 +32,9 @@ export class OutputConsoleComponent implements OnDestroy {
   autoScroll = signal(true);
   isResizing = false;
 
+  private boundOnMove: ((e: MouseEvent) => void) | null = null;
+  private boundOnUp: (() => void) | null = null;
+
   private _height = signal(300);
   get height() {
     return this._height();
@@ -82,9 +85,12 @@ export class OutputConsoleComponent implements OnDestroy {
 
     const onUp = () => {
       this.isResizing = false;
-      document.removeEventListener("mousemove", onMove);
-      document.removeEventListener("mouseup", onUp);
+      document.removeEventListener("mousemove", this.boundOnMove!);
+      document.removeEventListener("mouseup", this.boundOnUp!);
     };
+
+    this.boundOnMove = onMove;
+    this.boundOnUp = onUp;
 
     document.addEventListener("mousemove", onMove);
     document.addEventListener("mouseup", onUp);
@@ -108,5 +114,13 @@ export class OutputConsoleComponent implements OnDestroy {
 
   ngOnDestroy() {
     this.isResizing = false;
+    if (this.boundOnMove) {
+      document.removeEventListener("mousemove", this.boundOnMove);
+      this.boundOnMove = null;
+    }
+    if (this.boundOnUp) {
+      document.removeEventListener("mouseup", this.boundOnUp);
+      this.boundOnUp = null;
+    }
   }
 }

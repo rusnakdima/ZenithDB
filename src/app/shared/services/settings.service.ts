@@ -66,7 +66,6 @@ const STORAGE_KEY = "zenithdb-settings";
 @Injectable({ providedIn: "root" })
 export class SettingsService {
   private settingsSignal = signal<AppSettings>(this.loadSettings());
-  private changeListeners = signal<Array<(settings: AppSettings) => void>>([]);
 
   readonly settings = this.settingsSignal;
 
@@ -80,56 +79,36 @@ export class SettingsService {
     return this.settingsSignal();
   }
 
-  updateSettings(partial: Partial<AppSettings>): void {
-    this.settingsSignal.update((current) => ({
-      ...current,
-      general: { ...current.general, ...partial.general },
-      editor: { ...current.editor, ...partial.editor },
-      data: { ...current.data, ...partial.data },
-      connections: { ...current.connections, ...partial.connections },
-    }));
-    this.notifyListeners();
-  }
-
-  update<K extends keyof AppSettings>(key: K, partial: Partial<AppSettings[K]>): void {
-    this.settingsSignal.update((current) => ({
-      ...current,
-      [key]: { ...current[key], ...partial },
-    }));
-    this.notifyListeners();
-  }
-
   updateGeneral(partial: Partial<GeneralSettings>): void {
-    this.update("general", partial);
+    this.settingsSignal.update((current) => ({
+      ...current,
+      general: { ...current.general, ...partial },
+    }));
   }
 
   updateEditor(partial: Partial<EditorSettings>): void {
-    this.update("editor", partial);
+    this.settingsSignal.update((current) => ({
+      ...current,
+      editor: { ...current.editor, ...partial },
+    }));
   }
 
   updateData(partial: Partial<DataSettings>): void {
-    this.update("data", partial);
+    this.settingsSignal.update((current) => ({
+      ...current,
+      data: { ...current.data, ...partial },
+    }));
   }
 
   updateConnections(partial: Partial<ConnectionSettings>): void {
-    this.update("connections", partial);
+    this.settingsSignal.update((current) => ({
+      ...current,
+      connections: { ...current.connections, ...partial },
+    }));
   }
 
   resetToDefaults(): void {
     this.settingsSignal.set(structuredClone(DEFAULT_SETTINGS));
-    this.notifyListeners();
-  }
-
-  onSettingsChange(callback: (settings: AppSettings) => void): () => void {
-    this.changeListeners.update((listeners) => [...listeners, callback]);
-    return () => {
-      this.changeListeners.update((listeners) => listeners.filter((l) => l !== callback));
-    };
-  }
-
-  private notifyListeners(): void {
-    const settings = this.settingsSignal();
-    this.changeListeners().forEach((listener) => listener(settings));
   }
 
   private loadSettings(): AppSettings {

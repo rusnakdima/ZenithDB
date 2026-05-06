@@ -2,7 +2,6 @@ import {
   Component,
   inject,
   signal,
-  computed,
   ViewChild,
   ElementRef,
   AfterViewInit,
@@ -19,6 +18,8 @@ import { SqlEditorComponent } from "./sql-editor/sql-editor.component";
 import { OutputConsoleComponent } from "./output-console/output-console.component";
 
 import { QueryTab } from "@shared/models/query.model";
+import { TabService } from "@shared/services/tab.service";
+import { formatSQL } from "@shared/utils/sql-formatter.utils";
 
 @Component({
   selector: "app-workbench",
@@ -30,34 +31,22 @@ export class WorkbenchComponent implements AfterViewInit, OnDestroy {
   protected db = inject(DatabaseService);
   protected connState = inject(ConnectionStateService);
   protected toast = inject(ToastService);
+  protected tabService = inject(TabService);
 
   @ViewChild("splitContainer") splitContainer!: ElementRef<HTMLDivElement>;
 
-  tabs = signal<QueryTab[]>([this.createTab("Tab 1")]);
-  activeTabId = signal<string>("Tab 1");
-
-  editorHeight = signal(250);
-  isResizing = false;
-
-  activeTab = computed(() => {
-    return this.tabs().find((t) => t.id === this.activeTabId()) ?? this.tabs()[0];
-  });
+  readonly tabs = this.tabService.tabs;
+  readonly activeTabId = this.tabService.activeTabId;
+  readonly activeTab = this.tabService.activeTab;
 
   databases = ["ecommerce_main", "analytics_v1"];
   selectedDatabase = "ecommerce_main";
 
-  private createTab(name: string): QueryTab {
-    return {
-      id: crypto.randomUUID(),
-      name,
-      query: "",
-      results: null,
-      error: "",
-      loading: false,
-      modified: false,
-      executionTime: 0,
-    };
-  }
+  editorHeight = signal(250);
+  isResizing = false;
+
+  private boundOnMove: ((e: MouseEvent) => void) | null = null;
+  private boundOnUp: (() => void) | null = null;
 
   ngAfterViewInit() {}
 
@@ -70,70 +59,48 @@ export class WorkbenchComponent implements AfterViewInit, OnDestroy {
   }
 
   addTab() {
-    const tabs = this.tabs();
-    const newTab = this.createTab(`Tab ${tabs.length + 1}`);
-    this.tabs.set([...tabs, newTab]);
-    this.activeTabId.set(newTab.id);
+    this.tabService.addTab();
   }
 
   closeTab(tabId: string, event?: MouseEvent) {
-    if (event) {
-      event.stopPropagation();
-    }
-    const tabs = this.tabs();
-    if (tabs.length === 1) return;
-
-    const index = tabs.findIndex((t) => t.id === tabId);
-    const newTabs = tabs.filter((t) => t.id !== tabId);
-    this.tabs.set(newTabs);
-
-    if (this.activeTabId() === tabId) {
-      const newIndex = Math.min(index, newTabs.length - 1);
-      this.activeTabId.set(newTabs[newIndex].id);
-    }
+    this.tabService.closeTab(tabId, event);
   }
 
   selectTab(tabId: string) {
-    this.activeTabId.set(tabId);
+    this.tabService.selectTab(tabId);
   }
 
   updateQuery(query: string) {
-    const tab = this.activeTab();
-    if (!tab) return;
-    this.tabs.set(this.tabs().map((t) => (t.id === tab.id ? { ...t, query, modified: true } : t)));
+    this.tabService.updateQuery(query);
   }
 
   async runCurrentTab() {
     const tab = this.activeTab();
     if (!tab || !tab.query.trim()) return;
 
-    this.tabs.set(
-      this.tabs().map((t) => (t.id === tab.id ? { ...t, loading: true, error: "" } : t))
-    );
+    this.tabService.updateActiveTab({ loading: true, error: "" });
 
     const startTime = performance.now();
     try {
       const results = await this.db.executeRaw(tab.query);
       const executionTime = performance.now() - startTime;
 
-      this.tabs.set(
-        this.tabs().map((t) =>
-          t.id === tab.id
-            ? { ...t, results, error: "", loading: false, executionTime, modified: false }
-            : t
-        )
-      );
+      this.tabService.updateActiveTab({
+        results,
+        error: "",
+        loading: false,
+        executionTime,
+        modified: false,
+      });
 
       this.toast.success(`Query executed (${executionTime.toFixed(0)}ms)`);
     } catch (e: any) {
       const executionTime = performance.now() - startTime;
-      this.tabs.set(
-        this.tabs().map((t) =>
-          t.id === tab.id
-            ? { ...t, error: e.message || "Query failed", loading: false, executionTime }
-            : t
-        )
-      );
+      this.tabService.updateActiveTab({
+        error: e.message || "Query failed",
+        loading: false,
+        executionTime,
+      });
 
       this.toast.error(e.message || "Query failed");
     }
@@ -151,99 +118,46 @@ export class WorkbenchComponent implements AfterViewInit, OnDestroy {
     const tab = this.tabs().find((t) => t.id === tabId);
     if (!tab || !tab.query.trim()) return;
 
-    this.tabs.set(
-      this.tabs().map((t) => (t.id === tabId ? { ...t, loading: true, error: "" } : t))
-    );
+    this.tabService.updateTab(tabId, { loading: true, error: "" });
 
     const startTime = performance.now();
     try {
       const results = await this.db.executeRaw(tab.query);
       const executionTime = performance.now() - startTime;
 
-      this.tabs.set(
-        this.tabs().map((t) =>
-          t.id === tabId
-            ? { ...t, results, error: "", loading: false, executionTime, modified: false }
-            : t
-        )
-      );
+      this.tabService.updateTab(tabId, {
+        results,
+        error: "",
+        loading: false,
+        executionTime,
+        modified: false,
+      });
     } catch (e: any) {
       const executionTime = performance.now() - startTime;
-      this.tabs.set(
-        this.tabs().map((t) =>
-          t.id === tabId
-            ? { ...t, error: e.message || "Query failed", loading: false, executionTime }
-            : t
-        )
-      );
+      this.tabService.updateTab(tabId, {
+        error: e.message || "Query failed",
+        loading: false,
+        executionTime,
+      });
     }
   }
 
   formatAllSQL() {
-    const formatSQL = (sql: string): string => {
-      const keywords = [
-        "SELECT",
-        "FROM",
-        "WHERE",
-        "AND",
-        "OR",
-        "INSERT",
-        "INTO",
-        "VALUES",
-        "UPDATE",
-        "SET",
-        "DELETE",
-        "CREATE",
-        "TABLE",
-        "DROP",
-        "ALTER",
-        "JOIN",
-        "LEFT",
-        "RIGHT",
-        "INNER",
-        "OUTER",
-        "ON",
-        "GROUP BY",
-        "ORDER BY",
-        "HAVING",
-        "LIMIT",
-        "OFFSET",
-        "AS",
-        "DISTINCT",
-        "UNION",
-        "ALL",
-      ];
-
-      let result = sql;
-      keywords.forEach((kw) => {
-        const regex = new RegExp(`\\b${kw}\\b`, "gi");
-        result = result.replace(regex, kw);
-      });
-
-      return result
-        .replace(/\s+/g, " ")
-        .replace(/,\s*/g, ", ")
-        .replace(/\(\s*/g, "(")
-        .replace(/\s*\)/g, ")");
-    };
-
-    this.tabs.set(
-      this.tabs().map((t) => ({
-        ...t,
-        query: formatSQL(t.query),
-        modified: true,
-      }))
-    );
+    this.tabService.updateAllTabs({
+      modified: true,
+    });
+    this.tabs().forEach((tab) => {
+      this.tabService.updateTab(tab.id, { query: formatSQL(tab.query) });
+    });
   }
 
   clearEditor() {
-    const tab = this.activeTab();
-    if (!tab) return;
-    this.tabs.set(
-      this.tabs().map((t) =>
-        t.id === tab.id ? { ...t, query: "", results: null, error: "", modified: false } : t
-      )
-    );
+    this.tabService.updateActiveTab({
+      query: "",
+      results: null,
+      error: "",
+      modified: false,
+    });
   }
 
   startResize(event: MouseEvent) {
@@ -261,9 +175,12 @@ export class WorkbenchComponent implements AfterViewInit, OnDestroy {
 
     const onUp = () => {
       this.isResizing = false;
-      document.removeEventListener("mousemove", onMove);
-      document.removeEventListener("mouseup", onUp);
+      document.removeEventListener("mousemove", this.boundOnMove!);
+      document.removeEventListener("mouseup", this.boundOnUp!);
     };
+
+    this.boundOnMove = onMove;
+    this.boundOnUp = onUp;
 
     document.addEventListener("mousemove", onMove);
     document.addEventListener("mouseup", onUp);
@@ -275,5 +192,13 @@ export class WorkbenchComponent implements AfterViewInit, OnDestroy {
 
   ngOnDestroy() {
     this.isResizing = false;
+    if (this.boundOnMove) {
+      document.removeEventListener("mousemove", this.boundOnMove);
+      this.boundOnMove = null;
+    }
+    if (this.boundOnUp) {
+      document.removeEventListener("mouseup", this.boundOnUp);
+      this.boundOnUp = null;
+    }
   }
 }

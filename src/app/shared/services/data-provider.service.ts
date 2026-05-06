@@ -1,7 +1,5 @@
 import { Injectable, signal, inject } from "@angular/core";
 import { DatabaseService } from "./database.service";
-import { StorageService } from "@services/core/storage.service";
-import { ConnectionStateService } from "./connection-state.service";
 import { ColumnInfo, RowData, QueryParams, QueryResult } from "@shared/models/connection.config";
 
 export interface DataProviderParams {
@@ -29,8 +27,6 @@ interface ColumnsCacheEntry {
 @Injectable({ providedIn: "root" })
 export class DataProviderService {
   private db = inject(DatabaseService);
-  private storage = inject(StorageService);
-  private connectionState = inject(ConnectionStateService);
 
   private readonly MAX_ENTRIES_PER_COLLECTION = 50;
   private readonly COLUMNS_CACHE_TTL = 5 * 60 * 1000;
@@ -176,102 +172,5 @@ export class DataProviderService {
       })
     );
     return columns;
-  }
-
-  getCachedData(params: DataProviderParams): QueryResult | null {
-    const key = this.generateCacheKey(params);
-    const cached = this.collectionDataCache().get(key);
-    if (!cached) return null;
-    this.updateAccessTime(key);
-    return {
-      data: cached.data,
-      total: cached.total,
-      has_more: false,
-    };
-  }
-
-  async updateFilters(collection: string, filter: any): Promise<void> {
-    const current = this.currentParams();
-    if (!current || current.collection !== collection) return;
-
-    await this.loadData({
-      ...current,
-      filter,
-      skip: 0,
-    });
-  }
-
-  async updatePage(collection: string, skip: number): Promise<void> {
-    const current = this.currentParams();
-    if (!current || current.collection !== collection) return;
-
-    await this.loadData({
-      ...current,
-      skip,
-    });
-  }
-
-  async updatePageSize(collection: string, limit: number): Promise<void> {
-    const current = this.currentParams();
-    if (!current || current.collection !== collection) return;
-
-    await this.loadData({
-      ...current,
-      limit,
-      skip: 0,
-    });
-  }
-
-  updateColumns(columns: string[]): void {}
-
-  clearCache(collection?: string): void {
-    if (collection) {
-      const dataCache = this.collectionDataCache();
-      const newDataCache = new Map(dataCache);
-      for (const key of newDataCache.keys()) {
-        if (key.startsWith(collection + "_")) {
-          newDataCache.delete(key);
-        }
-      }
-      this.collectionDataCache.set(newDataCache);
-
-      const columnsCache = this.columnsCache();
-      const newColumnsCache = new Map(columnsCache);
-      newColumnsCache.delete(`${collection}_schema`);
-      this.columnsCache.set(newColumnsCache);
-    } else {
-      this.collectionDataCache.set(new Map());
-      this.columnsCache.set(new Map());
-    }
-  }
-
-  setData(
-    collection: string,
-    data: RowData[],
-    total: number,
-    columns: ColumnInfo[],
-    params: DataProviderParams
-  ): void {
-    const cacheKey = this.generateCacheKey({ ...params, collection });
-
-    this.evictLRU(collection);
-
-    const cachedData: CacheEntry = {
-      data,
-      total,
-      lastAccessed: Date.now(),
-      cachedAt: Date.now(),
-      queryParams: {
-        filter: params.filter,
-        skip: params.skip,
-        limit: params.limit,
-        order_by: params.order_by,
-        direction: params.direction,
-      },
-    };
-
-    const cache = this.collectionDataCache();
-    cache.set(cacheKey, cachedData);
-    this.collectionDataCache.set(new Map(cache));
   }
 }

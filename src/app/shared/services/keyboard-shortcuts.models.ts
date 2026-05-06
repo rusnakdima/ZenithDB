@@ -7,11 +7,6 @@ export interface Shortcut {
   modifiers?: ("ctrl" | "meta" | "shift" | "alt")[];
 }
 
-export interface ShortcutEvent {
-  shortcut: Shortcut;
-  action: string;
-}
-
 export const SHORTCUT_CONFIG: Record<string, Shortcut> = {
   "new-connection": {
     key: "n",

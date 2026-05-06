@@ -14,7 +14,6 @@ export class KeyboardShortcutsService {
   private zone = inject(NgZone);
   private destroyRef = inject(DestroyRef);
 
-  private listeners = new Map<string, Set<(event: KeyboardEvent) => void>>();
   private enabled = signal(true);
 
   shortcutsHelpVisible = signal(false);
@@ -59,7 +58,6 @@ export class KeyboardShortcutsService {
 
         this.zone.run(() => {
           this.dispatchAction(action, event);
-          this.notifyListeners(action, event);
         });
       }
     };
@@ -112,35 +110,6 @@ export class KeyboardShortcutsService {
 
   private closeTopModal(): void {
     document.dispatchEvent(new CustomEvent("zenith:close-top-modal"));
-  }
-
-  registerListener(shortcut: string, callback: (event: KeyboardEvent) => void): () => void {
-    if (!this.listeners.has(shortcut)) {
-      this.listeners.set(shortcut, new Set());
-    }
-    this.listeners.get(shortcut)!.add(callback);
-
-    return () => {
-      this.listeners.get(shortcut)?.delete(callback);
-    };
-  }
-
-  private notifyListeners(shortcut: string, event: KeyboardEvent): void {
-    this.listeners.get(shortcut)?.forEach((cb) => cb(event));
-  }
-
-  setEnabled(enabled: boolean): void {
-    this.enabled.set(enabled);
-  }
-
-  isEnabled(): boolean {
-    return this.enabled();
-  }
-
-  getShortcutDisplay(action: string): string {
-    const config = SHORTCUT_CONFIG[action];
-    if (!config) return "";
-    return formatShortcut(config.key, config.modifiers);
   }
 
   getShortcutsByCategory(): Record<ShortcutCategory, { key: string; desc: string }[]> {

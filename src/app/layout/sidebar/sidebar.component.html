@@ -93,21 +93,49 @@
                 } @else if (databases().length > 0) {
                   @for (db of databases(); track db.name) {
                     <div class="mb-1">
-                      <div
-                        class="tree-item flex items-center gap-2 p-1.5 text-[11px] text-[var(--text-dim)]"
-                        [class.active]="activeCollection() === db.name"
-                        (click)="onCollectionClick(db)"
-                      >
-                        <mat-icon
-                          fontIcon="table_chart"
-                          class="h-5! w-5! text-xl! text-[var(--accent)]/50"
-                        />
-                        <span>{{ db.name }}</span>
+                      <div class="flex items-center gap-1">
+                        <button
+                          class="tree-item flex flex-1 items-center gap-2 p-1.5 text-[11px] text-[var(--text-dim)]"
+                          [class.active]="activeCollection() === db.name"
+                          (click)="onDatabaseClick(db, $event)"
+                        >
+                          <mat-icon
+                            fontIcon="folder"
+                            class="h-5! w-5! text-xl! text-[var(--accent)]/70"
+                          />
+                          <span>{{ db.name }}</span>
+                        </button>
+                        <button
+                          class="p-1 text-[var(--text-muted)] hover:text-[var(--text-main)]"
+                          (click)="toggleDatabase(db, $event)"
+                        >
+                          <mat-icon
+                            [fontIcon]="db.expanded ? 'expand_less' : 'expand_more'"
+                            class="h-4! w-4! text-xl!"
+                          />
+                        </button>
                       </div>
+                      @if (db.expanded && db.children && db.children.length > 0) {
+                        <div class="ml-6 space-y-1 border-l border-[var(--border-subtle)] pl-2">
+                          @for (col of db.children; track col.name) {
+                            <div
+                              class="tree-item flex cursor-pointer items-center gap-2 p-1.5 text-[11px] text-[var(--text-dim)]"
+                              [class.active]="activeCollection() === col.name"
+                              (click)="onCollectionClick(col)"
+                            >
+                              <mat-icon
+                                fontIcon="insert_drive_file"
+                                class="h-5! w-5! text-xl! text-[var(--accent)]/50"
+                              />
+                              <span>{{ col.name }}</span>
+                            </div>
+                          }
+                        </div>
+                      }
                     </div>
                   }
                 } @else {
-                  <div class="p-2 text-[10px] text-[var(--text-muted)]">No collections</div>
+                  <div class="p-2 text-[10px] text-[var(--text-muted)]">No databases</div>
                 }
               </div>
             }

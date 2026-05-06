@@ -1,14 +1,9 @@
 export * from "./checkbox/checkbox.component";
-export * from "./command-palette/command-palette.component";
-export * from "./confirm-dialog/confirm-dialog.component";
 export * from "./filter-bar/filter-bar.component";
 export * from "./loading/loading-overlay.component";
 export * from "./loading/skeleton-loader.component";
 export * from "./modal/modal.component";
-export * from "./settings-dialog/settings-dialog.component";
 export * from "./shortcuts-help-dialog/shortcuts-help-dialog.component";
 export * from "./status-badge/status-badge.component";
 export * from "./data-type-badge/data-type-badge.component";
-export * from "./error-boundary/error-boundary.component";
-
 export * from "./sortable-header/sortable-header.component";

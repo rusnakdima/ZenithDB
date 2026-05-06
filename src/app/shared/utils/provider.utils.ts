@@ -53,17 +53,6 @@ export class ProviderUtils {
     return "dns";
   }
 
-  getProviderColor(provider: string): string {
-    const p = provider?.toLowerCase() || "";
-    if (p.includes("postgresql")) return COLOR_MAP["postgresql"];
-    if (p.includes("mongodb")) return COLOR_MAP["mongodb"];
-    if (p.includes("mysql")) return COLOR_MAP["mysql"];
-    if (p.includes("sqlite")) return COLOR_MAP["sqlite"];
-    if (p.includes("redis")) return COLOR_MAP["redis"];
-    if (p.includes("json")) return COLOR_MAP["json"];
-    return "text-emerald-500";
-  }
-
   toProviderType(type: string): ProviderType {
     const normalized = type.toLowerCase();
     const mapped = TYPE_MAP[normalized];

@@ -2,13 +2,13 @@ import { ErrorHandlerService } from "@shared/services/error-handler.service";
 import { ToastService } from "@services/toast.service";
 import { AppError, ErrorCode } from "@shared/models/error.model";
 
-export interface Result<T> {
+interface Result<T> {
   success: boolean;
   data?: T;
   error?: AppError;
 }
 
-export interface WithErrorHandlingOptions {
+interface WithErrorHandlingOptions {
   loading?: { set: (value: boolean) => void } | boolean;
   toast?: boolean;
   toastSuccess?: string;

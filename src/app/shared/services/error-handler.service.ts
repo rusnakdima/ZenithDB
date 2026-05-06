@@ -62,7 +62,7 @@ export class ErrorHandlerService {
     return appError;
   }
 
-  convertToAppError(error: unknown): AppError {
+  private convertToAppError(error: unknown): AppError {
     if (error instanceof HttpErrorResponse) {
       return this.convertHttpError(error);
     }
@@ -87,7 +87,7 @@ export class ErrorHandlerService {
     };
   }
 
-  convertHttpError(error: HttpErrorResponse): AppError {
+  private convertHttpError(error: HttpErrorResponse): AppError {
     if (!navigator.onLine) {
       return {
         code: ErrorCode.OFFLINE,
@@ -222,18 +222,6 @@ export class ErrorHandlerService {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  addError(error: AppError): void {
-    this.errorsSignal.update((errors) => [error, ...errors].slice(0, 10));
-  }
-
-  clearErrors(): void {
-    this.errorsSignal.set([]);
-  }
-
-  dismissError(index: number): void {
-    this.errorsSignal.update((errors) => errors.filter((_, i) => i !== index));
-  }
-
   private logError(error: AppError, context?: string): void {
     const entry: ErrorLogEntry = {
       id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -244,15 +232,11 @@ export class ErrorHandlerService {
     this.logsSignal.update((logs) => [entry, ...logs].slice(0, 100));
 
     if (typeof console !== "undefined") {
-      console.error(`[ErrorHandler${context ? `][${context}]` : ""}]`, {
+      console.error(`[ErrorHandler${context ? `[${context}]` : ""}]`, {
         code: error.code,
         message: error.message,
         timestamp: error.timestamp,
       });
     }
-  }
-
-  clearLogs(): void {
-    this.logsSignal.set([]);
   }
 }

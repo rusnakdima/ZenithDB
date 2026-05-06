@@ -131,6 +131,23 @@
                 </button>
               </div>
             </div>
+            <div>
+              <label class="form-label">Database Structure</label>
+              <select [(ngModel)]="behavior" class="form-input">
+                <option value="folders_as_databases">Subfolders as databases</option>
+                <option value="files_as_collections">Files as collections</option>
+                <option value="mixed">Mixed (both)</option>
+              </select>
+              <p class="mt-1 text-xs text-[var(--text-dim)]">
+                @if (behavior === "folders_as_databases") {
+                  Each subfolder = a database containing JSON files as collections
+                } @else if (behavior === "files_as_collections") {
+                  JSON files in the folder = collections in a single database
+                } @else {
+                  Subfolders are databases, plus JSON files at root level
+                }
+              </p>
+            </div>
           }
 
           @if (provider === "mongo") {

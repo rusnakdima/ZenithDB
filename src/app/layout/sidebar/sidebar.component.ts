@@ -13,7 +13,12 @@ import { MatIconModule } from "@angular/material/icon";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { DatabaseService } from "@shared/services/database.service";
 import { StorageService } from "@services/core/storage.service";
-import { CollectionMeta, SystemMetrics, ConnectionSummary } from "@shared/models/connection.config";
+import {
+  CollectionMeta,
+  SystemMetrics,
+  ConnectionSummary,
+  DatabaseMeta,
+} from "@shared/models/connection.config";
 import { interval, Subscription } from "rxjs";
 import { filter } from "rxjs/operators";
 import { ProviderUtils } from "@shared/utils/provider.utils";
@@ -147,12 +152,12 @@ export class SidebarComponent implements OnInit, OnDestroy {
   async loadDatabases(connId: string) {
     this.loadingDatabases.set(true);
     try {
-      const collections = await this.databaseService.listCollections();
-      const dbNodes: TreeNode[] = collections.map((c) => ({
-        name: c.name,
+      const databases = await this.databaseService.listDatabases(connId);
+      const dbNodes: TreeNode[] = databases.map((db) => ({
+        name: db.name,
         type: "database" as const,
         expanded: false,
-        collection: c,
+        children: [],
       }));
       this.databases.set(dbNodes);
     } catch (e) {
@@ -161,6 +166,17 @@ export class SidebarComponent implements OnInit, OnDestroy {
     } finally {
       this.loadingDatabases.set(false);
     }
+  }
+
+  async loadCollectionsForDatabase(dbNode: TreeNode, connId: string) {
+    const collections = await this.databaseService.listCollections(connId, dbNode.name);
+    dbNode.children = collections.map((c) => ({
+      name: c.name,
+      type: "collection" as const,
+      expanded: false,
+      collection: c,
+    }));
+    this.databases.update((dbs) => [...dbs]);
   }
 
   async toggleConnection(connId: string, event: Event) {
@@ -189,6 +205,18 @@ export class SidebarComponent implements OnInit, OnDestroy {
   toggleDatabase(node: TreeNode, event: Event) {
     event.stopPropagation();
     node.expanded = !node.expanded;
+
+    if (
+      node.expanded &&
+      node.type === "database" &&
+      (!node.children || node.children.length === 0)
+    ) {
+      const connId = this.activeConnectionId();
+      if (connId) {
+        this.loadCollectionsForDatabase(node, connId);
+      }
+    }
+
     this.databases.update((dbs) => [...dbs]);
   }
 
@@ -213,7 +241,10 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   onDatabaseClick(node: TreeNode, event: Event) {
     event.stopPropagation();
-    this.toggleDatabase(node, event);
+    const connId = this.activeConnectionId();
+    if (connId) {
+      this.router.navigate(["/connections", connId, "databases", node.name]);
+    }
   }
 
   isConnectionExpanded(connId: string): boolean {

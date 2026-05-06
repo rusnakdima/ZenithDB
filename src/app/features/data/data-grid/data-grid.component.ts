@@ -85,18 +85,7 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
     const reloadTriggerChanged = changes["reloadTrigger"]?.currentValue !== this.lastReloadTrigger;
     const columnsChanged = changes["columns"]?.currentValue !== undefined;
 
-    console.log("[DataGrid] ngOnChanges called", {
-      collectionChanged,
-      filterChanged,
-      pageChanged,
-      pageSizeChanged,
-      visibleColumnsChanged,
-      reloadTriggerChanged,
-      inputVisibleColumns: this.inputVisibleColumns,
-    });
-
     if (collectionChanged) {
-      console.log("[DataGrid] collectionChanged, calling loadData()");
       this.lastCollectionName = this.collectionName;
       this.lastFilter = this.filter;
       this.lastPageNum = this.page;
@@ -104,7 +93,6 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
       this.hasInitialized = true;
       this.loadData();
     } else if (filterChanged || pageChanged || pageSizeChanged) {
-      console.log("[DataGrid] filter/page/pageSize changed, calling loadData()");
       this.lastFilter = this.filter;
       this.lastPageNum = this.page;
       this.lastPageSizeNum = this.pageSize;
@@ -112,17 +100,14 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     if (visibleColumnsChanged) {
-      console.log("[DataGrid] visibleColumnsChanged, updating local state only");
       this.visibleColumns.set(new Set(this.inputVisibleColumns));
     }
 
     if (columnsChanged && this.columns.length > 0) {
-      console.log("[DataGrid] columnsChanged, re-initializing column order");
       this.initColumnWidths();
     }
 
     if (reloadTriggerChanged) {
-      console.log("[DataGrid] reloadTriggerChanged, calling loadData()");
       this.lastReloadTrigger = this.reloadTrigger;
       this.loadData(true);
     }
@@ -221,13 +206,6 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   async loadData(forceRefresh?: boolean) {
-    console.log("[DataGrid] loadData() START", {
-      collection: this.collectionName,
-      filter: this.filter,
-      page: this.page,
-      pageSize: this.pageSize,
-      forceRefresh,
-    });
     this.loading = true;
     this.error = "";
     try {
@@ -241,7 +219,6 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
           return;
         }
       }
-      console.log("[DataGrid] loadData() calling dataProvider.loadData");
       const effectiveLimit = Math.min(this.pageSize, this.MAX_PAGE_SIZE);
       const result = await this.dataProvider.loadData(
         {
@@ -254,7 +231,6 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
         },
         forceRefresh
       );
-      console.log("[DataGrid] loadData() got result, data length:", result.data.length);
       this.dataTruncated = result.data.length === effectiveLimit && result.total > effectiveLimit;
       this.data = result.data as RowData[];
       this.total = result.total;
@@ -263,7 +239,6 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
       this.toast.error(this.error);
     } finally {
       this.loading = false;
-      console.log("[DataGrid] loadData() END");
     }
   }
 
@@ -367,15 +342,9 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
 
   onRowClick(row: RowData, event: MouseEvent) {
     const target = event.target as HTMLElement;
-    console.log("[DataGrid] onRowClick called", {
-      row: row["_id"] || row["id"],
-      target: target.tagName,
-    });
     if (target.tagName === "INPUT" && (target as HTMLInputElement).type === "checkbox") {
-      console.log("[DataGrid] Clicked on checkbox, ignoring");
       return;
     }
-    console.log("[DataGrid] Emitting documentClick with row:", row["_id"] || row["id"]);
     this.documentClick.emit(row);
   }
 

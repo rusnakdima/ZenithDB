@@ -140,10 +140,11 @@ export class ApiProvider {
     }
   }
 
-  async listCollections(connId: string): Promise<CollectionMeta[]> {
+  async listCollections(connId: string, dbName?: string): Promise<CollectionMeta[]> {
     try {
       const collections = await invoke<CollectionMeta[]>("list_collections", {
         connId,
+        dbName,
         options: { signal: this.getAbortSignal() },
       });
       this.storage.setCollections(collections);

@@ -1,12 +1,4 @@
-import {
-  Component,
-  inject,
-  signal,
-  computed,
-  HostListener,
-  OnInit,
-  OnDestroy,
-} from "@angular/core";
+import { Component, inject, signal, HostListener, OnInit, OnDestroy } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { DatePipe } from "@angular/common";
 import { DatabaseService } from "@shared/services/database.service";
@@ -18,6 +10,7 @@ import { RawResult } from "@shared/models/connection.config";
 import { formatSQL } from "@shared/utils";
 
 import { QueryTab } from "@shared/models/query.model";
+import { TabService } from "@shared/services/tab.service";
 
 interface HistoryItem {
   id: string;
@@ -38,30 +31,16 @@ export class QueryEditorComponent implements OnInit, OnDestroy {
   protected toast = inject(ToastService);
   protected storage = inject(StorageService);
   protected exportService = inject(ExportService);
+  protected tabService = inject(TabService);
 
-  tabs = signal<QueryTab[]>([this.createTab("Tab 1")]);
-  activeTabId = signal<string>("Tab 1");
+  readonly tabs = this.tabService.tabs;
+  readonly activeTabId = this.tabService.activeTabId;
   showHistory = signal(false);
   history = signal<HistoryItem[]>([]);
 
   private eventCleanup: (() => void)[] = [];
 
-  activeTab = computed(() => {
-    return this.tabs().find((t) => t.id === this.activeTabId()) ?? this.tabs()[0];
-  });
-
-  private createTab(name: string): QueryTab {
-    return {
-      id: crypto.randomUUID(),
-      name,
-      query: "",
-      results: null,
-      error: "",
-      loading: false,
-      modified: false,
-      executionTime: 0,
-    };
-  }
+  activeTab = this.tabService.activeTab;
 
   ngOnInit() {
     this.loadHistory();
@@ -134,74 +113,49 @@ export class QueryEditorComponent implements OnInit, OnDestroy {
   }
 
   addTab() {
-    const tabs = this.tabs();
-    const newTab = this.createTab(`Tab ${tabs.length + 1}`);
-    this.tabs.set([...tabs, newTab]);
-    this.activeTabId.set(newTab.id);
+    this.tabService.addTab();
   }
 
   closeTab(tabId: string, event?: MouseEvent) {
-    if (event) {
-      event.stopPropagation();
-    }
-    const tabs = this.tabs();
-    if (tabs.length === 1) return;
-
-    const index = tabs.findIndex((t) => t.id === tabId);
-    const newTabs = tabs.filter((t) => t.id !== tabId);
-    this.tabs.set(newTabs);
-
-    if (this.activeTabId() === tabId) {
-      const newIndex = Math.min(index, newTabs.length - 1);
-      this.activeTabId.set(newTabs[newIndex].id);
-    }
+    this.tabService.closeTab(tabId, event);
   }
 
   selectTab(tabId: string) {
-    this.activeTabId.set(tabId);
+    this.tabService.selectTab(tabId);
   }
 
   updateQuery(value: string) {
-    const tab = this.activeTab();
-    if (!tab) return;
-    const updated = this.tabs().map((t) =>
-      t.id === tab.id ? { ...t, query: value, modified: true } : t
-    );
-    this.tabs.set(updated);
+    this.tabService.updateQuery(value);
   }
 
   async executeCurrentTab() {
     const tab = this.activeTab();
     if (!tab || !tab.query.trim()) return;
 
-    this.tabs.set(
-      this.tabs().map((t) => (t.id === tab.id ? { ...t, loading: true, error: "" } : t))
-    );
+    this.tabService.updateActiveTab({ loading: true, error: "" });
 
     const startTime = performance.now();
     try {
       const results = await this.db.executeRaw(tab.query);
       const executionTime = performance.now() - startTime;
 
-      this.tabs.set(
-        this.tabs().map((t) =>
-          t.id === tab.id
-            ? { ...t, results, error: "", loading: false, executionTime, modified: false }
-            : t
-        )
-      );
+      this.tabService.updateActiveTab({
+        results,
+        error: "",
+        loading: false,
+        executionTime,
+        modified: false,
+      });
 
       this.addToHistory(tab.query, true);
       this.toast.success(`Query executed successfully (${executionTime.toFixed(0)}ms)`);
     } catch (e: any) {
       const executionTime = performance.now() - startTime;
-      this.tabs.set(
-        this.tabs().map((t) =>
-          t.id === tab.id
-            ? { ...t, error: e.message || "Query failed", loading: false, executionTime }
-            : t
-        )
-      );
+      this.tabService.updateActiveTab({
+        error: e.message || "Query failed",
+        loading: false,
+        executionTime,
+      });
 
       this.addToHistory(tab.query, false, e.message);
       this.toast.error(e.message || "Query failed");
@@ -221,11 +175,7 @@ export class QueryEditorComponent implements OnInit, OnDestroy {
   }
 
   loadFromHistory(item: HistoryItem) {
-    const tab = this.activeTab();
-    if (!tab) return;
-    this.tabs.set(
-      this.tabs().map((t) => (t.id === tab.id ? { ...t, query: item.query, modified: true } : t))
-    );
+    this.tabService.updateActiveTab({ query: item.query, modified: true });
   }
 
   deleteHistoryItem(id: string) {
@@ -241,24 +191,17 @@ export class QueryEditorComponent implements OnInit, OnDestroy {
   formatSQL() {
     const tab = this.activeTab();
     if (!tab) return;
-    const formatted = this.formatSQLText(tab.query);
-    this.tabs.set(
-      this.tabs().map((t) => (t.id === tab.id ? { ...t, query: formatted, modified: true } : t))
-    );
-  }
-
-  private formatSQLText(sql: string): string {
-    return formatSQL(sql);
+    const formatted = formatSQL(tab.query);
+    this.tabService.updateActiveTab({ query: formatted, modified: true });
   }
 
   clearEditor() {
-    const tab = this.activeTab();
-    if (!tab) return;
-    this.tabs.set(
-      this.tabs().map((t) =>
-        t.id === tab.id ? { ...t, query: "", results: null, error: "", modified: false } : t
-      )
-    );
+    this.tabService.updateActiveTab({
+      query: "",
+      results: null,
+      error: "",
+      modified: false,
+    });
   }
 
   duplicateLine(): void {
@@ -272,9 +215,7 @@ export class QueryEditorComponent implements OnInit, OnDestroy {
       const duplicatedLine = lines[lineIndex];
       lines.splice(lineIndex + 1, 0, duplicatedLine);
       const newQuery = lines.join("\n");
-      this.tabs.set(
-        this.tabs().map((t) => (t.id === tab.id ? { ...t, query: newQuery, modified: true } : t))
-      );
+      this.tabService.updateActiveTab({ query: newQuery, modified: true });
     }
   }
 

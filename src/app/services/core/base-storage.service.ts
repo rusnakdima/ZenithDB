@@ -1,10 +1,5 @@
 import { Injectable, signal } from "@angular/core";
 
-export interface LoadingState {
-  isLoading: boolean;
-  error: string | null;
-}
-
 @Injectable({ providedIn: "root" })
 export abstract class BaseStorageService {
   protected loading = signal(false);

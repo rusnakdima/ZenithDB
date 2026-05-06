@@ -98,7 +98,7 @@ export type ConnectionConfig =
   | { type: "mysql"; name: string; uri: string };
 
 export type ConnectionConfigEnum =
-  | { type: "Json"; name: string; path: string }
+  | { type: "Json"; name: string; path: string; behavior?: string }
   | { type: "Mongo"; name: string; uri: string; database: string }
   | { type: "Redis"; name: string; uri: string }
   | { type: "Postgres"; name: string; uri: string }

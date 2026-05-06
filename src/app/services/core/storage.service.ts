@@ -1,4 +1,4 @@
-import { Injectable, signal, computed } from "@angular/core";
+import { Injectable, signal } from "@angular/core";
 import { BaseStorageService } from "./base-storage.service";
 import {
   ColumnInfo,
@@ -45,28 +45,12 @@ export class StorageService extends BaseStorageService {
   private readonly collectionDataSignal = signal<Map<string, CachedItem<CollectionData>>>(
     new Map()
   );
-  private readonly activeConnectionSignal = signal<string | null>(null);
-  private readonly systemMetricsSignal = signal<SystemMetrics | null>(null);
   private readonly collectionDataCache = signal<Map<string, CachedCollectionData>>(new Map());
+  private readonly systemMetricsSignal = signal<SystemMetrics | null>(null);
 
   readonly connections = this.connectionsSignal.asReadonly();
   readonly collections = this.collectionsSignal.asReadonly();
-  readonly activeConnectionId = this.activeConnectionSignal.asReadonly();
   readonly systemMetrics = this.systemMetricsSignal.asReadonly();
-
-  readonly activeConnectionName = computed(() => {
-    const id = this.activeConnectionId();
-    if (!id) return null;
-    const conn = this.connectionsSignal().find((c) => c.id === id);
-    return conn?.name ?? null;
-  });
-
-  readonly activeProvider = computed(() => {
-    const id = this.activeConnectionId();
-    if (!id) return null;
-    const conn = this.connectionsSignal().find((c) => c.id === id);
-    return conn?.provider ?? null;
-  });
 
   setConnections(connections: ConnectionSummary[]) {
     this.connectionsSignal.set(connections);
@@ -84,13 +68,9 @@ export class StorageService extends BaseStorageService {
 
   removeConnection(id: string) {
     this.connectionsSignal.update((conns) => conns.filter((c) => c.id !== id));
-    if (this.activeConnectionId() === id) {
-      this.activeConnectionSignal.set(null);
-    }
   }
 
   setActiveConnection(id: string | null) {
-    this.activeConnectionSignal.set(id);
     if (!id) {
       this.collectionsSignal.set([]);
       this.collectionDataSignal.set(new Map());

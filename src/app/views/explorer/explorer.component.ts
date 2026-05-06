@@ -328,9 +328,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   }
 
   onColumnsChange(columns: string[]) {
-    console.log("[Explorer] onColumnsChange called with:", columns);
     this.selectedColumns.set(columns);
-    console.log("[Explorer] selectedColumns now:", this.selectedColumns());
   }
 
   getDisabledColumns(): string[] {
@@ -346,19 +344,11 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   }
 
   openInspector(doc: RowData) {
-    console.log("[Explorer] openInspector called", { doc: doc["_id"] || doc["id"] });
     this.inspectorDocument.set(doc);
     this.showInspector.set(true);
-    console.log(
-      "[Explorer] Signals set - showInspector:",
-      this.showInspector(),
-      "inspectorDocument:",
-      !!this.inspectorDocument()
-    );
   }
 
   closeInspector() {
-    console.log("[Explorer] closeInspector called");
     this.showInspector.set(false);
     this.inspectorDocument.set(null);
   }

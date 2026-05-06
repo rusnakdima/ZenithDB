@@ -22,12 +22,4 @@ export class DialogService {
     this.dialogsSignal.update((d) => [...d, dialog]);
     return id;
   }
-
-  close(id: string): void {
-    this.dialogsSignal.update((d) => d.filter((dlg) => dlg.id !== id));
-  }
-
-  closeAll(): void {
-    this.dialogsSignal.set([]);
-  }
 }

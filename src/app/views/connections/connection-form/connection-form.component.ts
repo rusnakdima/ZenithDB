@@ -45,6 +45,7 @@ export class ConnectionFormComponent implements OnInit {
   provider: ProviderType = "json";
   name = "";
   path = "";
+  behavior = "folders_as_databases";
   uri = "";
   database = "";
   host = "localhost";
@@ -114,6 +115,11 @@ export class ConnectionFormComponent implements OnInit {
       this.provider = this.providerUtils.toProviderType(innerConfig.type);
       switch (innerConfig.type) {
         case "Json":
+          this.path = innerConfig.path || "";
+          if (innerConfig.behavior) {
+            this.behavior = innerConfig.behavior;
+          }
+          break;
         case "Sqlite":
           this.path = innerConfig.path || "";
           break;
@@ -146,6 +152,11 @@ export class ConnectionFormComponent implements OnInit {
       this.provider = this.providerUtils.toProviderType(innerConfig.type);
       switch (innerConfig.type) {
         case "Json":
+          this.path = innerConfig.path || "";
+          if (innerConfig.behavior) {
+            this.behavior = innerConfig.behavior;
+          }
+          break;
         case "Sqlite":
           this.path = innerConfig.path || "";
           break;
@@ -301,6 +312,15 @@ export class ConnectionFormComponent implements OnInit {
 
     switch (this.provider) {
       case "json":
+        return {
+          name: this.name,
+          config: {
+            type: configType,
+            name: this.name,
+            path: this.path,
+            behavior: this.behavior,
+          },
+        };
       case "sqlite":
         return {
           name: this.name,
