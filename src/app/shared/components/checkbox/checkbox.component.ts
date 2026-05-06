@@ -16,6 +16,7 @@ export class CheckboxComponent {
   disabled = input<boolean>(false);
   label = input<string>("");
   variant = input<CheckboxVariant>("accent");
+  value = input<string>("");
 
   changed = output<boolean>();
 

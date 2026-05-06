@@ -182,6 +182,20 @@ export class ApiProvider {
     }
   }
 
+  async listDatabasesForUri(providerType: string, uri: string): Promise<DatabaseMeta[]> {
+    try {
+      return await invoke<DatabaseMeta[]>("list_databases_for_uri", {
+        providerType,
+        uri,
+        options: { signal: this.getAbortSignal() },
+      });
+    } catch (e) {
+      if (e instanceof Error && e.name === "AbortError") return [];
+      this.errorHandler.handleError(e, "listDatabasesForUri");
+      throw e;
+    }
+  }
+
   async describeCollection(connId: string, collection: string): Promise<CollectionSchema> {
     try {
       return await invoke<CollectionSchema>("describe_collection", {

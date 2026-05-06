@@ -85,6 +85,10 @@ export class DatabaseService {
     );
   }
 
+  async listDatabasesForUri(providerType: string, uri: string): Promise<DatabaseMeta[]> {
+    return this.api.listDatabasesForUri(providerType, uri);
+  }
+
   async describeCollection(collection: string): Promise<CollectionSchema> {
     const connId = this.connectionState.activeConnectionId();
     return withConnectionAndLoading(
