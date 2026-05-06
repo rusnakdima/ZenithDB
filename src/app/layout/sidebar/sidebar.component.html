@@ -7,11 +7,11 @@
 
     <button
       class="nav-rail-item"
-      [class.active]="isAtConnectionPage()"
-      (click)="openNewConnection()"
-      title="New Connection"
+      [class.active]="isAtConnections() || isAtConnectionPage() || isAtExplorer()"
+      (click)="navigateToConnections()"
+      title="Connections"
     >
-      <mat-icon fontIcon="add" class="h-5! w-5! text-xl!" />
+      <mat-icon fontIcon="folder" class="h-5! w-5! text-xl!" />
     </button>
 
     <button
@@ -67,92 +67,60 @@
       </div>
     }
 
-    <!-- Explorer Tree View (only show when at a connection page) -->
-    @if (activeConnectionId()) {
-      <div class="flex flex-grow flex-col gap-1 overflow-y-auto p-4">
-        @if (storage.connections().length > 0) {
-          @for (conn of storage.connections(); track conn.id) {
-            <div class="mb-2">
-              <div
-                class="tree-item flex items-center gap-2 p-2 text-xs font-bold text-[var(--text-dim)]"
-                [class.active]="activeConnectionId() === conn.id"
-                (click)="toggleConnection(conn.id, $event)"
-              >
-                <mat-icon
-                  [fontIcon]="!isConnectionExpanded(conn.id) ? 'chevron_right' : 'expand_more'"
-                  class="h-5! w-5! text-xl!"
-                />
-                <mat-icon
-                  [fontIcon]="providerUtils.getProviderIcon(conn.provider)"
-                  class="h-5! w-5! text-xl! text-[var(--accent)]/70"
-                />
-                <span>{{ conn.name }}</span>
-              </div>
-
-              @if (isConnectionExpanded(conn.id) && activeConnectionId() === conn.id) {
-                <div class="mt-1 ml-4 space-y-1 border-l border-[var(--border-subtle)] pl-2">
-                  @if (loadingDatabases()) {
-                    <div class="p-2 text-[11px] text-[var(--text-dim)]">
-                      <mat-icon fontIcon="sync" class="h-5! w-5! text-xl!" /> Loading...
-                    </div>
-                  } @else if (databases().length > 0) {
-                    @for (db of databases(); track db.name) {
-                      <div class="mb-1">
-                        <div
-                          class="tree-item flex items-center gap-2 p-1.5 text-[11px] text-[var(--text-dim)]"
-                          [class.active]="false"
-                          (click)="onDatabaseClick(db, $event)"
-                          (contextmenu)="showContextMenu($event, db)"
-                        >
-                          <mat-icon
-                            [fontIcon]="!db.expanded ? 'chevron_right' : 'expand_more'"
-                            class="h-5! w-5! text-xl!"
-                          />
-                          <mat-icon
-                            fontIcon="storage"
-                            class="h-5! w-5! text-xl! text-[var(--accent)]/50"
-                          />
-                          <span>{{ db.name }}</span>
-                        </div>
-                        @if (db.expanded && db.children) {
-                          <div class="ml-4 space-y-1 border-l border-[var(--border-subtle)] pl-2">
-                            @for (col of db.children; track col.name) {
-                              <div
-                                class="tree-item flex items-center gap-2 p-1.5 text-[11px] text-[var(--text-muted)]"
-                                [class.active]="activeCollection() === col.name"
-                                (click)="onCollectionClick(col)"
-                                (contextmenu)="showContextMenu($event, col)"
-                              >
-                                <mat-icon
-                                  fontIcon="table_chart"
-                                  class="h-5! w-5! text-xl! text-[var(--text-muted)]"
-                                />
-                                <span>{{ col.name }}</span>
-                              </div>
-                            }
-                          </div>
-                        }
-                      </div>
-                    }
-                  } @else {
-                    <div class="p-2 text-[10px] text-[var(--text-muted)]">No collections</div>
-                  }
-                </div>
-              }
+    <!-- Explorer Tree View (always show connections list) -->
+    <div class="flex flex-grow flex-col gap-1 overflow-y-auto p-4">
+      @if (storage.connections().length > 0) {
+        @for (conn of storage.connections(); track conn.id) {
+          <div class="mb-4">
+            <div
+              class="tree-item flex items-center gap-2 p-2 text-xs font-bold text-[var(--text-dim)]"
+              [class.active]="activeConnectionId() === conn.id"
+              (click)="selectConnection(conn)"
+            >
+              <mat-icon
+                [fontIcon]="providerUtils.getProviderIcon(conn.provider)"
+                class="h-5! w-5! text-xl! text-[var(--accent)]/70"
+              />
+              <span>{{ conn.name }}</span>
             </div>
-          }
-        }
-      </div>
-    }
 
-    <!-- Empty state when at /connections with no connection selected -->
-    @if (isAtConnections() && !activeConnectionId()) {
-      <div class="sidebar-empty-state">
-        <mat-icon fontIcon="link_off" class="mb-2 h-12! w-12! text-xl!" />
-        <p>No connection selected</p>
-        <a routerLink="/connections/new">Add Connection</a>
-      </div>
-    }
+            @if (activeConnectionId() === conn.id) {
+              <div class="mt-1 ml-4 space-y-1 border-l border-[var(--border-subtle)] pl-2">
+                @if (loadingDatabases()) {
+                  <div class="p-2 text-[11px] text-[var(--text-dim)]">
+                    <mat-icon fontIcon="sync" class="h-5! w-5! text-xl!" /> Loading...
+                  </div>
+                } @else if (databases().length > 0) {
+                  @for (db of databases(); track db.name) {
+                    <div class="mb-1">
+                      <div
+                        class="tree-item flex items-center gap-2 p-1.5 text-[11px] text-[var(--text-dim)]"
+                        [class.active]="activeCollection() === db.name"
+                        (click)="onCollectionClick(db)"
+                      >
+                        <mat-icon
+                          fontIcon="table_chart"
+                          class="h-5! w-5! text-xl! text-[var(--accent)]/50"
+                        />
+                        <span>{{ db.name }}</span>
+                      </div>
+                    </div>
+                  }
+                } @else {
+                  <div class="p-2 text-[10px] text-[var(--text-muted)]">No collections</div>
+                }
+              </div>
+            }
+          </div>
+        }
+      } @else {
+        <div class="sidebar-empty-state">
+          <mat-icon fontIcon="link_off" class="mb-2 h-12! w-12! text-xl!" />
+          <p>No connections</p>
+          <a routerLink="/connections/new">Add Connection</a>
+        </div>
+      }
+    </div>
 
     <!-- Workbench placeholder when at query page -->
     @if (isAtQuery()) {

@@ -100,6 +100,10 @@ export class SidebarComponent implements OnInit, OnDestroy {
     this.router.navigate(["/query"]);
   }
 
+  navigateToConnections() {
+    this.router.navigate(["/connections"]);
+  }
+
   openNewConnection() {
     this.router.navigate(["/connections/new"]);
   }
@@ -130,6 +134,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
     this._activeConnectionId.set(conn.id);
     this.connectionState.setActiveConnection(conn);
     this.router.navigate(["/connections", conn.id]);
+    this.loadDatabases(conn.id);
   }
 
   async selectConnectionById(connId: string) {
@@ -143,18 +148,13 @@ export class SidebarComponent implements OnInit, OnDestroy {
     this.loadingDatabases.set(true);
     try {
       const collections = await this.databaseService.listCollections();
-      const dbNode: TreeNode = {
-        name: connId,
-        type: "database",
-        expanded: true,
-        children: collections.map((c) => ({
-          name: c.name,
-          type: "collection" as const,
-          expanded: false,
-          collection: c,
-        })),
-      };
-      this.databases.set([dbNode]);
+      const dbNodes: TreeNode[] = collections.map((c) => ({
+        name: c.name,
+        type: "database" as const,
+        expanded: false,
+        collection: c,
+      }));
+      this.databases.set(dbNodes);
     } catch (e) {
       console.error("Failed to load databases:", e);
       this.databases.set([]);
@@ -213,10 +213,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   onDatabaseClick(node: TreeNode, event: Event) {
     event.stopPropagation();
-    const connId = this.activeConnectionId();
-    if (connId) {
-      this.router.navigate(["/connections", connId]);
-    }
+    this.toggleDatabase(node, event);
   }
 
   isConnectionExpanded(connId: string): boolean {
