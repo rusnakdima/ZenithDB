@@ -18,6 +18,7 @@ import {
   SystemMetrics,
   RowData,
   FilterExpression,
+  DatabaseMeta,
 } from "@shared/models/connection.config";
 
 export interface CrudOptions {
@@ -150,6 +151,33 @@ export class ApiProvider {
     } catch (e) {
       if (e instanceof Error && e.name === "AbortError") return [];
       this.errorHandler.handleError(e, "listCollections");
+      throw e;
+    }
+  }
+
+  async listDatabases(connId: string): Promise<DatabaseMeta[]> {
+    try {
+      return await invoke<DatabaseMeta[]>("list_databases", {
+        connId,
+        options: { signal: this.getAbortSignal() },
+      });
+    } catch (e) {
+      if (e instanceof Error && e.name === "AbortError") return [];
+      this.errorHandler.handleError(e, "listDatabases");
+      throw e;
+    }
+  }
+
+  async createDatabase(connId: string, name: string): Promise<void> {
+    try {
+      return await invoke<void>("create_database", {
+        connId,
+        name,
+        options: { signal: this.getAbortSignal() },
+      });
+    } catch (e) {
+      if (e instanceof Error && e.name === "AbortError") throw new Error("Operation cancelled");
+      this.errorHandler.handleError(e, "createDatabase");
       throw e;
     }
   }

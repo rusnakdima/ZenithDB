@@ -69,7 +69,9 @@ export class DataProviderService {
   private evictLRU(collection: string): void {
     const entries = this.getCollectionEntries(collection);
     if (entries.size >= this.MAX_ENTRIES_PER_COLLECTION) {
-      const sorted = Array.from(entries.entries()).sort((a, b) => a[1].lastAccessed - b[1].lastAccessed);
+      const sorted = Array.from(entries.entries()).sort(
+        (a, b) => a[1].lastAccessed - b[1].lastAccessed
+      );
       const toRemove = sorted.slice(0, entries.size - this.MAX_ENTRIES_PER_COLLECTION + 1);
       const cache = this.collectionDataCache();
       for (const [key] of toRemove) {
@@ -167,10 +169,12 @@ export class DataProviderService {
 
     const schema = await this.db.describeCollection(collection);
     const columns = schema.columns;
-    this.columnsCache.set(new Map(this.columnsCache()).set(cacheKey, {
-      columns,
-      timestamp: Date.now(),
-    }));
+    this.columnsCache.set(
+      new Map(this.columnsCache()).set(cacheKey, {
+        columns,
+        timestamp: Date.now(),
+      })
+    );
     return columns;
   }
 

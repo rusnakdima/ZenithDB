@@ -3,6 +3,12 @@ export interface CollectionMeta {
   count: number;
 }
 
+export interface DatabaseMeta {
+  name: string;
+  size_bytes?: number;
+  table_count?: number;
+}
+
 export interface CollectionSchema {
   name: string;
   columns: ColumnInfo[];

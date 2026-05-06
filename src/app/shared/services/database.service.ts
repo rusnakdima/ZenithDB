@@ -18,6 +18,7 @@ import {
   QueryResult,
   RawResult,
   SystemMetrics,
+  DatabaseMeta,
 } from "@shared/models/connection.config";
 
 @Injectable({ providedIn: "root" })
@@ -64,6 +65,23 @@ export class DatabaseService {
       this.loadingService,
       "Loading collections...",
       (connId) => this.api.listCollections(connId)
+    );
+  }
+
+  async listDatabases(): Promise<DatabaseMeta[]> {
+    const connId = this.connectionState.activeConnectionId();
+    return withConnectionAndLoading(connId, this.loadingService, "Loading databases...", (connId) =>
+      this.api.listDatabases(connId)
+    );
+  }
+
+  async createDatabase(name: string): Promise<void> {
+    const connId = this.connectionState.activeConnectionId();
+    return withConnectionAndLoading(
+      connId,
+      this.loadingService,
+      `Creating database ${name}...`,
+      (connId) => this.api.createDatabase(connId, name)
     );
   }
 

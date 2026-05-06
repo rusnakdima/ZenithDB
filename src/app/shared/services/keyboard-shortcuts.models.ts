@@ -13,12 +13,6 @@ export interface ShortcutEvent {
 }
 
 export const SHORTCUT_CONFIG: Record<string, Shortcut> = {
-  "command-palette": {
-    key: "p",
-    description: "Open Command Palette",
-    category: "navigation",
-    modifiers: ["ctrl"],
-  },
   "new-connection": {
     key: "n",
     description: "New Connection",

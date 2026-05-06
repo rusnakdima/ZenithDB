@@ -20,8 +20,6 @@ export class KeyboardShortcutsService {
   shortcutsHelpVisible = signal(false);
 
   private shortcutActions: Record<string, () => void> = {
-    "command-palette": () =>
-      document.dispatchEvent(new CustomEvent("zenith:toggle-command-palette")),
     "new-connection": () => this.router.navigate(["/connections/new"]),
     "quick-search": () => document.dispatchEvent(new CustomEvent("zenith:focus-search")),
     "open-settings": () => document.dispatchEvent(new CustomEvent("zenith:open-settings")),
@@ -33,7 +31,8 @@ export class KeyboardShortcutsService {
     "clear-editor": () => document.dispatchEvent(new CustomEvent("zenith:clear-editor")),
     save: () => document.dispatchEvent(new CustomEvent("zenith:save")),
     "duplicate-line": () => document.dispatchEvent(new CustomEvent("zenith:duplicate-line")),
-    "open-connection-modal": () => document.dispatchEvent(new CustomEvent("zenith:open-connection-modal")),
+    "open-connection-modal": () =>
+      document.dispatchEvent(new CustomEvent("zenith:open-connection-modal")),
   };
 
   private boundHandler: ((event: KeyboardEvent) => void) | null = null;
