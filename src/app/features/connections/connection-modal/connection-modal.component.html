@@ -1,0 +1,113 @@
+@if (isOpen()) {
+  <div
+    class="connection-modal-backdrop fixed inset-0 z-[9999] flex items-start justify-center bg-black/50 pt-[15vh]"
+    (click)="onBackdropClick($event)"
+  >
+    <div
+      class="w-full max-w-3xl overflow-hidden rounded-xl border border-[var(--border-visible)] bg-[var(--bg-elevated)] shadow-2xl"
+    >
+      <div class="flex items-center gap-3 border-b border-[var(--border-subtle)] px-4 py-3">
+        <mat-icon class="h-5! w-5! min-w-5 text-2xl! text-[var(--text-dim)]">share</mat-icon>
+        <input
+          type="text"
+          class="flex-1 rounded-lg bg-transparent px-2 py-1 text-base text-[var(--text-main)] placeholder-[var(--text-dim)] outline-none"
+          placeholder="Search connections..."
+          [value]="searchQuery()"
+          (input)="onSearchInput($any($event.target).value)"
+          (keydown)="handleKeydown($event)"
+        />
+        <kbd
+          class="hidden items-center rounded bg-[var(--bg-card)] px-2 py-1 text-xs font-medium text-[var(--text-dim)] sm:inline-flex"
+        >
+          ESC
+        </kbd>
+      </div>
+
+      <div class="max-h-[60vh] overflow-y-auto">
+        @if (filteredItems().length === 0) {
+          <div class="py-8 text-center text-[var(--text-dim)]">
+            <mat-icon class="mb-2 h-5! w-5! min-w-5 text-2xl!">search_off</mat-icon>
+            <p>No connections found</p>
+          </div>
+        } @else {
+          @for (item of filteredItems(); track item.connection.id; let i = $index) {
+            <div
+              class="flex cursor-pointer items-center gap-3 px-4 py-3 transition-colors hover:bg-[var(--bg-card)]"
+              [class.bg-[var(--bg-card)]]="selectedIndex() === i"
+              (click)="selectItem(item)"
+              (mouseenter)="selectedIndex.set(i)"
+            >
+              <div class="relative">
+                <div
+                  class="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--accent)]/10"
+                >
+                  <mat-icon
+                    class="text-xl text-[var(--accent)]"
+                    [fontIcon]="item.connection.provider === 'turso' ? 'database' : 'storage'"
+                  ></mat-icon>
+                </div>
+                <div
+                  class="absolute -right-0.5 -bottom-0.5 h-3 w-3 rounded-full border-2 border-[var(--bg-elevated)]"
+                  [class.bg-green-400]="item.status === 'connected'"
+                  [class.bg-zinc-600]="item.status !== 'connected'"
+                ></div>
+              </div>
+
+              <div class="min-w-0 flex-1">
+                <div class="truncate text-sm font-medium text-[var(--text-main)]">
+                  {{ item.connection.name }}
+                </div>
+                <div class="truncate text-xs text-[var(--text-dim)]">
+                  {{ item.connection.provider === "turso" ? "Turso" : item.connection.provider }}
+                  @if (item.isActive) {
+                    <span class="ml-2 text-[var(--accent)]">Active</span>
+                  }
+                </div>
+              </div>
+
+              <div class="flex items-center gap-2">
+                @if (item.isActive) {
+                  <button
+                    class="rounded-lg p-2 text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-sidebar)] hover:text-red-400"
+                    title="Disconnect"
+                    (click)="disconnect(item, $event)"
+                  >
+                    <mat-icon fontIcon="link_off" class="text-xl!" />
+                  </button>
+                }
+                <button
+                  class="rounded-lg p-2 text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-sidebar)] hover:text-[var(--accent)]"
+                  title="View Details"
+                  (click)="viewDetails(item, $event)"
+                >
+                  <mat-icon fontIcon="open_in_new" class="text-xl!" />
+                </button>
+              </div>
+            </div>
+          }
+        }
+      </div>
+
+      <div
+        class="flex items-center justify-between border-t border-[var(--border-subtle)] bg-[var(--bg-sidebar)]/50 px-4 py-2"
+      >
+        <div class="flex items-center gap-4 text-xs text-[var(--text-dim)]">
+          <span class="flex items-center gap-1">
+            <kbd class="flex items-center rounded bg-[var(--bg-card)] px-1.5 py-0.5">
+              <mat-icon class="!text-sm! h-3! w-3! min-w-3">keyboard_arrow_up</mat-icon>
+              <mat-icon class="!text-sm! h-3! w-3! min-w-3">keyboard_arrow_down</mat-icon>
+            </kbd>
+            Navigate
+          </span>
+          <span class="flex items-center gap-1">
+            <kbd class="flex items-center rounded bg-[var(--bg-card)] px-1.5 py-0.5">
+              <mat-icon class="!text-sm! h-3! w-3! min-w-3">keyboard_return</mat-icon>
+            </kbd>
+            Select
+          </span>
+        </div>
+        <span class="text-xs text-[var(--text-muted)]">Ctrl+Shift+C</span>
+      </div>
+    </div>
+  </div>
+}
