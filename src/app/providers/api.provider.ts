@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { StorageService } from "@services/core/storage.service";
 import { ToastService } from "@services/toast.service";
 import { ErrorHandlerService } from "@shared/services/error-handler.service";
+import { SettingsService } from "@shared/services/settings.service";
 import {
   ConnectionSummary,
   ConnectionConfig,
@@ -40,11 +41,21 @@ export class ApiProvider {
   private abortController: AbortController | null = null;
   private toastService: ToastService | null = null;
   private errorHandler = inject(ErrorHandlerService);
+  private settingsService = inject(SettingsService);
 
-  private getAbortSignal(): AbortSignal {
+  private getTimeoutMs(): number {
+    return this.settingsService.currentSettings.connections.connectionTimeout * 1000;
+  }
+
+  private createAbortSignal(): AbortSignal {
     this.abortController?.abort();
     this.abortController = new AbortController();
+    setTimeout(() => this.abortController?.abort(), this.getTimeoutMs());
     return this.abortController.signal;
+  }
+
+  private getAbortSignal(): AbortSignal {
+    return this.createAbortSignal();
   }
 
   cancelPendingRequests(): void {
@@ -56,6 +67,14 @@ export class ApiProvider {
       this.toastService = inject(ToastService);
     }
     return this.toastService;
+  }
+
+  private getDefaultAbortSignal(): AbortSignal {
+    this.abortController?.abort();
+    this.abortController = new AbortController();
+    const timeoutMs = this.getTimeoutMs();
+    setTimeout(() => this.abortController?.abort(), timeoutMs);
+    return this.abortController.signal;
   }
 
   private checkResponseSize(data: unknown): { truncated: boolean; message?: string } {

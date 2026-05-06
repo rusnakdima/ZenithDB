@@ -55,7 +55,7 @@ const DEFAULT_SETTINGS: AppSettings = {
     maxRows: 1000,
   },
   connections: {
-    connectionTimeout: 30,
+    connectionTimeout: 15,
     maxConcurrent: 5,
     autoReconnect: true,
   },
