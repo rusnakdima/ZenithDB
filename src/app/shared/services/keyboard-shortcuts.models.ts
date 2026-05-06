@@ -84,6 +84,12 @@ export const SHORTCUT_CONFIG: Record<string, Shortcut> = {
     category: "editor",
     modifiers: ["ctrl"],
   },
+  "open-connection-modal": {
+    key: "c",
+    description: "Open Connection Manager",
+    category: "navigation",
+    modifiers: ["ctrl", "shift"],
+  },
 };
 
 export function formatShortcut(key: string, modifiers?: string[]): string {

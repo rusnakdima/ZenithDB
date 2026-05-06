@@ -2,6 +2,7 @@ import { Injectable, inject } from "@angular/core";
 import { invoke } from "@tauri-apps/api/core";
 import { StorageService } from "@services/core/storage.service";
 import { ToastService } from "@services/toast.service";
+import { ErrorHandlerService } from "@shared/services/error-handler.service";
 import {
   ConnectionSummary,
   ConnectionConfig,
@@ -37,6 +38,7 @@ export class ApiProvider {
   private storage = inject(StorageService);
   private abortController: AbortController | null = null;
   private toastService: ToastService | null = null;
+  private errorHandler = inject(ErrorHandlerService);
 
   private getAbortSignal(): AbortSignal {
     this.abortController?.abort();
@@ -80,6 +82,7 @@ export class ApiProvider {
       return connections;
     } catch (e) {
       if (e instanceof Error && e.name === "AbortError") return [];
+      this.errorHandler.handleError(e, "listConnections");
       throw e;
     }
   }
@@ -92,6 +95,7 @@ export class ApiProvider {
       });
     } catch (e) {
       if (e instanceof Error && e.name === "AbortError") throw new Error("Operation cancelled");
+      this.errorHandler.handleError(e, "getConnection");
       throw e;
     }
   }
@@ -106,6 +110,7 @@ export class ApiProvider {
       return id;
     } catch (e) {
       if (e instanceof Error && e.name === "AbortError") throw new Error("Operation cancelled");
+      this.errorHandler.handleError(e, "saveConnection");
       throw e;
     }
   }
@@ -116,6 +121,7 @@ export class ApiProvider {
       this.storage.removeConnection(id);
     } catch (e) {
       if (e instanceof Error && e.name === "AbortError") return;
+      this.errorHandler.handleError(e, "deleteConnection");
       throw e;
     }
   }
@@ -128,6 +134,7 @@ export class ApiProvider {
       });
     } catch (e) {
       if (e instanceof Error && e.name === "AbortError") throw new Error("Operation cancelled");
+      this.errorHandler.handleError(e, "testConnection");
       throw e;
     }
   }
@@ -142,6 +149,7 @@ export class ApiProvider {
       return collections;
     } catch (e) {
       if (e instanceof Error && e.name === "AbortError") return [];
+      this.errorHandler.handleError(e, "listCollections");
       throw e;
     }
   }
@@ -155,6 +163,7 @@ export class ApiProvider {
       });
     } catch (e) {
       if (e instanceof Error && e.name === "AbortError") throw new Error("Operation cancelled");
+      this.errorHandler.handleError(e, "describeCollection");
       throw e;
     }
   }
@@ -168,6 +177,7 @@ export class ApiProvider {
       });
     } catch (e) {
       if (e instanceof Error && e.name === "AbortError") throw new Error("Operation cancelled");
+      this.errorHandler.handleError(e, "getCollectionStats");
       throw e;
     }
   }
@@ -192,6 +202,7 @@ export class ApiProvider {
       return result;
     } catch (e) {
       if (e instanceof Error && e.name === "AbortError") throw new Error("Operation cancelled");
+      this.errorHandler.handleError(e, "queryData");
       throw e;
     }
   }
@@ -208,6 +219,7 @@ export class ApiProvider {
       return result;
     } catch (e) {
       if (e instanceof Error && e.name === "AbortError") return null;
+      this.errorHandler.handleError(e, "saveRow");
       throw e;
     }
   }
@@ -223,6 +235,7 @@ export class ApiProvider {
       this.storage.removeFromCollectionData(collection, id);
     } catch (e) {
       if (e instanceof Error && e.name === "AbortError") return;
+      this.errorHandler.handleError(e, "deleteRow");
       throw e;
     }
   }
@@ -237,6 +250,7 @@ export class ApiProvider {
       await this.listCollections(connId);
     } catch (e) {
       if (e instanceof Error && e.name === "AbortError") return;
+      this.errorHandler.handleError(e, "createCollection");
       throw e;
     }
   }
@@ -252,6 +266,7 @@ export class ApiProvider {
       await this.listCollections(connId);
     } catch (e) {
       if (e instanceof Error && e.name === "AbortError") return;
+      this.errorHandler.handleError(e, "dropCollection");
       throw e;
     }
   }
@@ -266,6 +281,7 @@ export class ApiProvider {
     } catch (e) {
       if (e instanceof Error && e.name === "AbortError")
         return { columns: [], rows: [], affected_rows: 0 } as RawResult;
+      this.errorHandler.handleError(e, "executeRaw");
       throw e;
     }
   }
@@ -278,6 +294,7 @@ export class ApiProvider {
       });
     } catch (e) {
       if (e instanceof Error && e.name === "AbortError") return "";
+      this.errorHandler.handleError(e, "getServerVersion");
       throw e;
     }
   }
@@ -291,6 +308,7 @@ export class ApiProvider {
       return metrics;
     } catch (e) {
       if (e instanceof Error && e.name === "AbortError") throw new Error("Operation cancelled");
+      this.errorHandler.handleError(e, "getSystemStatus");
       throw e;
     }
   }
