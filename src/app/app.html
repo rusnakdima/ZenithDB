@@ -5,34 +5,7 @@
     <main
       class="app-main flex min-h-0 flex-1 flex-col overflow-hidden transition-colors duration-200"
     >
-      <header class="header">
-        <div class="flex items-center gap-3">
-          <span class="text-[10px] font-black tracking-widest text-[var(--text-dim)] uppercase"
-            >Workspace</span
-          >
-          <mat-icon
-            fontIcon="chevron_right"
-            class="h-5! w-5! text-2xl! !text-[var(--text-muted)]"
-          />
-          <span class="text-[10px] font-black tracking-widest text-[var(--text-main)] uppercase">{{
-            getCurrentBreadcrumb()
-          }}</span>
-        </div>
-
-        <div class="flex items-center gap-6">
-          <div class="group relative">
-            <mat-icon
-              fontIcon="search"
-              class="absolute top-1/2 left-3 h-4! w-4! -translate-y-1/2 text-2xl! !text-neutral-500"
-            />
-            <input
-              type="text"
-              placeholder="Search data, collections..."
-              class="w-64 rounded-lg border border-white/5 bg-neutral-900 py-1.5 pr-4 pl-9 text-[11px] transition-all outline-none focus:border-[var(--accent)]/50"
-            />
-          </div>
-        </div>
-      </header>
+      <app-header></app-header>
 
       <div class="main-content flex-grow overflow-y-auto">
         <router-outlet></router-outlet>
@@ -48,7 +21,7 @@
     }
   }
 
-  <app-command-palette></app-command-palette>
+  <app-connection-modal #connectionModal></app-connection-modal>
   <app-loading-overlay></app-loading-overlay>
   <app-toast-container></app-toast-container>
   <app-shortcuts-help-dialog></app-shortcuts-help-dialog>
