@@ -152,28 +152,28 @@
                 </div>
               }
 
-              <a
-                [routerLink]="['/data', col.name]"
+              <button
+                type="button"
                 class="flex items-center gap-2 rounded px-3 py-1.5 text-sm text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--text-main)]"
-                (click)="$event.stopPropagation()"
+                (click)="viewData(col); $event.stopPropagation()"
               >
                 <mat-icon
                   fontIcon="table_chart"
                   class="h-6! w-5! flex-shrink-0 text-xl! text-[var(--text-muted)]"
                 ></mat-icon>
                 Browse Data
-              </a>
-              <a
-                [routerLink]="['/schema', col.name]"
+              </button>
+              <button
+                type="button"
                 class="flex items-center gap-2 rounded px-3 py-1.5 text-sm text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--text-main)]"
-                (click)="$event.stopPropagation()"
+                (click)="viewDetails(col); $event.stopPropagation()"
               >
                 <mat-icon
                   fontIcon="info"
                   class="h-6! w-5! flex-shrink-0 text-xl! text-[var(--text-muted)]"
                 ></mat-icon>
                 Details
-              </a>
+              </button>
             </div>
           }
         </div>

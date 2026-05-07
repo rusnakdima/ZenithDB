@@ -1,13 +1,16 @@
 mod commands;
 
-use commands::admin::{create_collection, drop_collection, execute_raw, get_server_version};
+use commands::admin::{
+  create_collection, drop_collection, execute_raw, get_server_version, rename_collection,
+};
 use commands::connection::{
   delete_connection, get_connection, list_connections, save_connection, test_connection,
+  test_connection_status, update_connection,
 };
 use commands::data::{delete_row, query_data, save_row};
 use commands::schema::{
-  create_database, describe_collection, get_collection_stats, list_collections, list_databases,
-  list_databases_for_uri,
+  create_database, delete_database, describe_collection, get_collection_stats, list_collections,
+  list_databases, list_databases_for_uri, rename_database,
 };
 use commands::system::get_system_status;
 
@@ -21,12 +24,16 @@ pub fn run() {
       save_connection,
       list_connections,
       delete_connection,
+      update_connection,
       test_connection,
+      test_connection_status,
       get_connection,
       list_collections,
       list_databases,
       list_databases_for_uri,
       create_database,
+      rename_database,
+      delete_database,
       describe_collection,
       get_collection_stats,
       query_data,
@@ -34,6 +41,7 @@ pub fn run() {
       delete_row,
       create_collection,
       drop_collection,
+      rename_collection,
       execute_raw,
       get_server_version,
       get_system_status,

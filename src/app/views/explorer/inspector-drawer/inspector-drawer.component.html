@@ -1,6 +1,7 @@
 <div class="fixed inset-0 z-40" (click)="onBackdropClick($event)">
   <div
     class="inspector-drawer fixed top-0 right-0 z-50 flex h-full w-[420px] transform flex-col border-l border-[var(--border-subtle)] bg-[var(--bg-sidebar)] shadow-2xl transition-transform duration-300"
+    [class.inspector-drawer-open]="true"
     (click)="onDrawerClick($event)"
   >
     <div

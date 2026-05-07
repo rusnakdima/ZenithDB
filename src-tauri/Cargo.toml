@@ -1,9 +1,11 @@
 [package]
-name = "zenithdb"
-version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
+authors = ["Dmitriy303"]
+description = "ZenithDB"
 edition = "2021"
+license = "MIT License"
+name = "zenithdb"
+repository = "https://github.com/TechCraft-Solutions/ZenithDB"
+version = "0.1.0"
 
 [lib]
 name = "zenithdb_lib"
@@ -24,6 +26,15 @@ tokio = { version = "1", features = ["full"] }
 sysinfo = "0.32"
 tauri-plugin-mcp-bridge = "0.11"
 
-nosql_orm = { git = "https://github.com/rusnakdima/nosql_orm", branch = "main", features = ["json", "mongo", "redis", "sql-postgres", "sql-sqlite", "sql-mysql", "query_cache", "validators"] }
+nosql_orm = { git = "https://github.com/rusnakdima/nosql_orm", branch = "main", features = [
+    "json",
+    "mongo",
+    "redis",
+    "sql-postgres",
+    "sql-sqlite",
+    "sql-mysql",
+    "query_cache",
+    "validators",
+] }
 # nosql_orm = { path = "/mnt/Other/Projects/Rust/nosql_orm", features = ["json", "mongo", "redis", "sql-postgres", "sql-sqlite", "sql-mysql", "query_cache", "validators"] }
 # nosql_orm = { path = "C:\\Users\\D.Rusnak\\Projects\\nosql_orm", features = ["json", "mongo", "redis", "sql-postgres", "sql-sqlite", "sql-mysql", "query_cache", "validators"] }

@@ -80,11 +80,19 @@ pub async fn list_databases(conn_id: &str) -> Result<Vec<DatabaseMeta>, String> 
       }
 
       match behavior.as_str() {
-        "files_as_collections" => Ok(vec![DatabaseMeta {
-          name: "root".to_string(),
-          size_bytes: None,
-          table_count: None,
-        }]),
+        "files_as_collections" => {
+          let folder_name = path_obj
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or("root")
+            .to_string();
+          let count = count_json_files_in_dir(&path_obj).await;
+          Ok(vec![DatabaseMeta {
+            name: folder_name,
+            size_bytes: None,
+            table_count: Some(count),
+          }])
+        }
         "folders_as_databases" | "mixed" => {
           let databases = list_json_databases(path_obj.clone(), behavior.as_str()).await?;
           if databases.is_empty() {
@@ -162,6 +170,89 @@ pub async fn create_database(conn_id: &str, name: &str) -> Result<(), String> {
             Ok(())
         }
     }
+}
+
+#[tauri::command]
+pub async fn rename_database(conn_id: &str, old_name: &str, new_name: &str) -> Result<(), String> {
+  let entry = get_connection_entry(conn_id).await?;
+
+  match &entry.config.config {
+    ConnectionConfigEnum::Sqlite { .. } => Err(
+      "SQLite database cannot be renamed. Create a new connection with a different file path."
+        .to_string(),
+    ),
+    ConnectionConfigEnum::Json { path, .. } => {
+      let old_path = std::path::Path::new(path).join(old_name);
+      let new_path = std::path::Path::new(path).join(new_name);
+      if old_path.exists() {
+        tokio::fs::rename(&old_path, &new_path)
+          .await
+          .map_err_string()?;
+      }
+      Ok(())
+    }
+    ConnectionConfigEnum::Redis { .. } => {
+      Err("Redis does not support renaming databases.".to_string())
+    }
+    ConnectionConfigEnum::Mongo { uri: _, .. } => {
+      Err("MongoDB does not support renaming databases via this interface.".to_string())
+    }
+    ConnectionConfigEnum::Postgres { uri, .. } => {
+      let provider = crate::commands::provider::create_postgres_provider(uri).await?;
+      provider
+        .execute_raw(
+          &format!("ALTER DATABASE \"{}\" RENAME TO \"{}\"", old_name, new_name),
+          vec![],
+        )
+        .await
+        .map_err_string()?;
+      Ok(())
+    }
+    ConnectionConfigEnum::MySql { uri: _, .. } => Err(
+      "MySQL does not support renaming databases directly. Create a new database and migrate data."
+        .to_string(),
+    ),
+  }
+}
+
+#[tauri::command]
+pub async fn delete_database(conn_id: &str, name: &str) -> Result<(), String> {
+  let entry = get_connection_entry(conn_id).await?;
+
+  match &entry.config.config {
+    ConnectionConfigEnum::Sqlite { .. } => Err(
+      "SQLite database cannot be deleted. Delete the connection and remove the file.".to_string(),
+    ),
+    ConnectionConfigEnum::Json { path, .. } => {
+      let db_path = std::path::Path::new(path).join(name);
+      if db_path.exists() && db_path.is_dir() {
+        tokio::fs::remove_dir_all(&db_path).await.map_err_string()?;
+      }
+      Ok(())
+    }
+    ConnectionConfigEnum::Redis { .. } => {
+      Err("Redis does not support deleting databases.".to_string())
+    }
+    ConnectionConfigEnum::Mongo { .. } => {
+      Err("MongoDB database deletion is not supported via this interface.".to_string())
+    }
+    ConnectionConfigEnum::Postgres { uri, .. } => {
+      let provider = crate::commands::provider::create_postgres_provider(uri).await?;
+      provider
+        .execute_raw(&format!("DROP DATABASE \"{}\"", name), vec![])
+        .await
+        .map_err_string()?;
+      Ok(())
+    }
+    ConnectionConfigEnum::MySql { uri, .. } => {
+      let provider = crate::commands::provider::create_mysql_provider(uri).await?;
+      provider
+        .execute_raw(&format!("DROP DATABASE IF EXISTS `{}`", name), vec![])
+        .await
+        .map_err_string()?;
+      Ok(())
+    }
+  }
 }
 
 #[tauri::command]
@@ -498,11 +589,37 @@ pub async fn list_databases_for_uri(
       }
       Ok(dbs)
     }
-    "redis" => Ok(vec![DatabaseMeta {
-      name: "default".to_string(),
-      size_bytes: None,
-      table_count: None,
-    }]),
+    "redis" => {
+      let provider = crate::commands::provider::create_redis_provider(uri).await?;
+      let result = provider
+        .execute_raw("INFO keyspace", vec![])
+        .await
+        .map_err_string()?;
+      let mut dbs = Vec::new();
+      for row in result.rows {
+        if let Some(line) = row.first().and_then(|v| v.as_str()) {
+          for part in line.lines() {
+            if part.starts_with("db") {
+              if let Some(name) = part.split(',').next().and_then(|s| s.split('=').last()) {
+                dbs.push(DatabaseMeta {
+                  name: name.to_string(),
+                  size_bytes: None,
+                  table_count: None,
+                });
+              }
+            }
+          }
+        }
+      }
+      if dbs.is_empty() {
+        dbs.push(DatabaseMeta {
+          name: "default".to_string(),
+          size_bytes: None,
+          table_count: None,
+        });
+      }
+      Ok(dbs)
+    }
     _ => Ok(vec![DatabaseMeta {
       name: "default".to_string(),
       size_bytes: None,

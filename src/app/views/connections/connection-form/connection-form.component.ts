@@ -48,6 +48,7 @@ export class ConnectionFormComponent implements OnInit {
   behavior = "folders_as_databases";
   uri = "";
   database = "";
+  manualDatabase = "";
   host = "localhost";
   port = "";
   username = "";
@@ -133,7 +134,12 @@ export class ConnectionFormComponent implements OnInit {
           this.uri = innerConfig.uri || "";
           break;
       }
-      if (this.provider === "postgres" || this.provider === "mysql" || this.provider === "mongo") {
+      if (
+        this.provider === "postgres" ||
+        this.provider === "mysql" ||
+        this.provider === "mongo" ||
+        this.provider === "redis"
+      ) {
         if (this.database) {
           this.selectedDatabases.set(this.database.split(",").map((d) => d.trim()));
         }
@@ -170,7 +176,12 @@ export class ConnectionFormComponent implements OnInit {
           this.uri = innerConfig.uri || "";
           break;
       }
-      if (this.provider === "postgres" || this.provider === "mysql" || this.provider === "mongo") {
+      if (
+        this.provider === "postgres" ||
+        this.provider === "mysql" ||
+        this.provider === "mongo" ||
+        this.provider === "redis"
+      ) {
         if (this.database) {
           this.selectedDatabases.set(this.database.split(",").map((d) => d.trim()));
         }
@@ -233,7 +244,10 @@ export class ConnectionFormComponent implements OnInit {
 
   async onUriChange() {
     if (
-      (this.provider === "postgres" || this.provider === "mysql" || this.provider === "mongo") &&
+      (this.provider === "postgres" ||
+        this.provider === "mysql" ||
+        this.provider === "mongo" ||
+        this.provider === "redis") &&
       this.uri &&
       this.uri.length > 10
     ) {
@@ -276,6 +290,53 @@ export class ConnectionFormComponent implements OnInit {
 
   isDatabaseSelected(dbName: string): boolean {
     return this.selectedDatabases().includes(dbName);
+  }
+
+  editingDb = signal<string | null>(null);
+  editDbName = "";
+
+  addManualDatabase() {
+    const name = this.manualDatabase.trim();
+    if (name && !this.selectedDatabases().includes(name)) {
+      this.selectedDatabases.set([...this.selectedDatabases(), name]);
+      this.database = this.selectedDatabases().join(",");
+    }
+    this.manualDatabase = "";
+  }
+
+  startEditDb(dbName: string) {
+    this.editingDb.set(dbName);
+    this.editDbName = dbName;
+  }
+
+  saveEditDb() {
+    const oldName = this.editingDb();
+    if (!oldName) return;
+
+    const newName = this.editDbName.trim();
+    if (!newName || newName === oldName) {
+      this.cancelEditDb();
+      return;
+    }
+
+    if (this.selectedDatabases().includes(newName)) {
+      this.cancelEditDb();
+      return;
+    }
+
+    this.selectedDatabases.set(this.selectedDatabases().map((d) => (d === oldName ? newName : d)));
+    this.database = this.selectedDatabases().join(",");
+    this.cancelEditDb();
+  }
+
+  cancelEditDb() {
+    this.editingDb.set(null);
+    this.editDbName = "";
+  }
+
+  removeDatabase(dbName: string) {
+    this.selectedDatabases.set(this.selectedDatabases().filter((d) => d !== dbName));
+    this.database = this.selectedDatabases().join(",");
   }
 
   async testConnection() {
@@ -341,6 +402,15 @@ export class ConnectionFormComponent implements OnInit {
           },
         };
       case "redis":
+        return {
+          name: this.name,
+          config: {
+            type: configType,
+            name: this.name,
+            uri: this.uri,
+            database: this.database,
+          },
+        };
       case "postgres":
       case "mysql":
         return {

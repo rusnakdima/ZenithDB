@@ -30,6 +30,22 @@ pub async fn drop_collection(conn_id: &str, name: &str) -> Result<(), String> {
 }
 
 #[tauri::command]
+pub async fn rename_collection(
+  conn_id: &str,
+  old_name: &str,
+  new_name: &str,
+) -> Result<(), String> {
+  let entry = get_connection_entry(conn_id).await?;
+  dispatch_provider!(entry, provider => {
+      let data = provider.find_many(old_name, None, None, None, None, true).await.map_err_string()?;
+      for item in data {
+        provider.insert(new_name, item.clone()).await.map_err_string()?;
+      }
+      provider.drop_collection(old_name).await.map_err_string()
+  })
+}
+
+#[tauri::command]
 pub async fn execute_raw(conn_id: &str, sql: &str) -> Result<RawResult, String> {
   let entry = get_connection_entry(conn_id).await?;
   dispatch_provider!(entry, provider => {

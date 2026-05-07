@@ -241,14 +241,18 @@ export class SchemaTreeComponent implements OnInit, OnDestroy {
   viewData(collection: TreeNode) {
     const connId = this.connectionState.activeConnectionId();
     if (connId) {
-      this.router.navigate(["/connections", connId, "data", collection.name]);
+      this.router.navigate(["/connections", connId, "explorer"], {
+        queryParams: { collection: collection.name },
+      });
     }
   }
 
   viewDetails(collection: TreeNode) {
     const connId = this.connectionState.activeConnectionId();
     if (connId) {
-      this.router.navigate(["/connections", connId, "schema", collection.name]);
+      this.router.navigate(["/connections", connId, "explorer"], {
+        queryParams: { collection: collection.name, view: "schema" },
+      });
     }
   }
 

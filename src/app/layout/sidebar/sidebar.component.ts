@@ -4,6 +4,7 @@ import {
   inject,
   signal,
   OnInit,
+  OnDestroy,
   DestroyRef,
   effect,
   computed,
@@ -55,9 +56,11 @@ export class SidebarComponent implements OnInit {
   databases = signal<TreeNode[]>([]);
   expandedConnections = signal<Set<string>>(new Set());
   loadingDatabases = signal(false);
+  loadingCollections = signal<Set<string>>(new Set());
   currentUrl = signal("");
 
   private statusSubscription: Subscription | null = null;
+  private connectionStatusSubscription: Subscription | null = null;
 
   contextMenu = signal<{ show: boolean; x: number; y: number; node: TreeNode | null }>({
     show: false,
@@ -74,11 +77,30 @@ export class SidebarComponent implements OnInit {
       /^\/connections\/[^/]+$/.test(this.currentUrl()) && !this.currentUrl().endsWith("/explorer")
   );
   isAtExplorer = computed(() => /^\/connections\/[^/]+\/explorer$/.test(this.currentUrl()));
+  isAtDatabasePage = computed(() =>
+    /^\/connections\/[^/]+\/databases\/[^/]+$/.test(this.currentUrl())
+  );
   isAtQuery = computed(() => this.currentUrl().startsWith("/query"));
 
   activeConnectionId = computed(() => {
     const match = this.currentUrl().match(/^\/connections\/([^/]+)/);
     return match ? match[1] : null;
+  });
+
+  activeDatabaseName = computed(() => {
+    const match = this.currentUrl().match(/^\/connections\/[^/]+\/databases\/([^/]+)$/);
+    return match ? match[1] : null;
+  });
+
+  private routeEffect = effect(() => {
+    const dbName = this.activeDatabaseName();
+    const connId = this.activeConnectionId();
+    console.log("[Sidebar] routeEffect triggered:", { dbName, connId, url: this.currentUrl() });
+    if (dbName && connId) {
+      this.expandDatabaseForRoute(connId, dbName);
+    } else if (!dbName && connId) {
+      this.loadConnectionForRoute(connId);
+    }
   });
 
   ngOnInit() {
@@ -94,9 +116,64 @@ export class SidebarComponent implements OnInit {
       this.fetchSystemStatus();
     });
 
+    this.connectionStatusSubscription = interval(5000).subscribe(() => {
+      this.refreshConnectionStatuses();
+    });
+
     this.destroyRef.onDestroy(() => {
       this.statusSubscription?.unsubscribe();
+      this.connectionStatusSubscription?.unsubscribe();
     });
+  }
+
+  async expandDatabaseForRoute(connId: string, dbName: string) {
+    console.log("[Sidebar] expandDatabaseForRoute called:", { connId, dbName });
+    const conn = this.storage.connections().find((c) => c.id === connId);
+    if (!conn) return;
+
+    this.connectionState.setActiveConnection(conn);
+
+    if (!this.expandedConnections().has(connId)) {
+      this.expandedConnections.update((set) => {
+        const newSet = new Set(set);
+        newSet.add(connId);
+        return newSet;
+      });
+      await this.loadDatabases(connId);
+    }
+
+    const dbNode = this.databases().find((d) => d.name === dbName);
+    if (dbNode) {
+      dbNode.expanded = true;
+      if (!dbNode.children || dbNode.children.length === 0) {
+        await this.loadCollectionsForDatabase(dbNode, connId);
+      }
+      this.databases.update((dbs) => [...dbs]);
+    }
+  }
+
+  collapseAllDatabases() {
+    const current = this.databases();
+    if (current.length > 0) {
+      const collapsed = current.map((db) => ({ ...db, expanded: false }));
+      this.databases.set(collapsed);
+    }
+  }
+
+  async loadConnectionForRoute(connId: string) {
+    const conn = this.storage.connections().find((c) => c.id === connId);
+    if (!conn) return;
+
+    if (!this.expandedConnections().has(connId)) {
+      this.expandedConnections.update((set) => {
+        const newSet = new Set(set);
+        newSet.add(connId);
+        return newSet;
+      });
+    }
+
+    this.connectionState.setActiveConnection(conn);
+    await this.loadDatabases(connId);
   }
 
   navigateToWorkbench() {
@@ -133,10 +210,32 @@ export class SidebarComponent implements OnInit {
     }
   }
 
+  async refreshConnectionStatuses() {
+    try {
+      const connections = this.storage.connections();
+      for (const conn of connections) {
+        const result = await this.databaseService.testConnectionStatus(conn.id);
+        if (result) {
+          this.storage.updateConnection(conn.id, { status: result.status });
+        }
+      }
+    } catch (e) {
+      console.error("Failed to refresh connection statuses:", e);
+    }
+  }
+
   async selectConnection(conn: ConnectionSummary) {
     this.connectionState.setActiveConnection(conn);
     this.router.navigate(["/connections", conn.id]);
     this.loadDatabases(conn.id);
+    this.testConnectionStatus(conn.id);
+  }
+
+  async testConnectionStatus(connId: string) {
+    const result = await this.databaseService.testConnectionStatus(connId);
+    if (result) {
+      this.storage.updateConnection(connId, { status: result.status });
+    }
   }
 
   async selectConnectionById(connId: string) {
@@ -147,6 +246,7 @@ export class SidebarComponent implements OnInit {
   }
 
   async loadDatabases(connId: string) {
+    console.log("[Sidebar] loadDatabases called:", connId);
     this.loadingDatabases.set(true);
     try {
       const databases = await this.databaseService.listDatabases(connId);
@@ -166,14 +266,40 @@ export class SidebarComponent implements OnInit {
   }
 
   async loadCollectionsForDatabase(dbNode: TreeNode, connId: string) {
-    const collections = await this.databaseService.listCollections(connId, dbNode.name);
-    dbNode.children = collections.map((c) => ({
-      name: c.name,
-      type: "collection" as const,
-      expanded: false,
-      collection: c,
-    }));
-    this.databases.update((dbs) => [...dbs]);
+    const key = `${connId}:${dbNode.name}`;
+    console.log("[Sidebar] loadCollectionsForDatabase called:", { key, dbNode: dbNode.name });
+    if (this.loadingCollections().has(key)) {
+      console.log("[Sidebar] loadCollectionsForDatabase skipped - already loading");
+      return;
+    }
+
+    this.loadingCollections.update((set) => {
+      const newSet = new Set(set);
+      newSet.add(key);
+      return newSet;
+    });
+
+    try {
+      console.log("[Sidebar] loadCollectionsForDatabase calling api:", {
+        connId,
+        dbName: dbNode.name,
+      });
+      const collections = await this.databaseService.listCollections(connId, dbNode.name);
+      console.log("[Sidebar] loadCollectionsForDatabase got collections:", collections.length);
+      dbNode.children = collections.map((c) => ({
+        name: c.name,
+        type: "collection" as const,
+        expanded: false,
+        collection: c,
+      }));
+      this.databases.update((dbs) => [...dbs]);
+    } finally {
+      this.loadingCollections.update((set) => {
+        const newSet = new Set(set);
+        newSet.delete(key);
+        return newSet;
+      });
+    }
   }
 
   async toggleConnection(connId: string, event: Event) {

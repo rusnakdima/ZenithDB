@@ -342,9 +342,12 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
 
   onRowClick(row: RowData, event: MouseEvent) {
     const target = event.target as HTMLElement;
+    console.log("[DEBUG] onRowClick fired, target:", target.tagName);
     if (target.tagName === "INPUT" && (target as HTMLInputElement).type === "checkbox") {
+      event.stopPropagation();
       return;
     }
+    console.log("[DEBUG] emitting documentClick for row:", row);
     this.documentClick.emit(row);
   }
 
@@ -471,7 +474,17 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   viewJson(row: RowData) {
+    console.log("[DEBUG] viewJson called for row:", row);
     this.documentClick.emit(row);
+  }
+
+  async copyRowJson(row: RowData) {
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(row, null, 2));
+      this.toast.success("Copied to clipboard");
+    } catch {
+      this.toast.error("Failed to copy");
+    }
   }
 
   onPageChange(newPage: number) {

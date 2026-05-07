@@ -344,8 +344,11 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   }
 
   openInspector(doc: RowData) {
+    console.log("[DEBUG] openInspector called with:", doc);
     this.inspectorDocument.set(doc);
+    console.log("[DEBUG] inspectorDocument set, showInspector about to be true");
     this.showInspector.set(true);
+    console.log("[DEBUG] showInspector is now:", this.showInspector());
   }
 
   closeInspector() {

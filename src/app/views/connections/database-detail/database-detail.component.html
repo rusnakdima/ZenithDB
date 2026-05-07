@@ -20,10 +20,16 @@
           </p>
         </div>
       </div>
-      <button (click)="refresh()" class="form-btn form-btn-secondary">
-        <mat-icon fontIcon="refresh" class="mr-2 h-5! w-5! text-xl!" />
-        Refresh
-      </button>
+      <div class="flex items-center gap-2">
+        <button (click)="openCreateCollectionModal()" class="form-btn form-btn-secondary">
+          <mat-icon fontIcon="add" class="mr-2 h-5! w-5! text-xl!" />
+          Create Collection
+        </button>
+        <button (click)="refresh()" class="form-btn form-btn-secondary">
+          <mat-icon fontIcon="refresh" class="mr-2 h-5! w-5! text-xl!" />
+          Refresh
+        </button>
+      </div>
     </div>
 
     @if (loading()) {
@@ -86,29 +92,67 @@
               </thead>
               <tbody class="divide-y divide-[var(--border-subtle)]">
                 @for (col of collections(); track col.name) {
-                  <tr
-                    class="cursor-pointer transition-colors hover:bg-[var(--bg-elevated)]"
-                    (click)="openCollection(col.name)"
-                  >
+                  <tr class="transition-colors hover:bg-[var(--bg-elevated)]">
                     <td class="px-4 py-3">
                       <div class="flex items-center gap-3">
-                        <mat-icon
-                          fontIcon="insert_drive_file"
-                          class="h-5! w-5! text-xl! text-[var(--accent)]/70"
-                        />
-                        <span class="font-medium text-[var(--text-main)]">{{ col.name }}</span>
+                        @if (editingCollection() === col.name) {
+                          <input
+                            type="text"
+                            [(ngModel)]="editCollectionName"
+                            class="form-input flex-1"
+                            (keyup.enter)="saveEditCollection()"
+                            (keyup.escape)="cancelEditCollection()"
+                          />
+                        } @else {
+                          <mat-icon
+                            fontIcon="insert_drive_file"
+                            class="h-5! w-5! text-xl! text-[var(--accent)]/70"
+                          />
+                          <span
+                            class="cursor-pointer font-medium text-[var(--text-main)]"
+                            (click)="openCollection(col.name)"
+                            >{{ col.name }}</span
+                          >
+                        }
                       </div>
                     </td>
                     <td class="px-4 py-3 text-right">
                       <span class="font-mono text-sm text-[var(--text-dim)]">{{ col.count }}</span>
                     </td>
                     <td class="px-4 py-3 text-right">
-                      <button
-                        (click)="openCollection(col.name); $event.stopPropagation()"
-                        class="rounded-lg px-3 py-1 text-xs font-medium text-[var(--accent)] transition-colors hover:bg-[var(--accent)]/10"
-                      >
-                        Explore
-                      </button>
+                      @if (editingCollection() === col.name) {
+                        <button
+                          (click)="saveEditCollection()"
+                          class="rounded p-1 text-[var(--accent)] hover:bg-[var(--bg-elevated)]"
+                        >
+                          <mat-icon fontIcon="check" class="h-5! w-5! text-xl!" />
+                        </button>
+                        <button
+                          (click)="cancelEditCollection()"
+                          class="rounded p-1 text-[var(--text-dim)] hover:bg-[var(--bg-elevated)]"
+                        >
+                          <mat-icon fontIcon="close" class="h-5! w-5! text-xl!" />
+                        </button>
+                      } @else {
+                        <button
+                          (click)="startEditCollection(col.name)"
+                          class="rounded p-1 text-[var(--text-dim)] hover:text-[var(--accent)]"
+                        >
+                          <mat-icon fontIcon="edit" class="h-5! w-5! text-xl!" />
+                        </button>
+                        <button
+                          (click)="deleteCollection(col.name)"
+                          class="rounded p-1 text-[var(--text-dim)] hover:text-red-400"
+                        >
+                          <mat-icon fontIcon="delete" class="h-5! w-5! text-xl!" />
+                        </button>
+                        <button
+                          (click)="openCollection(col.name)"
+                          class="rounded-lg px-3 py-1 text-xs font-medium text-[var(--accent)] transition-colors hover:bg-[var(--accent)]/10"
+                        >
+                          Explore
+                        </button>
+                      }
                     </td>
                   </tr>
                 }
@@ -130,3 +174,29 @@
     }
   </div>
 </div>
+
+@if (showCreateCollection()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    <div
+      class="w-full max-w-md rounded-xl border border-[var(--border-visible)] bg-[var(--bg-card)] p-6 shadow-xl"
+    >
+      <h3 class="mb-4 text-lg font-semibold text-[var(--text-main)]">Create Collection</h3>
+      <div class="mb-4">
+        <label class="mb-1.5 block text-sm text-[var(--text-dim)]">Collection Name</label>
+        <input
+          type="text"
+          [(ngModel)]="newCollectionName"
+          placeholder="collection_name"
+          class="form-input w-full"
+          (keyup.enter)="createCollection()"
+        />
+      </div>
+      <div class="flex justify-end gap-3">
+        <button (click)="closeCreateCollectionModal()" class="form-btn form-btn-secondary">
+          Cancel
+        </button>
+        <button (click)="createCollection()" class="form-btn form-btn-primary">Create</button>
+      </div>
+    </div>
+  </div>
+}

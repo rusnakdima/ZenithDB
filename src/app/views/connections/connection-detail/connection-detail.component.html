@@ -148,49 +148,96 @@
         </div>
       }
 
-      @if (getDbList().length > 0) {
-        <div class="mt-8">
-          <div class="mb-4 flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-[var(--text-main)]">Databases</h3>
-            <button (click)="showCreateDb.set(true)" class="form-btn form-btn-secondary text-xs">
-              <mat-icon fontIcon="add" class="mr-1 h-4! w-4! text-xl!" />
-              Create Database
-            </button>
-          </div>
-          <div class="space-y-2">
-            @for (db of getDbList(); track db) {
-              <div class="rounded-xl border border-[var(--border-visible)] bg-[var(--bg-card)] p-4">
-                <div class="mb-3 flex items-center gap-3">
+      <div class="mt-8">
+        <div class="mb-4 flex items-center justify-between">
+          <h3 class="text-lg font-semibold text-[var(--text-main)]">Databases</h3>
+          <button (click)="showCreateDb.set(true)" class="form-btn form-btn-secondary text-xs">
+            <mat-icon fontIcon="add" class="mr-1 h-4! w-4! text-xl!" />
+            Create Database
+          </button>
+        </div>
+        <div class="space-y-2">
+          @for (db of getSelectedDatabases(); track db) {
+            <div class="rounded-xl border border-[var(--border-visible)] bg-[var(--bg-card)] p-4">
+              @if (editingDb() === db) {
+                <div class="mb-3 flex items-center gap-2">
+                  <input
+                    type="text"
+                    [(ngModel)]="editDbName"
+                    class="form-input flex-1"
+                    (keyup.enter)="saveEditDb()"
+                    (keyup.escape)="cancelEditDb()"
+                  />
+                  <button
+                    type="button"
+                    (click)="saveEditDb()"
+                    class="rounded p-1 text-[var(--accent)] hover:bg-[var(--bg-elevated)]"
+                  >
+                    <mat-icon fontIcon="check" class="h-5! w-5! text-xl!" />
+                  </button>
+                  <button
+                    type="button"
+                    (click)="cancelEditDb()"
+                    class="rounded p-1 text-[var(--text-dim)] hover:bg-[var(--bg-elevated)]"
+                  >
+                    <mat-icon fontIcon="close" class="h-5! w-5! text-xl!" />
+                  </button>
+                </div>
+              } @else {
+                <div
+                  class="mb-3 flex cursor-pointer items-center gap-3 transition-colors hover:bg-[var(--bg-elevated)]"
+                  (click)="openDatabase(db)"
+                >
                   <mat-icon fontIcon="storage" class="h-5! w-5! text-xl! text-[var(--accent)]/70" />
-                  <span class="font-medium text-[var(--text-main)]">{{ db }}</span>
+                  <span class="flex-1 font-medium text-[var(--text-main)]">{{ db }}</span>
                   <span class="text-xs text-[var(--text-muted)]"
                     >{{ getCollectionsForDb(db).length }} collections</span
                   >
+                  <button
+                    type="button"
+                    (click)="startEditDb(db); $event.stopPropagation()"
+                    class="rounded p-1 text-[var(--text-dim)] hover:text-[var(--accent)]"
+                  >
+                    <mat-icon fontIcon="edit" class="h-5! w-5! text-xl!" />
+                  </button>
+                  <button
+                    type="button"
+                    (click)="deleteDatabase(db); $event.stopPropagation()"
+                    class="rounded p-1 text-[var(--text-dim)] hover:text-red-400"
+                  >
+                    <mat-icon fontIcon="delete" class="h-5! w-5! text-xl!" />
+                  </button>
                 </div>
-                <table class="w-full">
-                  <tbody class="divide-y divide-[var(--border-subtle)]">
-                    @for (col of getCollectionsForDb(db); track col.name) {
-                      <tr
-                        class="cursor-pointer transition-colors hover:bg-[var(--bg-elevated)]"
-                        (click)="openCollection(col.name)"
-                      >
-                        <td class="px-4 py-3">
-                          <span class="font-medium text-[var(--text-main)]">{{ col.name }}</span>
-                        </td>
-                        <td class="px-4 py-3 text-right">
-                          <span class="font-mono text-sm text-[var(--text-dim)]">{{
-                            col.count
-                          }}</span>
-                        </td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
-              </div>
-            }
-          </div>
+              }
+              <table class="w-full">
+                <tbody class="divide-y divide-[var(--border-subtle)]">
+                  @for (col of getCollectionsForDb(db); track col.name) {
+                    <tr
+                      class="cursor-pointer transition-colors hover:bg-[var(--bg-elevated)]"
+                      (click)="openCollection(col.name)"
+                    >
+                      <td class="px-4 py-3">
+                        <span class="font-medium text-[var(--text-main)]">{{ col.name }}</span>
+                      </td>
+                      <td class="px-4 py-3 text-right">
+                        <span class="font-mono text-sm text-[var(--text-dim)]">{{
+                          col.count
+                        }}</span>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @empty {
+            <div
+              class="rounded-xl border border-[var(--border-visible)] bg-[var(--bg-card)] p-8 text-center"
+            >
+              <p class="text-sm text-[var(--text-muted)]">No databases configured</p>
+            </div>
+          }
         </div>
-      }
+      </div>
     }
   </div>
 </div>

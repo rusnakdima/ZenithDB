@@ -2,16 +2,17 @@ import { Component, inject, signal, OnInit, OnDestroy } from "@angular/core";
 import { Router, RouterLink, ActivatedRoute } from "@angular/router";
 import { TitleCasePipe } from "@angular/common";
 import { MatIconModule } from "@angular/material/icon";
+import { FormsModule } from "@angular/forms";
 import { DatabaseService } from "@shared/services/database.service";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { ProviderUtils } from "@shared/utils/provider.utils";
-import { CollectionMeta, ConnectionSummary } from "@shared/models/connection.config";
+import { CollectionMeta } from "@shared/models/connection.config";
 import { Subscription } from "rxjs";
 
 @Component({
   selector: "app-database-detail",
   standalone: true,
-  imports: [RouterLink, MatIconModule, TitleCasePipe],
+  imports: [RouterLink, MatIconModule, TitleCasePipe, FormsModule],
   templateUrl: "./database-detail.component.html",
 })
 export class DatabaseDetailComponent implements OnInit, OnDestroy {
@@ -29,26 +30,46 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy {
   loading = signal(true);
   totalDocuments = signal(0);
 
+  editingCollection = signal<string | null>(null);
+  editCollectionName = "";
+  showCreateCollection = signal(false);
+  newCollectionName = "";
+
   private routeSub: Subscription | null = null;
 
   async ngOnInit() {
+    console.log("[DatabaseDetail] ngOnInit called");
     this.routeSub = this.route.paramMap.subscribe(async (params) => {
       const id = params.get("id");
       const dbName = params.get("dbName");
+      console.log("[DatabaseDetail] params received:", { id, dbName });
 
       if (id) {
         this.connectionId.set(id);
         this.databaseName.set(dbName);
 
-        const connections = await this.db.listConnections();
-        const conn = connections.find((c) => c.id === id);
-        if (conn) {
-          this.connectionName.set(conn.name);
-          this.provider.set(conn.provider);
-          this.connState.setActiveConnection(conn);
+        try {
+          console.log("[DatabaseDetail] calling getConnection:", id);
+          const fullConfig = await this.db.getConnection(id);
+          console.log("[DatabaseDetail] getConnection returned");
+          if (fullConfig?.config?.config) {
+            const connConfig = fullConfig.config.config;
+            this.connectionName.set(fullConfig.config.name);
+            this.provider.set(connConfig.type);
+            this.connState.setActiveConnection({
+              id: fullConfig.id,
+              name: fullConfig.config.name,
+              provider: connConfig.type,
+              status: "connected",
+            });
+          }
+        } catch (e) {
+          console.error("Failed to load connection:", e);
         }
 
+        console.log("[DatabaseDetail] calling loadCollections");
         await this.loadCollections();
+        console.log("[DatabaseDetail] loadCollections returned");
       }
     });
   }
@@ -62,13 +83,16 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy {
   }
 
   async loadCollections() {
+    console.log("[DatabaseDetail] loadCollections started");
     this.loading.set(true);
     try {
       const connId = this.connectionId();
       const dbName = this.databaseName();
+      console.log("[DatabaseDetail] loadCollections calling api:", { connId, dbName });
 
       if (connId && dbName) {
         const collections = await this.db.listCollections(connId, dbName);
+        console.log("[DatabaseDetail] loadCollections got:", collections.length, "collections");
         this.collections.set(collections);
 
         const total = collections.reduce((sum, c) => sum + c.count, 0);
@@ -78,6 +102,7 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy {
       console.error("Failed to load collections:", e);
     } finally {
       this.loading.set(false);
+      console.log("[DatabaseDetail] loadCollections done");
     }
   }
 
@@ -99,6 +124,79 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy {
     const connId = this.connectionId();
     if (connId) {
       this.router.navigate(["/connections", connId]);
+    }
+  }
+
+  openCreateCollectionModal() {
+    this.newCollectionName = "";
+    this.showCreateCollection.set(true);
+  }
+
+  closeCreateCollectionModal() {
+    this.showCreateCollection.set(false);
+    this.newCollectionName = "";
+  }
+
+  async createCollection() {
+    const name = this.newCollectionName.trim();
+    if (!name) return;
+
+    const connId = this.connectionId();
+    if (!connId) return;
+
+    try {
+      await this.db.createCollection(name);
+      this.closeCreateCollectionModal();
+      await this.loadCollections();
+    } catch (e) {
+      console.error("Failed to create collection:", e);
+    }
+  }
+
+  startEditCollection(colName: string) {
+    this.editingCollection.set(colName);
+    this.editCollectionName = colName;
+  }
+
+  async saveEditCollection() {
+    const oldName = this.editingCollection();
+    if (!oldName) return;
+
+    const newName = this.editCollectionName.trim();
+    if (!newName || newName === oldName) {
+      this.cancelEditCollection();
+      return;
+    }
+
+    const connId = this.connectionId();
+    if (!connId) return;
+
+    try {
+      await this.db.renameCollection(connId, oldName, newName);
+      this.cancelEditCollection();
+      await this.loadCollections();
+    } catch (e) {
+      console.error("Failed to rename collection:", e);
+      this.cancelEditCollection();
+    }
+  }
+
+  cancelEditCollection() {
+    this.editingCollection.set(null);
+    this.editCollectionName = "";
+  }
+
+  async deleteCollection(colName: string) {
+    if (!confirm(`Delete collection "${colName}"? This cannot be undone.`)) return;
+
+    const connId = this.connectionId();
+    if (!connId) return;
+
+    try {
+      await this.db.dropCollection(colName);
+      await this.loadCollections();
+    } catch (e) {
+      console.error("Failed to delete collection:", e);
     }
   }
 }

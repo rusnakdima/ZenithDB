@@ -58,6 +58,17 @@ export class ApiProvider {
     return this.createAbortSignal();
   }
 
+  private getFastAbortSignal(): AbortSignal {
+    this.abortController?.abort();
+    this.abortController = new AbortController();
+    return this.abortController.signal;
+  }
+
+  private isNetworkProvider(config: TestConnectionConfig): boolean {
+    const configType = config.config.type;
+    return configType !== "Json" && configType !== "Sqlite";
+  }
+
   cancelPendingRequests(): void {
     this.abortController?.abort();
   }
@@ -96,7 +107,7 @@ export class ApiProvider {
   async listConnections(): Promise<ConnectionSummary[]> {
     try {
       const connections = await invoke<ConnectionSummary[]>("list_connections", {
-        options: { signal: this.getAbortSignal() },
+        options: { signal: this.createAbortSignal() },
       });
       this.storage.setConnections(connections);
       return connections;
@@ -111,12 +122,29 @@ export class ApiProvider {
     try {
       return await invoke<ConnectionConfigResult>("get_connection", {
         id,
-        options: { signal: this.getAbortSignal() },
+        options: { signal: this.getFastAbortSignal() },
       });
     } catch (e) {
       if (e instanceof Error && e.name === "AbortError") throw new Error("Operation cancelled");
       this.errorHandler.handleError(e, "getConnection");
       throw e;
+    }
+  }
+
+  async testConnectionStatus(id: string): Promise<ConnectionSummary> {
+    try {
+      return await invoke<ConnectionSummary>("test_connection_status", {
+        id,
+        options: { signal: this.createAbortSignal() },
+      });
+    } catch (e) {
+      if (e instanceof Error && e.name === "AbortError") {
+        const msg = "Connection timed out";
+        this.getToastService().error(msg);
+        throw new Error(msg);
+      }
+      const msg = e instanceof Error ? e.message : String(e);
+      throw new Error(msg);
     }
   }
 
@@ -148,13 +176,21 @@ export class ApiProvider {
 
   async testConnection(config: TestConnectionConfig): Promise<ConnectionHealth> {
     try {
+      const isNetwork = this.isNetworkProvider(config);
+      const signal = isNetwork ? this.createAbortSignal() : this.getFastAbortSignal();
+
       return await invoke<ConnectionHealth>("test_connection", {
         config,
-        options: { signal: this.getAbortSignal() },
+        options: { signal },
       });
     } catch (e) {
-      if (e instanceof Error && e.name === "AbortError") throw new Error("Operation cancelled");
-      this.errorHandler.handleError(e, "testConnection");
+      if (e instanceof Error && e.name === "AbortError") {
+        const msg = "Connection timed out";
+        this.getToastService().error(msg);
+        throw new Error(msg);
+      }
+      const msg = e instanceof Error ? e.message : String(e);
+      this.getToastService().error(`Connection failed: ${msg}`);
       throw e;
     }
   }
@@ -367,6 +403,64 @@ export class ApiProvider {
     } catch (e) {
       if (e instanceof Error && e.name === "AbortError") throw new Error("Operation cancelled");
       this.errorHandler.handleError(e, "getSystemStatus");
+      throw e;
+    }
+  }
+
+  async updateConnection(id: string, config: ConnectionConfig): Promise<void> {
+    try {
+      return await invoke<void>("update_connection", {
+        id,
+        config,
+        options: { signal: this.getAbortSignal() },
+      });
+    } catch (e) {
+      if (e instanceof Error && e.name === "AbortError") throw new Error("Operation cancelled");
+      this.errorHandler.handleError(e, "updateConnection");
+      throw e;
+    }
+  }
+
+  async renameCollection(connId: string, oldName: string, newName: string): Promise<void> {
+    try {
+      return await invoke<void>("rename_collection", {
+        conn_id: connId,
+        old_name: oldName,
+        new_name: newName,
+        options: { signal: this.getAbortSignal() },
+      });
+    } catch (e) {
+      if (e instanceof Error && e.name === "AbortError") throw new Error("Operation cancelled");
+      this.errorHandler.handleError(e, "renameCollection");
+      throw e;
+    }
+  }
+
+  async renameDatabase(connId: string, oldName: string, newName: string): Promise<void> {
+    try {
+      return await invoke<void>("rename_database", {
+        conn_id: connId,
+        old_name: oldName,
+        new_name: newName,
+        options: { signal: this.getAbortSignal() },
+      });
+    } catch (e) {
+      if (e instanceof Error && e.name === "AbortError") throw new Error("Operation cancelled");
+      this.errorHandler.handleError(e, "renameDatabase");
+      throw e;
+    }
+  }
+
+  async deleteDatabase(connId: string, name: string): Promise<void> {
+    try {
+      return await invoke<void>("delete_database", {
+        conn_id: connId,
+        name,
+        options: { signal: this.getAbortSignal() },
+      });
+    } catch (e) {
+      if (e instanceof Error && e.name === "AbortError") throw new Error("Operation cancelled");
+      this.errorHandler.handleError(e, "deleteDatabase");
       throw e;
     }
   }

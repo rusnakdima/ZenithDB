@@ -58,6 +58,28 @@ export class DatabaseService {
     );
   }
 
+  async testConnectionById(connId: string): Promise<ConnectionHealth | null> {
+    try {
+      const fullConn = await this.getConnection(connId);
+      const config = {
+        name: fullConn.config.name,
+        config: fullConn.config.config,
+      };
+      return await this.api.testConnection(config);
+    } catch (e) {
+      console.error("Failed to test connection:", e);
+      return null;
+    }
+  }
+
+  async testConnectionStatus(connId: string): Promise<ConnectionSummary | null> {
+    try {
+      return await this.api.testConnectionStatus(connId);
+    } catch (e) {
+      return null;
+    }
+  }
+
   async listCollections(connId?: string, dbName?: string): Promise<CollectionMeta[]> {
     const id = connId || this.connectionState.activeConnectionId();
     return withConnectionAndLoading(id, this.loadingService, "Loading collections...", (connId) =>
@@ -166,5 +188,36 @@ export class DatabaseService {
 
   async getSystemStatus(): Promise<SystemMetrics> {
     return await this.api.getSystemStatus();
+  }
+
+  async updateConnection(id: string, config: ConnectionConfig): Promise<void> {
+    return await this.api.updateConnection(id, config);
+  }
+
+  async renameCollection(connId: string, oldName: string, newName: string): Promise<void> {
+    return withConnectionAndLoading(
+      connId,
+      this.loadingService,
+      `Renaming collection ${oldName} to ${newName}...`,
+      (connId) => this.api.renameCollection(connId, oldName, newName)
+    );
+  }
+
+  async renameDatabase(connId: string, oldName: string, newName: string): Promise<void> {
+    return withConnectionAndLoading(
+      connId,
+      this.loadingService,
+      `Renaming database ${oldName} to ${newName}...`,
+      (connId) => this.api.renameDatabase(connId, oldName, newName)
+    );
+  }
+
+  async deleteDatabase(connId: string, name: string): Promise<void> {
+    return withConnectionAndLoading(
+      connId,
+      this.loadingService,
+      `Deleting database ${name}...`,
+      (connId) => this.api.deleteDatabase(connId, name)
+    );
   }
 }

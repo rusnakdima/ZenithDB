@@ -47,6 +47,8 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
   showCreateDb = signal(false);
   newDbName = "";
   creatingDb = signal(false);
+  editingDb = signal<string | null>(null);
+  editDbName = "";
 
   providerIcon = signal("dns");
 
@@ -167,6 +169,13 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
     }
   }
 
+  openDatabase(dbName: string) {
+    const connId = this.connectionId();
+    if (connId) {
+      this.router.navigate(["/connections", connId, "databases", dbName]);
+    }
+  }
+
   getCollectionsForDb(dbName: string): CollectionMeta[] {
     return this.collections().filter(
       (c) => c.name.startsWith(dbName + ".") || c.name.split(".")[0] === dbName
@@ -187,6 +196,26 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
     return Array.from(dbs);
   }
 
+  getSelectedDatabases(): string[] {
+    const config = this.fullConfig();
+    if (!config || !config.config || !config.config.config) {
+      return [];
+    }
+    const innerConfig = config.config.config;
+    if (innerConfig.database && innerConfig.database.trim()) {
+      return innerConfig.database
+        .split(",")
+        .map((d: string) => d.trim())
+        .filter(Boolean);
+    }
+    if (innerConfig.type === "Json" && innerConfig.path) {
+      const pathParts = innerConfig.path.split(/[\/\\]/);
+      const folderName = pathParts[pathParts.length - 1] || "root";
+      return [folderName];
+    }
+    return [];
+  }
+
   async createDatabase() {
     if (!this.newDbName.trim()) return;
     this.creatingDb.set(true);
@@ -199,6 +228,78 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
       console.error("Failed to create database:", e);
     } finally {
       this.creatingDb.set(false);
+    }
+  }
+
+  startEditDb(dbName: string) {
+    this.editingDb.set(dbName);
+    this.editDbName = dbName;
+  }
+
+  async saveEditDb() {
+    const oldName = this.editingDb();
+    if (!oldName) return;
+
+    const newName = this.editDbName.trim();
+    if (!newName || newName === oldName) {
+      this.cancelEditDb();
+      return;
+    }
+
+    const connId = this.connectionId();
+    if (!connId) return;
+
+    try {
+      await this.db.renameDatabase(connId, oldName, newName);
+      const config = this.fullConfig();
+      if (config && config.config && config.config.config) {
+        const innerConfig = config.config.config;
+        const dbs = innerConfig.database.split(",").map((d: string) => d.trim());
+        const idx = dbs.indexOf(oldName);
+        if (idx >= 0) {
+          dbs[idx] = newName;
+          innerConfig.database = dbs.join(",");
+          await this.db.updateConnection(connId, config.config);
+        }
+      }
+      this.cancelEditDb();
+      await this.loadConnectionDetails();
+    } catch (e) {
+      console.error("Failed to rename database:", e);
+      this.cancelEditDb();
+    }
+  }
+
+  cancelEditDb() {
+    this.editingDb.set(null);
+    this.editDbName = "";
+  }
+
+  async deleteDatabase(dbName: string) {
+    if (!confirm(`Delete database "${dbName}"? This cannot be undone.`)) return;
+
+    const connId = this.connectionId();
+    if (!connId) return;
+
+    try {
+      await this.db.deleteDatabase(connId, dbName);
+      const config = this.fullConfig();
+      if (config && config.config && config.config.config) {
+        const innerConfig = config.config.config;
+        const dbs = innerConfig.database
+          .split(",")
+          .map((d: string) => d.trim())
+          .filter(Boolean);
+        const idx = dbs.indexOf(dbName);
+        if (idx >= 0) {
+          dbs.splice(idx, 1);
+          innerConfig.database = dbs.join(",");
+          await this.db.updateConnection(connId, config.config);
+        }
+      }
+      await this.loadConnectionDetails();
+    } catch (e) {
+      console.error("Failed to delete database:", e);
     }
   }
 }

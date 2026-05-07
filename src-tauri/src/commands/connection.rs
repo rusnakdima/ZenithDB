@@ -26,6 +26,8 @@ pub enum ConnectionConfigEnum {
   Redis {
     name: String,
     uri: String,
+    #[serde(default)]
+    database: String,
   },
   Postgres {
     name: String,
@@ -195,12 +197,11 @@ pub async fn list_connections() -> Result<Vec<ConnectionSummary>, String> {
   });
   let mut summaries = Vec::new();
   for c in store.connections.iter() {
-    let status = health_status_from_config(&c.config).await;
     summaries.push(ConnectionSummary {
       id: c.id.clone(),
       name: c.config.name.clone(),
       provider: get_connection_type(&c.config).to_string(),
-      status,
+      status: "unknown".to_string(),
     });
   }
   Ok(summaries)
@@ -298,6 +299,23 @@ async fn health_status_from_config(config: &ConnectionConfig) -> String {
 }
 
 #[tauri::command]
+pub async fn test_connection_status(id: &str) -> Result<ConnectionSummary, String> {
+  let store = ConnectionStore::load().map_err(|e| e.to_string())?;
+  let entry = store
+    .find_by_id(id)
+    .ok_or_else(|| format!("Connection {} not found", id))?;
+
+  let status = health_status_from_config(&entry.config).await;
+
+  Ok(ConnectionSummary {
+    id: entry.id.clone(),
+    name: entry.config.name.clone(),
+    provider: get_connection_type(&entry.config).to_string(),
+    status,
+  })
+}
+
+#[tauri::command]
 pub async fn delete_connection(id: &str) -> Result<(), String> {
   let mut store = ConnectionStore::load().unwrap_or_else(|e| {
     eprintln!(
@@ -311,6 +329,30 @@ pub async fn delete_connection(id: &str) -> Result<(), String> {
   } else {
     return Err(format!("Connection {} not found", id));
   }
+  Ok(())
+}
+
+#[tauri::command]
+pub async fn update_connection(id: &str, config: ConnectionConfig) -> Result<(), String> {
+  let mut store = ConnectionStore::load().unwrap_or_else(|e| {
+    eprintln!(
+      "WARNING: Failed to load connection store: {}, using empty store",
+      e
+    );
+    ConnectionStore::default()
+  });
+  let _entry = store
+    .find_by_id(id)
+    .ok_or_else(|| format!("Connection {} not found", id))?;
+
+  let updated_entry = ConnectionEntry {
+    id: id.to_string(),
+    config,
+  };
+
+  store.remove_connection(id);
+  store.add_connection(updated_entry);
+  store.save()?;
   Ok(())
 }
 

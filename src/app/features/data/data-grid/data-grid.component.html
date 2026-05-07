@@ -51,6 +51,13 @@
                   <div class="flex items-center gap-2">
                     <button
                       class="flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs text-[var(--text-dim)] transition-all hover:bg-[var(--bg-card)] hover:text-[var(--accent)]"
+                      title="Copy JSON"
+                      (click)="copyRowJson(row)"
+                    >
+                      <mat-icon fontIcon="content_copy" class="h-6! w-5! text-xl!" />
+                    </button>
+                    <button
+                      class="flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs text-[var(--text-dim)] transition-all hover:bg-[var(--bg-card)] hover:text-[var(--accent)]"
                       (click)="viewJson(row)"
                     >
                       <mat-icon fontIcon="visibility" class="h-6! w-5! text-xl!" />

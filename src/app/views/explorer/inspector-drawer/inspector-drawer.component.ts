@@ -29,6 +29,7 @@ export class InspectorDrawerComponent {
 
   documentId = computed(() => {
     const doc = this.document();
+    console.log("[DEBUG] InspectorDrawer documentId computed, doc:", doc);
     return doc?.["_id"] || doc?.["id"] || "Unknown";
   });
 
