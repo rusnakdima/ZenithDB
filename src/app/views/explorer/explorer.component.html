@@ -271,13 +271,22 @@
                     <span class="mono text-sm text-[var(--text-dim)]"
                       >Document {{ docIndex + 1 }}</span
                     >
-                    <button
-                      class="flex items-center gap-1 rounded px-2 py-1 text-xs text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--accent)]"
-                      (click)="openInspector(doc)"
-                    >
-                      <mat-icon fontIcon="visibility" class="h-6! w-5! text-xl!" />
-                      Inspect
-                    </button>
+                    <div class="flex items-center gap-1">
+                      <button
+                        class="flex items-center gap-1 rounded px-2 py-1 text-xs text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--accent)]"
+                        title="Copy JSON"
+                        (click)="copyRowJson(doc)"
+                      >
+                        <mat-icon fontIcon="content_copy" class="h-6! w-5! text-xl!" />
+                      </button>
+                      <button
+                        class="flex items-center gap-1 rounded px-2 py-1 text-xs text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--accent)]"
+                        (click)="openInspector(doc)"
+                      >
+                        <mat-icon fontIcon="visibility" class="h-6! w-5! text-xl!" />
+                        Inspect
+                      </button>
+                    </div>
                   </div>
                   <div class="json-body p-4">
                     @for (line of formatJsonLinesFn(doc); track $index; let lineIndex = $index) {

@@ -119,7 +119,26 @@ pub async fn list_databases(conn_id: &str) -> Result<Vec<DatabaseMeta>, String> 
     }
     ConnectionConfigEnum::Sqlite { .. } => Ok(vec![DatabaseMeta::from_name("default")]),
     ConnectionConfigEnum::Redis { .. } => Ok(vec![DatabaseMeta::from_name("default")]),
-    ConnectionConfigEnum::Mongo { .. } => Ok(vec![]),
+    ConnectionConfigEnum::Mongo { uri, .. } => {
+      let provider = crate::commands::provider::create_mongo_provider(uri, "admin").await?;
+      let result = provider
+        .execute_raw("listDatabases", vec![])
+        .await
+        .map_err_string()?;
+      let mut dbs = Vec::new();
+      for row in result.rows {
+        if let Some(doc) = row.get(0).and_then(|v| v.as_object()) {
+          if let Some(name) = doc.get("name").and_then(|v| v.as_str()) {
+            dbs.push(DatabaseMeta {
+              name: name.to_string(),
+              size_bytes: None,
+              table_count: None,
+            });
+          }
+        }
+      }
+      Ok(dbs)
+    }
     ConnectionConfigEnum::Postgres { uri, .. } => {
       let provider = crate::commands::provider::create_postgres_provider(uri).await?;
       let result = provider
@@ -147,29 +166,43 @@ pub async fn create_database(conn_id: &str, name: &str) -> Result<(), String> {
   let entry = get_connection_entry(conn_id).await?;
 
   match &entry.config.config {
-        ConnectionConfigEnum::Sqlite { .. } => {
-            Err("SQLite does not support creating databases. Create a new connection with a different file path.".to_string())
-        }
-        ConnectionConfigEnum::Json { .. } => {
-            Err("JSON provider does not support creating databases.".to_string())
-        }
-        ConnectionConfigEnum::Redis { .. } => {
-            Err("Redis does not support creating databases.".to_string())
-        }
-        ConnectionConfigEnum::Mongo { .. } => {
-            Err("Creating databases is not supported via this interface. Connect to the MongoDB server and use the mongo shell to create databases.".to_string())
-        }
-        ConnectionConfigEnum::Postgres { uri, .. } => {
-            let provider = crate::commands::provider::create_postgres_provider(uri).await?;
-            provider.execute_raw(&format!("CREATE DATABASE \"{}\"", name), vec![]).await.map_err_string()?;
-            Ok(())
-        }
-        ConnectionConfigEnum::MySql { uri, .. } => {
-            let provider = crate::commands::provider::create_mysql_provider(uri).await?;
-            provider.execute_raw(&format!("CREATE DATABASE IF NOT EXISTS `{}`", name), vec![]).await.map_err_string()?;
-            Ok(())
-        }
+    ConnectionConfigEnum::Sqlite { path, .. } => {
+      if !std::path::Path::new(path).exists() {
+        std::fs::File::create(path).map_err_string()?;
+      }
+      Ok(())
     }
+    ConnectionConfigEnum::Json { path, .. } => {
+      let db_path = std::path::Path::new(path).join(name);
+      tokio::fs::create_dir_all(&db_path).await.map_err_string()?;
+      Ok(())
+    }
+    ConnectionConfigEnum::Redis { .. } => Ok(()),
+    ConnectionConfigEnum::Mongo { uri, .. } => {
+      let provider = crate::commands::provider::create_mongo_provider(uri, &name).await?;
+      provider
+        .execute_raw("create", vec![])
+        .await
+        .map_err_string()?;
+      Ok(())
+    }
+    ConnectionConfigEnum::Postgres { uri, .. } => {
+      let provider = crate::commands::provider::create_postgres_provider(uri).await?;
+      provider
+        .execute_raw(&format!("CREATE DATABASE \"{}\"", name), vec![])
+        .await
+        .map_err_string()?;
+      Ok(())
+    }
+    ConnectionConfigEnum::MySql { uri, .. } => {
+      let provider = crate::commands::provider::create_mysql_provider(uri).await?;
+      provider
+        .execute_raw(&format!("CREATE DATABASE IF NOT EXISTS `{}`", name), vec![])
+        .await
+        .map_err_string()?;
+      Ok(())
+    }
+  }
 }
 
 #[tauri::command]
@@ -441,41 +474,62 @@ async fn list_all_json_collections_recursive(
 async fn list_json_collections(
   path_obj: std::path::PathBuf,
 ) -> Result<Vec<CollectionMeta>, String> {
-  let mut entries = tokio::fs::read_dir(&path_obj).await.map_err_string()?;
-
   let mut collections: Vec<CollectionMeta> = Vec::new();
+  let mut dirs_to_scan: Vec<(std::path::PathBuf, String)> = vec![(path_obj, String::new())];
 
-  while let Some(entry) = entries.next_entry().await.map_err_string()? {
-    let file_path = entry.path();
-    if file_path.extension().is_some_and(|ext| ext == "json") {
-      let name = entry
-        .file_name()
-        .into_string()
-        .ok()
-        .map(|n| n.trim_end_matches(".json").to_string());
+  while let Some((current_dir, base_path)) = dirs_to_scan.pop() {
+    let mut entries = match tokio::fs::read_dir(&current_dir).await {
+      Ok(e) => e,
+      Err(_) => continue,
+    };
 
-      if let Some(name) = name {
-        let count = match tokio::fs::read_to_string(&file_path).await {
-          Ok(content) => match serde_json::from_str::<serde_json::Value>(&content) {
-            Ok(v) => {
-              if let Some(arr) = v.as_array() {
-                arr.len() as u64
-              } else {
-                1
+    while let Some(entry) = entries.next_entry().await.map_err_string()? {
+      let entry_path = entry.path();
+
+      if entry_path.is_dir() {
+        let folder_name = entry.file_name().into_string().unwrap_or_default();
+        let new_base = if base_path.is_empty() {
+          folder_name.clone()
+        } else {
+          format!("{}/{}", base_path, folder_name)
+        };
+        dirs_to_scan.push((entry_path, new_base));
+      } else if entry_path.extension().is_some_and(|ext| ext == "json") {
+        let file_name = entry
+          .file_name()
+          .into_string()
+          .ok()
+          .map(|n| n.trim_end_matches(".json").to_string());
+
+        if let Some(file_name) = file_name {
+          let name = if base_path.is_empty() {
+            file_name.clone()
+          } else {
+            format!("{}/{}", base_path, file_name)
+          };
+
+          let count = match tokio::fs::read_to_string(&entry_path).await {
+            Ok(content) => match serde_json::from_str::<serde_json::Value>(&content) {
+              Ok(v) => {
+                if let Some(arr) = v.as_array() {
+                  arr.len() as u64
+                } else {
+                  1
+                }
               }
-            }
+              Err(e) => {
+                eprintln!("Warning: Failed to parse {}: {}", entry_path.display(), e);
+                0
+              }
+            },
             Err(e) => {
-              eprintln!("Warning: Failed to parse {}: {}", file_path.display(), e);
+              eprintln!("Warning: Failed to read {}: {}", entry_path.display(), e);
               0
             }
-          },
-          Err(e) => {
-            eprintln!("Warning: Failed to read {}: {}", file_path.display(), e);
-            0
-          }
-        };
+          };
 
-        collections.push(CollectionMeta { name, count });
+          collections.push(CollectionMeta { name, count });
+        }
       }
     }
   }
@@ -549,6 +603,10 @@ pub async fn list_databases_for_uri(
   provider_type: &str,
   uri: &str,
 ) -> Result<Vec<DatabaseMeta>, String> {
+  if uri.is_empty() {
+    return Err("URI cannot be empty".to_string());
+  }
+
   match provider_type {
     "postgres" => {
       let provider = crate::commands::provider::create_postgres_provider(uri).await?;

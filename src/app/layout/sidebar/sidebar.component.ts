@@ -58,6 +58,8 @@ export class SidebarComponent implements OnInit {
   loadingDatabases = signal(false);
   loadingCollections = signal<Set<string>>(new Set());
   currentUrl = signal("");
+  isExpandingRoute = signal(false);
+  isLoadingConnectionRoute = signal(false);
 
   private statusSubscription: Subscription | null = null;
   private connectionStatusSubscription: Subscription | null = null;
@@ -127,28 +129,39 @@ export class SidebarComponent implements OnInit {
   }
 
   async expandDatabaseForRoute(connId: string, dbName: string) {
-    console.log("[Sidebar] expandDatabaseForRoute called:", { connId, dbName });
-    const conn = this.storage.connections().find((c) => c.id === connId);
-    if (!conn) return;
-
-    this.connectionState.setActiveConnection(conn);
-
-    if (!this.expandedConnections().has(connId)) {
-      this.expandedConnections.update((set) => {
-        const newSet = new Set(set);
-        newSet.add(connId);
-        return newSet;
-      });
-      await this.loadDatabases(connId);
+    if (this.isExpandingRoute()) {
+      console.log("[Sidebar] expandDatabaseForRoute skipped - already expanding");
+      return;
     }
+    console.log("[Sidebar] expandDatabaseForRoute called:", { connId, dbName });
+    this.isExpandingRoute.set(true);
+    try {
+      const conn = this.storage.connections().find((c) => c.id === connId);
+      if (!conn) return;
 
-    const dbNode = this.databases().find((d) => d.name === dbName);
-    if (dbNode) {
-      dbNode.expanded = true;
-      if (!dbNode.children || dbNode.children.length === 0) {
-        await this.loadCollectionsForDatabase(dbNode, connId);
+      this.connectionState.setActiveConnection(conn);
+
+      if (!this.expandedConnections().has(connId)) {
+        this.expandedConnections.update((set) => {
+          const newSet = new Set(set);
+          newSet.add(connId);
+          return newSet;
+        });
+        await this.loadDatabases(connId);
       }
-      this.databases.update((dbs) => [...dbs]);
+
+      const dbNode = this.databases().find((d) => d.name === dbName);
+      if (dbNode) {
+        dbNode.expanded = true;
+        if (dbNode.children && dbNode.children.length > 0) {
+          this.databases.update((dbs) => [...dbs]);
+          return;
+        }
+        await this.loadCollectionsForDatabase(dbNode, connId);
+        this.databases.update((dbs) => [...dbs]);
+      }
+    } finally {
+      this.isExpandingRoute.set(false);
     }
   }
 
@@ -161,19 +174,29 @@ export class SidebarComponent implements OnInit {
   }
 
   async loadConnectionForRoute(connId: string) {
-    const conn = this.storage.connections().find((c) => c.id === connId);
-    if (!conn) return;
-
-    if (!this.expandedConnections().has(connId)) {
-      this.expandedConnections.update((set) => {
-        const newSet = new Set(set);
-        newSet.add(connId);
-        return newSet;
-      });
+    if (this.isLoadingConnectionRoute()) {
+      console.log("[Sidebar] loadConnectionForRoute skipped - already loading");
+      return;
     }
+    console.log("[Sidebar] loadConnectionForRoute called:", connId);
+    this.isLoadingConnectionRoute.set(true);
+    try {
+      const conn = this.storage.connections().find((c) => c.id === connId);
+      if (!conn) return;
 
-    this.connectionState.setActiveConnection(conn);
-    await this.loadDatabases(connId);
+      if (!this.expandedConnections().has(connId)) {
+        this.expandedConnections.update((set) => {
+          const newSet = new Set(set);
+          newSet.add(connId);
+          return newSet;
+        });
+      }
+
+      this.connectionState.setActiveConnection(conn);
+      await this.loadDatabases(connId);
+    } finally {
+      this.isLoadingConnectionRoute.set(false);
+    }
   }
 
   navigateToWorkbench() {

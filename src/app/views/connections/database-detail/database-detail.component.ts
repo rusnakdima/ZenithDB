@@ -8,6 +8,7 @@ import { ConnectionStateService } from "@shared/services/connection-state.servic
 import { ProviderUtils } from "@shared/utils/provider.utils";
 import { CollectionMeta } from "@shared/models/connection.config";
 import { Subscription } from "rxjs";
+import { filter, distinctUntilChanged } from "rxjs/operators";
 
 @Component({
   selector: "app-database-detail",
@@ -27,7 +28,7 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy {
   databaseName = signal<string | null>(null);
   provider = signal<string | null>(null);
   collections = signal<CollectionMeta[]>([]);
-  loading = signal(true);
+  loading = signal(false);
   totalDocuments = signal(0);
 
   editingCollection = signal<string | null>(null);
@@ -39,39 +40,47 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy {
 
   async ngOnInit() {
     console.log("[DatabaseDetail] ngOnInit called");
-    this.routeSub = this.route.paramMap.subscribe(async (params) => {
-      const id = params.get("id");
-      const dbName = params.get("dbName");
-      console.log("[DatabaseDetail] params received:", { id, dbName });
+    this.routeSub = this.route.paramMap
+      .pipe(
+        filter((params) => params.get("id") !== null),
+        distinctUntilChanged(
+          (prev, curr) =>
+            prev.get("id") === curr.get("id") && prev.get("dbName") === curr.get("dbName")
+        )
+      )
+      .subscribe(async (params) => {
+        const id = params.get("id");
+        const dbName = params.get("dbName");
+        console.log("[DatabaseDetail] params received:", { id, dbName });
 
-      if (id) {
-        this.connectionId.set(id);
-        this.databaseName.set(dbName);
+        if (id) {
+          this.connectionId.set(id);
+          this.databaseName.set(dbName);
 
-        try {
-          console.log("[DatabaseDetail] calling getConnection:", id);
-          const fullConfig = await this.db.getConnection(id);
-          console.log("[DatabaseDetail] getConnection returned");
-          if (fullConfig?.config?.config) {
-            const connConfig = fullConfig.config.config;
-            this.connectionName.set(fullConfig.config.name);
-            this.provider.set(connConfig.type);
-            this.connState.setActiveConnection({
-              id: fullConfig.id,
-              name: fullConfig.config.name,
-              provider: connConfig.type,
-              status: "connected",
-            });
+          try {
+            console.log("[DatabaseDetail] calling getConnection:", id);
+            const fullConfig = await this.db.getConnection(id);
+            console.log("[DatabaseDetail] getConnection returned");
+            if (fullConfig?.config?.config) {
+              const connConfig = fullConfig.config.config;
+              this.connectionName.set(fullConfig.config.name);
+              this.provider.set(connConfig.type);
+              this.connState.setActiveConnection({
+                id: fullConfig.id,
+                name: fullConfig.config.name,
+                provider: connConfig.type,
+                status: "connected",
+              });
+            }
+          } catch (e) {
+            console.error("Failed to load connection:", e);
           }
-        } catch (e) {
-          console.error("Failed to load connection:", e);
-        }
 
-        console.log("[DatabaseDetail] calling loadCollections");
-        await this.loadCollections();
-        console.log("[DatabaseDetail] loadCollections returned");
-      }
-    });
+          console.log("[DatabaseDetail] calling loadCollections");
+          await this.loadCollections();
+          console.log("[DatabaseDetail] loadCollections returned");
+        }
+      });
   }
 
   ngOnDestroy() {
@@ -83,6 +92,10 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy {
   }
 
   async loadCollections() {
+    if (this.loading()) {
+      console.log("[DatabaseDetail] loadCollections skipped - already loading");
+      return;
+    }
     console.log("[DatabaseDetail] loadCollections started");
     this.loading.set(true);
     try {

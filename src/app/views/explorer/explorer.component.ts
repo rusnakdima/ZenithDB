@@ -112,10 +112,17 @@ export class ExplorerComponent implements OnInit, OnDestroy {
 
     this.handleRouteChange();
 
-    this.queryParamsSub = this.route.queryParams.subscribe((params) => {
+    this.queryParamsSub = this.route.queryParams.subscribe(async (params) => {
       const collection = params["collection"];
       if (collection && collection !== this.activeCollection()) {
         this.addTab(collection);
+      }
+      const view = params["view"];
+      if (view === "schema" && collection) {
+        await this.loadColumns();
+        const schema = await this.db.describeCollection(collection);
+        this.inspectorDocument.set({ _schema: schema } as RowData);
+        this.showInspector.set(true);
       }
     });
   }
@@ -409,6 +416,17 @@ export class ExplorerComponent implements OnInit, OnDestroy {
       })
       .catch(() => {
         this.toast.error("Failed to copy JSON");
+      });
+  }
+
+  copyRowJson(doc: RowData) {
+    navigator.clipboard
+      .writeText(JSON.stringify(doc, null, 2))
+      .then(() => {
+        this.toast.success("Copied to clipboard");
+      })
+      .catch(() => {
+        this.toast.error("Failed to copy");
       });
   }
 
