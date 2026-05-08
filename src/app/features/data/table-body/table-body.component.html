@@ -10,7 +10,10 @@
       </td>
       @for (col of columns; track col.name) {
         @if (visibleColumnsList.includes(col.name)) {
-          <td class="border-r border-[var(--border-subtle)]/50 p-3 text-sm" [style.width.px]="columnWidths[col.name]">
+          <td
+            class="border-r border-[var(--border-subtle)]/50 p-3 text-sm"
+            [style.width.px]="columnWidths[col.name]"
+          >
             <app-cell-editor
               [value]="row[col.name]"
               [isEditing]="isCellModified(rowIndex, col.name)"

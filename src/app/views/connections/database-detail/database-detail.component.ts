@@ -198,7 +198,7 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy {
   }
 
   async deleteCollection(colName: string) {
-    if (!await this.confirm.confirmDelete(colName)) return;
+    if (!(await this.confirm.confirmDelete(colName))) return;
 
     const connId = this.connectionId();
     if (!connId) return;

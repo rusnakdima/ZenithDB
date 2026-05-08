@@ -16,7 +16,10 @@ export class RequestCancellationService {
     this.abortController?.abort();
     this.abortController = new AbortController();
     clearTimeout(this.abortTimeoutId);
-    this.abortTimeoutId = setTimeout(() => this.abortController?.abort(), this.getTimeoutMs()) as unknown as number;
+    this.abortTimeoutId = setTimeout(
+      () => this.abortController?.abort(),
+      this.getTimeoutMs()
+    ) as unknown as number;
     return this.abortController.signal;
   }
 

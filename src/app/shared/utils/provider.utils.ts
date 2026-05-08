@@ -4,17 +4,35 @@ import { ProviderType } from "@shared/models/provider.model";
 
 export type { ProviderType };
 
-export const PROVIDER_REGISTRY: Record<ProviderType, {
-  icon: string;
-  color: string;
-  isNetwork: boolean;
-  normalize: (type: string) => ProviderType;
-}> = {
-  json: { icon: "description", color: "text-yellow-500", isNetwork: false, normalize: () => "json" },
+export const PROVIDER_REGISTRY: Record<
+  ProviderType,
+  {
+    icon: string;
+    color: string;
+    isNetwork: boolean;
+    normalize: (type: string) => ProviderType;
+  }
+> = {
+  json: {
+    icon: "description",
+    color: "text-yellow-500",
+    isNetwork: false,
+    normalize: () => "json",
+  },
   mongo: { icon: "eco", color: "text-green-500", isNetwork: true, normalize: () => "mongo" },
   redis: { icon: "flash_on", color: "text-red-500", isNetwork: true, normalize: () => "redis" },
-  postgres: { icon: "storage", color: "text-blue-500", isNetwork: true, normalize: () => "postgres" },
-  sqlite: { icon: "insert_drive_file", color: "text-slate-400", isNetwork: false, normalize: () => "sqlite" },
+  postgres: {
+    icon: "storage",
+    color: "text-blue-500",
+    isNetwork: true,
+    normalize: () => "postgres",
+  },
+  sqlite: {
+    icon: "insert_drive_file",
+    color: "text-slate-400",
+    isNetwork: false,
+    normalize: () => "sqlite",
+  },
   mysql: { icon: "storage", color: "text-orange-500", isNetwork: true, normalize: () => "mysql" },
 };
 

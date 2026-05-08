@@ -109,9 +109,11 @@ export class SidebarComponent implements OnInit {
     this.fetchSystemStatus();
     this.fetchConnections();
 
-    this.routerSub = this.router.events.pipe(filter((e) => e instanceof NavigationEnd)).subscribe((e: any) => {
-      this.currentUrl.set(e.urlAfterRedirects);
-    });
+    this.routerSub = this.router.events
+      .pipe(filter((e) => e instanceof NavigationEnd))
+      .subscribe((e: any) => {
+        this.currentUrl.set(e.urlAfterRedirects);
+      });
     this.currentUrl.set(this.router.url);
 
     this.statusSubscription = interval(5000).subscribe(() => {
@@ -234,7 +236,7 @@ export class SidebarComponent implements OnInit {
     try {
       const connections = this.storage.connections();
       const results = await Promise.all(
-        connections.map(conn => this.databaseService.testConnectionStatus(conn.id))
+        connections.map((conn) => this.databaseService.testConnectionStatus(conn.id))
       );
       results.forEach((result, index) => {
         if (result) {
@@ -490,6 +492,5 @@ export class SidebarComponent implements OnInit {
     }
   }
 
-  private deleteCollection(_collection: string) {
-  }
+  private deleteCollection(_collection: string) {}
 }

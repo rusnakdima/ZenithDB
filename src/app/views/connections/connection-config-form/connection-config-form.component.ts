@@ -87,7 +87,12 @@ export interface ConfigFormData {
           ) {
             <div>
               <label class="form-label">Database Name</label>
-              <input type="text" [(ngModel)]="data.database" placeholder="mydb" class="form-input" />
+              <input
+                type="text"
+                [(ngModel)]="data.database"
+                placeholder="mydb"
+                class="form-input"
+              />
             </div>
           }
         </div>

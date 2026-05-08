@@ -5,7 +5,10 @@ import { ResponseSizeGuardService } from "./response-size-guard.service";
 import { StorageService } from "@services/core/storage.service";
 import { ToastService } from "@services/toast.service";
 import { ErrorHandlerService } from "@shared/services/error-handler.service";
-import { invokeWithAbortHandling, invokeWithAbortHandlingOrDefault } from "@shared/utils/invoke-wrapper.util";
+import {
+  invokeWithAbortHandling,
+  invokeWithAbortHandlingOrDefault,
+} from "@shared/utils/invoke-wrapper.util";
 import {
   ConnectionSummary,
   ConnectionConfig,
@@ -124,7 +127,11 @@ export class ApiProvider {
 
   async deleteConnection(id: string): Promise<void> {
     await invokeWithAbortHandlingOrDefault(
-      () => this.tauriBridge.invoke<void>("delete_connection", { id, options: { signal: this.getAbortSignal() } }),
+      () =>
+        this.tauriBridge.invoke<void>("delete_connection", {
+          id,
+          options: { signal: this.getAbortSignal() },
+        }),
       "deleteConnection",
       this.errorHandler,
       undefined
@@ -235,7 +242,11 @@ export class ApiProvider {
     );
   }
 
-  async queryData(connId: string, collection: string, params: QueryParams): Promise<QueryResult<RowData>> {
+  async queryData(
+    connId: string,
+    collection: string,
+    params: QueryParams
+  ): Promise<QueryResult<RowData>> {
     const result = await invokeWithAbortHandling(
       () =>
         this.tauriBridge.invoke<QueryResult<unknown>>("query_data", {

@@ -5,10 +5,10 @@
     <div class="flex items-center gap-2">
       <button
         (click)="runCurrentTab()"
-        [disabled]="activeTab()?.loading || !activeTab()?.query?.trim()"
+        [disabled]="activeTab().loading || !activeTab().query.trim()"
         class="inline-flex items-center gap-2 rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-bold text-black transition-colors hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-50"
       >
-        @if (activeTab()?.loading) {
+        @if (activeTab().loading) {
           <div
             class="h-4 w-4 animate-spin rounded-full border-2 border-black border-t-transparent"
           ></div>
@@ -79,7 +79,7 @@
   <div #splitContainer class="flex min-h-0 flex-1 flex-col overflow-hidden">
     <div class="overflow-hidden" [style.height.px]="editorHeight()">
       <app-sql-editor
-        [query]="activeTab()?.query || ''"
+        [query]="activeTab().query || ''"
         (queryChange)="updateQuery($event)"
       ></app-sql-editor>
     </div>
@@ -91,10 +91,10 @@
 
     <div class="flex-1 overflow-hidden">
       <app-output-console
-        [results]="activeTab()?.results || null"
-        [loading]="activeTab()?.loading || false"
-        [error]="activeTab()?.error || ''"
-        [executionTime]="activeTab()?.executionTime || 0"
+        [results]="activeTab().results || null"
+        [loading]="activeTab().loading || false"
+        [error]="activeTab().error || ''"
+        [executionTime]="activeTab().executionTime || 0"
         (clear)="clearEditor()"
       ></app-output-console>
     </div>
@@ -112,11 +112,11 @@
       }
     </div>
     <div class="flex items-center gap-4">
-      @if (activeTab()?.results?.rows?.length) {
-        <span>{{ activeTab()?.results?.rows?.length }} rows</span>
+      @if (activeTab().results?.rows?.length) {
+        <span>{{ activeTab().results?.rows?.length }} rows</span>
       }
-      @if (activeTab()?.executionTime) {
-        <span>{{ activeTab()?.executionTime?.toFixed(0) }}ms</span>
+      @if (activeTab().executionTime) {
+        <span>{{ activeTab().executionTime.toFixed(0) }}ms</span>
       }
     </div>
   </div>

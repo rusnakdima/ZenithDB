@@ -1,6 +1,12 @@
 import { Injectable, signal, inject } from "@angular/core";
 import { DatabaseService } from "./database.service";
-import { ColumnInfo, RowData, QueryParams, QueryResult, FilterExpression } from "@shared/models/connection.config";
+import {
+  ColumnInfo,
+  RowData,
+  QueryParams,
+  QueryResult,
+  FilterExpression,
+} from "@shared/models/connection.config";
 
 export interface DataProviderParams {
   collection: string;

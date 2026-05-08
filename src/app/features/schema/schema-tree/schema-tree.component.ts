@@ -93,7 +93,11 @@ export class SchemaTreeComponent implements OnInit, OnDestroy {
         const cols = await this.db.listCollections();
         return cols;
       },
-      { loading: this.loading, context: "LoadCollections", errorMessage: "Failed to load collections" },
+      {
+        loading: this.loading,
+        context: "LoadCollections",
+        errorMessage: "Failed to load collections",
+      },
       { errorHandler: this.errorHandler, toastService: this.toast }
     );
 

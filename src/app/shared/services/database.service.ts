@@ -163,9 +163,10 @@ export class DatabaseService {
       connId,
       this.loadingService,
       `Creating collection ${name}...`,
-      (connId) => this.api.createCollection(connId, name).then(() => {
-        this.dataProvider.invalidateColumnsCache();
-      })
+      (connId) =>
+        this.api.createCollection(connId, name).then(() => {
+          this.dataProvider.invalidateColumnsCache();
+        })
     );
   }
 

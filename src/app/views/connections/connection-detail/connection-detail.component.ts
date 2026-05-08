@@ -30,7 +30,14 @@ interface DbNode {
 @Component({
   selector: "app-connection-detail",
   standalone: true,
-  imports: [RouterLink, StatusBadgeComponent, ConnectionStatusBadgeComponent, TitleCasePipe, MatIconModule, FormsModule],
+  imports: [
+    RouterLink,
+    StatusBadgeComponent,
+    ConnectionStatusBadgeComponent,
+    TitleCasePipe,
+    MatIconModule,
+    FormsModule,
+  ],
   templateUrl: "./connection-detail.component.html",
 })
 export class ConnectionDetailComponent implements OnInit, OnDestroy {
@@ -293,7 +300,7 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
   }
 
   async deleteDatabase(dbName: string) {
-    if (!await this.confirm.confirmDelete(dbName)) return;
+    if (!(await this.confirm.confirmDelete(dbName))) return;
 
     const connId = this.connectionId();
     if (!connId) return;

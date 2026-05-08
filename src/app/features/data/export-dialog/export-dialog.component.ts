@@ -1,10 +1,4 @@
-import {
-  Component,
-  Input,
-  Output,
-  EventEmitter,
-  signal,
-} from "@angular/core";
+import { Component, Input, Output, EventEmitter, signal } from "@angular/core";
 import { MatIconModule } from "@angular/material/icon";
 
 export type ExportFormat = "csv" | "json" | "jsonl" | "sql" | "markdown";

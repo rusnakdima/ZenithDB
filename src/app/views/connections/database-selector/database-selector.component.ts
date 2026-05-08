@@ -94,13 +94,7 @@ import { DatabaseMeta } from "@shared/models/connection.config";
         placeholder="Enter database name"
         class="form-input flex-1"
       />
-      <button
-        type="button"
-        (click)="addManual()"
-        class="form-btn form-btn-secondary"
-      >
-        Add
-      </button>
+      <button type="button" (click)="addManual()" class="form-btn form-btn-secondary">Add</button>
     </div>
   `,
 })
@@ -164,9 +158,7 @@ export class DatabaseSelectorComponent {
       return;
     }
 
-    this.databasesChange.emit(
-      this.selectedDatabases().map((d) => (d === oldName ? newName : d))
-    );
+    this.databasesChange.emit(this.selectedDatabases().map((d) => (d === oldName ? newName : d)));
     this.cancelEdit();
   }
 
@@ -180,9 +172,7 @@ export class DatabaseSelectorComponent {
   }
 
   async loadDatabases() {
-    if (
-      this.uri().length > 10
-    ) {
+    if (this.uri().length > 10) {
       this.availableDatabases.set([]);
       this.databasesLoaded.set(false);
       this.loadingDatabases.set(true);

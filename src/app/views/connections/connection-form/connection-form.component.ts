@@ -9,7 +9,10 @@ import { parseProviderConfig } from "@shared/utils/provider-config.utils";
 import { ConnectionHealth } from "@shared/models/connection.config";
 import { ProviderType } from "@shared/models/provider.model";
 import { ProviderSelectorComponent } from "../provider-selector/provider-selector.component";
-import { ConnectionConfigFormComponent, ConfigFormData } from "../connection-config-form/connection-config-form.component";
+import {
+  ConnectionConfigFormComponent,
+  ConfigFormData,
+} from "../connection-config-form/connection-config-form.component";
 
 type WizardStep = 1 | 2 | 3;
 

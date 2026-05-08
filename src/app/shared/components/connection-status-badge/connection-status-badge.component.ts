@@ -17,7 +17,8 @@ export class ConnectionStatusBadgeComponent {
   size = input<"sm" | "md" | "lg">("sm");
 
   statusClass = computed(() => {
-    const baseClass = this.size() === "sm" ? "badge-sm" : this.size() === "md" ? "badge-md" : "badge-lg";
+    const baseClass =
+      this.size() === "sm" ? "badge-sm" : this.size() === "md" ? "badge-md" : "badge-lg";
     const statusClass = this.status() === "connected" ? "badge-connected" : "badge-offline";
     return `${baseClass} ${statusClass}`;
   });

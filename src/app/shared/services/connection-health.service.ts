@@ -5,7 +5,9 @@ import { DatabaseService } from "./database.service";
 @Injectable({ providedIn: "root" })
 export class ConnectionHealthService {
   private db = inject(DatabaseService);
-  private healthCache = signal<Map<string, { health: ConnectionHealth; timestamp: number }>>(new Map());
+  private healthCache = signal<Map<string, { health: ConnectionHealth; timestamp: number }>>(
+    new Map()
+  );
   private readonly CACHE_TTL_MS = 30000;
 
   getCachedHealth(connectionId: string): ConnectionHealth | null {

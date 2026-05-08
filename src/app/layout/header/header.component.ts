@@ -1,4 +1,12 @@
-import { Component, inject, computed, signal, ElementRef, viewChild, OnDestroy } from "@angular/core";
+import {
+  Component,
+  inject,
+  computed,
+  signal,
+  ElementRef,
+  viewChild,
+  OnDestroy,
+} from "@angular/core";
 import { Router, NavigationEnd } from "@angular/router";
 import { filter, map } from "rxjs/operators";
 import { MatIconModule } from "@angular/material/icon";

@@ -31,7 +31,9 @@ export class LoggerService {
   }
 
   private shouldLog(level: LogLevel): boolean {
-    const config = this.settings.get("logging") as { enabled?: boolean; productionLevel?: string } | undefined;
+    const config = this.settings.get("logging") as
+      | { enabled?: boolean; productionLevel?: string }
+      | undefined;
     if (!config?.enabled) return true;
     if (this.isProduction()) {
       const minLevel = (config.productionLevel ?? "warn") as LogLevel;

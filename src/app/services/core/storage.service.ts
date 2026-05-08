@@ -1,11 +1,7 @@
 import { Injectable, signal } from "@angular/core";
 import { BaseStorageService } from "./base-storage.service";
 import { safeJsonParse } from "@shared/utils/json.utils";
-import {
-  ConnectionSummary,
-  CollectionMeta,
-  SystemMetrics,
-} from "@shared/models/connection.config";
+import { ConnectionSummary, CollectionMeta, SystemMetrics } from "@shared/models/connection.config";
 
 @Injectable({ providedIn: "root" })
 export class StorageService extends BaseStorageService {

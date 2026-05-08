@@ -13,7 +13,7 @@ import {
   ChangeDetectionStrategy,
   input,
 } from "@angular/core";
-import { CdkDragDrop, CdkDrag, CdkDropList, moveItemInArray } from "@angular/cdk/drag-drop";
+import { CdkDragDrop, moveItemInArray } from "@angular/cdk/drag-drop";
 import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
 import { DataProviderService } from "@shared/services/data-provider.service";
@@ -28,7 +28,10 @@ import { PaginationComponent } from "@shared/components/pagination/pagination.co
 import { withErrorHandling } from "@shared/utils/error-handler.utils";
 import { TableBodyComponent } from "@app/features/data/table-body/table-body.component";
 import { ColumnManagerComponent } from "@app/features/data/column-manager/column-manager.component";
-import { ExportDialogComponent, ExportFormat } from "@app/features/data/export-dialog/export-dialog.component";
+import {
+  ExportDialogComponent,
+  ExportFormat,
+} from "@app/features/data/export-dialog/export-dialog.component";
 
 @Component({
   selector: "app-data-grid",
@@ -38,8 +41,6 @@ import { ExportDialogComponent, ExportFormat } from "@app/features/data/export-d
     FormsModule,
     MatIconModule,
     PaginationComponent,
-    CdkDrag,
-    CdkDropList,
     TableBodyComponent,
     ColumnManagerComponent,
     ExportDialogComponent,

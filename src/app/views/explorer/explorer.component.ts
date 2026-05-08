@@ -221,21 +221,21 @@ export class ExplorerComponent implements OnInit, OnDestroy {
       const allData = result.data as RowData[];
       const totalRows = allData.length;
       const processedData: RowData[] = [];
-      
+
       for (let i = 0; i < totalRows; i += BATCH_SIZE) {
         const batch = allData.slice(i, Math.min(i + BATCH_SIZE, totalRows));
         processedData.push(...batch);
-        
+
         const progress = Math.round(((i + batch.length) / totalRows) * 100);
         this.jsonLoadProgress.set(progress);
-        
+
         await new Promise<void>((resolve) => {
           requestAnimationFrame(() => {
             setTimeout(() => resolve(), 0);
           });
         });
       }
-      
+
       this.fullJsonData.set(processedData);
       this.jsonLoadProgress.set(100);
     } catch {

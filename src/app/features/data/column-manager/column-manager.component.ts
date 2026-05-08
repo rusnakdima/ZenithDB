@@ -1,10 +1,4 @@
-import {
-  Component,
-  Input,
-  Output,
-  EventEmitter,
-  signal,
-} from "@angular/core";
+import { Component, Input, Output, EventEmitter, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
 import { CdkDragDrop, CdkDrag, CdkDropList, moveItemInArray } from "@angular/cdk/drag-drop";
@@ -16,7 +10,15 @@ import { CheckboxComponent } from "@shared/components/checkbox/checkbox.componen
 @Component({
   selector: "app-column-manager",
   standalone: true,
-  imports: [FormsModule, MatIconModule, CdkDrag, CdkDropList, SortableHeaderComponent, DataTypeBadgeComponent, CheckboxComponent],
+  imports: [
+    FormsModule,
+    MatIconModule,
+    CdkDrag,
+    CdkDropList,
+    SortableHeaderComponent,
+    DataTypeBadgeComponent,
+    CheckboxComponent,
+  ],
   templateUrl: "./column-manager.component.html",
 })
 export class ColumnManagerComponent {

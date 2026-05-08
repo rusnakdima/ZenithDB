@@ -310,14 +310,14 @@
           <span class="text-xs font-medium tracking-wider text-neutral-400 uppercase">
             Results
           </span>
-          @if (activeTab()?.results?.rows?.length) {
+          @if (activeTab().results?.rows?.length) {
             <span class="rounded bg-emerald-500/10 px-2 py-0.5 text-xs text-emerald-400">
-              {{ activeTab()?.results?.rows?.length }} rows
+              {{ activeTab().results?.rows?.length }} rows
             </span>
           }
           @if (hasAffectedRows()) {
             <span class="rounded bg-amber-500/10 px-2 py-0.5 text-xs text-amber-400">
-              {{ activeTab()?.results?.affected_rows }} affected
+              {{ activeTab().results?.affected_rows }} affected
             </span>
           }
         </div>
@@ -337,9 +337,7 @@
         </button>
       </div>
 
-      @if (
-        activeTab()?.results?.rows?.length === 0 && activeTab()?.results?.columns?.length === 0
-      ) {
+      @if (activeTab().results?.rows?.length === 0 && activeTab().results?.columns?.length === 0) {
         <div class="flex flex-col items-center justify-center py-12 text-center">
           <svg
             class="h-12 w-12 text-emerald-500/30"
@@ -357,22 +355,22 @@
           <p class="mt-3 text-neutral-400">Query executed successfully</p>
           @if (hasAffectedRows()) {
             <p class="mt-1 text-sm text-emerald-400">
-              {{ activeTab()?.results?.affected_rows }} rows affected
+              {{ activeTab().results?.affected_rows }} rows affected
             </p>
           }
         </div>
-      } @else if (activeTab()?.results?.rows?.length) {
+      } @else if (activeTab().results?.rows?.length) {
         <div class="max-h-80 overflow-auto">
           <table class="w-full text-left text-sm">
             <thead class="sticky top-0 bg-neutral-800 tracking-wider text-neutral-400 uppercase">
               <tr>
-                @for (col of activeTab()?.results?.columns || []; track col) {
+                @for (col of activeTab().results?.columns || []; track col) {
                   <th class="px-4 py-3 font-medium">{{ col }}</th>
                 }
               </tr>
             </thead>
             <tbody class="divide-y divide-neutral-800">
-              @for (row of activeTab()?.results?.rows || []; track $index) {
+              @for (row of activeTab().results?.rows || []; track $index) {
                 <tr class="transition-colors hover:bg-neutral-800/50">
                   @for (cell of row; track $index) {
                     <td class="px-4 py-3 font-mono text-xs text-neutral-300">{{ cell }}</td>

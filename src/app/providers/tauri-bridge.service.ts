@@ -16,7 +16,11 @@ export class TauriBridgeService {
     return this.settingsService.currentSettings.connections.connectionTimeout * 1000;
   }
 
-  async invoke<T>(cmd: string, args?: Record<string, unknown>, options?: InvokeOptions): Promise<T> {
+  async invoke<T>(
+    cmd: string,
+    args?: Record<string, unknown>,
+    options?: InvokeOptions
+  ): Promise<T> {
     return invoke<T>(cmd, args, options);
   }
 }
