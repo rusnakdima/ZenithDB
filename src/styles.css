@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@import "flowbite/dist/flowbite.css";
 @import "material-icons/iconfont/material-icons.css";
 
 @variant dark (&:where(.dark, .dark *));
