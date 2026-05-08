@@ -22,7 +22,7 @@
           [class.card-status-dot-connected]="connection().status === 'connected'"
           [class.card-status-dot-offline]="connection().status !== 'connected'"
         ></span>
-        <span class="card-status-badge {{ statusClass }}">{{ statusLabel }}</span>
+        <app-connection-status-badge [status]="connection().status" />
       </div>
       <div class="card-uptime">{{ lastConnectedLabel }}</div>
     </div>

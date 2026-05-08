@@ -4,7 +4,6 @@ import {
   signal,
   ViewChild,
   ElementRef,
-  AfterViewInit,
   HostListener,
   OnDestroy,
 } from "@angular/core";
@@ -19,6 +18,7 @@ import { OutputConsoleComponent } from "./output-console/output-console.componen
 
 import { QueryTab } from "@shared/models/query.model";
 import { TabService } from "@shared/services/tab.service";
+import { QueryExecutionService } from "@shared/services/query-execution.service";
 import { formatSQL } from "@shared/utils/sql-formatter.utils";
 
 @Component({
@@ -27,11 +27,12 @@ import { formatSQL } from "@shared/utils/sql-formatter.utils";
   imports: [FormsModule, MatIconModule, SqlEditorComponent, OutputConsoleComponent],
   templateUrl: "./workbench.component.html",
 })
-export class WorkbenchComponent implements AfterViewInit, OnDestroy {
+export class WorkbenchComponent implements OnDestroy {
   protected db = inject(DatabaseService);
   protected connState = inject(ConnectionStateService);
   protected toast = inject(ToastService);
   protected tabService = inject(TabService);
+  private readonly queryExecution = inject(QueryExecutionService);
 
   @ViewChild("splitContainer") splitContainer!: ElementRef<HTMLDivElement>;
 
@@ -39,16 +40,11 @@ export class WorkbenchComponent implements AfterViewInit, OnDestroy {
   readonly activeTabId = this.tabService.activeTabId;
   readonly activeTab = this.tabService.activeTab;
 
-  databases = ["ecommerce_main", "analytics_v1"];
-  selectedDatabase = "ecommerce_main";
-
   editorHeight = signal(250);
   isResizing = false;
 
   private boundOnMove: ((e: MouseEvent) => void) | null = null;
   private boundOnUp: (() => void) | null = null;
-
-  ngAfterViewInit() {}
 
   @HostListener("window:keydown", ["$event"])
   handleKeydown(event: KeyboardEvent) {
@@ -77,33 +73,7 @@ export class WorkbenchComponent implements AfterViewInit, OnDestroy {
   async runCurrentTab() {
     const tab = this.activeTab();
     if (!tab || !tab.query.trim()) return;
-
-    this.tabService.updateActiveTab({ loading: true, error: "" });
-
-    const startTime = performance.now();
-    try {
-      const results = await this.db.executeRaw(tab.query);
-      const executionTime = performance.now() - startTime;
-
-      this.tabService.updateActiveTab({
-        results,
-        error: "",
-        loading: false,
-        executionTime,
-        modified: false,
-      });
-
-      this.toast.success(`Query executed (${executionTime.toFixed(0)}ms)`);
-    } catch (e: any) {
-      const executionTime = performance.now() - startTime;
-      this.tabService.updateActiveTab({
-        error: e.message || "Query failed",
-        loading: false,
-        executionTime,
-      });
-
-      this.toast.error(e.message || "Query failed");
-    }
+    await this.queryExecution.executeWithTiming(tab.query, this.db);
   }
 
   runAllTabs() {

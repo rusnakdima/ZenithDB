@@ -5,8 +5,12 @@ import { MatIconModule } from "@angular/material/icon";
 import { FormsModule } from "@angular/forms";
 import { DatabaseService } from "@shared/services/database.service";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
+import { ConfirmService } from "@shared/services/confirm.service";
+import { ErrorHandlerService } from "@shared/services/error-handler.service";
+import { ToastService } from "@services/toast.service";
 import { ProviderUtils } from "@shared/utils/provider.utils";
 import { CollectionMeta } from "@shared/models/connection.config";
+import { withErrorHandling } from "@shared/utils/error-handler.utils";
 import { Subscription } from "rxjs";
 import { filter, distinctUntilChanged } from "rxjs/operators";
 
@@ -19,6 +23,9 @@ import { filter, distinctUntilChanged } from "rxjs/operators";
 export class DatabaseDetailComponent implements OnInit, OnDestroy {
   private db = inject(DatabaseService);
   private connState = inject(ConnectionStateService);
+  private confirm = inject(ConfirmService);
+  private errorHandler = inject(ErrorHandlerService);
+  private toast = inject(ToastService);
   providerUtils = inject(ProviderUtils);
   route = inject(ActivatedRoute);
   router = inject(Router);
@@ -39,7 +46,6 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy {
   private routeSub: Subscription | null = null;
 
   async ngOnInit() {
-    console.log("[DatabaseDetail] ngOnInit called");
     this.routeSub = this.route.paramMap
       .pipe(
         filter((params) => params.get("id") !== null),
@@ -51,16 +57,13 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy {
       .subscribe(async (params) => {
         const id = params.get("id");
         const dbName = params.get("dbName");
-        console.log("[DatabaseDetail] params received:", { id, dbName });
 
         if (id) {
           this.connectionId.set(id);
           this.databaseName.set(dbName);
 
           try {
-            console.log("[DatabaseDetail] calling getConnection:", id);
             const fullConfig = await this.db.getConnection(id);
-            console.log("[DatabaseDetail] getConnection returned");
             if (fullConfig?.config?.config) {
               const connConfig = fullConfig.config.config;
               this.connectionName.set(fullConfig.config.name);
@@ -76,9 +79,7 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy {
             console.error("Failed to load connection:", e);
           }
 
-          console.log("[DatabaseDetail] calling loadCollections");
           await this.loadCollections();
-          console.log("[DatabaseDetail] loadCollections returned");
         }
       });
   }
@@ -92,30 +93,27 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy {
   }
 
   async loadCollections() {
+    const connId = this.connectionId();
+    const dbName = this.databaseName();
+    if (!connId || !dbName) return;
+
     if (this.loading()) {
-      console.log("[DatabaseDetail] loadCollections skipped - already loading");
       return;
     }
-    console.log("[DatabaseDetail] loadCollections started");
-    this.loading.set(true);
-    try {
-      const connId = this.connectionId();
-      const dbName = this.databaseName();
-      console.log("[DatabaseDetail] loadCollections calling api:", { connId, dbName });
 
-      if (connId && dbName) {
+    const result = await withErrorHandling(
+      async () => {
         const collections = await this.db.listCollections(connId, dbName);
-        console.log("[DatabaseDetail] loadCollections got:", collections.length, "collections");
-        this.collections.set(collections);
-
         const total = collections.reduce((sum, c) => sum + c.count, 0);
-        this.totalDocuments.set(total);
-      }
-    } catch (e) {
-      console.error("Failed to load collections:", e);
-    } finally {
-      this.loading.set(false);
-      console.log("[DatabaseDetail] loadCollections done");
+        return { collections, total };
+      },
+      { loading: this.loading, context: "LoadCollections" },
+      { errorHandler: this.errorHandler, toastService: this.toast }
+    );
+
+    if (result.success && result.data) {
+      this.collections.set(result.data.collections);
+      this.totalDocuments.set(result.data.total);
     }
   }
 
@@ -200,7 +198,7 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy {
   }
 
   async deleteCollection(colName: string) {
-    if (!confirm(`Delete collection "${colName}"? This cannot be undone.`)) return;
+    if (!await this.confirm.confirmDelete(colName)) return;
 
     const connId = this.connectionId();
     if (!connId) return;

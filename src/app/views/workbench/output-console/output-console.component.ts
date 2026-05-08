@@ -40,9 +40,7 @@ export class OutputConsoleComponent implements OnDestroy {
     return this._height();
   }
 
-  logs = signal<LogEntry[]>([
-    { timestamp: new Date(), level: "info", message: "Ready to execute queries" },
-  ]);
+  logs = signal<LogEntry[]>([]);
 
   filteredLogs = computed(() => {
     const level = this.filterLevel();

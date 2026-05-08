@@ -60,9 +60,7 @@
                   [class.bg-green-500]="health()?.healthy"
                   [class.bg-red-500]="!health()?.healthy"
                 ></span>
-                <span class="text-lg font-semibold text-[var(--text-main)]">
-                  {{ health()?.healthy ? "CONNECTED" : "OFFLINE" }}
-                </span>
+                <app-connection-status-badge [status]="connectionStatus" size="md" />
               </div>
             </div>
           </div>

@@ -12,7 +12,9 @@ import { DataProviderService } from "@shared/services/data-provider.service";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { StorageService } from "@services/core/storage.service";
 import { ToastService } from "@services/toast.service";
+import { ClipboardService } from "@shared/services/clipboard.service";
 import { ExportService } from "@shared/services/export.service";
+import { LocalStorageService, SplitMode } from "@shared/services/local-storage.service";
 import {
   CollectionMeta,
   CollectionStats,
@@ -21,13 +23,15 @@ import {
   FilterExpression,
 } from "@shared/models/connection.config";
 import { FormatBytesPipe } from "@shared/pipes/format-bytes.pipe";
-import { formatJsonLines, highlightJsonLine } from "@shared/utils/json.utils";
+import { formatJsonLines, highlightJsonLine, safeJsonParse } from "@shared/utils/json.utils";
+import { formatCompactNumber } from "@shared/utils/number.utils";
 import { InspectorDrawerComponent } from "./inspector-drawer/inspector-drawer.component";
+import { CollectionTabsComponent } from "./collection-tabs/collection-tabs.component";
+import { ViewSwitcherComponent } from "./view-switcher/view-switcher.component";
 import { PaginationComponent } from "@shared/components/pagination/pagination.component";
 import { withErrorHandling } from "@shared/utils/error-handler.utils";
 
 type ViewTab = "table" | "tree" | "json";
-type SplitMode = "none" | "horizontal" | "vertical";
 
 interface Tab {
   name: string;
@@ -44,6 +48,8 @@ interface Tab {
     SchemaTreeComponent,
     FilterBarComponent,
     InspectorDrawerComponent,
+    CollectionTabsComponent,
+    ViewSwitcherComponent,
     FormatBytesPipe,
     PaginationComponent,
   ],
@@ -55,7 +61,9 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   private connectionState = inject(ConnectionStateService);
   private storage = inject(StorageService);
   private toast = inject(ToastService);
+  private clipboard = inject(ClipboardService);
   private exportService = inject(ExportService);
+  private localStorage = inject(LocalStorageService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private queryParamsSub: Subscription | null = null;
@@ -83,24 +91,13 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   showCollectionSelector = signal(false);
   fullJsonData = signal<RowData[]>([]);
   jsonLoading = signal(false);
+  jsonLoadProgress = signal(0);
 
   private currentConnectionId: string | null = null;
 
-  viewTabs: { id: ViewTab; label: string }[] = [
-    { id: "table", label: "Table View" },
-    { id: "tree", label: "Tree View" },
-    { id: "json", label: "JSON View" },
-  ];
-
-  splitModes: { id: SplitMode; label: string; icon: string }[] = [
-    { id: "none", label: "No Split", icon: "view_column" },
-    { id: "horizontal", label: "Horizontal", icon: "vertical_split" },
-    { id: "vertical", label: "Vertical", icon: "horizontal_split" },
-  ];
-
   async ngOnInit() {
-    const savedSplitMode = localStorage.getItem("explorer_split_mode") as SplitMode;
-    if (savedSplitMode && ["none", "horizontal", "vertical"].includes(savedSplitMode)) {
+    const savedSplitMode = this.localStorage.getExplorerSplitMode();
+    if (savedSplitMode) {
       this.splitMode.set(savedSplitMode);
     }
 
@@ -119,10 +116,11 @@ export class ExplorerComponent implements OnInit, OnDestroy {
       }
       const view = params["view"];
       if (view === "schema" && collection) {
-        await this.loadColumns();
-        const schema = await this.db.describeCollection(collection);
-        this.inspectorDocument.set({ _schema: schema } as RowData);
-        this.showInspector.set(true);
+        const schema = await this.loadColumns();
+        if (schema.length > 0) {
+          this.inspectorDocument.set({ _schema: schema } as RowData);
+          this.showInspector.set(true);
+        }
       }
     });
   }
@@ -130,6 +128,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.queryParamsSub?.unsubscribe();
     this.routeSub?.unsubscribe();
+    this.fullJsonData.set([]);
   }
 
   private async handleRouteChange() {
@@ -192,29 +191,53 @@ export class ExplorerComponent implements OnInit, OnDestroy {
     }
   }
 
-  async loadColumns() {
+  async loadColumns(): Promise<ColumnInfo[]> {
     const collection = this.activeCollection();
-    if (!collection) return;
+    if (!collection) return [];
     try {
-      const schema = await this.db.describeCollection(collection);
-      const cols = schema.columns.map((c) => c.name);
+      const columns = await this.dataProvider.loadColumns(collection);
+      const cols = columns.map((c) => c.name);
       this.availableColumns.set(cols);
-      this.availableColumnsMeta.set(schema.columns);
+      this.availableColumnsMeta.set(columns);
       this.selectedColumns.set([...cols]);
+      return columns;
     } catch {
       this.availableColumns.set([]);
       this.availableColumnsMeta.set([]);
       this.selectedColumns.set([]);
+      return [];
     }
   }
 
   async loadFullJsonData() {
+    this.fullJsonData.set([]);
     this.jsonLoading.set(true);
+    this.jsonLoadProgress.set(0);
+    const BATCH_SIZE = 1000;
     try {
       const result = await this.db.queryData(this.activeCollection(), {
         limit: 10000,
       });
-      this.fullJsonData.set(result.data as RowData[]);
+      const allData = result.data as RowData[];
+      const totalRows = allData.length;
+      const processedData: RowData[] = [];
+      
+      for (let i = 0; i < totalRows; i += BATCH_SIZE) {
+        const batch = allData.slice(i, Math.min(i + BATCH_SIZE, totalRows));
+        processedData.push(...batch);
+        
+        const progress = Math.round(((i + batch.length) / totalRows) * 100);
+        this.jsonLoadProgress.set(progress);
+        
+        await new Promise<void>((resolve) => {
+          requestAnimationFrame(() => {
+            setTimeout(() => resolve(), 0);
+          });
+        });
+      }
+      
+      this.fullJsonData.set(processedData);
+      this.jsonLoadProgress.set(100);
     } catch {
       this.toast.error("Failed to load JSON data");
     } finally {
@@ -241,6 +264,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
 
   selectTab(collection: string) {
     this.activeCollection.set(collection);
+    this.fullJsonData.set([]);
     this.page.set(0);
     this.loadStats();
     this.loadColumns();
@@ -265,7 +289,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
 
   setSplitMode(mode: SplitMode) {
     this.splitMode.set(mode);
-    localStorage.setItem("explorer_split_mode", mode);
+    this.localStorage.setExplorerSplitMode(mode);
   }
 
   toggleCollectionSelector() {
@@ -313,9 +337,8 @@ export class ExplorerComponent implements OnInit, OnDestroy {
     try {
       let filterObj: FilterExpression | undefined;
       if (this.filterText()) {
-        try {
-          filterObj = JSON.parse(this.filterText()) as FilterExpression;
-        } catch {
+        filterObj = safeJsonParse(this.filterText(), undefined);
+        if (filterObj === undefined) {
           this.toast.error("Invalid filter JSON");
           return;
         }
@@ -351,11 +374,8 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   }
 
   openInspector(doc: RowData) {
-    console.log("[DEBUG] openInspector called with:", doc);
     this.inspectorDocument.set(doc);
-    console.log("[DEBUG] inspectorDocument set, showInspector about to be true");
     this.showInspector.set(true);
-    console.log("[DEBUG] showInspector is now:", this.showInspector());
   }
 
   closeInspector() {
@@ -398,36 +418,16 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   }
 
   formatDocumentCount(count: number): string {
-    if (count >= 1000000) {
-      return (count / 1000000).toFixed(1) + "M";
-    }
-    if (count >= 1000) {
-      return (count / 1000).toFixed(1) + "K";
-    }
-    return count.toString();
+    return formatCompactNumber(count);
   }
 
   copyJsonToClipboard() {
     const json = JSON.stringify(this.fullJsonData(), null, 2);
-    navigator.clipboard
-      .writeText(json)
-      .then(() => {
-        this.toast.success("JSON copied to clipboard");
-      })
-      .catch(() => {
-        this.toast.error("Failed to copy JSON");
-      });
+    this.clipboard.copyToClipboard(json, "JSON copied to clipboard");
   }
 
   copyRowJson(doc: RowData) {
-    navigator.clipboard
-      .writeText(JSON.stringify(doc, null, 2))
-      .then(() => {
-        this.toast.success("Copied to clipboard");
-      })
-      .catch(() => {
-        this.toast.error("Failed to copy");
-      });
+    this.clipboard.copyToClipboard(JSON.stringify(doc, null, 2), "Copied to clipboard");
   }
 
   getReloadTrigger(): number {

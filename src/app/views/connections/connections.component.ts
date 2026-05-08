@@ -6,6 +6,7 @@ import { DatabaseService } from "@shared/services/database.service";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { StorageService } from "@services/core/storage.service";
 import { ConnectionSummary } from "@shared/models/connection.config";
+import { ConfirmService } from "@shared/services/confirm.service";
 import { withErrorHandling } from "@shared/utils/error-handler.utils";
 
 @Component({
@@ -20,6 +21,7 @@ export class ConnectionsComponent implements OnInit {
   private connState = inject(ConnectionStateService);
   private storage = inject(StorageService);
   private router = inject(Router);
+  private confirm = inject(ConfirmService);
 
   connections = computed(() => this.storage.connections());
 
@@ -37,7 +39,7 @@ export class ConnectionsComponent implements OnInit {
   }
 
   async onDelete(connection: ConnectionSummary): Promise<void> {
-    if (confirm(`Delete connection "${connection.name}"?`)) {
+    if (await this.confirm.confirmDelete(connection.name)) {
       await withErrorHandling(() => this.db.deleteConnection(connection.id), {
         toast: true,
         toastSuccess: "Connection deleted",

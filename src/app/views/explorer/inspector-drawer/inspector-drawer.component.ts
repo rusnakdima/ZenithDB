@@ -1,9 +1,10 @@
 import { Component, input, output, signal, computed, inject } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
+import { ClipboardService } from "@shared/services/clipboard.service";
 import { ToastService } from "@services/toast.service";
 import { ExportService } from "@shared/services/export.service";
-import { formatJsonLines, highlightJsonLine } from "@shared/utils/json.utils";
+import { formatJsonLines, highlightJsonLine, safeJsonParse } from "@shared/utils/json.utils";
 
 @Component({
   selector: "app-inspector-drawer",
@@ -18,6 +19,7 @@ export class InspectorDrawerComponent {
   delete = output<void>();
 
   private toast = inject(ToastService);
+  private clipboard = inject(ClipboardService);
   private exportService = inject(ExportService);
 
   isEditing = signal(false);
@@ -29,7 +31,6 @@ export class InspectorDrawerComponent {
 
   documentId = computed(() => {
     const doc = this.document();
-    console.log("[DEBUG] InspectorDrawer documentId computed, doc:", doc);
     return doc?.["_id"] || doc?.["id"] || "Unknown";
   });
 
@@ -71,12 +72,15 @@ export class InspectorDrawerComponent {
     if (!this.isValidJson()) return;
     this.isSaving.set(true);
     try {
-      const parsed = JSON.parse(this.editText());
+      const parsed = safeJsonParse(this.editText(), undefined);
+      if (parsed === undefined) {
+        this.jsonError.set("Invalid JSON");
+        this.isSaving.set(false);
+        return;
+      }
       this.save.emit(parsed);
       this.toast.success("Document saved");
       this.isEditing.set(false);
-    } catch (e: any) {
-      this.jsonError.set("Invalid JSON: " + e.message);
     } finally {
       this.isSaving.set(false);
     }
@@ -114,14 +118,13 @@ export class InspectorDrawerComponent {
   }
 
   isValidJson(): boolean {
-    try {
-      JSON.parse(this.editText());
-      this.jsonError.set("");
-      return true;
-    } catch (e: any) {
-      this.jsonError.set("Invalid JSON: " + e.message);
+    const parsed = safeJsonParse(this.editText(), undefined);
+    if (parsed === undefined) {
+      this.jsonError.set("Invalid JSON");
       return false;
     }
+    this.jsonError.set("");
+    return true;
   }
 
   togglePath(path: string) {
@@ -141,12 +144,7 @@ export class InspectorDrawerComponent {
   }
 
   async copyToClipboard(text: string) {
-    try {
-      await navigator.clipboard.writeText(text);
-      this.toast.success("Copied to clipboard");
-    } catch {
-      this.toast.error("Failed to copy");
-    }
+    await this.clipboard.copyToClipboard(text, "Copied to clipboard");
   }
 
   copyJson() {

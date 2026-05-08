@@ -2,11 +2,12 @@ import { Component, input, output, signal, inject } from "@angular/core";
 import { MatIconModule } from "@angular/material/icon";
 import { ConnectionSummary } from "@shared/models/connection.config";
 import { ProviderUtils } from "@shared/utils/provider.utils";
+import { ConnectionStatusBadgeComponent } from "@shared/components/connection-status-badge/connection-status-badge.component";
 
 @Component({
   selector: "app-connection-card",
   standalone: true,
-  imports: [MatIconModule],
+  imports: [MatIconModule, ConnectionStatusBadgeComponent],
   templateUrl: "./connection-card.component.html",
 })
 export class ConnectionCardComponent {
@@ -20,16 +21,6 @@ export class ConnectionCardComponent {
 
   showActions = signal(false);
   providerUtils = inject(ProviderUtils);
-
-  get statusClass(): string {
-    return this.connection().status === "connected"
-      ? "card-status-connected"
-      : "card-status-offline";
-  }
-
-  get statusLabel(): string {
-    return this.connection().status === "connected" ? "CONNECTED" : "OFFLINE";
-  }
 
   get lastConnectedLabel(): string {
     return "Last connected: 2 days ago";

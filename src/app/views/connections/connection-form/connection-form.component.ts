@@ -1,35 +1,30 @@
-import { Component, inject, signal, computed, OnInit, output } from "@angular/core";
+import { Component, inject, signal, OnInit, OnDestroy, output } from "@angular/core";
 import { Router, ActivatedRoute } from "@angular/router";
-import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
 import { ModalComponent } from "@shared/components/modal/modal.component";
-import { CheckboxComponent } from "@shared/components/checkbox/checkbox.component";
 import { DatabaseService } from "@shared/services/database.service";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { ProviderUtils } from "@shared/utils/provider.utils";
-import {
-  ConnectionConfig,
-  ConnectionHealth,
-  ConnectionSummary,
-  DatabaseMeta,
-} from "@shared/models/connection.config";
+import { parseProviderConfig } from "@shared/utils/provider-config.utils";
+import { ConnectionHealth } from "@shared/models/connection.config";
 import { ProviderType } from "@shared/models/provider.model";
-type WizardStep = 1 | 2 | 3;
+import { ProviderSelectorComponent } from "../provider-selector/provider-selector.component";
+import { ConnectionConfigFormComponent, ConfigFormData } from "../connection-config-form/connection-config-form.component";
 
-interface ProviderOption {
-  type: ProviderType;
-  label: string;
-  icon: string;
-  description: string;
-}
+type WizardStep = 1 | 2 | 3;
 
 @Component({
   selector: "app-connection-form",
   standalone: true,
-  imports: [FormsModule, MatIconModule, ModalComponent, CheckboxComponent],
+  imports: [
+    MatIconModule,
+    ModalComponent,
+    ProviderSelectorComponent,
+    ConnectionConfigFormComponent,
+  ],
   templateUrl: "./connection-form.component.html",
 })
-export class ConnectionFormComponent implements OnInit {
+export class ConnectionFormComponent implements OnInit, OnDestroy {
   closed = output<void>();
 
   private db = inject(DatabaseService);
@@ -43,44 +38,20 @@ export class ConnectionFormComponent implements OnInit {
 
   currentStep = signal<WizardStep>(1);
   provider: ProviderType = "json";
-  name = "";
-  path = "";
-  behavior = "folders_as_databases";
-  uri = "";
-  database = "";
-  manualDatabase = "";
-  host = "localhost";
-  port = "";
-  username = "";
-  password = "";
-  useSsl = false;
+  selectedDatabases = signal<string[]>([]);
+
+  formData = signal<ConfigFormData>({
+    name: "",
+    path: "",
+    uri: "",
+    database: "",
+    behavior: "folders_as_databases",
+    useSsl: false,
+  });
 
   testResult = signal<ConnectionHealth | null>(null);
   testing = signal(false);
   saving = signal(false);
-  availableDatabases = signal<DatabaseMeta[]>([]);
-  loadingDatabases = signal(false);
-  selectedDatabases = signal<string[]>([]);
-  databasesLoaded = signal(false);
-
-  providers: ProviderOption[] = [
-    { type: "json", label: "JSON", icon: "description", description: "Local JSON file storage" },
-    { type: "mongo", label: "MongoDB", icon: "eco", description: "MongoDB document database" },
-    { type: "redis", label: "Redis", icon: "flash_on", description: "Redis in-memory cache" },
-    {
-      type: "postgres",
-      label: "PostgreSQL",
-      icon: "storage",
-      description: "PostgreSQL relational DB",
-    },
-    {
-      type: "sqlite",
-      label: "SQLite",
-      icon: "insert_drive_file",
-      description: "SQLite file database",
-    },
-    { type: "mysql", label: "MySQL", icon: "storage", description: "MySQL relational DB" },
-  ];
 
   stepTitles: Record<WizardStep, string> = {
     1: "Choose Provider",
@@ -102,6 +73,8 @@ export class ConnectionFormComponent implements OnInit {
     }
   }
 
+  ngOnDestroy() {}
+
   onClose() {
     this.closed.emit();
     this.router.navigate(["/connections"]);
@@ -111,39 +84,19 @@ export class ConnectionFormComponent implements OnInit {
     try {
       const conn = await this.db.getConnection(id);
       this.editingId = id;
-      this.name = conn.config.name;
       const innerConfig = conn.config.config;
       this.provider = this.providerUtils.toProviderType(innerConfig.type);
-      switch (innerConfig.type) {
-        case "Json":
-          this.path = innerConfig.path || "";
-          if (innerConfig.behavior) {
-            this.behavior = innerConfig.behavior;
-          }
-          break;
-        case "Sqlite":
-          this.path = innerConfig.path || "";
-          break;
-        case "Mongo":
-          this.uri = innerConfig.uri || "";
-          this.database = innerConfig.database || "";
-          break;
-        case "Redis":
-        case "Postgres":
-        case "MySql":
-          this.uri = innerConfig.uri || "";
-          break;
-      }
-      if (
-        this.provider === "postgres" ||
-        this.provider === "mysql" ||
-        this.provider === "mongo" ||
-        this.provider === "redis"
-      ) {
-        if (this.database) {
-          this.selectedDatabases.set(this.database.split(",").map((d) => d.trim()));
-        }
-        setTimeout(() => this.onUriChange(), 100);
+      const parsed = parseProviderConfig(innerConfig);
+      this.formData.set({
+        name: conn.config.name,
+        path: parsed.path,
+        uri: parsed.uri,
+        database: parsed.database,
+        behavior: parsed.behavior,
+        useSsl: false,
+      });
+      if (parsed.database) {
+        this.selectedDatabases.set(parsed.database.split(",").map((d) => d.trim()));
       }
     } catch (e) {
       console.error("Failed to load connection:", e);
@@ -154,80 +107,39 @@ export class ConnectionFormComponent implements OnInit {
     try {
       const conn = await this.db.getConnection(id);
       const innerConfig = conn.config.config;
-      this.name = innerConfig.name + " (Copy)";
       this.provider = this.providerUtils.toProviderType(innerConfig.type);
-      switch (innerConfig.type) {
-        case "Json":
-          this.path = innerConfig.path || "";
-          if (innerConfig.behavior) {
-            this.behavior = innerConfig.behavior;
-          }
-          break;
-        case "Sqlite":
-          this.path = innerConfig.path || "";
-          break;
-        case "Mongo":
-          this.uri = innerConfig.uri || "";
-          this.database = innerConfig.database || "";
-          break;
-        case "Redis":
-        case "Postgres":
-        case "MySql":
-          this.uri = innerConfig.uri || "";
-          break;
-      }
-      if (
-        this.provider === "postgres" ||
-        this.provider === "mysql" ||
-        this.provider === "mongo" ||
-        this.provider === "redis"
-      ) {
-        if (this.database) {
-          this.selectedDatabases.set(this.database.split(",").map((d) => d.trim()));
-        }
-        setTimeout(() => this.onUriChange(), 100);
+      const parsed = parseProviderConfig(innerConfig);
+      this.formData.set({
+        name: innerConfig.name + " (Copy)",
+        path: parsed.path,
+        uri: parsed.uri,
+        database: parsed.database,
+        behavior: parsed.behavior,
+        useSsl: false,
+      });
+      if (parsed.database) {
+        this.selectedDatabases.set(parsed.database.split(",").map((d) => d.trim()));
       }
     } catch (e) {
       console.error("Failed to load connection:", e);
     }
   }
 
-  isStep1Valid = computed(() => this.provider !== null);
-
-  isStep2Valid(): boolean {
-    if (!this.name.trim()) return false;
-    switch (this.provider) {
-      case "json":
-      case "sqlite":
-        return !!this.path.trim();
-      case "mongo":
-        return !!this.uri.trim() && !!this.database.trim();
-      case "redis":
-      case "postgres":
-      case "mysql":
-        return !!this.uri.trim();
-      default:
-        return false;
-    }
-  }
-
-  selectProvider(type: ProviderType) {
+  onProviderSelected(type: ProviderType) {
     this.provider = type;
-    this.resetFormFields();
+    this.formData.set({
+      name: this.formData().name,
+      path: "",
+      uri: "",
+      database: "",
+      behavior: "folders_as_databases",
+      useSsl: false,
+    });
+    this.selectedDatabases.set([]);
   }
 
-  private resetFormFields() {
-    this.path = "";
-    this.uri = "";
-    this.database = "";
-    this.host = "localhost";
-    this.port = "";
-    this.username = "";
-    this.password = "";
-    this.useSsl = false;
-    this.availableDatabases.set([]);
-    this.selectedDatabases.set([]);
-    this.databasesLoaded.set(false);
+  onFormDataChange(data: ConfigFormData) {
+    this.formData.set(data);
   }
 
   nextStep() {
@@ -242,101 +154,47 @@ export class ConnectionFormComponent implements OnInit {
     }
   }
 
-  async onUriChange() {
-    if (
-      (this.provider === "postgres" ||
-        this.provider === "mysql" ||
-        this.provider === "mongo" ||
-        this.provider === "redis") &&
-      this.uri &&
-      this.uri.length > 10
-    ) {
-      this.availableDatabases.set([]);
-      this.selectedDatabases.set([]);
-      this.loadingDatabases.set(true);
-      this.databasesLoaded.set(false);
-      try {
-        const dbs = await this.db.listDatabasesForUri(this.provider, this.uri);
-        this.availableDatabases.set(dbs);
-        this.databasesLoaded.set(true);
-      } catch (e) {
-        console.error("Failed to load databases:", e);
-      } finally {
-        this.loadingDatabases.set(false);
+  async onBrowseFile(directory: boolean = false) {
+    try {
+      const { open } = await import("@tauri-apps/plugin-dialog");
+      const selected = await open({
+        multiple: false,
+        directory,
+        filters: directory
+          ? []
+          : [
+              {
+                name: "Database Files",
+                extensions: ["json", "db", "sqlite", "sqlite3"],
+              },
+            ],
+      });
+      if (selected) {
+        this.formData.update((d) => ({ ...d, path: selected as string }));
       }
+    } catch (e) {
+      console.error("File dialog error:", e);
     }
   }
 
-  toggleDatabase(dbName: string) {
-    const current = this.selectedDatabases();
-    if (current.includes(dbName)) {
-      this.selectedDatabases.set(current.filter((n) => n !== dbName));
-    } else {
-      this.selectedDatabases.set([...current, dbName]);
+  isStep1Valid = signal(true);
+
+  isStep2Valid(): boolean {
+    const data = this.formData();
+    if (!data.name.trim()) return false;
+    switch (this.provider) {
+      case "json":
+      case "sqlite":
+        return !!data.path.trim();
+      case "mongo":
+        return !!data.uri.trim() && !!data.database.trim();
+      case "redis":
+      case "postgres":
+      case "mysql":
+        return !!data.uri.trim();
+      default:
+        return false;
     }
-    this.database = this.selectedDatabases().join(",");
-  }
-
-  onDatabaseCheckboxChange(event: boolean, dbName: string) {
-    if (event) {
-      if (!this.selectedDatabases().includes(dbName)) {
-        this.selectedDatabases.set([...this.selectedDatabases(), dbName]);
-      }
-    } else {
-      this.selectedDatabases.set(this.selectedDatabases().filter((n) => n !== dbName));
-    }
-    this.database = this.selectedDatabases().join(",");
-  }
-
-  isDatabaseSelected(dbName: string): boolean {
-    return this.selectedDatabases().includes(dbName);
-  }
-
-  editingDb = signal<string | null>(null);
-  editDbName = "";
-
-  addManualDatabase() {
-    const name = this.manualDatabase.trim();
-    if (name && !this.selectedDatabases().includes(name)) {
-      this.selectedDatabases.set([...this.selectedDatabases(), name]);
-      this.database = this.selectedDatabases().join(",");
-    }
-    this.manualDatabase = "";
-  }
-
-  startEditDb(dbName: string) {
-    this.editingDb.set(dbName);
-    this.editDbName = dbName;
-  }
-
-  saveEditDb() {
-    const oldName = this.editingDb();
-    if (!oldName) return;
-
-    const newName = this.editDbName.trim();
-    if (!newName || newName === oldName) {
-      this.cancelEditDb();
-      return;
-    }
-
-    if (this.selectedDatabases().includes(newName)) {
-      this.cancelEditDb();
-      return;
-    }
-
-    this.selectedDatabases.set(this.selectedDatabases().map((d) => (d === oldName ? newName : d)));
-    this.database = this.selectedDatabases().join(",");
-    this.cancelEditDb();
-  }
-
-  cancelEditDb() {
-    this.editingDb.set(null);
-    this.editDbName = "";
-  }
-
-  removeDatabase(dbName: string) {
-    this.selectedDatabases.set(this.selectedDatabases().filter((d) => d !== dbName));
-    this.database = this.selectedDatabases().join(",");
   }
 
   async testConnection() {
@@ -369,65 +227,66 @@ export class ConnectionFormComponent implements OnInit {
   }
 
   private buildConfig(): any {
+    const data = this.formData();
     const configType = this.providerUtils.toConfigType(this.provider);
 
     switch (this.provider) {
       case "json":
         return {
-          name: this.name,
+          name: data.name,
           config: {
             type: configType,
-            name: this.name,
-            path: this.path,
-            behavior: this.behavior,
+            name: data.name,
+            path: data.path,
+            behavior: data.behavior,
           },
         };
       case "sqlite":
         return {
-          name: this.name,
+          name: data.name,
           config: {
             type: configType,
-            name: this.name,
-            path: this.path,
+            name: data.name,
+            path: data.path,
           },
         };
       case "mongo":
         return {
-          name: this.name,
+          name: data.name,
           config: {
             type: configType,
-            name: this.name,
-            uri: this.uri,
-            database: this.database,
+            name: data.name,
+            uri: data.uri,
+            database: data.database,
           },
         };
       case "redis":
         return {
-          name: this.name,
+          name: data.name,
           config: {
             type: configType,
-            name: this.name,
-            uri: this.uri,
-            database: this.database,
+            name: data.name,
+            uri: data.uri,
+            database: data.database,
           },
         };
       case "postgres":
       case "mysql":
         return {
-          name: this.name,
+          name: data.name,
           config: {
             type: configType,
-            name: this.name,
-            uri: this.uri,
+            name: data.name,
+            uri: data.uri,
           },
         };
       default:
         return {
-          name: this.name,
+          name: data.name,
           config: {
             type: configType,
-            name: this.name,
-            uri: this.uri,
+            name: data.name,
+            uri: data.uri,
           },
         };
     }
@@ -435,28 +294,5 @@ export class ConnectionFormComponent implements OnInit {
 
   cancel() {
     this.onClose();
-  }
-
-  async browseFile(directory: boolean = false) {
-    try {
-      const { open } = await import("@tauri-apps/plugin-dialog");
-      const selected = await open({
-        multiple: false,
-        directory,
-        filters: directory
-          ? []
-          : [
-              {
-                name: "Database Files",
-                extensions: ["json", "db", "sqlite", "sqlite3"],
-              },
-            ],
-      });
-      if (selected) {
-        this.path = selected as string;
-      }
-    } catch (e) {
-      console.error("File dialog error:", e);
-    }
   }
 }

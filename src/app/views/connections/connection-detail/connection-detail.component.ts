@@ -5,6 +5,10 @@ import { MatIconModule } from "@angular/material/icon";
 import { FormsModule } from "@angular/forms";
 import { DatabaseService } from "@shared/services/database.service";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
+import { ConnectionHealthService } from "@shared/services/connection-health.service";
+import { ConfirmService } from "@shared/services/confirm.service";
+import { ErrorHandlerService } from "@shared/services/error-handler.service";
+import { ToastService } from "@services/toast.service";
 import { ProviderUtils } from "@shared/utils/provider.utils";
 import {
   ConnectionHealth,
@@ -13,6 +17,8 @@ import {
   ConnectionConfig,
 } from "@shared/models/connection.config";
 import { StatusBadgeComponent } from "@shared/components/status-badge/status-badge.component";
+import { ConnectionStatusBadgeComponent } from "@shared/components/connection-status-badge/connection-status-badge.component";
+import { withErrorHandling } from "@shared/utils/error-handler.utils";
 import { Subscription } from "rxjs";
 
 interface DbNode {
@@ -24,12 +30,16 @@ interface DbNode {
 @Component({
   selector: "app-connection-detail",
   standalone: true,
-  imports: [RouterLink, StatusBadgeComponent, TitleCasePipe, MatIconModule, FormsModule],
+  imports: [RouterLink, StatusBadgeComponent, ConnectionStatusBadgeComponent, TitleCasePipe, MatIconModule, FormsModule],
   templateUrl: "./connection-detail.component.html",
 })
 export class ConnectionDetailComponent implements OnInit, OnDestroy {
   private db = inject(DatabaseService);
   private connState = inject(ConnectionStateService);
+  private connHealth = inject(ConnectionHealthService);
+  private confirm = inject(ConfirmService);
+  private errorHandler = inject(ErrorHandlerService);
+  private toast = inject(ToastService);
   providerUtils = inject(ProviderUtils);
   route = inject(ActivatedRoute);
   router = inject(Router);
@@ -96,44 +106,51 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
   }
 
   async loadConnectionDetails() {
-    this.loading.set(true);
-    try {
-      if (this.connectionId()) {
-        const config = this.fullConfig();
+    const connId = this.connectionId();
+    if (!connId) return;
+
+    const result = await withErrorHandling(
+      async () => {
         const [version, collections, healthResult] = await Promise.all([
           this.db.getServerVersion().catch(() => null),
           this.db.listCollections().catch(() => []),
-          config ? this.db.testConnection(config.config).catch(() => null) : Promise.resolve(null),
+          this.connHealth.checkHealth(connId).catch(() => null),
         ]);
+        return { version, collections, healthResult };
+      },
+      { loading: this.loading, context: "ConnectionDetails" },
+      { errorHandler: this.errorHandler, toastService: this.toast }
+    );
 
-        this.serverVersion.set(version);
-        this.collections.set(collections);
-        this.health.set(healthResult);
-      }
-    } catch (e) {
-      console.error("Failed to load connection details", e);
-    } finally {
-      this.loading.set(false);
+    if (result.success && result.data) {
+      this.serverVersion.set(result.data.version);
+      this.collections.set(result.data.collections);
+      this.health.set(result.data.healthResult);
     }
   }
 
   async testConnection() {
-    this.testing.set(true);
-    try {
-      const fullConfig = this.fullConfig();
-      if (!fullConfig) {
-        throw new Error("No connection config available");
-      }
-      const config = {
-        name: fullConfig.config.name,
-        config: fullConfig.config.config,
-      };
-      const result = await this.db.testConnection(config);
-      this.health.set(result);
-    } catch (e) {
-      console.error("Test connection failed:", e);
-    } finally {
-      this.testing.set(false);
+    const fullConfig = this.fullConfig();
+    if (!fullConfig) return;
+
+    const connId = this.connectionId();
+    if (connId) {
+      this.connHealth.invalidateHealth(connId);
+    }
+
+    const config = {
+      name: fullConfig.config.name,
+      config: fullConfig.config.config,
+    };
+
+    const result = await withErrorHandling(
+      async () => await this.db.testConnection(config),
+      { loading: this.testing, context: "TestConnection" },
+      { errorHandler: this.errorHandler, toastService: this.toast }
+    );
+
+    if (result.success && result.data) {
+      this.health.set(result.data);
     }
   }
 
@@ -143,7 +160,7 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
 
   async deleteConnection() {
     if (!this.connectionId()) return;
-    if (confirm(`Delete connection "${this.connectionName()}"? This action cannot be undone.`)) {
+    if (await this.confirm.confirmDelete(this.connectionName()!)) {
       await this.db.deleteConnection(this.connectionId()!);
       this.disconnect();
     }
@@ -156,8 +173,8 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
     this.router.navigate(["/connections"]);
   }
 
-  get connectionStatus(): "connected" | "offline" {
-    return this.health()?.healthy ? "connected" : "offline";
+  get connectionStatus(): "connected" | "disconnected" | undefined {
+    return this.health()?.healthy ? "connected" : "disconnected";
   }
 
   openCollection(collectionName: string) {
@@ -276,7 +293,7 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
   }
 
   async deleteDatabase(dbName: string) {
-    if (!confirm(`Delete database "${dbName}"? This cannot be undone.`)) return;
+    if (!await this.confirm.confirmDelete(dbName)) return;
 
     const connId = this.connectionId();
     if (!connId) return;

@@ -37,17 +37,6 @@
         <mat-icon fontIcon="delete" class="h-6! w-5! text-xl!" />
       </button>
     </div>
-
-    <div class="flex items-center gap-3">
-      <select
-        [(ngModel)]="selectedDatabase"
-        class="rounded border border-[var(--border-visible)] bg-[var(--bg-card)] px-3 py-1.5 text-sm text-[var(--text-main)]"
-      >
-        @for (db of databases; track db) {
-          <option [value]="db">{{ db }}</option>
-        }
-      </select>
-    </div>
   </div>
 
   <div
@@ -121,7 +110,6 @@
           {{ connState.activeConnectionName() }}
         </span>
       }
-      <span>{{ selectedDatabase }}</span>
     </div>
     <div class="flex items-center gap-4">
       @if (activeTab()?.results?.rows?.length) {
