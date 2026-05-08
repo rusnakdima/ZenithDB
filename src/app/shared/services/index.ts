@@ -1,3 +1,5 @@
+export * from "./clipboard.service";
+export * from "./confirm.service";
 export * from "./connection-state.service";
 export * from "./database.service";
 export * from "./dialog.service";
@@ -7,5 +9,6 @@ export * from "./form-validation.service";
 export * from "./json-highlighter.service";
 export * from "./keyboard-shortcuts.service";
 export * from "./loading.service";
+export * from "./local-storage.service";
 export * from "./settings.service";
 export * from "./theme.service";

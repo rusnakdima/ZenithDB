@@ -4,8 +4,8 @@ use crate::commands::provider::{
 };
 use nosql_orm::prelude::*;
 use serde::{Deserialize, Serialize};
-use std::fs;
 use std::path::PathBuf;
+use tokio::fs;
 
 pub type ConnectionId = String;
 
@@ -107,27 +107,44 @@ impl ConnectionStore {
       .join("connections.json")
   }
 
-  pub fn load() -> Result<Self, String> {
+  pub async fn load() -> Result<Self, String> {
     let path = Self::path();
     if !path.exists() {
       return Ok(Self::default());
     }
-    let content =
-      std::fs::read_to_string(&path).map_err(|e| format!("Failed to read connections: {}", e))?;
+    let content = tokio::fs::read_to_string(&path)
+      .await
+      .map_err(|e| format!("Failed to read connections: {}", e))?;
     let connections: Vec<ConnectionEntry> =
       serde_json::from_str(&content).map_err(|e| format!("Failed to parse connections: {}", e))?;
     Ok(Self { connections, path })
   }
 
-  pub fn save(&self) -> Result<(), String> {
+  pub async fn save(&self) -> Result<(), String> {
     if let Some(parent) = self.path.parent() {
-      fs::create_dir_all(parent).map_err(|e| format!("Failed to create dir: {}", e))?;
+      fs::create_dir_all(parent)
+        .await
+        .map_err(|e| format!("Failed to create dir: {}", e))?;
     }
     let content = serde_json::to_string_pretty(&self.connections)
       .map_err(|e| format!("Failed to serialize: {}", e))?;
-    std::fs::write(&self.path, content)
+    tokio::fs::write(&self.path, content)
+      .await
       .map_err(|e| format!("Failed to write connections: {}", e))?;
     Ok(())
+  }
+
+  pub async fn load_or_default() -> Self {
+    match Self::load().await {
+      Ok(store) => store,
+      Err(e) => {
+        eprintln!(
+          "WARNING: Failed to load connection store: {}, using empty store",
+          e
+        );
+        Self::default()
+      }
+    }
   }
 
   pub fn add_connection(&mut self, entry: ConnectionEntry) {
@@ -174,27 +191,15 @@ pub async fn save_connection(config: ConnectionConfig) -> Result<ConnectionId, S
     config,
   };
 
-  let mut store = ConnectionStore::load().unwrap_or_else(|e| {
-    eprintln!(
-      "WARNING: Failed to load connection store: {}, using empty store",
-      e
-    );
-    ConnectionStore::default()
-  });
+  let mut store = ConnectionStore::load_or_default().await;
   store.add_connection(entry);
-  store.save()?;
+  store.save().await?;
   Ok(id)
 }
 
 #[tauri::command]
 pub async fn list_connections() -> Result<Vec<ConnectionSummary>, String> {
-  let store = ConnectionStore::load().unwrap_or_else(|e| {
-    eprintln!(
-      "WARNING: Failed to load connection store: {}, using empty store",
-      e
-    );
-    ConnectionStore::default()
-  });
+  let store = ConnectionStore::load_or_default().await;
   let mut summaries = Vec::new();
   for c in store.connections.iter() {
     summaries.push(ConnectionSummary {
@@ -214,8 +219,7 @@ async fn check_provider_health(config: &ConnectionConfig) -> ConnectionHealth {
         let healthy = match p.health_check().await {
           Ok(h) => h,
           Err(e) => {
-            eprintln!("Health check failed: {}", e);
-            false
+            return ConnectionHealth::err(&format!("json: health check failed: {}", e));
           }
         };
         if healthy {
@@ -234,8 +238,7 @@ async fn check_provider_health(config: &ConnectionConfig) -> ConnectionHealth {
             Err(_) => match p.list_collections().await {
               Ok(_) => true,
               Err(e) => {
-                eprintln!("Health check failed: {}", e);
-                false
+                return ConnectionHealth::err(&format!("mongo: health check failed: {}", e));
               }
             },
           };
@@ -253,8 +256,7 @@ async fn check_provider_health(config: &ConnectionConfig) -> ConnectionHealth {
         let healthy = match p.health_check().await {
           Ok(h) => h,
           Err(e) => {
-            eprintln!("Health check failed: {}", e);
-            false
+            return ConnectionHealth::err(&format!("redis: health check failed: {}", e));
           }
         };
         if healthy {
@@ -300,7 +302,7 @@ async fn health_status_from_config(config: &ConnectionConfig) -> String {
 
 #[tauri::command]
 pub async fn test_connection_status(id: &str) -> Result<ConnectionSummary, String> {
-  let store = ConnectionStore::load().map_err(|e| e.to_string())?;
+  let store = ConnectionStore::load().await.map_err(|e| e.to_string())?;
   let entry = store
     .find_by_id(id)
     .ok_or_else(|| format!("Connection {} not found", id))?;
@@ -317,15 +319,9 @@ pub async fn test_connection_status(id: &str) -> Result<ConnectionSummary, Strin
 
 #[tauri::command]
 pub async fn delete_connection(id: &str) -> Result<(), String> {
-  let mut store = ConnectionStore::load().unwrap_or_else(|e| {
-    eprintln!(
-      "WARNING: Failed to load connection store: {}, using empty store",
-      e
-    );
-    ConnectionStore::default()
-  });
+  let mut store = ConnectionStore::load_or_default().await;
   if store.remove_connection(id) {
-    store.save()?;
+    store.save().await?;
   } else {
     return Err(format!("Connection {} not found", id));
   }
@@ -334,13 +330,7 @@ pub async fn delete_connection(id: &str) -> Result<(), String> {
 
 #[tauri::command]
 pub async fn update_connection(id: &str, config: ConnectionConfig) -> Result<(), String> {
-  let mut store = ConnectionStore::load().unwrap_or_else(|e| {
-    eprintln!(
-      "WARNING: Failed to load connection store: {}, using empty store",
-      e
-    );
-    ConnectionStore::default()
-  });
+  let mut store = ConnectionStore::load_or_default().await;
   let _entry = store
     .find_by_id(id)
     .ok_or_else(|| format!("Connection {} not found", id))?;
@@ -352,7 +342,7 @@ pub async fn update_connection(id: &str, config: ConnectionConfig) -> Result<(),
 
   store.remove_connection(id);
   store.add_connection(updated_entry);
-  store.save()?;
+  store.save().await?;
   Ok(())
 }
 
@@ -364,13 +354,7 @@ pub struct ConnectionConfigResult {
 
 #[tauri::command]
 pub async fn get_connection(id: &str) -> Result<ConnectionConfigResult, String> {
-  let store = ConnectionStore::load().unwrap_or_else(|e| {
-    eprintln!(
-      "WARNING: Failed to load connection store: {}, using empty store",
-      e
-    );
-    ConnectionStore::default()
-  });
+  let store = ConnectionStore::load_or_default().await;
   let entry = store
     .find_by_id(id)
     .ok_or_else(|| format!("Connection {} not found", id))?;

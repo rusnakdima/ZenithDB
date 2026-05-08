@@ -699,6 +699,26 @@ html.light {
     @apply border border-[var(--border-subtle)] bg-[var(--bg-elevated)] text-[var(--text-dim)];
   }
 
+  .badge-sm {
+    @apply rounded px-2 py-0.5 text-[0.625rem] font-bold;
+  }
+
+  .badge-md {
+    @apply rounded px-2 py-1 text-xs font-bold;
+  }
+
+  .badge-lg {
+    @apply rounded px-3 py-1 text-sm font-bold;
+  }
+
+  .badge-connected {
+    @apply border border-green-500/20 bg-green-500/20 text-green-500;
+  }
+
+  .badge-offline {
+    @apply border border-[var(--border-subtle)] bg-[var(--bg-elevated)] text-[var(--text-dim)];
+  }
+
   .card-uptime {
     @apply mt-1 text-[0.625rem] text-[var(--text-dim)];
   }

@@ -12,10 +12,13 @@ import { Router, RouterLink, ActivatedRoute } from "@angular/router";
 import { FormsModule } from "@angular/forms";
 import { DatabaseService } from "@shared/services/database.service";
 import { ToastService } from "@services/toast.service";
+import { ConfirmService } from "@shared/services/confirm.service";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
+import { ErrorHandlerService } from "@shared/services/error-handler.service";
 import { MatIconModule } from "@angular/material/icon";
 import { SkeletonLoaderComponent } from "@shared/components/loading/skeleton-loader.component";
 import { CollectionMeta, ColumnInfo } from "@shared/models/connection.config";
+import { withErrorHandling } from "@shared/utils/error-handler.utils";
 
 interface TreeNode {
   name: string;
@@ -68,6 +71,8 @@ export class SchemaTreeComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private connectionState = inject(ConnectionStateService);
+  private confirm = inject(ConfirmService);
+  private errorHandler = inject(ErrorHandlerService);
   private boundCloseContextMenu: (() => void) | null = null;
 
   ngOnInit() {
@@ -83,12 +88,18 @@ export class SchemaTreeComponent implements OnInit, OnDestroy {
   }
 
   async loadCollections() {
-    this.loading.set(true);
-    this.error.set("");
-    try {
-      const cols = await this.db.listCollections();
+    const result = await withErrorHandling(
+      async () => {
+        const cols = await this.db.listCollections();
+        return cols;
+      },
+      { loading: this.loading, context: "LoadCollections", errorMessage: "Failed to load collections" },
+      { errorHandler: this.errorHandler, toastService: this.toast }
+    );
+
+    if (result.success && result.data) {
       this.collections.set(
-        cols.map((c: CollectionMeta) => ({
+        result.data.map((c: CollectionMeta) => ({
           name: c.name,
           type: "collection" as const,
           count: c.count,
@@ -97,11 +108,8 @@ export class SchemaTreeComponent implements OnInit, OnDestroy {
         }))
       );
       this.applyFilter();
-    } catch {
+    } else {
       this.error.set("Failed to load collections");
-      this.toast.error(this.error());
-    } finally {
-      this.loading.set(false);
     }
   }
 
@@ -222,7 +230,7 @@ export class SchemaTreeComponent implements OnInit, OnDestroy {
 
   async dropCollection(node: TreeNode) {
     this.closeContextMenu();
-    if (confirm(`Drop collection "${node.name}"? This cannot be undone.`)) {
+    if (await this.confirm.confirmDelete(node.name)) {
       try {
         await this.db.dropCollection(node.name);
         this.toast.success(`Collection "${node.name}" dropped`);

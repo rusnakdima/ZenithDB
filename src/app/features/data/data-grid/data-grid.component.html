@@ -97,121 +97,42 @@
           </div>
         } @else {
           <table class="data-table w-full border-collapse">
-            <thead class="sticky top-0 z-10 bg-[var(--bg-sidebar)]/95 backdrop-blur-sm">
-              <tr
-                cdkDropList
-                [cdkDropListData]="visibleColumnsList()"
-                (cdkDropListDropped)="onColumnDrop($event)"
-                cdkDropListOrientation="horizontal"
-              >
-                <th class="w-10 border-r border-b border-[var(--border-subtle)] p-3 text-center">
-                  <app-checkbox [checked]="allSelected" (changed)="toggleSelectAll()" />
-                </th>
-                @for (col of columns; track col.name) {
-                  @if (visibleColumnsList().includes(col.name)) {
-                    <th
-                      class="relative cursor-move border-r border-b border-[var(--border-subtle)] p-3 text-left text-[10px] font-black tracking-widest text-[var(--text-dim)] uppercase select-none"
-                      cdkDrag
-                      [cdkDragData]="col.name"
-                      [style.width.px]="columnWidths()[col.name]"
-                    >
-                      <div class="flex items-center gap-2">
-                        <app-sortable-header
-                          [column]="col.name"
-                          [currentSort]="sortColumn()"
-                          [direction]="sortColumn() === col.name ? sortDirection() : 'none'"
-                          (sortChange)="onSort($event)"
-                        />
-                        <app-data-type-badge [dataType]="col.data_type" variant="icon" />
-                      </div>
-                      <div
-                        class="resize-handle absolute top-0 right-0 bottom-0 w-1 cursor-col-resize transition-colors hover:bg-[var(--accent)]/50"
-                        (mousedown)="onColumnResizeStart(col.name, $event)"
-                      ></div>
-                    </th>
-                  }
-                }
-                <th
-                  class="w-28 border-b border-[var(--border-subtle)] p-3 text-left text-[10px] font-black tracking-widest text-[var(--text-dim)] uppercase"
-                >
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody class="mono">
-              @for (row of data; track trackByRow($index, row); let rowIndex = $index) {
-                <tr
-                  class="data-row group border-b border-[var(--border-subtle)] transition-colors hover:bg-[var(--accent)]/5"
-                  [class.bg-[var(--accent)]/10]="isSelected(rowIndex)"
-                  (click)="onRowClick(row, $event)"
-                >
-                  <td class="p-3 text-center" (click)="$event.stopPropagation()">
-                    <app-checkbox
-                      [checked]="isSelected(rowIndex)"
-                      (changed)="toggleRow(rowIndex)"
-                    />
-                  </td>
-                  @for (col of columns; track col.name) {
-                    @if (visibleColumnsList().includes(col.name)) {
-                      <td class="border-r border-[var(--border-subtle)]/50 p-3 text-sm">
-                        @if (editingCell?.row === rowIndex && editingCell?.col === col.name) {
-                          <input
-                            [(ngModel)]="editValue"
-                            (keyup.enter)="saveEdit()"
-                            (keyup.escape)="cancelEdit()"
-                            (blur)="saveEdit()"
-                            class="mono w-full rounded-lg border border-[var(--accent)]/50 bg-[var(--bg-card)] px-3 py-1.5 text-sm text-[var(--accent)] focus:border-[var(--accent)] focus:outline-none"
-                            autofocus
-                          />
-                        } @else {
-                          <div
-                            class="-mx-1 cursor-pointer rounded-lg px-2 py-1.5 text-[var(--text-main)] transition-colors hover:bg-[var(--bg-elevated)]"
-                            [class.text-[var(--accent)]]="isCellModified(rowIndex, col.name)"
-                            (dblclick)="startEdit(rowIndex, col.name, row[col.name])"
-                          >
-                            {{ formatValue(row[col.name]) }}
-                          </div>
-                        }
-                      </td>
-                    }
-                  }
-                  <td class="p-3" (click)="$event.stopPropagation()">
-                    <div
-                      class="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100"
-                    >
-                      <button
-                        class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-[var(--bg-elevated)] hover:text-[var(--accent)]"
-                        title="Edit"
-                        (click)="viewJson(row)"
-                      >
-                        <mat-icon fontIcon="edit" class="h-6! w-5! text-xl!" />
-                      </button>
-                      <button
-                        class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-[var(--bg-elevated)] hover:text-amber-400"
-                        title="Duplicate"
-                        (click)="duplicateRow(row)"
-                      >
-                        <mat-icon fontIcon="content_copy" class="h-6! w-5! text-xl!" />
-                      </button>
-                      <button
-                        class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-[var(--bg-elevated)] hover:text-blue-400"
-                        title="View JSON"
-                        (click)="viewJson(row)"
-                      >
-                        <mat-icon fontIcon="data_object" class="h-6! w-5! text-xl!" />
-                      </button>
-                      <button
-                        class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-red-900/20 hover:text-red-400"
-                        title="Delete"
-                        (click)="deleteRow(row)"
-                      >
-                        <mat-icon fontIcon="delete" class="h-6! w-5! text-xl!" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              }
-            </tbody>
+            <app-column-manager
+              [columns]="columns"
+              [visibleColumnsList]="visibleColumnsList()"
+              [columnOrder]="columnOrder()"
+              [columnWidths]="columnWidths()"
+              [sortColumn]="sortColumn()"
+              [sortDirection]="sortDirection()"
+              [allSelected]="allSelected"
+              (sortChange)="onSort($event)"
+              (columnDrop)="onColumnDrop($event)"
+              (columnResizeStart)="onColumnResizeStart($event.col, $event.event)"
+              (toggleSelectAll)="toggleSelectAll()"
+              (showAllColumns)="showAllColumns()"
+              (toggleColumnVisibility)="toggleColumnVisibility($event)"
+              (columnsOrderChange)="columnsOrderChange.emit($event)"
+              (toggleColumnMenu)="toggleColumnMenu()"
+            />
+
+            <app-table-body
+              [data]="data"
+              [columns]="columns"
+              [visibleColumnsList]="visibleColumnsList()"
+              [columnWidths]="columnWidths()"
+              [selectedRows]="selectedRows()"
+              [editingCell]="editingCell"
+              [editValue]="editValue"
+              (rowClick)="onRowClick($event.row, $event.event)"
+              (toggleRow)="toggleRow($event)"
+              (toggleSelectAll)="toggleSelectAll()"
+              (startEdit)="startEdit($event.rowIndex, $event.col, $event.value)"
+              (saveEdit)="saveEdit()"
+              (cancelEdit)="cancelEdit()"
+              (duplicateRow)="duplicateRow($event)"
+              (deleteRow)="deleteRow($event)"
+              (viewJson)="viewJson($event)"
+            />
           </table>
         }
       </div>
@@ -226,4 +147,12 @@
     (pageChange)="onPageChange($event)"
     (pageSizeChange)="changePageSize($event)"
   ></app-pagination>
+
+  <app-export-dialog
+    [visible]="showExportDialog()"
+    [selectedCount]="selectedRows().size"
+    [totalCount]="data.length"
+    (exportData)="exportData($event)"
+    (close)="closeExportDialog()"
+  />
 </div>

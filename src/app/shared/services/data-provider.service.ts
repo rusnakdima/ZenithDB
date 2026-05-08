@@ -1,10 +1,10 @@
 import { Injectable, signal, inject } from "@angular/core";
 import { DatabaseService } from "./database.service";
-import { ColumnInfo, RowData, QueryParams, QueryResult } from "@shared/models/connection.config";
+import { ColumnInfo, RowData, QueryParams, QueryResult, FilterExpression } from "@shared/models/connection.config";
 
 export interface DataProviderParams {
   collection: string;
-  filter?: any;
+  filter?: FilterExpression;
   skip?: number;
   limit?: number;
   order_by?: string;
@@ -12,7 +12,7 @@ export interface DataProviderParams {
 }
 
 interface CacheEntry {
-  data: any[];
+  data: RowData[];
   total: number;
   lastAccessed: number;
   cachedAt: number;
@@ -22,6 +22,7 @@ interface CacheEntry {
 interface ColumnsCacheEntry {
   columns: ColumnInfo[];
   timestamp: number;
+  lastAccessed: number;
 }
 
 @Injectable({ providedIn: "root" })
@@ -30,6 +31,7 @@ export class DataProviderService {
 
   private readonly MAX_ENTRIES_PER_COLLECTION = 50;
   private readonly COLUMNS_CACHE_TTL = 5 * 60 * 1000;
+  private readonly MAX_COLUMNS_CACHE_SIZE = 100;
 
   private collectionDataCache = signal<Map<string, CacheEntry>>(new Map());
   private columnsCache = signal<Map<string, ColumnsCacheEntry>>(new Map());
@@ -74,6 +76,20 @@ export class DataProviderService {
         cache.delete(key);
       }
       this.collectionDataCache.set(new Map(cache));
+    }
+  }
+
+  private evictLRUColumns(): void {
+    const cache = this.columnsCache();
+    if (cache.size >= this.MAX_COLUMNS_CACHE_SIZE) {
+      const sorted = Array.from(cache.entries()).sort(
+        (a, b) => a[1].lastAccessed - b[1].lastAccessed
+      );
+      const toRemove = sorted.slice(0, cache.size - this.MAX_COLUMNS_CACHE_SIZE + 1);
+      for (const [key] of toRemove) {
+        cache.delete(key);
+      }
+      this.columnsCache.set(new Map(cache));
     }
   }
 
@@ -159,9 +175,13 @@ export class DataProviderService {
 
     if (!forceRefresh && cached) {
       if (Date.now() - cached.timestamp < this.COLUMNS_CACHE_TTL) {
+        cached.lastAccessed = Date.now();
+        this.columnsCache.set(new Map(this.columnsCache()));
         return cached.columns;
       }
     }
+
+    this.evictLRUColumns();
 
     const schema = await this.db.describeCollection(collection);
     const columns = schema.columns;
@@ -169,8 +189,40 @@ export class DataProviderService {
       new Map(this.columnsCache()).set(cacheKey, {
         columns,
         timestamp: Date.now(),
+        lastAccessed: Date.now(),
       })
     );
     return columns;
+  }
+
+  invalidateCache(collection: string): void {
+    const cache = this.collectionDataCache();
+    const keysToDelete: string[] = [];
+    for (const key of cache.keys()) {
+      if (key.startsWith(collection + "_")) {
+        keysToDelete.push(key);
+      }
+    }
+    if (keysToDelete.length > 0) {
+      const newCache = new Map(cache);
+      for (const key of keysToDelete) {
+        newCache.delete(key);
+      }
+      this.collectionDataCache.set(newCache);
+    }
+  }
+
+  invalidateColumnsCache(collection?: string): void {
+    const cache = this.columnsCache();
+    if (collection) {
+      const key = `${collection}_schema`;
+      if (cache.has(key)) {
+        const newCache = new Map(cache);
+        newCache.delete(key);
+        this.columnsCache.set(newCache);
+      }
+    } else {
+      this.columnsCache.set(new Map());
+    }
   }
 }

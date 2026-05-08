@@ -10,35 +10,39 @@ import {
   computed,
   OnChanges,
   SimpleChanges,
+  ChangeDetectionStrategy,
+  input,
 } from "@angular/core";
 import { CdkDragDrop, CdkDrag, CdkDropList, moveItemInArray } from "@angular/cdk/drag-drop";
 import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
 import { DataProviderService } from "@shared/services/data-provider.service";
 import { DatabaseService } from "@shared/services/database.service";
+import { ClipboardService } from "@shared/services/clipboard.service";
 import { ToastService } from "@services/toast.service";
-import { StorageService } from "@services/core/storage.service";
 import { ExportService } from "@shared/services/export.service";
+import { LocalStorageService } from "@shared/services/local-storage.service";
 import { ColumnInfo, RowData, FilterExpression } from "@shared/models/connection.config";
-import { formatJsonLines, highlightJsonLine } from "@shared/utils/json.utils";
-import { DataTypeBadgeComponent } from "@shared/components/data-type-badge/data-type-badge.component";
-import { SortableHeaderComponent } from "@shared/components/sortable-header/sortable-header.component";
+import { formatJsonLines, highlightJsonLine, safeJsonParse } from "@shared/utils/json.utils";
 import { PaginationComponent } from "@shared/components/pagination/pagination.component";
-import { CheckboxComponent } from "@shared/components/checkbox/checkbox.component";
 import { withErrorHandling } from "@shared/utils/error-handler.utils";
+import { TableBodyComponent } from "@app/features/data/table-body/table-body.component";
+import { ColumnManagerComponent } from "@app/features/data/column-manager/column-manager.component";
+import { ExportDialogComponent, ExportFormat } from "@app/features/data/export-dialog/export-dialog.component";
 
 @Component({
   selector: "app-data-grid",
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
     MatIconModule,
-    DataTypeBadgeComponent,
-    SortableHeaderComponent,
     PaginationComponent,
-    CheckboxComponent,
     CdkDrag,
     CdkDropList,
+    TableBodyComponent,
+    ColumnManagerComponent,
+    ExportDialogComponent,
   ],
   templateUrl: "./data-grid.component.html",
 })
@@ -46,7 +50,7 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
   private isResizingInProgress = false;
   private resizeMoveHandler: ((e: MouseEvent) => void) | null = null;
   private resizeUpHandler: (() => void) | null = null;
-  private storage = inject(StorageService);
+  private localStorage = inject(LocalStorageService);
   protected readonly MAX_PAGE_SIZE = 1000;
 
   @Input() collectionName = "";
@@ -133,10 +137,10 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
   private db = inject(DatabaseService);
   private dataProvider = inject(DataProviderService);
   private toast = inject(ToastService);
+  private clipboard = inject(ClipboardService);
   private exportService = inject(ExportService);
 
-  showExportMenu = signal(false);
-  exportFormat = signal<"csv" | "json" | "jsonl" | "sql" | "markdown">("csv");
+  showExportDialog = signal(false);
 
   get allSelected() {
     return this.data.length > 0 && this.selectedRows().size === this.data.length;
@@ -211,9 +215,8 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
     try {
       let filterObj: FilterExpression | undefined;
       if (this.filter) {
-        try {
-          filterObj = JSON.parse(this.filter) as FilterExpression;
-        } catch {
+        filterObj = safeJsonParse<FilterExpression | undefined>(this.filter, undefined);
+        if (filterObj === undefined) {
           this.error = "Invalid filter JSON";
           this.loading = false;
           return;
@@ -342,12 +345,10 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
 
   onRowClick(row: RowData, event: MouseEvent) {
     const target = event.target as HTMLElement;
-    console.log("[DEBUG] onRowClick fired, target:", target.tagName);
     if (target.tagName === "INPUT" && (target as HTMLInputElement).type === "checkbox") {
       event.stopPropagation();
       return;
     }
-    console.log("[DEBUG] emitting documentClick for row:", row);
     this.documentClick.emit(row);
   }
 
@@ -402,13 +403,15 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   ngOnDestroy() {
-    if (this.isResizingInProgress && this.resizeMoveHandler && this.resizeUpHandler) {
+    if (this.resizeMoveHandler) {
       document.removeEventListener("mousemove", this.resizeMoveHandler);
-      document.removeEventListener("mouseup", this.resizeUpHandler);
       this.resizeMoveHandler = null;
-      this.resizeUpHandler = null;
-      this.isResizingInProgress = false;
     }
+    if (this.resizeUpHandler) {
+      document.removeEventListener("mouseup", this.resizeUpHandler);
+      this.resizeUpHandler = null;
+    }
+    this.isResizingInProgress = false;
   }
 
   toggleColumnMenu() {
@@ -440,15 +443,13 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
 
   private saveColumnOrder(order: string[]) {
     if (!this.collectionName) return;
-    const key = `col_order_${this.collectionName}`;
-    this.storage.setItem(key, order);
+    this.localStorage.setColumnOrder(this.collectionName, order);
   }
 
   private loadColumnOrder(): string[] {
     if (!this.collectionName) return [];
-    const key = `col_order_${this.collectionName}`;
-    const stored = this.storage.getItem<string[]>(key);
-    if (stored && Array.isArray(stored)) {
+    const stored = this.localStorage.getColumnOrder(this.collectionName);
+    if (stored && stored.length > 0) {
       const valid = stored.filter((c) => this.columns.some((col) => col.name === c));
       if (valid.length > 0) return valid;
     }
@@ -474,17 +475,11 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   viewJson(row: RowData) {
-    console.log("[DEBUG] viewJson called for row:", row);
     this.documentClick.emit(row);
   }
 
   async copyRowJson(row: RowData) {
-    try {
-      await navigator.clipboard.writeText(JSON.stringify(row, null, 2));
-      this.toast.success("Copied to clipboard");
-    } catch {
-      this.toast.error("Failed to copy");
-    }
+    await this.clipboard.copyToClipboard(JSON.stringify(row, null, 2), "Copied to clipboard");
   }
 
   onPageChange(newPage: number) {
@@ -527,7 +522,7 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
     return selected.map((i) => this.data[i]);
   }
 
-  async exportData(format: "csv" | "json" | "jsonl" | "sql" | "markdown") {
+  async exportData(format: ExportFormat) {
     const dataToExport = this.selectedRows().size > 0 ? this.getSelectedData() : this.data;
     const filename = `${this.collectionName}_export_${Date.now()}`;
 
@@ -538,14 +533,14 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
         this.toast.error("Export failed");
       }
     }
-    this.showExportMenu.set(false);
+    this.showExportDialog.set(false);
   }
 
-  toggleExportMenu() {
-    this.showExportMenu.update((v) => !v);
+  toggleExportDialog() {
+    this.showExportDialog.update((v) => !v);
   }
 
-  closeExportMenu() {
-    this.showExportMenu.set(false);
+  closeExportDialog() {
+    this.showExportDialog.set(false);
   }
 }

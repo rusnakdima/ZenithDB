@@ -3,6 +3,7 @@ import { save } from "@tauri-apps/plugin-dialog";
 import { writeTextFile } from "@tauri-apps/plugin-fs";
 import { ToastService } from "@services/toast.service";
 import { LoadingService } from "@shared/services/loading.service";
+import { RowData } from "@shared/models/connection.config";
 
 type FileFilter = {
   name: string;
@@ -23,7 +24,7 @@ export class ExportService {
   private toast = inject(ToastService) as ToastService;
   private loading = inject(LoadingService) as LoadingService;
 
-  private validateExportData(data: any[]): boolean {
+  private validateExportData(data: RowData[]): boolean {
     if (!data || data.length === 0) {
       this.toast.warning("No data to export");
       return false;
@@ -31,7 +32,7 @@ export class ExportService {
     return true;
   }
 
-  async exportToCsv(data: any[], filename: string, includeHeaders = true): Promise<void> {
+  async exportToCsv(data: RowData[], filename: string, includeHeaders = true): Promise<void> {
     if (!this.validateExportData(data)) return;
 
     const headers = Object.keys(data[0]);
@@ -41,14 +42,14 @@ export class ExportService {
     await this.saveFile(content, filename, [{ name: "CSV Files", extensions: ["csv"] }]);
   }
 
-  async exportToJson(data: any[], filename: string): Promise<void> {
+  async exportToJson(data: RowData[], filename: string): Promise<void> {
     if (!this.validateExportData(data)) return;
 
     const content = JSON.stringify(data, null, 2);
     await this.saveFile(content, filename, [{ name: "JSON Files", extensions: ["json"] }]);
   }
 
-  async exportToJsonLines(data: any[], filename: string): Promise<void> {
+  async exportToJsonLines(data: RowData[], filename: string): Promise<void> {
     if (!this.validateExportData(data)) return;
 
     const content = data.map((row) => JSON.stringify(row)).join("\n");
@@ -58,7 +59,7 @@ export class ExportService {
     ]);
   }
 
-  async exportToSql(data: any[], tableName: string, filename: string): Promise<void> {
+  async exportToSql(data: RowData[], tableName: string, filename: string): Promise<void> {
     if (!this.validateExportData(data)) return;
 
     const headers = Object.keys(data[0]);
@@ -71,7 +72,7 @@ export class ExportService {
     await this.saveFile(content, filename, [{ name: "SQL Files", extensions: ["sql"] }]);
   }
 
-  async exportToMarkdown(data: any[], filename: string): Promise<void> {
+  async exportToMarkdown(data: RowData[], filename: string): Promise<void> {
     if (!this.validateExportData(data)) return;
 
     const headers = Object.keys(data[0]);
@@ -85,7 +86,7 @@ export class ExportService {
     await this.saveFile(content, filename, [{ name: "Markdown Files", extensions: ["md"] }]);
   }
 
-  async export(options: ExportOptions, data: any[]): Promise<void> {
+  async export(options: ExportOptions, data: RowData[]): Promise<void> {
     const { format, filename, includeHeaders = true, tableName = "data" } = options;
 
     this.loading.show(`Exporting to ${format.toUpperCase()}...`);
@@ -144,7 +145,7 @@ export class ExportService {
     }
   }
 
-  private escapeCsvValue(value: any): string {
+  private escapeCsvValue(value: unknown): string {
     if (value === null || value === undefined) return "";
     const str = String(value);
     if (str.includes(",") || str.includes('"') || str.includes("\n")) {
@@ -153,7 +154,7 @@ export class ExportService {
     return str;
   }
 
-  private escapeSqlValue(value: any): string {
+  private escapeSqlValue(value: unknown): string {
     if (value === null || value === undefined) return "NULL";
     if (typeof value === "number") return String(value);
     if (typeof value === "boolean") return value ? "1" : "0";

@@ -168,7 +168,7 @@ pub async fn create_database(conn_id: &str, name: &str) -> Result<(), String> {
   match &entry.config.config {
     ConnectionConfigEnum::Sqlite { path, .. } => {
       if !std::path::Path::new(path).exists() {
-        std::fs::File::create(path).map_err_string()?;
+        tokio::fs::File::create(path).await.map_err_string()?;
       }
       Ok(())
     }

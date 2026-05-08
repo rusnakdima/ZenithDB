@@ -15,6 +15,8 @@ import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
 import { ToastService } from "@services/toast.service";
 import { CheckboxComponent } from "@shared/components/checkbox/checkbox.component";
+import { LocalStorageService } from "@shared/services/local-storage.service";
+import { safeJsonParse } from "@shared/utils/json.utils";
 
 @Component({
   selector: "app-filter-bar",
@@ -23,6 +25,7 @@ import { CheckboxComponent } from "@shared/components/checkbox/checkbox.componen
   templateUrl: "./filter-bar.component.html",
 })
 export class FilterBarComponent implements OnInit, OnChanges, OnDestroy {
+  private localStorage = new LocalStorageService();
   @Input() filter = "";
   @Input() viewMode: "grid" | "json" = "grid";
   @Input() availableColumns: { name: string; data_type: string }[] = [];
@@ -47,8 +50,6 @@ export class FilterBarComponent implements OnInit, OnChanges, OnDestroy {
   showAutocomplete = signal(false);
   autocompleteFiltered = signal<string[]>([]);
   selectedAutocompleteIndex = signal(-1);
-
-  private readonly STORAGE_KEY = "zenithdb_filter_history";
   private readonly MAX_HISTORY = 10;
   private readonly FILTER_DEBOUNCE_MS = 300;
   private filterDebounceTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -89,9 +90,9 @@ export class FilterBarComponent implements OnInit, OnChanges, OnDestroy {
 
   loadHistory() {
     try {
-      const stored = localStorage.getItem(this.STORAGE_KEY);
-      if (stored) {
-        this.filterHistory.set(JSON.parse(stored));
+      const history = this.localStorage.getFilterHistory();
+      if (history.length > 0) {
+        this.filterHistory.set(history);
       }
     } catch (e) {
       console.error("Failed to load filter history, continuing with defaults:", e);
@@ -100,7 +101,7 @@ export class FilterBarComponent implements OnInit, OnChanges, OnDestroy {
 
   saveHistory() {
     try {
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.filterHistory()));
+      this.localStorage.setFilterHistory(this.filterHistory());
     } catch (e) {
       console.error("Failed to save filter history:", e);
     }
@@ -192,16 +193,16 @@ export class FilterBarComponent implements OnInit, OnChanges, OnDestroy {
       this.filterError.set("");
       return;
     }
-    try {
-      if (value.includes("{")) {
-        JSON.parse(value);
+    if (value.includes("{")) {
+      const parsed = safeJsonParse<object>(value, {} as object);
+      if (Object.keys(parsed).length === 0 && !value.trim().startsWith("{")) {
+        this.isValidFilter.set(false);
+        this.filterError.set("Invalid JSON syntax");
+        return;
       }
-      this.isValidFilter.set(true);
-      this.filterError.set("");
-    } catch (e: any) {
-      this.isValidFilter.set(false);
-      this.filterError.set("Invalid JSON syntax");
     }
+    this.isValidFilter.set(true);
+    this.filterError.set("");
   }
 
   onApply() {
@@ -284,7 +285,6 @@ export class FilterBarComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   toggleColumn(col: string) {
-    console.log("[FilterBar] toggleColumn called:", col, "disabled:", this.isColumnDisabled(col));
     if (this.isColumnDisabled(col)) return;
     this.selectedColumns.update((selected) => {
       const newSet = new Set(selected);
@@ -295,7 +295,6 @@ export class FilterBarComponent implements OnInit, OnChanges, OnDestroy {
       }
       return newSet;
     });
-    console.log("[FilterBar] emitting columnsChange with:", this.getSelectedColumns());
     this.columnsChange.emit(this.getSelectedColumns());
   }
 

@@ -94,7 +94,7 @@
             [disabled]="activeTab().loading || !activeTab().query.trim()"
             class="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            @if (activeTab()?.loading) {
+            @if (activeTab().loading) {
               <div
                 class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
               ></div>
@@ -145,7 +145,7 @@
           </button>
         </div>
         <div class="flex items-center gap-2 text-xs text-neutral-500">
-          @if (activeTab()?.executionTime) {
+          @if (activeTab().executionTime) {
             <span class="font-mono">{{ activeTab().executionTime.toFixed(1) }}ms</span>
           }
         </div>
@@ -167,7 +167,7 @@
 
         <!-- Text Area -->
         <textarea
-          [value]="activeTab()?.query || ''"
+          [value]="activeTab().query || ''"
           (input)="updateQuery($any($event.target).value)"
           (keydown.control.enter)="executeCurrentTab()"
           placeholder="Enter SQL query... (e.g., SELECT * FROM users LIMIT 10)"
@@ -279,7 +279,7 @@
   </div>
 
   <!-- Error Display -->
-  @if (activeTab()?.error) {
+  @if (activeTab().error) {
     <div class="flex items-start gap-3 rounded-lg border border-red-800/50 bg-red-900/20 px-4 py-3">
       <svg
         class="mt-0.5 h-5 w-5 shrink-0 text-red-400"
@@ -295,13 +295,13 @@
         ></path>
       </svg>
       <div class="flex-1">
-        <p class="font-mono text-sm text-red-400">{{ activeTab()?.error }}</p>
+        <p class="font-mono text-sm text-red-400">{{ activeTab().error }}</p>
       </div>
     </div>
   }
 
   <!-- Results Section -->
-  @if (activeTab()?.results) {
+  @if (activeTab().results) {
     <div class="flex-1 overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900">
       <div
         class="flex items-center justify-between border-b border-neutral-800 bg-neutral-800/50 px-4 py-2"

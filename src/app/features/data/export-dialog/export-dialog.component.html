@@ -1,0 +1,29 @@
+@if (visible) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    <div class="glass-card min-w-80 p-6">
+      <div class="mb-4 flex items-center justify-between">
+        <h3 class="text-lg font-bold text-[var(--text-main)]">Export Data</h3>
+        <button class="text-[var(--text-dim)] hover:text-[var(--text-main)]" (click)="onClose()">
+          <mat-icon fontIcon="close" class="h-6! w-5! text-xl!" />
+        </button>
+      </div>
+      <p class="mb-4 text-sm text-[var(--text-dim)]">
+        Exporting {{ dataCount }} row{{ dataCount !== 1 ? 's' : '' }}
+        @if (selectedCount > 0) {
+          <span class="text-[var(--accent)]">({{ selectedCount }} selected)</span>
+        }
+      </p>
+      <div class="grid grid-cols-2 gap-3">
+        @for (format of formats; track format.value) {
+          <button
+            class="flex flex-col items-center gap-2 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-elevated)] p-4 transition-all hover:border-[var(--accent)]/50 hover:bg-[var(--bg-card)]"
+            (click)="onExport(format.value)"
+          >
+            <mat-icon [fontIcon]="format.icon" class="h-8! w-8! text-2xl! text-[var(--accent)]" />
+            <span class="text-sm font-medium text-[var(--text-main)]">{{ format.label }}</span>
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+}

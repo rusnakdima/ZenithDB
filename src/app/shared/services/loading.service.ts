@@ -7,17 +7,14 @@ export class LoadingService {
   loadingMessage = signal<string | null>(null);
 
   show(message?: string): void {
-    this._loadingCount.update((c) => c + 1);
+    this._loadingCount.update((c) => Math.max(0, c + 1));
     if (message) {
       this.loadingMessage.set(message);
     }
   }
 
   hide(): void {
-    this._loadingCount.update((c) => {
-      const newCount = c - 1;
-      return newCount < 0 ? 0 : newCount;
-    });
+    this._loadingCount.update((c) => Math.max(0, c - 1));
   }
 
   reset(): void {

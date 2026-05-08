@@ -11,6 +11,7 @@ import { formatSQL } from "@shared/utils";
 
 import { QueryTab } from "@shared/models/query.model";
 import { TabService } from "@shared/services/tab.service";
+import { QueryExecutionService } from "@shared/services/query-execution.service";
 
 interface HistoryItem {
   id: string;
@@ -32,6 +33,7 @@ export class QueryEditorComponent implements OnInit, OnDestroy {
   protected storage = inject(StorageService);
   protected exportService = inject(ExportService);
   protected tabService = inject(TabService);
+  private readonly queryExecution = inject(QueryExecutionService);
 
   readonly tabs = this.tabService.tabs;
   readonly activeTabId = this.tabService.activeTabId;
@@ -131,34 +133,11 @@ export class QueryEditorComponent implements OnInit, OnDestroy {
   async executeCurrentTab() {
     const tab = this.activeTab();
     if (!tab || !tab.query.trim()) return;
-
-    this.tabService.updateActiveTab({ loading: true, error: "" });
-
-    const startTime = performance.now();
-    try {
-      const results = await this.db.executeRaw(tab.query);
-      const executionTime = performance.now() - startTime;
-
-      this.tabService.updateActiveTab({
-        results,
-        error: "",
-        loading: false,
-        executionTime,
-        modified: false,
-      });
-
+    const result = await this.queryExecution.executeWithTiming(tab.query, this.db);
+    if (result.success) {
       this.addToHistory(tab.query, true);
-      this.toast.success(`Query executed successfully (${executionTime.toFixed(0)}ms)`);
-    } catch (e: any) {
-      const executionTime = performance.now() - startTime;
-      this.tabService.updateActiveTab({
-        error: e.message || "Query failed",
-        loading: false,
-        executionTime,
-      });
-
-      this.addToHistory(tab.query, false, e.message);
-      this.toast.error(e.message || "Query failed");
+    } else {
+      this.addToHistory(tab.query, false, result.error);
     }
   }
 

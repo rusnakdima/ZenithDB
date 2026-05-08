@@ -1,5 +1,6 @@
 import { Injectable, inject } from "@angular/core";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
+import { DataProviderService } from "@shared/services/data-provider.service";
 import { LoadingService } from "@shared/services/loading.service";
 import { withConnectionAndLoading, withLoading } from "@shared/utils/api-wrapper.util";
 import { ApiProvider } from "@providers/api.provider";
@@ -16,6 +17,7 @@ import {
   CollectionStats,
   QueryParams,
   QueryResult,
+  RowData,
   RawResult,
   SystemMetrics,
   DatabaseMeta,
@@ -24,6 +26,7 @@ import {
 @Injectable({ providedIn: "root" })
 export class DatabaseService {
   private connectionState = inject(ConnectionStateService);
+  private dataProvider = inject(DataProviderService);
   private loadingService = inject(LoadingService);
   private api = inject(ApiProvider);
   private storage = inject(StorageService);
@@ -128,7 +131,7 @@ export class DatabaseService {
     );
   }
 
-  async queryData(collection: string, params: QueryParams): Promise<QueryResult> {
+  async queryData(collection: string, params: QueryParams): Promise<QueryResult<RowData>> {
     const connId = this.connectionState.activeConnectionId();
     return withConnectionAndLoading(connId, this.loadingService, "Executing query...", (connId) =>
       this.api.queryData(connId, collection, params)
@@ -138,14 +141,19 @@ export class DatabaseService {
   async saveRow(collection: string, data: Record<string, unknown>): Promise<unknown> {
     const connId = this.connectionState.activeConnectionId();
     return withConnectionAndLoading(connId, this.loadingService, "Saving row...", (connId) =>
-      this.api.saveRow(connId, collection, data)
+      this.api.saveRow(connId, collection, data).then((result) => {
+        this.dataProvider.invalidateCache(collection);
+        return result;
+      })
     );
   }
 
   async deleteRow(collection: string, id: string): Promise<void> {
     const connId = this.connectionState.activeConnectionId();
     return withConnectionAndLoading(connId, this.loadingService, "Deleting row...", (connId) =>
-      this.api.deleteRow(connId, collection, id)
+      this.api.deleteRow(connId, collection, id).then(() => {
+        this.dataProvider.invalidateCache(collection);
+      })
     );
   }
 
@@ -155,7 +163,9 @@ export class DatabaseService {
       connId,
       this.loadingService,
       `Creating collection ${name}...`,
-      (connId) => this.api.createCollection(connId, name)
+      (connId) => this.api.createCollection(connId, name).then(() => {
+        this.dataProvider.invalidateColumnsCache();
+      })
     );
   }
 

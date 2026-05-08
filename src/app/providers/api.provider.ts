@@ -1,9 +1,11 @@
 import { Injectable, inject } from "@angular/core";
-import { invoke } from "@tauri-apps/api/core";
+import { TauriBridgeService } from "./tauri-bridge.service";
+import { RequestCancellationService } from "./request-cancellation.service";
+import { ResponseSizeGuardService } from "./response-size-guard.service";
 import { StorageService } from "@services/core/storage.service";
 import { ToastService } from "@services/toast.service";
 import { ErrorHandlerService } from "@shared/services/error-handler.service";
-import { SettingsService } from "@shared/services/settings.service";
+import { invokeWithAbortHandling, invokeWithAbortHandlingOrDefault } from "@shared/utils/invoke-wrapper.util";
 import {
   ConnectionSummary,
   ConnectionConfig,
@@ -18,50 +20,29 @@ import {
   RawResult,
   SystemMetrics,
   RowData,
-  FilterExpression,
   DatabaseMeta,
 } from "@shared/models/connection.config";
 
-export interface CrudOptions {
-  visibility?: "private" | "shared" | "public";
-  connId?: string;
-  collection?: string;
-  id?: string;
-  filter?: FilterExpression;
-  limit?: number;
-  offset?: number;
-}
-
 @Injectable({ providedIn: "root" })
 export class ApiProvider {
-  private readonly MAX_RESPONSE_SIZE_MB = 10;
-  private readonly MAX_RESPONSE_SIZE_BYTES = this.MAX_RESPONSE_SIZE_MB * 1024 * 1024;
+  private tauriBridge = inject(TauriBridgeService);
+  private cancellation = inject(RequestCancellationService);
+  private responseSizeGuard = inject(ResponseSizeGuardService);
 
   private storage = inject(StorageService);
-  private abortController: AbortController | null = null;
   private toastService: ToastService | null = null;
   private errorHandler = inject(ErrorHandlerService);
-  private settingsService = inject(SettingsService);
 
-  private getTimeoutMs(): number {
-    return this.settingsService.currentSettings.connections.connectionTimeout * 1000;
+  private getAbortSignal() {
+    return this.cancellation.getAbortSignal();
   }
 
-  private createAbortSignal(): AbortSignal {
-    this.abortController?.abort();
-    this.abortController = new AbortController();
-    setTimeout(() => this.abortController?.abort(), this.getTimeoutMs());
-    return this.abortController.signal;
+  private getFastAbortSignal() {
+    return this.cancellation.getFastAbortSignal();
   }
 
-  private getAbortSignal(): AbortSignal {
-    return this.createAbortSignal();
-  }
-
-  private getFastAbortSignal(): AbortSignal {
-    this.abortController?.abort();
-    this.abortController = new AbortController();
-    return this.abortController.signal;
+  private createAbortSignal() {
+    return this.cancellation.createAbortSignal();
   }
 
   private isNetworkProvider(config: TestConnectionConfig): boolean {
@@ -70,7 +51,7 @@ export class ApiProvider {
   }
 
   cancelPendingRequests(): void {
-    this.abortController?.abort();
+    this.cancellation.cancelPendingRequests();
   }
 
   private getToastService(): ToastService {
@@ -80,60 +61,39 @@ export class ApiProvider {
     return this.toastService;
   }
 
-  private getDefaultAbortSignal(): AbortSignal {
-    this.abortController?.abort();
-    this.abortController = new AbortController();
-    const timeoutMs = this.getTimeoutMs();
-    setTimeout(() => this.abortController?.abort(), timeoutMs);
-    return this.abortController.signal;
-  }
-
-  private checkResponseSize(data: unknown): { truncated: boolean; message?: string } {
-    try {
-      const jsonStr = JSON.stringify(data);
-      const sizeBytes = new Blob([jsonStr]).size;
-      if (sizeBytes > this.MAX_RESPONSE_SIZE_BYTES) {
-        return {
-          truncated: true,
-          message: `Response size (${(sizeBytes / (1024 * 1024)).toFixed(1)}MB) exceeds ${this.MAX_RESPONSE_SIZE_MB}MB limit. Data may be truncated.`,
-        };
-      }
-    } catch {
-      return { truncated: false };
-    }
-    return { truncated: false };
+  private checkResponseSize(data: unknown) {
+    return this.responseSizeGuard.checkResponseSize(data);
   }
 
   async listConnections(): Promise<ConnectionSummary[]> {
-    try {
-      const connections = await invoke<ConnectionSummary[]>("list_connections", {
-        options: { signal: this.createAbortSignal() },
-      });
-      this.storage.setConnections(connections);
-      return connections;
-    } catch (e) {
-      if (e instanceof Error && e.name === "AbortError") return [];
-      this.errorHandler.handleError(e, "listConnections");
-      throw e;
-    }
+    const connections = await invokeWithAbortHandlingOrDefault(
+      () =>
+        this.tauriBridge.invoke<ConnectionSummary[]>("list_connections", {
+          options: { signal: this.createAbortSignal() },
+        }),
+      "listConnections",
+      this.errorHandler,
+      []
+    );
+    this.storage.setConnections(connections);
+    return connections;
   }
 
   async getConnection(id: string): Promise<ConnectionConfigResult> {
-    try {
-      return await invoke<ConnectionConfigResult>("get_connection", {
-        id,
-        options: { signal: this.getFastAbortSignal() },
-      });
-    } catch (e) {
-      if (e instanceof Error && e.name === "AbortError") throw new Error("Operation cancelled");
-      this.errorHandler.handleError(e, "getConnection");
-      throw e;
-    }
+    return invokeWithAbortHandling(
+      () =>
+        this.tauriBridge.invoke<ConnectionConfigResult>("get_connection", {
+          id,
+          options: { signal: this.getFastAbortSignal() },
+        }),
+      "getConnection",
+      this.errorHandler
+    );
   }
 
   async testConnectionStatus(id: string): Promise<ConnectionSummary> {
     try {
-      return await invoke<ConnectionSummary>("test_connection_status", {
+      return await this.tauriBridge.invoke<ConnectionSummary>("test_connection_status", {
         id,
         options: { signal: this.createAbortSignal() },
       });
@@ -149,29 +109,27 @@ export class ApiProvider {
   }
 
   async saveConnection(config: ConnectionConfig): Promise<string> {
-    try {
-      const id = await invoke<string>("save_connection", {
-        config,
-        options: { signal: this.getAbortSignal() },
-      });
-      await this.listConnections();
-      return id;
-    } catch (e) {
-      if (e instanceof Error && e.name === "AbortError") throw new Error("Operation cancelled");
-      this.errorHandler.handleError(e, "saveConnection");
-      throw e;
-    }
+    const id = await invokeWithAbortHandling(
+      () =>
+        this.tauriBridge.invoke<string>("save_connection", {
+          config,
+          options: { signal: this.getAbortSignal() },
+        }),
+      "saveConnection",
+      this.errorHandler
+    );
+    await this.listConnections();
+    return id;
   }
 
   async deleteConnection(id: string): Promise<void> {
-    try {
-      await invoke<void>("delete_connection", { id, options: { signal: this.getAbortSignal() } });
-      this.storage.removeConnection(id);
-    } catch (e) {
-      if (e instanceof Error && e.name === "AbortError") return;
-      this.errorHandler.handleError(e, "deleteConnection");
-      throw e;
-    }
+    await invokeWithAbortHandlingOrDefault(
+      () => this.tauriBridge.invoke<void>("delete_connection", { id, options: { signal: this.getAbortSignal() } }),
+      "deleteConnection",
+      this.errorHandler,
+      undefined
+    );
+    this.storage.removeConnection(id);
   }
 
   async testConnection(config: TestConnectionConfig): Promise<ConnectionHealth> {
@@ -179,7 +137,7 @@ export class ApiProvider {
       const isNetwork = this.isNetworkProvider(config);
       const signal = isNetwork ? this.createAbortSignal() : this.getFastAbortSignal();
 
-      return await invoke<ConnectionHealth>("test_connection", {
+      return await this.tauriBridge.invoke<ConnectionHealth>("test_connection", {
         config,
         options: { signal },
       });
@@ -196,272 +154,261 @@ export class ApiProvider {
   }
 
   async listCollections(connId: string, dbName?: string): Promise<CollectionMeta[]> {
-    try {
-      const collections = await invoke<CollectionMeta[]>("list_collections", {
-        connId,
-        dbName,
-        options: { signal: this.getAbortSignal() },
-      });
-      this.storage.setCollections(collections);
-      return collections;
-    } catch (e) {
-      if (e instanceof Error && e.name === "AbortError") return [];
-      this.errorHandler.handleError(e, "listCollections");
-      throw e;
-    }
+    const collections = await invokeWithAbortHandlingOrDefault(
+      () =>
+        this.tauriBridge.invoke<CollectionMeta[]>("list_collections", {
+          connId,
+          dbName,
+          options: { signal: this.getAbortSignal() },
+        }),
+      "listCollections",
+      this.errorHandler,
+      []
+    );
+    this.storage.setCollections(collections);
+    return collections;
   }
 
   async listDatabases(connId: string): Promise<DatabaseMeta[]> {
-    try {
-      return await invoke<DatabaseMeta[]>("list_databases", {
-        connId,
-        options: { signal: this.getAbortSignal() },
-      });
-    } catch (e) {
-      if (e instanceof Error && e.name === "AbortError") return [];
-      this.errorHandler.handleError(e, "listDatabases");
-      throw e;
-    }
+    return invokeWithAbortHandlingOrDefault(
+      () =>
+        this.tauriBridge.invoke<DatabaseMeta[]>("list_databases", {
+          connId,
+          options: { signal: this.getAbortSignal() },
+        }),
+      "listDatabases",
+      this.errorHandler,
+      []
+    );
   }
 
   async createDatabase(connId: string, name: string): Promise<void> {
-    try {
-      return await invoke<void>("create_database", {
-        connId,
-        name,
-        options: { signal: this.getAbortSignal() },
-      });
-    } catch (e) {
-      if (e instanceof Error && e.name === "AbortError") throw new Error("Operation cancelled");
-      this.errorHandler.handleError(e, "createDatabase");
-      throw e;
-    }
+    await invokeWithAbortHandling(
+      () =>
+        this.tauriBridge.invoke<void>("create_database", {
+          connId,
+          name,
+          options: { signal: this.getAbortSignal() },
+        }),
+      "createDatabase",
+      this.errorHandler
+    );
   }
 
   async listDatabasesForUri(providerType: string, uri: string): Promise<DatabaseMeta[]> {
-    try {
-      return await invoke<DatabaseMeta[]>("list_databases_for_uri", {
-        providerType,
-        uri,
-        options: { signal: this.getAbortSignal() },
-      });
-    } catch (e) {
-      if (e instanceof Error && e.name === "AbortError") return [];
-      this.errorHandler.handleError(e, "listDatabasesForUri");
-      throw e;
-    }
+    return invokeWithAbortHandlingOrDefault(
+      () =>
+        this.tauriBridge.invoke<DatabaseMeta[]>("list_databases_for_uri", {
+          providerType,
+          uri,
+          options: { signal: this.getAbortSignal() },
+        }),
+      "listDatabasesForUri",
+      this.errorHandler,
+      []
+    );
   }
 
   async describeCollection(connId: string, collection: string): Promise<CollectionSchema> {
-    try {
-      return await invoke<CollectionSchema>("describe_collection", {
-        connId,
-        collection,
-        options: { signal: this.getAbortSignal() },
-      });
-    } catch (e) {
-      if (e instanceof Error && e.name === "AbortError") throw new Error("Operation cancelled");
-      this.errorHandler.handleError(e, "describeCollection");
-      throw e;
-    }
+    return invokeWithAbortHandling(
+      () =>
+        this.tauriBridge.invoke<CollectionSchema>("describe_collection", {
+          connId,
+          collection,
+          options: { signal: this.getAbortSignal() },
+        }),
+      "describeCollection",
+      this.errorHandler
+    );
   }
 
   async getCollectionStats(connId: string, collection: string): Promise<CollectionStats> {
-    try {
-      return await invoke<CollectionStats>("get_collection_stats", {
-        connId,
-        collection,
-        options: { signal: this.getAbortSignal() },
-      });
-    } catch (e) {
-      if (e instanceof Error && e.name === "AbortError") throw new Error("Operation cancelled");
-      this.errorHandler.handleError(e, "getCollectionStats");
-      throw e;
-    }
+    return invokeWithAbortHandling(
+      () =>
+        this.tauriBridge.invoke<CollectionStats>("get_collection_stats", {
+          connId,
+          collection,
+          options: { signal: this.getAbortSignal() },
+        }),
+      "getCollectionStats",
+      this.errorHandler
+    );
   }
 
-  async queryData(connId: string, collection: string, params: QueryParams): Promise<QueryResult> {
-    try {
-      const result = await invoke<QueryResult>("query_data", {
-        connId,
-        collection,
-        query: params,
-        options: { signal: this.getAbortSignal() },
-      });
-      const sizeCheck = this.checkResponseSize(result.data);
-      if (sizeCheck.truncated) {
-        this.getToastService().warning(sizeCheck.message!);
-        const maxItems = Math.floor(this.MAX_RESPONSE_SIZE_BYTES / 500);
-        if (result.data.length > maxItems) {
-          result.data = result.data.slice(0, maxItems);
-        }
+  async queryData(connId: string, collection: string, params: QueryParams): Promise<QueryResult<RowData>> {
+    const result = await invokeWithAbortHandling(
+      () =>
+        this.tauriBridge.invoke<QueryResult<unknown>>("query_data", {
+          connId,
+          collection,
+          query: params,
+          options: { signal: this.getAbortSignal() },
+        }),
+      "queryData",
+      this.errorHandler
+    );
+    const sizeCheck = this.checkResponseSize(result.data);
+    if (sizeCheck.truncated) {
+      this.getToastService().warning(sizeCheck.message!);
+      const maxItems = this.responseSizeGuard.getMaxItems();
+      if (result.data.length > maxItems) {
+        result.data = result.data.slice(0, maxItems) as RowData[];
       }
-      return result;
-    } catch (e) {
-      if (e instanceof Error && e.name === "AbortError") throw new Error("Operation cancelled");
-      this.errorHandler.handleError(e, "queryData");
-      throw e;
     }
+    return result as QueryResult<RowData>;
   }
 
   async saveRow(connId: string, collection: string, data: RowData): Promise<RowData | null> {
-    try {
-      const result = await invoke<RowData>("save_row", {
-        connId,
-        collection,
-        data,
-        options: { signal: this.getAbortSignal() },
-      });
-      return result;
-    } catch (e) {
-      if (e instanceof Error && e.name === "AbortError") return null;
-      this.errorHandler.handleError(e, "saveRow");
-      throw e;
-    }
+    return invokeWithAbortHandlingOrDefault(
+      () =>
+        this.tauriBridge.invoke<RowData>("save_row", {
+          connId,
+          collection,
+          data,
+          options: { signal: this.getAbortSignal() },
+        }),
+      "saveRow",
+      this.errorHandler,
+      null
+    );
   }
 
   async deleteRow(connId: string, collection: string, id: string): Promise<void> {
-    try {
-      await invoke<void>("delete_row", {
-        connId,
-        collection,
-        id,
-        options: { signal: this.getAbortSignal() },
-      });
-    } catch (e) {
-      if (e instanceof Error && e.name === "AbortError") return;
-      this.errorHandler.handleError(e, "deleteRow");
-      throw e;
-    }
+    await invokeWithAbortHandlingOrDefault(
+      () =>
+        this.tauriBridge.invoke<void>("delete_row", {
+          connId,
+          collection,
+          id,
+          options: { signal: this.getAbortSignal() },
+        }),
+      "deleteRow",
+      this.errorHandler,
+      undefined
+    );
   }
 
   async createCollection(connId: string, name: string): Promise<void> {
-    try {
-      await invoke<void>("create_collection", {
-        connId,
-        name,
-        options: { signal: this.getAbortSignal() },
-      });
-      await this.listCollections(connId);
-    } catch (e) {
-      if (e instanceof Error && e.name === "AbortError") return;
-      this.errorHandler.handleError(e, "createCollection");
-      throw e;
-    }
+    await invokeWithAbortHandlingOrDefault(
+      () =>
+        this.tauriBridge.invoke<void>("create_collection", {
+          connId,
+          name,
+          options: { signal: this.getAbortSignal() },
+        }),
+      "createCollection",
+      this.errorHandler,
+      undefined
+    );
+    await this.listCollections(connId);
   }
 
   async dropCollection(connId: string, name: string): Promise<void> {
-    try {
-      await invoke<void>("drop_collection", {
-        connId,
-        name,
-        options: { signal: this.getAbortSignal() },
-      });
-      await this.listCollections(connId);
-    } catch (e) {
-      if (e instanceof Error && e.name === "AbortError") return;
-      this.errorHandler.handleError(e, "dropCollection");
-      throw e;
-    }
+    await invokeWithAbortHandlingOrDefault(
+      () =>
+        this.tauriBridge.invoke<void>("drop_collection", {
+          connId,
+          name,
+          options: { signal: this.getAbortSignal() },
+        }),
+      "dropCollection",
+      this.errorHandler,
+      undefined
+    );
+    await this.listCollections(connId);
   }
 
   async executeRaw(connId: string, sql: string): Promise<RawResult> {
-    try {
-      return await invoke<RawResult>("execute_raw", {
-        connId,
-        sql,
-        options: { signal: this.getAbortSignal() },
-      });
-    } catch (e) {
-      if (e instanceof Error && e.name === "AbortError")
-        return { columns: [], rows: [], affected_rows: 0 } as RawResult;
-      this.errorHandler.handleError(e, "executeRaw");
-      throw e;
-    }
+    return invokeWithAbortHandlingOrDefault(
+      () =>
+        this.tauriBridge.invoke<RawResult>("execute_raw", {
+          connId,
+          sql,
+          options: { signal: this.getAbortSignal() },
+        }),
+      "executeRaw",
+      this.errorHandler,
+      { columns: [], rows: [], affected_rows: 0 } as RawResult
+    );
   }
 
   async getServerVersion(connId: string): Promise<string> {
-    try {
-      return await invoke<string>("get_server_version", {
-        connId,
-        options: { signal: this.getAbortSignal() },
-      });
-    } catch (e) {
-      if (e instanceof Error && e.name === "AbortError") return "";
-      this.errorHandler.handleError(e, "getServerVersion");
-      throw e;
-    }
+    return invokeWithAbortHandlingOrDefault(
+      () =>
+        this.tauriBridge.invoke<string>("get_server_version", {
+          connId,
+          options: { signal: this.getAbortSignal() },
+        }),
+      "getServerVersion",
+      this.errorHandler,
+      ""
+    );
   }
 
   async getSystemStatus(): Promise<SystemMetrics> {
-    try {
-      const metrics = await invoke<SystemMetrics>("get_system_status", {
-        options: { signal: this.getAbortSignal() },
-      });
-      this.storage.setSystemMetrics(metrics);
-      return metrics;
-    } catch (e) {
-      if (e instanceof Error && e.name === "AbortError") throw new Error("Operation cancelled");
-      this.errorHandler.handleError(e, "getSystemStatus");
-      throw e;
-    }
+    const metrics = await invokeWithAbortHandling(
+      () =>
+        this.tauriBridge.invoke<SystemMetrics>("get_system_status", {
+          options: { signal: this.getAbortSignal() },
+        }),
+      "getSystemStatus",
+      this.errorHandler
+    );
+    this.storage.setSystemMetrics(metrics);
+    return metrics;
   }
 
   async updateConnection(id: string, config: ConnectionConfig): Promise<void> {
-    try {
-      return await invoke<void>("update_connection", {
-        id,
-        config,
-        options: { signal: this.getAbortSignal() },
-      });
-    } catch (e) {
-      if (e instanceof Error && e.name === "AbortError") throw new Error("Operation cancelled");
-      this.errorHandler.handleError(e, "updateConnection");
-      throw e;
-    }
+    await invokeWithAbortHandling(
+      () =>
+        this.tauriBridge.invoke<void>("update_connection", {
+          id,
+          config,
+          options: { signal: this.getAbortSignal() },
+        }),
+      "updateConnection",
+      this.errorHandler
+    );
   }
 
   async renameCollection(connId: string, oldName: string, newName: string): Promise<void> {
-    try {
-      return await invoke<void>("rename_collection", {
-        conn_id: connId,
-        old_name: oldName,
-        new_name: newName,
-        options: { signal: this.getAbortSignal() },
-      });
-    } catch (e) {
-      if (e instanceof Error && e.name === "AbortError") throw new Error("Operation cancelled");
-      this.errorHandler.handleError(e, "renameCollection");
-      throw e;
-    }
+    await invokeWithAbortHandling(
+      () =>
+        this.tauriBridge.invoke<void>("rename_collection", {
+          conn_id: connId,
+          old_name: oldName,
+          new_name: newName,
+          options: { signal: this.getAbortSignal() },
+        }),
+      "renameCollection",
+      this.errorHandler
+    );
   }
 
   async renameDatabase(connId: string, oldName: string, newName: string): Promise<void> {
-    try {
-      return await invoke<void>("rename_database", {
-        conn_id: connId,
-        old_name: oldName,
-        new_name: newName,
-        options: { signal: this.getAbortSignal() },
-      });
-    } catch (e) {
-      if (e instanceof Error && e.name === "AbortError") throw new Error("Operation cancelled");
-      this.errorHandler.handleError(e, "renameDatabase");
-      throw e;
-    }
+    await invokeWithAbortHandling(
+      () =>
+        this.tauriBridge.invoke<void>("rename_database", {
+          conn_id: connId,
+          old_name: oldName,
+          new_name: newName,
+          options: { signal: this.getAbortSignal() },
+        }),
+      "renameDatabase",
+      this.errorHandler
+    );
   }
 
   async deleteDatabase(connId: string, name: string): Promise<void> {
-    try {
-      return await invoke<void>("delete_database", {
-        conn_id: connId,
-        name,
-        options: { signal: this.getAbortSignal() },
-      });
-    } catch (e) {
-      if (e instanceof Error && e.name === "AbortError") throw new Error("Operation cancelled");
-      this.errorHandler.handleError(e, "deleteDatabase");
-      throw e;
-    }
+    await invokeWithAbortHandling(
+      () =>
+        this.tauriBridge.invoke<void>("delete_database", {
+          conn_id: connId,
+          name,
+          options: { signal: this.getAbortSignal() },
+        }),
+      "deleteDatabase",
+      this.errorHandler
+    );
   }
 }

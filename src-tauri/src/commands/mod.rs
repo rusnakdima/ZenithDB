@@ -9,7 +9,9 @@ pub mod schema;
 pub mod system;
 
 pub async fn get_connection_entry(conn_id: &str) -> Result<ConnectionEntry, String> {
-  let store = connection::ConnectionStore::load().map_err(|e| e.to_string())?;
+  let store = connection::ConnectionStore::load()
+    .await
+    .map_err(|e| e.to_string())?;
   store
     .find_by_id(conn_id)
     .cloned()

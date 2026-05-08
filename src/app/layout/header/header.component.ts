@@ -1,4 +1,4 @@
-import { Component, inject, computed, signal, ElementRef, viewChild } from "@angular/core";
+import { Component, inject, computed, signal, ElementRef, viewChild, OnDestroy } from "@angular/core";
 import { Router, NavigationEnd } from "@angular/router";
 import { filter, map } from "rxjs/operators";
 import { MatIconModule } from "@angular/material/icon";
@@ -20,7 +20,7 @@ export interface Breadcrumb {
   imports: [MatIconModule],
   templateUrl: "./header.component.html",
 })
-export class HeaderComponent {
+export class HeaderComponent implements OnDestroy {
   connectionState = inject(ConnectionStateService);
   themeService = inject(ThemeService);
   router = inject(Router);
@@ -189,5 +189,11 @@ export class HeaderComponent {
     this.isSearching.set(false);
     this.selectedIndex.set(-1);
     this.searchInputRef()?.nativeElement?.blur();
+  }
+
+  ngOnDestroy(): void {
+    if (this.searchDebounceTimer) {
+      clearTimeout(this.searchDebounceTimer);
+    }
   }
 }

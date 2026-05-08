@@ -1,4 +1,5 @@
 import { Injectable, signal, effect } from "@angular/core";
+import { LocalStorageService } from "./local-storage.service";
 
 type ThemeSetting = "dark" | "light" | "system";
 type TabSize = 2 | 4 | 8;
@@ -61,11 +62,10 @@ const DEFAULT_SETTINGS: AppSettings = {
   },
 };
 
-const STORAGE_KEY = "zenithdb-settings";
-
 @Injectable({ providedIn: "root" })
 export class SettingsService {
   private settingsSignal = signal<AppSettings>(this.loadSettings());
+  private localStorage = new LocalStorageService();
 
   readonly settings = this.settingsSignal;
 
@@ -77,6 +77,16 @@ export class SettingsService {
 
   get currentSettings(): AppSettings {
     return this.settingsSignal();
+  }
+
+  get(path: string): unknown {
+    const keys = path.split(".");
+    let value: any = this.settingsSignal();
+    for (const key of keys) {
+      if (value == null || typeof value !== "object") return undefined;
+      value = value[key];
+    }
+    return value;
   }
 
   updateGeneral(partial: Partial<GeneralSettings>): void {
@@ -113,10 +123,9 @@ export class SettingsService {
 
   private loadSettings(): AppSettings {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = this.localStorage.getSettings<AppSettings>();
       if (stored) {
-        const parsed = JSON.parse(stored);
-        return this.mergeWithDefaults(parsed);
+        return this.mergeWithDefaults(stored);
       }
     } catch (e) {
       console.error("Failed to load settings, continuing with defaults:", e);
@@ -125,7 +134,7 @@ export class SettingsService {
   }
 
   private saveSettings(settings: AppSettings): void {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+    this.localStorage.setSettings(settings);
   }
 
   private mergeWithDefaults(stored: Partial<AppSettings>): AppSettings {

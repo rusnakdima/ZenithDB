@@ -39,6 +39,7 @@ const DEFAULT_DURATIONS: Record<ToastType, number> = {
 export class ToastService {
   private toastsSignal = signal<ToastConfig[]>([]);
   private counter = 0;
+  private autoDismissTimers = new Map<string, ReturnType<typeof setTimeout>>();
 
   readonly toasts = computed(() => this.toastsSignal());
 
@@ -66,7 +67,11 @@ export class ToastService {
     });
 
     if (!persistent && duration > 0) {
-      setTimeout(() => this.dismiss(id), duration);
+      const timer = setTimeout(() => {
+        this.autoDismissTimers.delete(id);
+        this.dismiss(id);
+      }, duration);
+      this.autoDismissTimers.set(id, timer);
     }
 
     return id;
@@ -95,10 +100,17 @@ export class ToastService {
   }
 
   dismiss(id: string): void {
+    const timer = this.autoDismissTimers.get(id);
+    if (timer !== undefined) {
+      clearTimeout(timer);
+      this.autoDismissTimers.delete(id);
+    }
     this.toastsSignal.update((toasts) => toasts.filter((t) => t.id !== id));
   }
 
   dismissAll(): void {
+    this.autoDismissTimers.forEach((timer) => clearTimeout(timer));
+    this.autoDismissTimers.clear();
     this.toastsSignal.set([]);
   }
 

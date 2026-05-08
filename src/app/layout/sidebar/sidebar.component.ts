@@ -63,6 +63,7 @@ export class SidebarComponent implements OnInit {
 
   private statusSubscription: Subscription | null = null;
   private connectionStatusSubscription: Subscription | null = null;
+  private routerSub: Subscription | null = null;
 
   contextMenu = signal<{ show: boolean; x: number; y: number; node: TreeNode | null }>({
     show: false,
@@ -97,7 +98,6 @@ export class SidebarComponent implements OnInit {
   private routeEffect = effect(() => {
     const dbName = this.activeDatabaseName();
     const connId = this.activeConnectionId();
-    console.log("[Sidebar] routeEffect triggered:", { dbName, connId, url: this.currentUrl() });
     if (dbName && connId) {
       this.expandDatabaseForRoute(connId, dbName);
     } else if (!dbName && connId) {
@@ -109,7 +109,7 @@ export class SidebarComponent implements OnInit {
     this.fetchSystemStatus();
     this.fetchConnections();
 
-    this.router.events.pipe(filter((e) => e instanceof NavigationEnd)).subscribe((e: any) => {
+    this.routerSub = this.router.events.pipe(filter((e) => e instanceof NavigationEnd)).subscribe((e: any) => {
       this.currentUrl.set(e.urlAfterRedirects);
     });
     this.currentUrl.set(this.router.url);
@@ -123,6 +123,7 @@ export class SidebarComponent implements OnInit {
     });
 
     this.destroyRef.onDestroy(() => {
+      this.routerSub?.unsubscribe();
       this.statusSubscription?.unsubscribe();
       this.connectionStatusSubscription?.unsubscribe();
     });
@@ -130,10 +131,8 @@ export class SidebarComponent implements OnInit {
 
   async expandDatabaseForRoute(connId: string, dbName: string) {
     if (this.isExpandingRoute()) {
-      console.log("[Sidebar] expandDatabaseForRoute skipped - already expanding");
       return;
     }
-    console.log("[Sidebar] expandDatabaseForRoute called:", { connId, dbName });
     this.isExpandingRoute.set(true);
     try {
       const conn = this.storage.connections().find((c) => c.id === connId);
@@ -175,10 +174,8 @@ export class SidebarComponent implements OnInit {
 
   async loadConnectionForRoute(connId: string) {
     if (this.isLoadingConnectionRoute()) {
-      console.log("[Sidebar] loadConnectionForRoute skipped - already loading");
       return;
     }
-    console.log("[Sidebar] loadConnectionForRoute called:", connId);
     this.isLoadingConnectionRoute.set(true);
     try {
       const conn = this.storage.connections().find((c) => c.id === connId);
@@ -236,12 +233,14 @@ export class SidebarComponent implements OnInit {
   async refreshConnectionStatuses() {
     try {
       const connections = this.storage.connections();
-      for (const conn of connections) {
-        const result = await this.databaseService.testConnectionStatus(conn.id);
+      const results = await Promise.all(
+        connections.map(conn => this.databaseService.testConnectionStatus(conn.id))
+      );
+      results.forEach((result, index) => {
         if (result) {
-          this.storage.updateConnection(conn.id, { status: result.status });
+          this.storage.updateConnection(connections[index].id, { status: result.status });
         }
-      }
+      });
     } catch (e) {
       console.error("Failed to refresh connection statuses:", e);
     }
@@ -269,7 +268,6 @@ export class SidebarComponent implements OnInit {
   }
 
   async loadDatabases(connId: string) {
-    console.log("[Sidebar] loadDatabases called:", connId);
     this.loadingDatabases.set(true);
     try {
       const databases = await this.databaseService.listDatabases(connId);
@@ -290,9 +288,7 @@ export class SidebarComponent implements OnInit {
 
   async loadCollectionsForDatabase(dbNode: TreeNode, connId: string) {
     const key = `${connId}:${dbNode.name}`;
-    console.log("[Sidebar] loadCollectionsForDatabase called:", { key, dbNode: dbNode.name });
     if (this.loadingCollections().has(key)) {
-      console.log("[Sidebar] loadCollectionsForDatabase skipped - already loading");
       return;
     }
 
@@ -303,12 +299,7 @@ export class SidebarComponent implements OnInit {
     });
 
     try {
-      console.log("[Sidebar] loadCollectionsForDatabase calling api:", {
-        connId,
-        dbName: dbNode.name,
-      });
       const collections = await this.databaseService.listCollections(connId, dbNode.name);
-      console.log("[Sidebar] loadCollectionsForDatabase got collections:", collections.length);
       dbNode.children = collections.map((c) => ({
         name: c.name,
         type: "collection" as const,
@@ -460,13 +451,6 @@ export class SidebarComponent implements OnInit {
     this.contextMenu.set({ show: false, x: 0, y: 0, node: null });
   }
 
-  onRefreshClick() {
-    const node = this.contextMenu().node;
-    if (node?.type === "collection" && node.collection) {
-    }
-    this.hideContextMenu();
-  }
-
   onBrowseDataClick() {
     const node = this.contextMenu().node;
     if (node?.type === "collection") {
@@ -483,10 +467,29 @@ export class SidebarComponent implements OnInit {
     this.hideContextMenu();
   }
 
+  onRefreshClick() {
+    const node = this.contextMenu().node;
+    if (node?.type === "collection" && node.collection) {
+      this.loadCollectionData(node.collection.name);
+    }
+    this.hideContextMenu();
+  }
+
   onDeleteClick() {
     const node = this.contextMenu().node;
     if (node?.type === "collection" && node.collection) {
+      this.deleteCollection(node.collection.name);
     }
     this.hideContextMenu();
+  }
+
+  private loadCollectionData(collection: string) {
+    const connId = this.activeConnectionId();
+    if (connId) {
+      this.databaseService.queryData(collection, { limit: 100 }).catch(console.error);
+    }
+  }
+
+  private deleteCollection(_collection: string) {
   }
 }

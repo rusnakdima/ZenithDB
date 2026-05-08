@@ -7,3 +7,4 @@ export * from "./shortcuts-help-dialog/shortcuts-help-dialog.component";
 export * from "./status-badge/status-badge.component";
 export * from "./data-type-badge/data-type-badge.component";
 export * from "./sortable-header/sortable-header.component";
+export * from "./connection-status-badge/connection-status-badge.component";

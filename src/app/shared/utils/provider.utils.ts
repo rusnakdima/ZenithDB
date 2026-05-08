@@ -4,25 +4,21 @@ import { ProviderType } from "@shared/models/provider.model";
 
 export type { ProviderType };
 
-const ICON_MAP: Record<ProviderType, string> = {
-  json: "description",
-  mongo: "eco",
-  redis: "flash_on",
-  postgres: "storage",
-  sqlite: "insert_drive_file",
-  mysql: "storage",
+export const PROVIDER_REGISTRY: Record<ProviderType, {
+  icon: string;
+  color: string;
+  isNetwork: boolean;
+  normalize: (type: string) => ProviderType;
+}> = {
+  json: { icon: "description", color: "text-yellow-500", isNetwork: false, normalize: () => "json" },
+  mongo: { icon: "eco", color: "text-green-500", isNetwork: true, normalize: () => "mongo" },
+  redis: { icon: "flash_on", color: "text-red-500", isNetwork: true, normalize: () => "redis" },
+  postgres: { icon: "storage", color: "text-blue-500", isNetwork: true, normalize: () => "postgres" },
+  sqlite: { icon: "insert_drive_file", color: "text-slate-400", isNetwork: false, normalize: () => "sqlite" },
+  mysql: { icon: "storage", color: "text-orange-500", isNetwork: true, normalize: () => "mysql" },
 };
 
-const COLOR_MAP: Record<string, string> = {
-  postgresql: "text-blue-500",
-  mongodb: "text-green-500",
-  mysql: "text-orange-500",
-  sqlite: "text-slate-400",
-  redis: "text-red-500",
-  json: "text-yellow-500",
-};
-
-const TYPE_MAP: Record<string, ProviderType> = {
+const PROVIDER_KEYS: Record<string, ProviderType> = {
   postgresql: "postgres",
   mongodb: "mongo",
   mysql: "mysql",
@@ -43,19 +39,13 @@ const CONFIG_TYPE_MAP: Record<ProviderType, string> = {
 @Injectable({ providedIn: "root" })
 export class ProviderUtils {
   getProviderIcon(provider: string): string {
-    const p = provider?.toLowerCase() || "";
-    if (p.includes("mongo")) return ICON_MAP.mongo;
-    if (p.includes("postgres")) return ICON_MAP.postgres;
-    if (p.includes("redis")) return ICON_MAP.redis;
-    if (p.includes("mysql")) return ICON_MAP.mysql;
-    if (p.includes("sqlite")) return ICON_MAP.sqlite;
-    if (p.includes("json")) return ICON_MAP.json;
-    return "dns";
+    const type = this.toProviderType(provider);
+    return PROVIDER_REGISTRY[type]?.icon ?? "dns";
   }
 
   toProviderType(type: string): ProviderType {
-    const normalized = type.toLowerCase();
-    const mapped = TYPE_MAP[normalized];
+    const normalized = type?.toLowerCase() || "";
+    const mapped = PROVIDER_KEYS[normalized];
     if (mapped) return mapped;
     if (normalized.includes("mongo")) return "mongo";
     if (normalized.includes("postgres")) return "postgres";
@@ -67,7 +57,11 @@ export class ProviderUtils {
   }
 
   toConfigType(provider: ProviderType): string {
-    return CONFIG_TYPE_MAP[provider] || provider;
+    return CONFIG_TYPE_MAP[provider] ?? provider;
+  }
+
+  isNetworkProvider(provider: ProviderType): boolean {
+    return PROVIDER_REGISTRY[provider]?.isNetwork ?? false;
   }
 
   formatBytes(bytes: number): string {
