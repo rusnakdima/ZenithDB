@@ -9,6 +9,6 @@ export * from "./form-validation.service";
 export * from "./json-highlighter.service";
 export * from "./keyboard-shortcuts.service";
 export * from "./loading.service";
-export * from "./local-storage.service";
+export * from "./persistent-storage.service";
 export * from "./settings.service";
 export * from "./theme.service";

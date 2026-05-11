@@ -1,5 +1,5 @@
-import { Injectable, signal, effect } from "@angular/core";
-import { LocalStorageService } from "./local-storage.service";
+import { Injectable, signal, effect, inject } from "@angular/core";
+import { PersistentStorageService } from "./persistent-storage.service";
 
 type ThemeSetting = "dark" | "light" | "system";
 type TabSize = 2 | 4 | 8;
@@ -64,8 +64,8 @@ const DEFAULT_SETTINGS: AppSettings = {
 
 @Injectable({ providedIn: "root" })
 export class SettingsService {
+  private storage = inject(PersistentStorageService);
   private settingsSignal = signal<AppSettings>(this.loadSettings());
-  private localStorage = new LocalStorageService();
 
   readonly settings = this.settingsSignal;
 
@@ -123,7 +123,7 @@ export class SettingsService {
 
   private loadSettings(): AppSettings {
     try {
-      const stored = this.localStorage.getSettings<AppSettings>();
+      const stored = this.storage.getSettings<AppSettings>();
       if (stored) {
         return this.mergeWithDefaults(stored);
       }
@@ -134,7 +134,7 @@ export class SettingsService {
   }
 
   private saveSettings(settings: AppSettings): void {
-    this.localStorage.setSettings(settings);
+    this.storage.setSettings(settings);
   }
 
   private mergeWithDefaults(stored: Partial<AppSettings>): AppSettings {

@@ -13,7 +13,7 @@ import { MatIconModule } from "@angular/material/icon";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { ThemeService } from "@shared/services/theme.service";
 import { DatabaseService } from "@shared/services/database.service";
-import { StorageService } from "@services/core/storage.service";
+import { DataStoreService } from "@services/core/data-store.service";
 import { toSignal } from "@angular/core/rxjs-interop";
 
 export interface Breadcrumb {
@@ -33,7 +33,7 @@ export class HeaderComponent implements OnDestroy {
   themeService = inject(ThemeService);
   router = inject(Router);
   private databaseService = inject(DatabaseService);
-  private storage = inject(StorageService);
+  private dataStore = inject(DataStoreService);
 
   private searchInputRef = viewChild<ElementRef<HTMLInputElement>>("searchInput");
 
@@ -103,7 +103,7 @@ export class HeaderComponent implements OnDestroy {
   }
 
   private getConnectionName(connId: string): string {
-    const conn = this.storage.connections().find((c) => c.id === connId);
+    const conn = this.dataStore.getConnections().find((c) => c.id === connId);
     return conn?.name || connId;
   }
 
@@ -148,7 +148,7 @@ export class HeaderComponent implements OnDestroy {
     this.searchDebounceTimer = setTimeout(async () => {
       this.isSearching.set(true);
 
-      let collections = this.storage.collections() || [];
+      let collections = this.dataStore.getCollections() || [];
       if (collections.length === 0) {
         try {
           const result = await this.databaseService.listCollections();

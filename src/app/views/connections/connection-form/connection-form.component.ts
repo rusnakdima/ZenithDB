@@ -47,7 +47,6 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
     name: "",
     path: "",
     uri: "",
-    database: "",
     behavior: "folders_as_databases",
     useSsl: false,
   });
@@ -94,13 +93,9 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
         name: conn.config.name,
         path: parsed.path,
         uri: parsed.uri,
-        database: parsed.database,
         behavior: parsed.behavior,
         useSsl: false,
       });
-      if (parsed.database) {
-        this.selectedDatabases.set(parsed.database.split(",").map((d) => d.trim()));
-      }
     } catch (e) {
       console.error("Failed to load connection:", e);
     }
@@ -116,13 +111,9 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
         name: innerConfig.name + " (Copy)",
         path: parsed.path,
         uri: parsed.uri,
-        database: parsed.database,
         behavior: parsed.behavior,
         useSsl: false,
       });
-      if (parsed.database) {
-        this.selectedDatabases.set(parsed.database.split(",").map((d) => d.trim()));
-      }
     } catch (e) {
       console.error("Failed to load connection:", e);
     }
@@ -134,11 +125,9 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
       name: this.formData().name,
       path: "",
       uri: "",
-      database: "",
       behavior: "folders_as_databases",
       useSsl: false,
     });
-    this.selectedDatabases.set([]);
   }
 
   onFormDataChange(data: ConfigFormData) {
@@ -190,7 +179,6 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
       case "sqlite":
         return !!data.path.trim();
       case "mongo":
-        return !!data.uri.trim() && !!data.database.trim();
       case "redis":
       case "postgres":
       case "mysql":
@@ -260,7 +248,6 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
             type: configType,
             name: data.name,
             uri: data.uri,
-            database: data.database,
           },
         };
       case "redis":
@@ -270,7 +257,6 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
             type: configType,
             name: data.name,
             uri: data.uri,
-            database: data.database,
           },
         };
       case "postgres":

@@ -11,7 +11,7 @@ const KEYS = {
 } as const;
 
 @Injectable({ providedIn: "root" })
-export class LocalStorageService {
+export class PersistentStorageService {
   get<T>(key: string): T | null {
     const stored = localStorage.getItem(key);
     if (!stored) return null;

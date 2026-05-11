@@ -30,14 +30,7 @@ interface DbNode {
 @Component({
   selector: "app-connection-detail",
   standalone: true,
-  imports: [
-    RouterLink,
-    StatusBadgeComponent,
-    ConnectionStatusBadgeComponent,
-    TitleCasePipe,
-    MatIconModule,
-    FormsModule,
-  ],
+  imports: [RouterLink, ConnectionStatusBadgeComponent, TitleCasePipe, MatIconModule, FormsModule],
   templateUrl: "./connection-detail.component.html",
 })
 export class ConnectionDetailComponent implements OnInit, OnDestroy {
@@ -64,8 +57,7 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
   showCreateDb = signal(false);
   newDbName = "";
   creatingDb = signal(false);
-  editingDb = signal<string | null>(null);
-  editDbName = "";
+  manuallyAddedDatabases = signal<string[]>([]);
 
   providerIcon = signal("dns");
 
@@ -99,9 +91,6 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
       this.updateProviderIcon();
       await this.loadConnectionDetails();
     });
-
-    this.updateProviderIcon();
-    await this.loadConnectionDetails();
   }
 
   ngOnDestroy() {
@@ -202,17 +191,31 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
 
   getCollectionsForDb(dbName: string): CollectionMeta[] {
     return this.collections().filter(
-      (c) => c.name.startsWith(dbName + ".") || c.name.split(".")[0] === dbName
+      (c) => c.name.startsWith(dbName + ".") || c.name.split(".")[0] === dbName || c.name === dbName
     );
   }
 
   getDbList(): string[] {
+    const manuallyAdded = this.manuallyAddedDatabases();
+    if (manuallyAdded.length > 0) {
+      return manuallyAdded;
+    }
+
     const colls = this.collections();
-    const dbs = new Set<string>();
+    const selectedDbs = this.getSelectedDatabases();
+    if (selectedDbs.length > 0) {
+      const hasDottedCollections = colls.some((c) => c.name.includes("."));
+      if (!hasDottedCollections) {
+        return selectedDbs;
+      }
+    }
+    const dbs = new Set<string>(selectedDbs);
     colls.forEach((c) => {
       const parts = c.name.split(".");
       if (parts.length > 1) {
         dbs.add(parts[0]);
+      } else if (selectedDbs.includes(c.name)) {
+        dbs.add(c.name);
       } else {
         dbs.add("default");
       }
@@ -221,109 +224,21 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
   }
 
   getSelectedDatabases(): string[] {
-    const config = this.fullConfig();
-    if (!config || !config.config || !config.config.config) {
-      return [];
-    }
-    const innerConfig = config.config.config;
-    if (innerConfig.database && innerConfig.database.trim()) {
-      return innerConfig.database
-        .split(",")
-        .map((d: string) => d.trim())
-        .filter(Boolean);
-    }
-    if (innerConfig.type === "Json" && innerConfig.path) {
-      const pathParts = innerConfig.path.split(/[\/\\]/);
-      const folderName = pathParts[pathParts.length - 1] || "root";
-      return [folderName];
-    }
-    return [];
+    return this.manuallyAddedDatabases();
   }
 
-  async createDatabase() {
+  createDatabase() {
     if (!this.newDbName.trim()) return;
-    this.creatingDb.set(true);
-    try {
-      await this.db.createDatabase(this.newDbName.trim());
-      this.newDbName = "";
-      this.showCreateDb.set(false);
-      await this.loadConnectionDetails();
-    } catch (e) {
-      console.error("Failed to create database:", e);
-    } finally {
-      this.creatingDb.set(false);
-    }
+    this.manuallyAddedDatabases.update((dbs) => [...dbs, this.newDbName.trim()]);
+    this.newDbName = "";
+    this.showCreateDb.set(false);
   }
 
-  startEditDb(dbName: string) {
-    this.editingDb.set(dbName);
-    this.editDbName = dbName;
-  }
+  startEditDb(dbName: string) {}
 
-  async saveEditDb() {
-    const oldName = this.editingDb();
-    if (!oldName) return;
+  saveEditDb() {}
 
-    const newName = this.editDbName.trim();
-    if (!newName || newName === oldName) {
-      this.cancelEditDb();
-      return;
-    }
+  cancelEditDb() {}
 
-    const connId = this.connectionId();
-    if (!connId) return;
-
-    try {
-      await this.db.renameDatabase(connId, oldName, newName);
-      const config = this.fullConfig();
-      if (config && config.config && config.config.config) {
-        const innerConfig = config.config.config;
-        const dbs = innerConfig.database.split(",").map((d: string) => d.trim());
-        const idx = dbs.indexOf(oldName);
-        if (idx >= 0) {
-          dbs[idx] = newName;
-          innerConfig.database = dbs.join(",");
-          await this.db.updateConnection(connId, config.config);
-        }
-      }
-      this.cancelEditDb();
-      await this.loadConnectionDetails();
-    } catch (e) {
-      console.error("Failed to rename database:", e);
-      this.cancelEditDb();
-    }
-  }
-
-  cancelEditDb() {
-    this.editingDb.set(null);
-    this.editDbName = "";
-  }
-
-  async deleteDatabase(dbName: string) {
-    if (!(await this.confirm.confirmDelete(dbName))) return;
-
-    const connId = this.connectionId();
-    if (!connId) return;
-
-    try {
-      await this.db.deleteDatabase(connId, dbName);
-      const config = this.fullConfig();
-      if (config && config.config && config.config.config) {
-        const innerConfig = config.config.config;
-        const dbs = innerConfig.database
-          .split(",")
-          .map((d: string) => d.trim())
-          .filter(Boolean);
-        const idx = dbs.indexOf(dbName);
-        if (idx >= 0) {
-          dbs.splice(idx, 1);
-          innerConfig.database = dbs.join(",");
-          await this.db.updateConnection(connId, config.config);
-        }
-      }
-      await this.loadConnectionDetails();
-    } catch (e) {
-      console.error("Failed to delete database:", e);
-    }
-  }
+  deleteDatabase(dbName: string) {}
 }

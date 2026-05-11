@@ -8,13 +8,12 @@ import { DataGridComponent } from "@features/data/data-grid/data-grid.component"
 import { SchemaTreeComponent } from "@features/schema/schema-tree/schema-tree.component";
 import { FilterBarComponent } from "@shared/components/filter-bar/filter-bar.component";
 import { DatabaseService } from "@shared/services/database.service";
-import { DataProviderService } from "@shared/services/data-provider.service";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
-import { StorageService } from "@services/core/storage.service";
+import { DataStoreService } from "@services/core/data-store.service";
 import { ToastService } from "@services/toast.service";
 import { ClipboardService } from "@shared/services/clipboard.service";
 import { ExportService } from "@shared/services/export.service";
-import { LocalStorageService, SplitMode } from "@shared/services/local-storage.service";
+import { PersistentStorageService, SplitMode } from "@shared/services/persistent-storage.service";
 import {
   CollectionMeta,
   CollectionStats,
@@ -51,19 +50,17 @@ interface Tab {
     CollectionTabsComponent,
     ViewSwitcherComponent,
     FormatBytesPipe,
-    PaginationComponent,
   ],
   templateUrl: "./explorer.component.html",
 })
 export class ExplorerComponent implements OnInit, OnDestroy {
   private db = inject(DatabaseService);
-  private dataProvider = inject(DataProviderService);
   private connectionState = inject(ConnectionStateService);
-  private storage = inject(StorageService);
+  private dataStore = inject(DataStoreService);
   private toast = inject(ToastService);
   private clipboard = inject(ClipboardService);
   private exportService = inject(ExportService);
-  private localStorage = inject(LocalStorageService);
+  private persistentStorage = inject(PersistentStorageService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private queryParamsSub: Subscription | null = null;
@@ -96,7 +93,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   private currentConnectionId: string | null = null;
 
   async ngOnInit() {
-    const savedSplitMode = this.localStorage.getExplorerSplitMode();
+    const savedSplitMode = this.persistentStorage.getExplorerSplitMode();
     if (savedSplitMode) {
       this.splitMode.set(savedSplitMode);
     }
@@ -136,7 +133,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
     const connIdIndex = segments.indexOf("connections");
     if (connIdIndex !== -1 && segments[connIdIndex + 1]) {
       this.currentConnectionId = segments[connIdIndex + 1];
-      const conn = this.storage.connections().find((c) => c.id === this.currentConnectionId);
+      const conn = this.dataStore.connections().find((c) => c.id === this.currentConnectionId);
       if (conn) {
         this.connectionState.setActiveConnection(conn);
       }
@@ -195,7 +192,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
     const collection = this.activeCollection();
     if (!collection) return [];
     try {
-      const columns = await this.dataProvider.loadColumns(collection);
+      const columns = await this.dataStore.loadColumns(collection);
       const cols = columns.map((c) => c.name);
       this.availableColumns.set(cols);
       this.availableColumnsMeta.set(columns);
@@ -289,7 +286,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
 
   setSplitMode(mode: SplitMode) {
     this.splitMode.set(mode);
-    this.localStorage.setExplorerSplitMode(mode);
+    this.persistentStorage.setExplorerSplitMode(mode);
   }
 
   toggleCollectionSelector() {
@@ -383,30 +380,9 @@ export class ExplorerComponent implements OnInit, OnDestroy {
     this.inspectorDocument.set(null);
   }
 
-  async saveDocument(doc: RowData) {
-    const result = await withErrorHandling(() => this.db.saveRow(this.activeCollection(), doc), {
-      toast: true,
-      toastSuccess: "Document saved",
-      errorMessage: "Failed to save document",
-    });
-    if (result.success) {
-      this.closeInspector();
-    }
-  }
+  async saveDocument(doc: RowData) {}
 
-  async deleteDocument(doc: RowData) {
-    const id = (doc["_id"] || doc["id"]) as string;
-    if (!id) return;
-    const result = await withErrorHandling(() => this.db.deleteRow(this.activeCollection(), id), {
-      toast: true,
-      toastSuccess: "Document deleted",
-      errorMessage: "Failed to delete document",
-    });
-    if (result.success) {
-      this.closeInspector();
-      await this.loadStats();
-    }
-  }
+  async deleteDocument(doc: RowData) {}
 
   onPageChange(newPage: number) {
     this.page.set(newPage);

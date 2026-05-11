@@ -15,16 +15,12 @@ import { formatJsonLines, highlightJsonLine, safeJsonParse } from "@shared/utils
 export class InspectorDrawerComponent {
   document = input.required<any>();
   close = output<void>();
-  save = output<any>();
   delete = output<void>();
 
   private toast = inject(ToastService);
   private clipboard = inject(ClipboardService);
   private exportService = inject(ExportService);
 
-  isEditing = signal(false);
-  editText = signal("");
-  isSaving = signal(false);
   jsonError = signal("");
   expandedPaths = signal<Set<string>>(new Set());
   showDeleteConfirm = signal(false);
@@ -63,27 +59,8 @@ export class InspectorDrawerComponent {
   }
 
   onClose() {
-    this.isEditing.set(false);
     this.showDeleteConfirm.set(false);
     this.close.emit();
-  }
-
-  async onSave() {
-    if (!this.isValidJson()) return;
-    this.isSaving.set(true);
-    try {
-      const parsed = safeJsonParse(this.editText(), undefined);
-      if (parsed === undefined) {
-        this.jsonError.set("Invalid JSON");
-        this.isSaving.set(false);
-        return;
-      }
-      this.save.emit(parsed);
-      this.toast.success("Document saved");
-      this.isEditing.set(false);
-    } finally {
-      this.isSaving.set(false);
-    }
   }
 
   onDelete() {
@@ -100,32 +77,7 @@ export class InspectorDrawerComponent {
     this.showDeleteConfirm.set(false);
   }
 
-  startEdit() {
-    this.editText.set(this.jsonPayload());
-    this.isEditing.set(true);
-    this.jsonError.set("");
-  }
-
-  cancelEdit() {
-    this.isEditing.set(false);
-    this.editText.set("");
-    this.jsonError.set("");
-  }
-
-  resetEdit() {
-    this.editText.set(this.jsonPayload());
-    this.jsonError.set("");
-  }
-
-  isValidJson(): boolean {
-    const parsed = safeJsonParse(this.editText(), undefined);
-    if (parsed === undefined) {
-      this.jsonError.set("Invalid JSON");
-      return false;
-    }
-    this.jsonError.set("");
-    return true;
-  }
+  resetEdit() {}
 
   togglePath(path: string) {
     this.expandedPaths.update((paths) => {

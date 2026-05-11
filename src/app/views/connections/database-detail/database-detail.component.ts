@@ -17,7 +17,7 @@ import { filter, distinctUntilChanged } from "rxjs/operators";
 @Component({
   selector: "app-database-detail",
   standalone: true,
-  imports: [RouterLink, MatIconModule, TitleCasePipe, FormsModule],
+  imports: [MatIconModule, TitleCasePipe, FormsModule],
   templateUrl: "./database-detail.component.html",
 })
 export class DatabaseDetailComponent implements OnInit, OnDestroy {

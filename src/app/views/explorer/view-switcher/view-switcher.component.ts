@@ -1,6 +1,6 @@
 import { Component, input, output } from "@angular/core";
 import { MatIconModule } from "@angular/material/icon";
-import { SplitMode } from "@shared/services/local-storage.service";
+import { SplitMode } from "@shared/services/persistent-storage.service";
 
 type ViewTab = "table" | "tree" | "json";
 
