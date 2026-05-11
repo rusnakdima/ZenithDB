@@ -26,17 +26,10 @@ export class TableBodyComponent {
   @Input() visibleColumnsList: string[] = [];
   @Input() columnWidths: Record<string, number> = {};
   @Input() selectedRows: Set<number> = new Set();
-  @Input() editingCell: { row: number; col: string } | null = null;
-  @Input() editValue = "";
 
   @Output() rowClick = new EventEmitter<{ row: RowData; event: MouseEvent }>();
   @Output() toggleRow = new EventEmitter<number>();
   @Output() toggleSelectAll = new EventEmitter<void>();
-  @Output() startEdit = new EventEmitter<{ rowIndex: number; col: string; value: unknown }>();
-  @Output() saveEdit = new EventEmitter<void>();
-  @Output() cancelEdit = new EventEmitter<void>();
-  @Output() duplicateRow = new EventEmitter<RowData>();
-  @Output() deleteRow = new EventEmitter<RowData>();
   @Output() viewJson = new EventEmitter<RowData>();
 
   allSelected = computed(() => this.data.length > 0 && this.selectedRows.size === this.data.length);
@@ -56,7 +49,7 @@ export class TableBodyComponent {
   }
 
   isCellModified(rowIndex: number, col: string): boolean {
-    return this.editingCell?.row === rowIndex && this.editingCell?.col === col;
+    return false;
   }
 
   onRowClick(row: RowData, event: MouseEvent, rowIndex: number) {
@@ -74,26 +67,6 @@ export class TableBodyComponent {
 
   onToggleSelectAll() {
     this.toggleSelectAll.emit();
-  }
-
-  onStartEdit(rowIndex: number, col: string, value: unknown) {
-    this.startEdit.emit({ rowIndex, col, value });
-  }
-
-  onSaveEdit() {
-    this.saveEdit.emit();
-  }
-
-  onCancelEdit() {
-    this.cancelEdit.emit();
-  }
-
-  onDuplicateRow(row: RowData) {
-    this.duplicateRow.emit(row);
-  }
-
-  onDeleteRow(row: RowData) {
-    this.deleteRow.emit(row);
   }
 
   onViewJson(row: RowData) {

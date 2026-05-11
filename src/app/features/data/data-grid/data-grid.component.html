@@ -121,16 +121,9 @@
               [visibleColumnsList]="visibleColumnsList()"
               [columnWidths]="columnWidths()"
               [selectedRows]="selectedRows()"
-              [editingCell]="editingCell"
-              [editValue]="editValue"
               (rowClick)="onRowClick($event.row, $event.event)"
               (toggleRow)="toggleRow($event)"
               (toggleSelectAll)="toggleSelectAll()"
-              (startEdit)="startEdit($event.rowIndex, $event.col, $event.value)"
-              (saveEdit)="saveEdit()"
-              (cancelEdit)="cancelEdit()"
-              (duplicateRow)="duplicateRow($event)"
-              (deleteRow)="deleteRow($event)"
               (viewJson)="viewJson($event)"
             />
           </table>
