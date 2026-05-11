@@ -1,6 +1,10 @@
+use crate::commands::cancellation::{register_query, unregister_query, with_cancellation};
 use crate::commands::connection::ConnectionConfigEnum;
 use crate::commands::error_utils::ToStringError;
 use crate::commands::get_connection_entry;
+use crate::commands::metrics::record_query;
+use crate::commands::rate_limit::check_rate_limit;
+use crate::commands::validation::validate_query_size;
 use crate::dispatch_provider;
 use nosql_orm::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -35,6 +39,7 @@ pub async fn query_data(
   collection: &str,
   query: QueryParams,
 ) -> Result<QueryResult, String> {
+  check_rate_limit(conn_id).await?;
   let entry = get_connection_entry(conn_id).await?;
   let filter = parse_filter(query.filter)?;
   let skip = query.skip;
@@ -42,46 +47,35 @@ pub async fn query_data(
   let sort_by = query.order_by.as_deref();
   let sort_asc = query.direction.as_deref() != Some("desc");
 
-  let (data, total) = dispatch_provider!(entry, provider => {
-      let total = provider.count(collection, filter.as_ref()).await.map_err_string()?;
-      let data = provider
-          .find_many(collection, filter.as_ref(), skip, limit, sort_by, sort_asc)
-          .await
-          .map_err_string()?;
-      Ok::<_, String>((data, total))
-  })?;
+  let (query_id, token) = register_query().await?;
 
-  let has_more = if let (Some(_skip), Some(limit)) = (skip, limit) {
-    data.len() as u64 >= limit
-  } else {
-    false
-  };
+  let result = with_cancellation(&query_id, token, async {
+    record_query(async {
+      let (data, total) = dispatch_provider!(entry, provider => {
+          let total = provider.count(collection, filter.as_ref()).await.map_err_string()?;
+          let data = provider
+              .find_many(collection, filter.as_ref(), skip, limit, sort_by, sort_asc)
+              .await
+              .map_err_string()?;
+          Ok::<_, String>((data, total))
+      })?;
 
-  Ok(QueryResult {
-    data,
-    total,
-    has_more,
+      let has_more = if let (Some(_skip), Some(limit)) = (skip, limit) {
+        data.len() as u64 >= limit
+      } else {
+        false
+      };
+
+      Ok(QueryResult {
+        data,
+        total,
+        has_more,
+      })
+    })
+    .await
   })
-}
+  .await;
 
-#[tauri::command]
-pub async fn save_row(conn_id: &str, collection: &str, data: Value) -> Result<Value, String> {
-  let entry = get_connection_entry(conn_id).await?;
-  dispatch_provider!(entry, provider => {
-      if let Some(id) = data.get("id").and_then(|v| v.as_str()) {
-          if provider.exists(collection, id).await.map_err_string()? {
-              return provider.update(collection, id, data.clone()).await.map_err_string();
-          }
-      }
-      provider.insert(collection, data).await.map_err_string()
-  })
-}
-
-#[tauri::command]
-pub async fn delete_row(conn_id: &str, collection: &str, id: &str) -> Result<(), String> {
-  let entry = get_connection_entry(conn_id).await?;
-  dispatch_provider!(entry, provider => {
-      provider.delete(collection, id).await.map_err_string()?;
-      Ok(())
-  })
+  unregister_query(&query_id).await;
+  result
 }

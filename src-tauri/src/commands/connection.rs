@@ -4,8 +4,12 @@ use crate::commands::provider::{
 };
 use nosql_orm::prelude::*;
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
+use std::path::Path;
+use std::sync::Arc;
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use tokio::fs;
+use tokio::sync::{Mutex, RwLock};
+use tokio::time;
 
 pub type ConnectionId = String;
 
@@ -21,13 +25,10 @@ pub enum ConnectionConfigEnum {
   Mongo {
     name: String,
     uri: String,
-    database: String,
   },
   Redis {
     name: String,
     uri: String,
-    #[serde(default)]
-    database: String,
   },
   Postgres {
     name: String,
@@ -138,10 +139,7 @@ impl ConnectionStore {
     match Self::load().await {
       Ok(store) => store,
       Err(e) => {
-        eprintln!(
-          "WARNING: Failed to load connection store: {}, using empty store",
-          e
-        );
+        tracing::warn!("Failed to load connection store: {}, using empty store", e);
         Self::default()
       }
     }
@@ -172,6 +170,68 @@ impl Default for ConnectionStore {
   }
 }
 
+struct CachedConnectionStore {
+  store: Arc<Mutex<ConnectionStore>>,
+  loaded_at: Instant,
+  file_mtime: u64,
+}
+
+impl CachedConnectionStore {
+  fn new(store: Arc<Mutex<ConnectionStore>>, file_mtime: u64) -> Self {
+    Self {
+      store,
+      loaded_at: Instant::now(),
+      file_mtime,
+    }
+  }
+
+  fn is_valid(&self) -> bool {
+    if self.loaded_at.elapsed().as_secs() >= 30 {
+      return false;
+    }
+    if let Ok(metadata) = std::fs::metadata(self.store.lock().await.path.clone()) {
+      if let Ok(modified) = metadata.modified() {
+        if let Ok(mtime) = modified.duration_since(UNIX_EPOCH) {
+          return mtime.as_secs() == self.file_mtime;
+        }
+      }
+    }
+    true
+  }
+}
+
+static CONNECTION_CACHE: std::sync::OnceLock<Arc<RwLock<Option<CachedConnectionStore>>>> =
+  std::sync::OnceLock::new();
+
+fn get_connection_cache() -> &'static Arc<RwLock<Option<CachedConnectionStore>>> {
+  CONNECTION_CACHE.get_or_init(Arc::new(RwLock::new(None)))
+}
+
+pub async fn load_or_default_cached() -> Arc<Mutex<ConnectionStore>> {
+  let cache = get_connection_cache();
+  let cached = cache.read().await;
+  if let Some(ref cached) = *cached {
+    if cached.is_valid() {
+      return cached.store.clone();
+    }
+  }
+  drop(cached);
+
+  let store = Arc::new(Mutex::new(ConnectionStore::load_or_default().await));
+  let file_mtime = get_file_mtime(&store.lock().await.path).await.unwrap_or(0);
+  let mut cache = cache.write().await;
+  *cache = Some(CachedConnectionStore::new(store.clone(), file_mtime));
+  store
+}
+
+async fn get_file_mtime(path: &Path) -> Option<u64> {
+  std::fs::metadata(path)
+    .ok()
+    .and_then(|m| m.modified().ok())
+    .and_then(|t| t.duration_since(UNIX_EPOCH).ok())
+    .map(|d| d.as_secs())
+}
+
 fn get_connection_type(config: &ConnectionConfig) -> &'static str {
   match config.config {
     ConnectionConfigEnum::Json { .. } => "json",
@@ -191,7 +251,8 @@ pub async fn save_connection(config: ConnectionConfig) -> Result<ConnectionId, S
     config,
   };
 
-  let mut store = ConnectionStore::load_or_default().await;
+  let store = load_or_default_cached().await;
+  let mut store = store.lock().await;
   store.add_connection(entry);
   store.save().await?;
   Ok(id)
@@ -199,7 +260,8 @@ pub async fn save_connection(config: ConnectionConfig) -> Result<ConnectionId, S
 
 #[tauri::command]
 pub async fn list_connections() -> Result<Vec<ConnectionSummary>, String> {
-  let store = ConnectionStore::load_or_default().await;
+  let store = load_or_default_cached().await;
+  let store = store.lock().await;
   let mut summaries = Vec::new();
   for c in store.connections.iter() {
     summaries.push(ConnectionSummary {
@@ -216,10 +278,13 @@ async fn check_provider_health(config: &ConnectionConfig) -> ConnectionHealth {
   match &config.config {
     ConnectionConfigEnum::Json { path, .. } => match create_json_provider(path).await {
       Ok(p) => {
-        let healthy = match p.health_check().await {
-          Ok(h) => h,
-          Err(e) => {
+        let healthy = match time::timeout(Duration::from_secs(5), p.health_check()).await {
+          Ok(Ok(h)) => h,
+          Ok(Err(e)) => {
             return ConnectionHealth::err(&format!("json: health check failed: {}", e));
+          }
+          Err(_) => {
+            return ConnectionHealth::err("json: health check timed out after 5s");
           }
         };
         if healthy {
@@ -230,33 +295,47 @@ async fn check_provider_health(config: &ConnectionConfig) -> ConnectionHealth {
       }
       Err(e) => ConnectionHealth::err(&e),
     },
-    ConnectionConfigEnum::Mongo { uri, database, .. } => {
-      match create_mongo_provider(uri, database).await {
-        Ok(p) => {
-          let healthy = match p.health_check().await {
-            Ok(h) => h,
-            Err(_) => match p.list_collections().await {
-              Ok(_) => true,
-              Err(e) => {
-                return ConnectionHealth::err(&format!("mongo: health check failed: {}", e));
-              }
-            },
-          };
-          if healthy {
-            ConnectionHealth::ok("mongo")
-          } else {
-            ConnectionHealth::err("mongo: health check failed")
-          }
+    ConnectionConfigEnum::Mongo { uri, .. } => match create_mongo_provider(uri).await {
+      Ok(p) => {
+        let health_check_fut = p.health_check();
+        let list_collections_fut = p.list_collections();
+
+        let healthy = match time::timeout(Duration::from_secs(5), health_check_fut).await {
+          Ok(Ok(h)) => Some(h),
+          Ok(Err(_)) => None,
+          Err(_) => None,
+        };
+
+        let healthy = match healthy {
+          Some(h) => h,
+          None => match time::timeout(Duration::from_secs(5), list_collections_fut).await {
+            Ok(Ok(_)) => true,
+            Ok(Err(e)) => {
+              return ConnectionHealth::err(&format!("mongo: health check failed: {}", e));
+            }
+            Err(_) => {
+              return ConnectionHealth::err("mongo: health check timed out after 5s");
+            }
+          },
+        };
+
+        if healthy {
+          ConnectionHealth::ok("mongo")
+        } else {
+          ConnectionHealth::err("mongo: health check failed")
         }
-        Err(e) => ConnectionHealth::err(&e),
       }
-    }
+      Err(e) => ConnectionHealth::err(&e),
+    },
     ConnectionConfigEnum::Redis { uri, .. } => match create_redis_provider(uri).await {
       Ok(p) => {
-        let healthy = match p.health_check().await {
-          Ok(h) => h,
-          Err(e) => {
+        let healthy = match time::timeout(Duration::from_secs(5), p.health_check()).await {
+          Ok(Ok(h)) => h,
+          Ok(Err(e)) => {
             return ConnectionHealth::err(&format!("redis: health check failed: {}", e));
+          }
+          Err(_) => {
+            return ConnectionHealth::err("redis: health check timed out after 5s");
           }
         };
         if healthy {
@@ -268,25 +347,31 @@ async fn check_provider_health(config: &ConnectionConfig) -> ConnectionHealth {
       Err(e) => ConnectionHealth::err(&e),
     },
     ConnectionConfigEnum::Postgres { uri, .. } => match create_postgres_provider(uri).await {
-      Ok(p) => match p.execute_raw("SELECT 1", vec![]).await {
-        Ok(_) => ConnectionHealth::ok("postgres"),
-        Err(e) => ConnectionHealth::err(&format!("postgres: {}", e)),
+      Ok(p) => match time::timeout(Duration::from_secs(5), p.execute_raw("SELECT 1", vec![])).await
+      {
+        Ok(Ok(_)) => ConnectionHealth::ok("postgres"),
+        Ok(Err(e)) => ConnectionHealth::err(&format!("postgres: {}", e)),
+        Err(_) => ConnectionHealth::err("postgres: health check timed out after 5s"),
       },
-      Err(e) => ConnectionHealth::err(&format!("postgres: {}", e)),
+      Err(e) => ConnectionHealth::err(&e),
     },
     ConnectionConfigEnum::Sqlite { path, .. } => match create_sqlite_provider(path).await {
-      Ok(p) => match p.execute_raw("SELECT 1", vec![]).await {
-        Ok(_) => ConnectionHealth::ok("sqlite"),
-        Err(e) => ConnectionHealth::err(&format!("sqlite: {}", e)),
+      Ok(p) => match time::timeout(Duration::from_secs(5), p.execute_raw("SELECT 1", vec![])).await
+      {
+        Ok(Ok(_)) => ConnectionHealth::ok("sqlite"),
+        Ok(Err(e)) => ConnectionHealth::err(&format!("sqlite: {}", e)),
+        Err(_) => ConnectionHealth::err("sqlite: health check timed out after 5s"),
       },
-      Err(e) => ConnectionHealth::err(&format!("sqlite: {}", e)),
+      Err(e) => ConnectionHealth::err(&e),
     },
     ConnectionConfigEnum::MySql { uri, .. } => match create_mysql_provider(uri).await {
-      Ok(p) => match p.execute_raw("SELECT 1", vec![]).await {
-        Ok(_) => ConnectionHealth::ok("mysql"),
-        Err(e) => ConnectionHealth::err(&format!("mysql: {}", e)),
+      Ok(p) => match time::timeout(Duration::from_secs(5), p.execute_raw("SELECT 1", vec![])).await
+      {
+        Ok(Ok(_)) => ConnectionHealth::ok("mysql"),
+        Ok(Err(e)) => ConnectionHealth::err(&format!("mysql: {}", e)),
+        Err(_) => ConnectionHealth::err("mysql: health check timed out after 5s"),
       },
-      Err(e) => ConnectionHealth::err(&format!("mysql: {}", e)),
+      Err(e) => ConnectionHealth::err(&e),
     },
   }
 }
@@ -302,7 +387,8 @@ async fn health_status_from_config(config: &ConnectionConfig) -> String {
 
 #[tauri::command]
 pub async fn test_connection_status(id: &str) -> Result<ConnectionSummary, String> {
-  let store = ConnectionStore::load().await.map_err(|e| e.to_string())?;
+  let store = load_or_default_cached().await;
+  let store = store.lock().await;
   let entry = store
     .find_by_id(id)
     .ok_or_else(|| format!("Connection {} not found", id))?;
@@ -319,7 +405,8 @@ pub async fn test_connection_status(id: &str) -> Result<ConnectionSummary, Strin
 
 #[tauri::command]
 pub async fn delete_connection(id: &str) -> Result<(), String> {
-  let mut store = ConnectionStore::load_or_default().await;
+  let store = load_or_default_cached().await;
+  let mut store = store.lock().await;
   if store.remove_connection(id) {
     store.save().await?;
   } else {
@@ -330,7 +417,8 @@ pub async fn delete_connection(id: &str) -> Result<(), String> {
 
 #[tauri::command]
 pub async fn update_connection(id: &str, config: ConnectionConfig) -> Result<(), String> {
-  let mut store = ConnectionStore::load_or_default().await;
+  let store = load_or_default_cached().await;
+  let mut store = store.lock().await;
   let _entry = store
     .find_by_id(id)
     .ok_or_else(|| format!("Connection {} not found", id))?;
@@ -340,7 +428,6 @@ pub async fn update_connection(id: &str, config: ConnectionConfig) -> Result<(),
     config,
   };
 
-  store.remove_connection(id);
   store.add_connection(updated_entry);
   store.save().await?;
   Ok(())
@@ -354,7 +441,8 @@ pub struct ConnectionConfigResult {
 
 #[tauri::command]
 pub async fn get_connection(id: &str) -> Result<ConnectionConfigResult, String> {
-  let store = ConnectionStore::load_or_default().await;
+  let store = load_or_default_cached().await;
+  let store = store.lock().await;
   let entry = store
     .find_by_id(id)
     .ok_or_else(|| format!("Connection {} not found", id))?;

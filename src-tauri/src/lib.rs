@@ -1,18 +1,17 @@
 mod commands;
 
-use commands::admin::{
-  create_collection, drop_collection, execute_raw, get_server_version, rename_collection,
-};
+use commands::admin::{execute_raw, get_server_version};
 use commands::connection::{
   delete_connection, get_connection, list_connections, save_connection, test_connection,
   test_connection_status, update_connection,
 };
-use commands::data::{delete_row, query_data, save_row};
+use commands::data::query_data;
+use commands::metrics::get_metrics;
 use commands::schema::{
-  create_database, delete_database, describe_collection, get_collection_stats, list_collections,
-  list_databases, list_databases_for_uri, rename_database,
+  describe_collection, get_collection_stats, list_collections, list_databases,
+  list_databases_for_uri,
 };
-use commands::system::get_system_status;
+use commands::system::{cancel_query_cmd, get_metrics, get_system_status};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -31,21 +30,18 @@ pub fn run() {
       list_collections,
       list_databases,
       list_databases_for_uri,
-      create_database,
-      rename_database,
-      delete_database,
       describe_collection,
       get_collection_stats,
       query_data,
-      save_row,
-      delete_row,
-      create_collection,
-      drop_collection,
-      rename_collection,
       execute_raw,
       get_server_version,
       get_system_status,
+      get_metrics,
+      cancel_query_cmd,
     ])
     .run(tauri::generate_context!())
-    .expect("error while running tauri application");
+    .unwrap_or_else(|e| {
+      tracing::error!("Failed to run tauri application: {}", e);
+      std::process::exit(1);
+    });
 }

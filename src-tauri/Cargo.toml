@@ -25,16 +25,11 @@ uuid = { version = "1", features = ["v4"] }
 tokio = { version = "1", features = ["full"] }
 sysinfo = "0.32"
 tauri-plugin-mcp-bridge = "0.11"
+thiserror = "2"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+regex = "1"
 
-nosql_orm = { git = "https://github.com/rusnakdima/nosql_orm", branch = "main", features = [
-    "json",
-    "mongo",
-    "redis",
-    "sql-postgres",
-    "sql-sqlite",
-    "sql-mysql",
-    "query_cache",
-    "validators",
-] }
-# nosql_orm = { path = "/mnt/Other/Projects/Rust/nosql_orm", features = ["json", "mongo", "redis", "sql-postgres", "sql-sqlite", "sql-mysql", "query_cache", "validators"] }
-# nosql_orm = { path = "C:\\Users\\D.Rusnak\\Projects\\nosql_orm", features = ["json", "mongo", "redis", "sql-postgres", "sql-sqlite", "sql-mysql", "query_cache", "validators"] }
+nosql_orm = { path = "/mnt/Other/Projects/Rust/nosql_orm", features = ["full", "query_cache", "validators"] }
+prometheus = "0.13"
+once_cell = "1"

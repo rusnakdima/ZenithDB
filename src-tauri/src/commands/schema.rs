@@ -1,9 +1,14 @@
+use crate::commands::cancellation::{register_query, unregister_query, with_cancellation};
 use crate::commands::connection::ConnectionConfigEnum;
 use crate::commands::error_utils::ToStringError;
 use crate::commands::get_connection_entry;
+use crate::commands::metrics::record_query;
+use crate::commands::rate_limit::check_rate_limit;
 use crate::dispatch_provider;
 use nosql_orm::prelude::*;
 use serde::{Deserialize, Serialize};
+use std::time::Duration;
+use tokio::time;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CollectionMeta {
@@ -68,34 +73,43 @@ fn parse_database_rows(rows: &[Vec<serde_json::Value>]) -> Vec<DatabaseMeta> {
   dbs
 }
 
+fn validate_db_name(db_name: &str) -> Result<(), String> {
+  if db_name.contains("..") {
+    return Err("Database name cannot contain '..'".to_string());
+  }
+  if db_name.starts_with('/') || db_name.starts_with('\\') {
+    return Err("Database name cannot be an absolute path".to_string());
+  }
+  if db_name.contains('/') && db_name.contains('\\') {
+    return Err("Database name cannot contain both '/' and '\\'".to_string());
+  }
+  Ok(())
+}
+
+fn is_safe_path(base: &std::path::Path, target: &std::path::Path) -> bool {
+  if let Ok(base_canonical) = base.canonicalize() {
+    if let Ok(target_canonical) = target.canonicalize() {
+      return target_canonical.starts_with(&base_canonical);
+    }
+  }
+  false
+}
+
 #[tauri::command]
 pub async fn list_databases(conn_id: &str) -> Result<Vec<DatabaseMeta>, String> {
+  check_rate_limit(conn_id).await?;
   let entry = get_connection_entry(conn_id).await?;
 
-  match &entry.config.config {
-    ConnectionConfigEnum::Json { path, behavior, .. } => {
-      let path_obj = std::path::Path::new(path).to_path_buf();
-      if !path_obj.is_dir() {
-        return Ok(Vec::new());
-      }
-
-      match behavior.as_str() {
-        "files_as_collections" => {
-          let folder_name = path_obj
-            .file_name()
-            .and_then(|n| n.to_str())
-            .unwrap_or("root")
-            .to_string();
-          let count = count_json_files_in_dir(&path_obj).await;
-          Ok(vec![DatabaseMeta {
-            name: folder_name,
-            size_bytes: None,
-            table_count: Some(count),
-          }])
+  record_query(async {
+    match &entry.config.config {
+      ConnectionConfigEnum::Json { path, behavior, .. } => {
+        let path_obj = std::path::Path::new(path).to_path_buf();
+        if !path_obj.is_dir() {
+          return Ok(Vec::new());
         }
-        "folders_as_databases" | "mixed" => {
-          let databases = list_json_databases(path_obj.clone(), behavior.as_str()).await?;
-          if databases.is_empty() {
+
+        match behavior.as_str() {
+          "files_as_collections" => {
             let folder_name = path_obj
               .file_name()
               .and_then(|n| n.to_str())
@@ -107,185 +121,70 @@ pub async fn list_databases(conn_id: &str) -> Result<Vec<DatabaseMeta>, String> 
               size_bytes: None,
               table_count: Some(count),
             }])
-          } else {
+          }
+          "folders_as_databases" | "mixed" => {
+            let databases = list_json_databases(path_obj.clone(), behavior.as_str()).await?;
+            if databases.is_empty() {
+              let folder_name = path_obj
+                .file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or("root")
+                .to_string();
+              let count = count_json_files_in_dir(&path_obj).await;
+              Ok(vec![DatabaseMeta {
+                name: folder_name,
+                size_bytes: None,
+                table_count: Some(count),
+              }])
+            } else {
+              Ok(databases)
+            }
+          }
+          _ => {
+            let databases = list_json_databases(path_obj.clone(), "folders_as_databases").await?;
             Ok(databases)
           }
         }
-        _ => {
-          let databases = list_json_databases(path_obj.clone(), "folders_as_databases").await?;
-          Ok(databases)
-        }
       }
-    }
-    ConnectionConfigEnum::Sqlite { .. } => Ok(vec![DatabaseMeta::from_name("default")]),
-    ConnectionConfigEnum::Redis { .. } => Ok(vec![DatabaseMeta::from_name("default")]),
-    ConnectionConfigEnum::Mongo { uri, .. } => {
-      let provider = crate::commands::provider::create_mongo_provider(uri, "admin").await?;
-      let result = provider
-        .execute_raw("listDatabases", vec![])
-        .await
-        .map_err_string()?;
-      let mut dbs = Vec::new();
-      for row in result.rows {
-        if let Some(doc) = row.get(0).and_then(|v| v.as_object()) {
-          if let Some(name) = doc.get("name").and_then(|v| v.as_str()) {
-            dbs.push(DatabaseMeta {
-              name: name.to_string(),
+      ConnectionConfigEnum::Sqlite { .. } => Ok(vec![DatabaseMeta::from_name("default")]),
+      ConnectionConfigEnum::Redis { .. } => Ok(vec![DatabaseMeta::from_name("default")]),
+      ConnectionConfigEnum::Mongo { uri, .. } => {
+        let provider = crate::commands::provider::create_mongo_provider(uri).await?;
+        let names = provider.list_databases().await.map_err_string()?;
+        provider.close().await.map_err_string()?;
+        Ok(
+          names
+            .into_iter()
+            .map(|name| DatabaseMeta {
+              name,
               size_bytes: None,
               table_count: None,
-            });
-          }
-        }
-      }
-      Ok(dbs)
-    }
-    ConnectionConfigEnum::Postgres { uri, .. } => {
-      let provider = crate::commands::provider::create_postgres_provider(uri).await?;
-      let result = provider
-        .execute_raw(
-          "SELECT datname FROM pg_database WHERE datistemplate = false",
-          vec![],
+            })
+            .collect(),
         )
-        .await
-        .map_err_string()?;
-      Ok(parse_database_rows(&result.rows))
-    }
-    ConnectionConfigEnum::MySql { uri, .. } => {
-      let provider = crate::commands::provider::create_mysql_provider(uri).await?;
-      let result = provider
-        .execute_raw("SHOW DATABASES", vec![])
-        .await
-        .map_err_string()?;
-      Ok(parse_database_rows(&result.rows))
-    }
-  }
-}
-
-#[tauri::command]
-pub async fn create_database(conn_id: &str, name: &str) -> Result<(), String> {
-  let entry = get_connection_entry(conn_id).await?;
-
-  match &entry.config.config {
-    ConnectionConfigEnum::Sqlite { path, .. } => {
-      if !std::path::Path::new(path).exists() {
-        tokio::fs::File::create(path).await.map_err_string()?;
       }
-      Ok(())
-    }
-    ConnectionConfigEnum::Json { path, .. } => {
-      let db_path = std::path::Path::new(path).join(name);
-      tokio::fs::create_dir_all(&db_path).await.map_err_string()?;
-      Ok(())
-    }
-    ConnectionConfigEnum::Redis { .. } => Ok(()),
-    ConnectionConfigEnum::Mongo { uri, .. } => {
-      let provider = crate::commands::provider::create_mongo_provider(uri, &name).await?;
-      provider
-        .execute_raw("create", vec![])
-        .await
-        .map_err_string()?;
-      Ok(())
-    }
-    ConnectionConfigEnum::Postgres { uri, .. } => {
-      let provider = crate::commands::provider::create_postgres_provider(uri).await?;
-      provider
-        .execute_raw(&format!("CREATE DATABASE \"{}\"", name), vec![])
-        .await
-        .map_err_string()?;
-      Ok(())
-    }
-    ConnectionConfigEnum::MySql { uri, .. } => {
-      let provider = crate::commands::provider::create_mysql_provider(uri).await?;
-      provider
-        .execute_raw(&format!("CREATE DATABASE IF NOT EXISTS `{}`", name), vec![])
-        .await
-        .map_err_string()?;
-      Ok(())
-    }
-  }
-}
-
-#[tauri::command]
-pub async fn rename_database(conn_id: &str, old_name: &str, new_name: &str) -> Result<(), String> {
-  let entry = get_connection_entry(conn_id).await?;
-
-  match &entry.config.config {
-    ConnectionConfigEnum::Sqlite { .. } => Err(
-      "SQLite database cannot be renamed. Create a new connection with a different file path."
-        .to_string(),
-    ),
-    ConnectionConfigEnum::Json { path, .. } => {
-      let old_path = std::path::Path::new(path).join(old_name);
-      let new_path = std::path::Path::new(path).join(new_name);
-      if old_path.exists() {
-        tokio::fs::rename(&old_path, &new_path)
+      ConnectionConfigEnum::Postgres { uri, .. } => {
+        let provider = crate::commands::provider::create_postgres_provider(uri).await?;
+        let result = provider
+          .execute_raw(
+            "SELECT datname FROM pg_database WHERE datistemplate = false",
+            vec![],
+          )
           .await
           .map_err_string()?;
+        Ok(parse_database_rows(&result.rows))
       }
-      Ok(())
-    }
-    ConnectionConfigEnum::Redis { .. } => {
-      Err("Redis does not support renaming databases.".to_string())
-    }
-    ConnectionConfigEnum::Mongo { uri: _, .. } => {
-      Err("MongoDB does not support renaming databases via this interface.".to_string())
-    }
-    ConnectionConfigEnum::Postgres { uri, .. } => {
-      let provider = crate::commands::provider::create_postgres_provider(uri).await?;
-      provider
-        .execute_raw(
-          &format!("ALTER DATABASE \"{}\" RENAME TO \"{}\"", old_name, new_name),
-          vec![],
-        )
-        .await
-        .map_err_string()?;
-      Ok(())
-    }
-    ConnectionConfigEnum::MySql { uri: _, .. } => Err(
-      "MySQL does not support renaming databases directly. Create a new database and migrate data."
-        .to_string(),
-    ),
-  }
-}
-
-#[tauri::command]
-pub async fn delete_database(conn_id: &str, name: &str) -> Result<(), String> {
-  let entry = get_connection_entry(conn_id).await?;
-
-  match &entry.config.config {
-    ConnectionConfigEnum::Sqlite { .. } => Err(
-      "SQLite database cannot be deleted. Delete the connection and remove the file.".to_string(),
-    ),
-    ConnectionConfigEnum::Json { path, .. } => {
-      let db_path = std::path::Path::new(path).join(name);
-      if db_path.exists() && db_path.is_dir() {
-        tokio::fs::remove_dir_all(&db_path).await.map_err_string()?;
+      ConnectionConfigEnum::MySql { uri, .. } => {
+        let provider = crate::commands::provider::create_mysql_provider(uri).await?;
+        let result = provider
+          .execute_raw("SHOW DATABASES", vec![])
+          .await
+          .map_err_string()?;
+        Ok(parse_database_rows(&result.rows))
       }
-      Ok(())
     }
-    ConnectionConfigEnum::Redis { .. } => {
-      Err("Redis does not support deleting databases.".to_string())
-    }
-    ConnectionConfigEnum::Mongo { .. } => {
-      Err("MongoDB database deletion is not supported via this interface.".to_string())
-    }
-    ConnectionConfigEnum::Postgres { uri, .. } => {
-      let provider = crate::commands::provider::create_postgres_provider(uri).await?;
-      provider
-        .execute_raw(&format!("DROP DATABASE \"{}\"", name), vec![])
-        .await
-        .map_err_string()?;
-      Ok(())
-    }
-    ConnectionConfigEnum::MySql { uri, .. } => {
-      let provider = crate::commands::provider::create_mysql_provider(uri).await?;
-      provider
-        .execute_raw(&format!("DROP DATABASE IF EXISTS `{}`", name), vec![])
-        .await
-        .map_err_string()?;
-      Ok(())
-    }
-  }
+  })
+  .await
 }
 
 #[tauri::command]
@@ -293,70 +192,104 @@ pub async fn list_collections(
   conn_id: &str,
   db_name: Option<String>,
 ) -> Result<Vec<CollectionMeta>, String> {
+  check_rate_limit(conn_id).await?;
   let entry = get_connection_entry(conn_id).await?;
 
-  match &entry.config.config {
-    ConnectionConfigEnum::Json { path, behavior, .. } => {
-      let path_obj = std::path::Path::new(path).to_path_buf();
-      if !path_obj.is_dir() {
-        return Ok(Vec::new());
-      }
+  let (query_id, token) = register_query().await?;
 
-      match behavior.as_str() {
-        "files_as_collections" => {
-          let collections = list_json_collections(path_obj).await?;
-          Ok(collections)
-        }
-        "folders_as_databases" => {
-          if let Some(db) = db_name {
-            let folder_name = path_obj.file_name().and_then(|n| n.to_str()).unwrap_or("");
-
-            let collections = if db == folder_name {
-              list_json_collections(path_obj).await?
-            } else {
-              let db_path = path_obj.join(&db);
-              list_json_collections(db_path).await?
-            };
-            Ok(collections)
-          } else {
-            let all_collections = list_all_json_collections_recursive(path_obj).await?;
-            Ok(all_collections)
+  let result = with_cancellation(&query_id, token, async {
+    record_query(async {
+      match &entry.config.config {
+        ConnectionConfigEnum::Json { path, behavior, .. } => {
+          let path_obj = std::path::Path::new(path).to_path_buf();
+          if !path_obj.is_dir() {
+            return Ok(Vec::new());
           }
-        }
-        "mixed" => {
-          if let Some(db) = db_name {
-            if db == "root" {
+
+          match behavior.as_str() {
+            "files_as_collections" => {
               let collections = list_json_collections(path_obj).await?;
               Ok(collections)
-            } else {
-              let db_path = path_obj.join(&db);
-              let collections = list_json_collections(db_path).await?;
+            }
+            "folders_as_databases" => {
+              if let Some(db) = db_name {
+                validate_db_name(&db)?;
+                let folder_name = path_obj.file_name().and_then(|n| n.to_str()).unwrap_or("");
+
+                let collections = if db == folder_name {
+                  list_json_collections(path_obj).await?
+                } else {
+                  let db_path = path_obj.join(&db);
+                  if !is_safe_path(&path_obj, &db_path) {
+                    return Err("Invalid database path".to_string());
+                  }
+                  list_json_collections(db_path).await?
+                };
+                Ok(collections)
+              } else {
+                let all_collections = list_all_json_collections_recursive(path_obj).await?;
+                Ok(all_collections)
+              }
+            }
+            "mixed" => {
+              if let Some(db) = db_name {
+                if db == "root" {
+                  let collections = list_json_collections(path_obj).await?;
+                  Ok(collections)
+                } else {
+                  validate_db_name(&db)?;
+                  let db_path = path_obj.join(&db);
+                  if !is_safe_path(&path_obj, &db_path) {
+                    return Err("Invalid database path".to_string());
+                  }
+                  let collections = list_json_collections(db_path).await?;
+                  Ok(collections)
+                }
+              } else {
+                let collections = list_json_collections(path_obj).await?;
+                Ok(collections)
+              }
+            }
+            _ => {
+              let collections = list_json_collections(path_obj).await?;
               Ok(collections)
             }
-          } else {
-            let collections = list_json_collections(path_obj).await?;
-            Ok(collections)
           }
         }
-        _ => {
-          let collections = list_json_collections(path_obj).await?;
-          Ok(collections)
-        }
-      }
-    }
-    _ => {
-      dispatch_provider!(entry, provider => {
+        ConnectionConfigEnum::Mongo { uri, .. } => {
+          let provider = crate::commands::provider::create_mongo_provider(uri).await?;
           let collections = provider.list_collections().await.map_err_string()?;
-          Ok(collections
+          provider.close().await.map_err_string()?;
+          Ok(
+            collections
               .into_iter()
               .map(|c| CollectionMeta {
-                  name: c.name,
-                  count: c.document_count,
+                name: c.name,
+                count: c.document_count,
               })
-              .collect())
-      })
-    }
-  }
+              .collect(),
+          )
+        }
+        _ => {
+          dispatch_provider!(entry, provider => {
+              let collections = provider.list_collections().await.map_err_string()?;
+              Ok(collections
+                  .into_iter()
+                  .map(|c| CollectionMeta {
+                      name: c.name,
+                      count: c.document_count,
+                  })
+                  .collect())
+          })
+        }
+      }
+    })
+    .await
+  })
+  .await;
+
+  unregister_query(&query_id).await;
+  result
 }
 
 async fn list_json_databases(
@@ -369,7 +302,7 @@ async fn list_json_databases(
   while let Some(entry) = entries.next_entry().await.map_err_string()? {
     let entry_path = entry.path();
     if entry_path.is_dir() {
-      let name = entry.file_name().into_string().unwrap_or_default();
+      let name = entry.file_name().into_string().map_err_string()?;
 
       let collection_count = count_json_files_in_dir(&entry_path).await;
 
@@ -393,15 +326,13 @@ async fn list_json_databases(
     }
   }
 
-  if behavior == "mixed" {
-    if !databases.iter().any(|d| d.name == "root") {
-      let root_count = count_json_files_in_dir(&path_obj).await;
-      databases.push(DatabaseMeta {
-        name: "root".to_string(),
-        size_bytes: None,
-        table_count: Some(root_count),
-      });
-    }
+  if behavior == "mixed" && !databases.iter().any(|d| d.name == "root") {
+    let root_count = count_json_files_in_dir(&path_obj).await;
+    databases.push(DatabaseMeta {
+      name: "root".to_string(),
+      size_bytes: None,
+      table_count: Some(root_count),
+    });
   }
 
   databases.sort_by(|a, b| a.name.cmp(&b.name));
@@ -409,42 +340,65 @@ async fn list_json_databases(
 }
 
 async fn count_json_files_in_dir(path: &std::path::Path) -> u64 {
-  let mut entries = match tokio::fs::read_dir(path).await {
-    Ok(e) => e,
-    Err(_) => return 0,
+  let fut = async {
+    let mut entries = match tokio::fs::read_dir(path).await {
+      Ok(e) => e,
+      Err(e) => {
+        eprintln!("Failed to read directory {}: {}", path.display(), e);
+        return 0;
+      }
+    };
+
+    let mut count = 0u64;
+    while let Ok(Some(entry)) = entries.next_entry().await {
+      if entry.path().extension().is_some_and(|ext| ext == "json") {
+        count += 1;
+      }
+    }
+    count
   };
 
-  let mut count = 0u64;
-  while let Ok(Some(entry)) = entries.next_entry().await {
-    if entry.path().extension().is_some_and(|ext| ext == "json") {
-      count += 1;
-    }
-  }
-  count
+  time::timeout(Duration::from_secs(30), fut)
+    .await
+    .unwrap_or(0)
 }
 
 async fn list_all_json_collections_recursive(
   path_obj: std::path::PathBuf,
 ) -> Result<Vec<CollectionMeta>, String> {
   let mut collections: Vec<CollectionMeta> = Vec::new();
-  let mut dirs_to_scan: Vec<std::path::PathBuf> = vec![path_obj];
+  let mut dirs_to_scan: Vec<(std::path::PathBuf, usize)> = vec![(path_obj, 0)];
+  let max_depth = 10;
 
-  while let Some(current_dir) = dirs_to_scan.pop() {
-    let mut entries = match tokio::fs::read_dir(&current_dir).await {
-      Ok(e) => e,
-      Err(_) => continue,
+  while let Some((current_dir, depth)) = dirs_to_scan.pop() {
+    if depth >= max_depth {
+      tracing::warn!(
+        "Max depth {} reached, skipping: {}",
+        max_depth,
+        current_dir.display()
+      );
+      continue;
+    }
+
+    let read_dir_fut = tokio::fs::read_dir(&current_dir);
+    let mut entries = match time::timeout(Duration::from_secs(30), read_dir_fut).await {
+      Ok(Ok(e)) => e,
+      Ok(Err(e)) | Err(_) => {
+        tracing::warn!("Failed to read directory {}: {}", current_dir.display(), e);
+        continue;
+      }
     };
 
     while let Some(entry) = entries.next_entry().await.map_err_string()? {
       let entry_path = entry.path();
 
       if entry_path.is_dir() {
-        dirs_to_scan.push(entry_path);
+        dirs_to_scan.push((entry_path, depth + 1));
       } else if entry_path.extension().is_some_and(|ext| ext == "json") {
         let name = entry
           .file_name()
           .into_string()
-          .ok()
+          .map_err_string()
           .map(|n| n.trim_end_matches(".json").to_string());
 
         if let Some(name) = name {
@@ -471,112 +425,50 @@ async fn list_all_json_collections_recursive(
   Ok(collections)
 }
 
-async fn list_json_collections(
-  path_obj: std::path::PathBuf,
-) -> Result<Vec<CollectionMeta>, String> {
-  let mut collections: Vec<CollectionMeta> = Vec::new();
-  let mut dirs_to_scan: Vec<(std::path::PathBuf, String)> = vec![(path_obj, String::new())];
-
-  while let Some((current_dir, base_path)) = dirs_to_scan.pop() {
-    let mut entries = match tokio::fs::read_dir(&current_dir).await {
-      Ok(e) => e,
-      Err(_) => continue,
-    };
-
-    while let Some(entry) = entries.next_entry().await.map_err_string()? {
-      let entry_path = entry.path();
-
-      if entry_path.is_dir() {
-        let folder_name = entry.file_name().into_string().unwrap_or_default();
-        let new_base = if base_path.is_empty() {
-          folder_name.clone()
-        } else {
-          format!("{}/{}", base_path, folder_name)
-        };
-        dirs_to_scan.push((entry_path, new_base));
-      } else if entry_path.extension().is_some_and(|ext| ext == "json") {
-        let file_name = entry
-          .file_name()
-          .into_string()
-          .ok()
-          .map(|n| n.trim_end_matches(".json").to_string());
-
-        if let Some(file_name) = file_name {
-          let name = if base_path.is_empty() {
-            file_name.clone()
-          } else {
-            format!("{}/{}", base_path, file_name)
-          };
-
-          let count = match tokio::fs::read_to_string(&entry_path).await {
-            Ok(content) => match serde_json::from_str::<serde_json::Value>(&content) {
-              Ok(v) => {
-                if let Some(arr) = v.as_array() {
-                  arr.len() as u64
-                } else {
-                  1
-                }
-              }
-              Err(e) => {
-                eprintln!("Warning: Failed to parse {}: {}", entry_path.display(), e);
-                0
-              }
-            },
-            Err(e) => {
-              eprintln!("Warning: Failed to read {}: {}", entry_path.display(), e);
-              0
-            }
-          };
-
-          collections.push(CollectionMeta { name, count });
-        }
-      }
-    }
-  }
-
-  Ok(collections)
-}
-
 #[tauri::command]
 pub async fn describe_collection(
   conn_id: &str,
   collection: &str,
 ) -> Result<CollectionSchema, String> {
+  check_rate_limit(conn_id).await?;
   let entry = get_connection_entry(conn_id).await?;
 
-  let (schema, indexes) = dispatch_provider!(entry, provider => {
-      let schema = provider.describe_collection(collection).await.map_err_string()?;
-      let indexes = nosql_orm::provider::SchemaIntrospection::list_indexes(&provider, collection)
-          .await
-          .map_err_string()?;
-      Ok::<_, String>((schema, indexes))
-  })?;
+  record_query(async {
+    let (schema, indexes) = dispatch_provider!(entry, provider => {
+        let schema = provider.describe_collection(collection).await.map_err_string()?;
+        let indexes = nosql_orm::provider::SchemaIntrospection::list_indexes(&provider, collection)
+            .await
+            .map_err_string()?;
+        Ok::<_, String>((schema, indexes))
+    })?;
 
-  let columns: Vec<ColumnInfo> = schema
-    .fields
-    .iter()
-    .map(|(name, field)| ColumnInfo {
-      name: name.clone(),
-      data_type: field.field_type.clone(),
-      nullable: field.nullable,
-      is_primary_key: false,
+    let columns: Vec<ColumnInfo> = schema
+      .fields
+      .iter()
+      .map(|(name, field)| ColumnInfo {
+        name: name.clone(),
+        data_type: field.field_type.clone(),
+        nullable: field.nullable,
+        is_primary_key: false,
+      })
+      .collect();
+
+    let index_infos: Vec<IndexInfo> = indexes
+      .into_iter()
+      .map(|idx| IndexInfo {
+        name: idx.name,
+        columns: idx.fields,
+        is_unique: idx.unique,
+      })
+      .collect();
+
+    Ok(CollectionSchema {
+      name: collection.to_string(),
+      columns,
+      indexes: index_infos,
     })
-    .collect();
-
-  let index_infos: Vec<IndexInfo> = indexes
-    .into_iter()
-    .map(|idx| IndexInfo {
-      name: idx.name,
-      columns: idx.fields,
-      is_unique: idx.unique,
-    })
-    .collect();
-
-  Ok(CollectionSchema {
-    name: collection.to_string(),
-    columns,
-    indexes: index_infos,
   })
+  .await
 }
 
 #[tauri::command]
@@ -584,18 +476,22 @@ pub async fn get_collection_stats(
   conn_id: &str,
   collection: &str,
 ) -> Result<CollectionStats, String> {
+  check_rate_limit(conn_id).await?;
   let entry = get_connection_entry(conn_id).await?;
 
-  let stats = dispatch_provider!(entry, provider => {
-      provider.get_collection_stats(collection).await.map_err_string()
-  })?;
+  record_query(async {
+    let stats = dispatch_provider!(entry, provider => {
+        provider.get_collection_stats(collection).await.map_err_string()
+    })?;
 
-  Ok(CollectionStats {
-    name: collection.to_string(),
-    document_count: stats.document_count,
-    size_bytes: stats.size_bytes,
-    index_count: stats.index_count,
+    Ok(CollectionStats {
+      name: collection.to_string(),
+      document_count: stats.document_count,
+      size_bytes: stats.size_bytes,
+      index_count: stats.index_count,
+    })
   })
+  .await
 }
 
 #[tauri::command]
@@ -605,6 +501,14 @@ pub async fn list_databases_for_uri(
 ) -> Result<Vec<DatabaseMeta>, String> {
   if uri.is_empty() {
     return Err("URI cannot be empty".to_string());
+  }
+
+  let uri_pattern = regex::Regex::new(r"^(postgres|mysql|mongodb|redis)://.*").map_err_string()?;
+  if !uri_pattern.is_match(uri) {
+    return Err(
+      "Invalid URI format. Must be a valid connection URI (e.g., postgres://host:port/db)"
+        .to_string(),
+    );
   }
 
   match provider_type {
@@ -628,24 +532,18 @@ pub async fn list_databases_for_uri(
       Ok(parse_database_rows(&result.rows))
     }
     "mongodb" => {
-      let provider = crate::commands::provider::create_mongo_provider(uri, "admin").await?;
-      let result = provider
-        .execute_raw("listDatabases", vec![])
-        .await
-        .map_err_string()?;
-      let mut dbs = Vec::new();
-      for row in result.rows {
-        if let Some(doc) = row.get(0).and_then(|v| v.as_object()) {
-          if let Some(name) = doc.get("name").and_then(|v| v.as_str()) {
-            dbs.push(DatabaseMeta {
-              name: name.to_string(),
-              size_bytes: None,
-              table_count: None,
-            });
-          }
-        }
-      }
-      Ok(dbs)
+      let provider = crate::commands::provider::create_mongo_provider(uri).await?;
+      let names = provider.list_databases().await.map_err_string()?;
+      Ok(
+        names
+          .into_iter()
+          .map(|name| DatabaseMeta {
+            name,
+            size_bytes: None,
+            table_count: None,
+          })
+          .collect(),
+      )
     }
     "redis" => {
       let provider = crate::commands::provider::create_redis_provider(uri).await?;
@@ -658,7 +556,11 @@ pub async fn list_databases_for_uri(
         if let Some(line) = row.first().and_then(|v| v.as_str()) {
           for part in line.lines() {
             if part.starts_with("db") {
-              if let Some(name) = part.split(',').next().and_then(|s| s.split('=').last()) {
+              if let Some(name) = part
+                .split(',')
+                .next()
+                .and_then(|s| s.split('=').next_back())
+              {
                 dbs.push(DatabaseMeta {
                   name: name.to_string(),
                   size_bytes: None,

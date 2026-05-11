@@ -1,12 +1,14 @@
-use crate::commands::connection::ConnectionEntry;
-
 pub mod admin;
+pub mod cancellation;
 pub mod connection;
 pub mod data;
 pub mod error_utils;
+pub mod metrics;
 pub mod provider;
+pub mod rate_limit;
 pub mod schema;
 pub mod system;
+pub mod validation;
 
 pub async fn get_connection_entry(conn_id: &str) -> Result<ConnectionEntry, String> {
   let store = connection::ConnectionStore::load()
@@ -26,8 +28,8 @@ macro_rules! dispatch_provider {
         let $provider = $crate::commands::provider::create_json_provider(path).await?;
         $body
       }
-      ConnectionConfigEnum::Mongo { uri, database, .. } => {
-        let $provider = $crate::commands::provider::create_mongo_provider(uri, database).await?;
+      ConnectionConfigEnum::Mongo { uri, .. } => {
+        let $provider = $crate::commands::provider::create_mongo_provider(uri).await?;
         $body
       }
       ConnectionConfigEnum::Redis { uri, .. } => {
