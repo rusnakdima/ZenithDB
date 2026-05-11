@@ -4,7 +4,7 @@ import { DatePipe } from "@angular/common";
 import { DatabaseService } from "@shared/services/database.service";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { ToastService } from "@services/toast.service";
-import { StorageService } from "@services/core/storage.service";
+import { PersistentStorageService } from "@shared/services/persistent-storage.service";
 import { ExportService } from "@shared/services/export.service";
 import { RawResult } from "@shared/models/connection.config";
 import { formatSQL } from "@shared/utils";
@@ -30,7 +30,7 @@ export class QueryEditorComponent implements OnInit, OnDestroy {
   protected db = inject(DatabaseService);
   protected connState = inject(ConnectionStateService);
   protected toast = inject(ToastService);
-  protected storage = inject(StorageService);
+  protected storage = inject(PersistentStorageService);
   protected exportService = inject(ExportService);
   protected tabService = inject(TabService);
   private readonly queryExecution = inject(QueryExecutionService);
@@ -93,7 +93,7 @@ export class QueryEditorComponent implements OnInit, OnDestroy {
   }
 
   loadHistory() {
-    const stored = this.storage.getItem<any[]>("zenith_query_history");
+    const stored = this.storage.get<any[]>("zenith_query_history");
     if (stored) {
       this.history.set(
         stored.map((h: any) => ({
@@ -108,7 +108,7 @@ export class QueryEditorComponent implements OnInit, OnDestroy {
 
   saveHistory() {
     const limited = this.history().slice(0, 20);
-    this.storage.setItem(
+    this.storage.set(
       "zenith_query_history",
       limited.map((h) => ({ ...h, timestamp: h.timestamp.toISOString() }))
     );
@@ -164,7 +164,7 @@ export class QueryEditorComponent implements OnInit, OnDestroy {
 
   clearAllHistory() {
     this.history.set([]);
-    this.storage.removeItem("zenith_query_history");
+    this.storage.remove("zenith_query_history");
   }
 
   formatSQL() {
