@@ -4,6 +4,7 @@ pub mod admin;
 pub mod auth;
 pub mod connection;
 pub mod data;
+pub mod decentralization;
 pub mod entities;
 pub mod error_utils;
 pub mod provider;

@@ -1,3 +1,4 @@
+use crate::commands::decentralization::delete_connection_databases_metadata;
 use crate::commands::get_auth_context;
 use crate::commands::provider::{
   create_json_provider, create_mongo_provider, create_mysql_provider, create_postgres_provider,
@@ -309,6 +310,9 @@ pub async fn delete_connection(id: &str) -> Result<(), String> {
     store.save().await?;
   } else {
     return Err(format!("Connection {} not found", id));
+  }
+  if let Err(e) = delete_connection_databases_metadata(id.to_string()).await {
+    eprintln!("Warning: Failed to delete connection metadata: {}", e);
   }
   Ok(())
 }

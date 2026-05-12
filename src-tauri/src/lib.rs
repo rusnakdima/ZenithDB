@@ -9,15 +9,19 @@ use commands::connection::{
   test_connection_status, update_connection,
 };
 use commands::data::{delete_row, query_data, save_row};
+use commands::decentralization::{
+  delete_connection_databases_metadata, delete_database_metadata, get_database_metadata,
+  init_decentralized_storage, list_databases_metadata, save_database_metadata,
+  update_database_metadata,
+};
 use commands::schema::{
   create_database, delete_database, describe_collection, get_collection_stats, list_collections,
-  list_databases, list_databases_for_uri, rename_database,
+  rename_database,
 };
 use commands::system::get_system_status;
 
 use commands::entities::collection::routes as collection_routes;
 use commands::entities::connection::routes as connection_routes;
-use commands::entities::database::routes as database_routes;
 use commands::entities::query::routes as query_routes;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -35,8 +39,6 @@ pub fn run() {
       test_connection_status,
       get_connection,
       list_collections,
-      list_databases,
-      list_databases_for_uri,
       create_database,
       rename_database,
       delete_database,
@@ -58,10 +60,13 @@ pub fn run() {
       connection_routes::connection_delete,
       connection_routes::connection_test,
       connection_routes::connection_test_status,
-      database_routes::database_list,
-      database_routes::database_create,
-      database_routes::database_rename,
-      database_routes::database_delete,
+      init_decentralized_storage,
+      save_database_metadata,
+      list_databases_metadata,
+      get_database_metadata,
+      update_database_metadata,
+      delete_database_metadata,
+      delete_connection_databases_metadata,
       collection_routes::collection_list,
       collection_routes::collection_describe,
       collection_routes::collection_stats,
