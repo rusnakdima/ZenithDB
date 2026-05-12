@@ -1,6 +1,3 @@
-use crate::commands::cancellation::cancel_query;
-use crate::commands::metrics::METRICS;
-use prometheus::Encoder;
 use serde::{Deserialize, Serialize};
 use sysinfo::{Disks, Networks, System};
 
@@ -87,21 +84,4 @@ pub async fn get_system_status() -> Result<SystemMetrics, String> {
   .map_err(|e| format!("Task join error: {}", e))?;
 
   Ok(sys)
-}
-
-#[tauri::command]
-pub async fn get_metrics() -> Result<String, String> {
-  let metrics = METRICS.lock().await;
-  let encoder = prometheus::TextEncoder::new();
-  let metric_families = metrics.registry.gather();
-  let mut buffer = Vec::new();
-  encoder
-    .encode(&metric_families, &mut buffer)
-    .map_err(|e| format!("Failed to encode metrics: {}", e))?;
-  String::from_utf8(buffer).map_err(|e| format!("Failed to convert metrics: {}", e))
-}
-
-#[tauri::command]
-pub async fn cancel_query_cmd(query_id: &str) -> Result<bool, String> {
-  Ok(cancel_query(query_id).await)
 }
