@@ -29,6 +29,10 @@
           <mat-icon fontIcon="refresh" class="mr-2 h-5! w-5! text-xl!" />
           Refresh
         </button>
+        <button (click)="showAddDbModal.set(true)" class="form-btn form-btn-secondary">
+          <mat-icon fontIcon="add" class="mr-2 h-5! w-5! text-xl!" />
+          Add Database
+        </button>
       </div>
     </div>
 
@@ -199,4 +203,13 @@
       </div>
     </div>
   </div>
+}
+
+@if (showAddDbModal()) {
+  <app-add-database-path
+    [provider]="provider()!"
+    [connectionId]="connectionId()!"
+    (added)="onAddDbModalAdded($event)"
+    (cancelled)="onAddDbModalCancelled()"
+  />
 }

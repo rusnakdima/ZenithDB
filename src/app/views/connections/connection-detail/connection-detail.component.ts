@@ -11,6 +11,10 @@ import { ErrorHandlerService } from "@shared/services/error-handler.service";
 import { ToastService } from "@services/toast.service";
 import { ProviderUtils } from "@shared/utils/provider.utils";
 import {
+  DecentralizationService,
+  DatabaseMetadata,
+} from "@shared/services/decentralization.service";
+import {
   ConnectionHealth,
   CollectionMeta,
   ConnectionSummary,
@@ -19,10 +23,14 @@ import {
 import { StatusBadgeComponent } from "@shared/components/status-badge/status-badge.component";
 import { ConnectionStatusBadgeComponent } from "@shared/components/connection-status-badge/connection-status-badge.component";
 import { withErrorHandling } from "@shared/utils/error-handler.utils";
+import { AddDatabasePathComponent } from "../add-database-path/add-database-path.component";
 import { Subscription } from "rxjs";
+import { distinctUntilChanged } from "rxjs/operators";
 
 interface DbNode {
+  id?: number;
   name: string;
+  path?: string;
   expanded: boolean;
   collections: CollectionMeta[];
 }
@@ -30,7 +38,14 @@ interface DbNode {
 @Component({
   selector: "app-connection-detail",
   standalone: true,
-  imports: [RouterLink, ConnectionStatusBadgeComponent, TitleCasePipe, MatIconModule, FormsModule],
+  imports: [
+    RouterLink,
+    ConnectionStatusBadgeComponent,
+    TitleCasePipe,
+    MatIconModule,
+    FormsModule,
+    AddDatabasePathComponent,
+  ],
   templateUrl: "./connection-detail.component.html",
 })
 export class ConnectionDetailComponent implements OnInit, OnDestroy {
@@ -40,6 +55,7 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
   private confirm = inject(ConfirmService);
   private errorHandler = inject(ErrorHandlerService);
   private toast = inject(ToastService);
+  private localDb = inject(DecentralizationService);
   providerUtils = inject(ProviderUtils);
   route = inject(ActivatedRoute);
   router = inject(Router);
@@ -54,47 +70,60 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
   loading = signal(true);
   testing = signal(false);
   fullConfig = signal<any>(null);
-  showCreateDb = signal(false);
-  newDbName = "";
+  showAddDbModal = signal(false);
   creatingDb = signal(false);
   editingDb = signal<string | null>(null);
   editDbName = "";
+  private isLoadingDetails = false;
 
   providerIcon = signal("dns");
 
   private routeSub: Subscription | null = null;
 
   async ngOnInit() {
-    this.routeSub = this.route.paramMap.subscribe(async (params) => {
-      const id = params.get("id");
-      if (id && id !== "new") {
-        this.connectionId.set(id);
-        const connections = await this.db.listConnections();
-        const conn = connections.find((c) => c.id === id);
-        if (conn) {
-          this.connectionName.set(conn.name);
-          this.provider.set(conn.provider);
-          this.connState.setActiveConnection(conn);
-          try {
-            const fullConn = await this.db.getConnection(id);
-            this.fullConfig.set(fullConn);
-          } catch (e) {
-            this.errorHandler.handleError(e, "Loading full config");
-          }
+    try {
+      await Promise.race([
+        this.localDb.initStorage(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("Init timeout")), 5000)),
+      ]);
+    } catch (e) {
+      console.error("Failed to initialize storage:", e);
+    }
 
-          await this.loadConnectionDetails();
+    this.routeSub = this.route.paramMap
+      .pipe(distinctUntilChanged((prev, curr) => prev.get("id") === curr.get("id")))
+      .subscribe(async (params) => {
+        const id = params.get("id");
+        if (id && id !== "new") {
+          this.connectionId.set(id);
+          const connections = await this.db.listConnections();
+          const conn = connections.find((c) => c.id === id);
+          if (conn) {
+            this.connectionName.set(conn.name);
+            this.provider.set(conn.provider);
+            this.connState.setActiveConnection(conn);
+            try {
+              const fullConn = await this.db.getConnection(id);
+              this.fullConfig.set(fullConn);
+            } catch (e) {
+              this.errorHandler.handleError(e, "Loading full config");
+            }
+
+            await this.loadConnectionDetails();
+          }
+        } else {
+          this.connectionId.set(this.connState.activeConnectionId());
+          this.connectionName.set(this.connState.activeConnectionName());
+          this.provider.set(this.connState.activeProvider());
+          this.fullConfig.set(this.connState.activeConnectionConfig());
         }
-      } else {
-        this.connectionId.set(this.connState.activeConnectionId());
-        this.connectionName.set(this.connState.activeConnectionName());
-        this.provider.set(this.connState.activeProvider());
-        this.fullConfig.set(this.connState.activeConnectionConfig());
-      }
-    });
+      });
   }
 
   ngOnDestroy() {
     this.routeSub?.unsubscribe();
+    this.isLoadingDetails = false;
+    this.loading.set(false);
   }
 
   private updateProviderIcon() {
@@ -103,25 +132,39 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
 
   async loadConnectionDetails() {
     const connId = this.connectionId();
-    if (!connId) return;
+    if (!connId || this.isLoadingDetails) return;
 
-    const result = await withErrorHandling(
-      async () => {
-        const [version, collections, healthResult] = await Promise.all([
-          this.db.getServerVersion().catch(() => null),
-          this.db.listCollections().catch(() => []),
-          this.connHealth.checkHealth(connId).catch(() => null),
-        ]);
-        return { version, collections, healthResult };
-      },
-      { loading: this.loading, context: "ConnectionDetails" },
-      { errorHandler: this.errorHandler, toastService: this.toast }
-    );
+    this.isLoadingDetails = true;
+    try {
+      const result = await withErrorHandling(
+        async () => {
+          const [version, collections, healthResult, localDatabases] = await Promise.all([
+            this.db.getServerVersion().catch(() => null),
+            this.db.listCollections().catch(() => []),
+            this.connHealth.checkHealth(connId).catch(() => null),
+            this.localDb.listDatabases(connId).catch(() => []),
+          ]);
+          return { version, collections, healthResult, localDatabases };
+        },
+        { loading: this.loading, context: "ConnectionDetails" },
+        { errorHandler: this.errorHandler, toastService: this.toast }
+      );
 
-    if (result.success && result.data) {
-      this.serverVersion.set(result.data.version);
-      this.collections.set(result.data.collections);
-      this.health.set(result.data.healthResult);
+      if (result.success && result.data) {
+        this.serverVersion.set(result.data.version);
+        this.collections.set(result.data.collections);
+        this.health.set(result.data.healthResult);
+        const databases: DbNode[] = result.data.localDatabases.map((db: DatabaseMetadata) => ({
+          id: db.id,
+          name: db.name,
+          path: db.path || undefined,
+          expanded: false,
+          collections: [],
+        }));
+        this.databases.set(databases);
+      }
+    } finally {
+      this.isLoadingDetails = false;
     }
   }
 
@@ -195,53 +238,29 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
     );
   }
 
-  getDbList(): string[] {
-    const colls = this.collections();
-    const dbs = new Set<string>();
-    colls.forEach((c) => {
-      const parts = c.name.split(".");
-      if (parts.length > 1) {
-        dbs.add(parts[0]);
-      } else {
-        dbs.add("default");
-      }
-    });
-    return Array.from(dbs);
+  needsPath(): boolean {
+    const p = this.provider();
+    return p === "sqlite" || p === "json";
   }
 
-  getSelectedDatabases(): string[] {
-    const config = this.fullConfig();
-    if (!config || !config.config || !config.config.config) {
-      return [];
-    }
-    const innerConfig = config.config.config;
-    if (innerConfig.database && innerConfig.database.trim()) {
-      return innerConfig.database
-        .split(",")
-        .map((d: string) => d.trim())
-        .filter(Boolean);
-    }
-    if (innerConfig.type === "Json" && innerConfig.path) {
-      const pathParts = innerConfig.path.split(/[\/\\]/);
-      const folderName = pathParts[pathParts.length - 1] || "root";
-      return [folderName];
-    }
-    return [];
-  }
+  async onAddDbModalAdded(data: { name: string; path: string }) {
+    const connId = this.connectionId();
+    if (!connId) return;
 
-  async createDatabase() {
-    if (!this.newDbName.trim()) return;
     this.creatingDb.set(true);
     try {
-      await this.db.createDatabase(this.newDbName.trim());
-      this.newDbName = "";
-      this.showCreateDb.set(false);
+      await this.localDb.saveDatabase(connId, data.name, data.path || undefined);
+      this.showAddDbModal.set(false);
       await this.loadConnectionDetails();
     } catch (e) {
-      this.errorHandler.handleError(e, "Creating database");
+      this.errorHandler.handleError(e, "Adding database");
     } finally {
       this.creatingDb.set(false);
     }
+  }
+
+  onAddDbModalCancelled() {
+    this.showAddDbModal.set(false);
   }
 
   startEditDb(dbName: string) {
@@ -263,17 +282,11 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
     if (!connId) return;
 
     try {
-      await this.db.renameDatabase(connId, oldName, newName);
-      const config = this.fullConfig();
-      if (config && config.config && config.config.config) {
-        const innerConfig = config.config.config;
-        const dbs = innerConfig.database.split(",").map((d: string) => d.trim());
-        const idx = dbs.indexOf(oldName);
-        if (idx >= 0) {
-          dbs[idx] = newName;
-          innerConfig.database = dbs.join(",");
-          await this.db.updateConnection(connId, config.config);
-        }
+      const localDbs = await this.localDb.listDatabases(connId);
+      const dbToEdit = localDbs.find((d) => d.name === oldName);
+      if (dbToEdit) {
+        await this.localDb.deleteDatabase(dbToEdit.id);
+        await this.localDb.saveDatabase(connId, newName, dbToEdit.path || undefined);
       }
       this.cancelEditDb();
       await this.loadConnectionDetails();
@@ -295,20 +308,10 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
     if (!connId) return;
 
     try {
-      await this.db.deleteDatabase(connId, dbName);
-      const config = this.fullConfig();
-      if (config && config.config && config.config.config) {
-        const innerConfig = config.config.config;
-        const dbs = innerConfig.database
-          .split(",")
-          .map((d: string) => d.trim())
-          .filter(Boolean);
-        const idx = dbs.indexOf(dbName);
-        if (idx >= 0) {
-          dbs.splice(idx, 1);
-          innerConfig.database = dbs.join(",");
-          await this.db.updateConnection(connId, config.config);
-        }
+      const localDbs = await this.localDb.listDatabases(connId);
+      const dbToDelete = localDbs.find((d) => d.name === dbName);
+      if (dbToDelete) {
+        await this.localDb.deleteDatabase(dbToDelete.id);
       }
       await this.loadConnectionDetails();
     } catch (e) {

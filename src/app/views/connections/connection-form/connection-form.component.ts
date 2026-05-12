@@ -158,17 +158,18 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
   async onBrowseFile(directory: boolean = false) {
     try {
       const { open } = await import("@tauri-apps/plugin-dialog");
+      let filters: { name: string; extensions: string[] }[] = [];
+      if (!directory) {
+        if (this.provider === "sqlite") {
+          filters = [{ name: "SQLite Database", extensions: ["db", "sqlite", "sqlite3"] }];
+        } else {
+          filters = [{ name: "JSON Database", extensions: ["json"] }];
+        }
+      }
       const selected = await open({
         multiple: false,
         directory,
-        filters: directory
-          ? []
-          : [
-              {
-                name: "Database Files",
-                extensions: ["json", "db", "sqlite", "sqlite3"],
-              },
-            ],
+        filters,
       });
       if (selected) {
         this.formData.update((d) => ({ ...d, path: selected as string }));

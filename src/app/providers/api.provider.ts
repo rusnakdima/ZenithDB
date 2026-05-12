@@ -23,7 +23,6 @@ import {
   RawResult,
   SystemMetrics,
   RowData,
-  DatabaseMeta,
 } from "@shared/models/connection.config";
 
 @Injectable({ providedIn: "root" })
@@ -65,15 +64,21 @@ export class ApiProvider {
   }
 
   async listConnections(): Promise<ConnectionSummary[]> {
-    const connections = await invokeWithAbortHandlingOrDefault(
-      () =>
-        this.tauriBridge.invoke<ConnectionSummary[]>("list_connections", {
-          options: { signal: this.createAbortSignal() },
-        }),
-      "listConnections",
-      this.errorHandler,
-      []
-    );
+    const withTimeout = Promise.race([
+      invokeWithAbortHandlingOrDefault(
+        () =>
+          this.tauriBridge.invoke<ConnectionSummary[]>("list_connections", {
+            options: { signal: this.createAbortSignal() },
+          }),
+        "listConnections",
+        this.errorHandler,
+        []
+      ),
+      new Promise<ConnectionSummary[]>((_, reject) =>
+        setTimeout(() => reject(new Error("listConnections timeout")), 5000)
+      ),
+    ]);
+    const connections = await withTimeout;
     this.dataStore.updateConnections(connections);
     return connections;
   }
@@ -172,19 +177,6 @@ export class ApiProvider {
     return collections;
   }
 
-  async listDatabases(connId: string): Promise<DatabaseMeta[]> {
-    return invokeWithAbortHandlingOrDefault(
-      () =>
-        this.tauriBridge.invoke<DatabaseMeta[]>("list_databases", {
-          connId,
-          options: { signal: this.createAbortSignal() },
-        }),
-      "listDatabases",
-      this.errorHandler,
-      []
-    );
-  }
-
   async createDatabase(connId: string, name: string): Promise<void> {
     await invokeWithAbortHandling(
       () =>
@@ -195,20 +187,6 @@ export class ApiProvider {
         }),
       "createDatabase",
       this.errorHandler
-    );
-  }
-
-  async listDatabasesForUri(providerType: string, uri: string): Promise<DatabaseMeta[]> {
-    return invokeWithAbortHandlingOrDefault(
-      () =>
-        this.tauriBridge.invoke<DatabaseMeta[]>("list_databases_for_uri", {
-          providerType,
-          uri,
-          options: { signal: this.createAbortSignal() },
-        }),
-      "listDatabasesForUri",
-      this.errorHandler,
-      []
     );
   }
 

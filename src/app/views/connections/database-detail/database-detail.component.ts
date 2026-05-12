@@ -9,15 +9,17 @@ import { ConfirmService } from "@shared/services/confirm.service";
 import { ErrorHandlerService } from "@shared/services/error-handler.service";
 import { ToastService } from "@services/toast.service";
 import { ProviderUtils } from "@shared/utils/provider.utils";
+import { DecentralizationService } from "@shared/services/decentralization.service";
 import { CollectionMeta } from "@shared/models/connection.config";
 import { withErrorHandling } from "@shared/utils/error-handler.utils";
+import { AddDatabasePathComponent } from "../add-database-path/add-database-path.component";
 import { Subscription } from "rxjs";
 import { filter, distinctUntilChanged } from "rxjs/operators";
 
 @Component({
   selector: "app-database-detail",
   standalone: true,
-  imports: [MatIconModule, TitleCasePipe, FormsModule],
+  imports: [MatIconModule, TitleCasePipe, FormsModule, AddDatabasePathComponent],
   templateUrl: "./database-detail.component.html",
 })
 export class DatabaseDetailComponent implements OnInit, OnDestroy {
@@ -26,6 +28,7 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy {
   private confirm = inject(ConfirmService);
   private errorHandler = inject(ErrorHandlerService);
   private toast = inject(ToastService);
+  private localDb = inject(DecentralizationService);
   providerUtils = inject(ProviderUtils);
   route = inject(ActivatedRoute);
   router = inject(Router);
@@ -42,10 +45,17 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy {
   editCollectionName = "";
   showCreateCollection = signal(false);
   newCollectionName = "";
+  showAddDbModal = signal(false);
 
   private routeSub: Subscription | null = null;
 
   async ngOnInit() {
+    try {
+      await this.localDb.initStorage();
+    } catch (e) {
+      console.error("Failed to initialize storage:", e);
+    }
+
     this.routeSub = this.route.paramMap
       .pipe(
         filter((params) => params.get("id") !== null),
@@ -209,5 +219,22 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy {
     } catch (e) {
       this.errorHandler.handleError(e, "Deleting collection");
     }
+  }
+
+  async onAddDbModalAdded(data: { name: string; path: string }) {
+    const connId = this.connectionId();
+    if (!connId) return;
+
+    try {
+      await this.localDb.saveDatabase(connId, data.name, data.path || undefined);
+      this.showAddDbModal.set(false);
+      this.goBack();
+    } catch (e) {
+      this.errorHandler.handleError(e, "Adding database");
+    }
+  }
+
+  onAddDbModalCancelled() {
+    this.showAddDbModal.set(false);
   }
 }

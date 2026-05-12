@@ -14,12 +14,8 @@ import { MatIconModule } from "@angular/material/icon";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { DatabaseService } from "@shared/services/database.service";
 import { DataStoreService } from "@services/core/data-store.service";
-import {
-  CollectionMeta,
-  SystemMetrics,
-  ConnectionSummary,
-  DatabaseMeta,
-} from "@shared/models/connection.config";
+import { DecentralizationService } from "@shared/services/decentralization.service";
+import { CollectionMeta, SystemMetrics, ConnectionSummary } from "@shared/models/connection.config";
 import { interval, Subscription } from "rxjs";
 import { filter } from "rxjs/operators";
 import { ProviderUtils } from "@shared/utils/provider.utils";
@@ -46,6 +42,7 @@ export class SidebarComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   connectionState = inject(ConnectionStateService);
   databaseService = inject(DatabaseService);
+  private localDb = inject(DecentralizationService);
   dataStore = inject(DataStoreService);
   themeService = inject(ThemeService);
   private errorHandler = inject(ErrorHandlerService);
@@ -62,6 +59,7 @@ export class SidebarComponent implements OnInit {
   currentUrl = signal("");
   isExpandingRoute = signal(false);
   isLoadingConnectionRoute = signal(false);
+  private isLoadingDatabases = false;
 
   private statusSubscription: Subscription | null = null;
   private connectionStatusSubscription: Subscription | null = null;
@@ -102,7 +100,7 @@ export class SidebarComponent implements OnInit {
     const connId = this.activeConnectionId();
     if (dbName && connId) {
       this.expandDatabaseForRoute(connId, dbName);
-    } else if (!dbName && connId) {
+    } else if (!dbName && connId && connId !== "new") {
       this.loadConnectionForRoute(connId);
     }
   });
@@ -134,7 +132,7 @@ export class SidebarComponent implements OnInit {
   }
 
   async expandDatabaseForRoute(connId: string, dbName: string) {
-    if (this.isExpandingRoute()) {
+    if (this.isExpandingRoute() || this.isLoadingConnectionRoute() || this.isLoadingDatabases) {
       return;
     }
     this.isExpandingRoute.set(true);
@@ -142,7 +140,9 @@ export class SidebarComponent implements OnInit {
       const conn = this.dataStore.getConnections().find((c) => c.id === connId);
       if (!conn) return;
 
-      this.connectionState.setActiveConnection(conn);
+      if (this.connectionState.activeConnectionId() !== connId) {
+        this.connectionState.setActiveConnection(conn);
+      }
 
       if (!this.expandedConnections().has(connId)) {
         this.expandedConnections.update((set) => {
@@ -177,13 +177,16 @@ export class SidebarComponent implements OnInit {
   }
 
   async loadConnectionForRoute(connId: string) {
-    if (this.isLoadingConnectionRoute()) {
+    if (this.isLoadingConnectionRoute() || this.isExpandingRoute() || this.isLoadingDatabases) {
       return;
     }
     this.isLoadingConnectionRoute.set(true);
     try {
       const conn = this.dataStore.getConnections().find((c) => c.id === connId);
-      if (!conn) return;
+      if (!conn) {
+        this.isLoadingConnectionRoute.set(false);
+        return;
+      }
 
       if (!this.expandedConnections().has(connId)) {
         this.expandedConnections.update((set) => {
@@ -193,7 +196,9 @@ export class SidebarComponent implements OnInit {
         });
       }
 
-      this.connectionState.setActiveConnection(conn);
+      if (this.connectionState.activeConnectionId() !== connId) {
+        this.connectionState.setActiveConnection(conn);
+      }
       await this.loadDatabases(connId);
     } finally {
       this.isLoadingConnectionRoute.set(false);
@@ -272,9 +277,19 @@ export class SidebarComponent implements OnInit {
   }
 
   async loadDatabases(connId: string) {
-    this.loadingDatabases.set(true);
+    if (this.isLoadingDatabases) {
+      return;
+    }
+    if (this.connectionState.activeConnectionId() !== connId) {
+      return;
+    }
+    this.isLoadingDatabases = true;
     try {
-      const databases = await this.databaseService.listDatabases(connId);
+      this.loadingDatabases.set(true);
+      const databases = await this.localDb.listDatabases(connId);
+      if (this.connectionState.activeConnectionId() !== connId) {
+        return;
+      }
       const dbNodes: TreeNode[] = databases.map((db) => ({
         name: db.name,
         type: "database" as const,
@@ -286,6 +301,7 @@ export class SidebarComponent implements OnInit {
       this.errorHandler.handleError(e, "Loading databases");
       this.databases.set([]);
     } finally {
+      this.isLoadingDatabases = false;
       this.loadingDatabases.set(false);
     }
   }

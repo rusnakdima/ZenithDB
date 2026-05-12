@@ -7,7 +7,6 @@ import {
   CollectionMeta,
   CollectionSchema,
   CollectionStats,
-  DatabaseMeta,
 } from "@shared/models/connection.config";
 
 @Injectable({ providedIn: "root" })
@@ -23,13 +22,6 @@ export class SchemaService {
     );
   }
 
-  async listDatabases(connId?: string): Promise<DatabaseMeta[]> {
-    const id = connId || this.connectionState.activeConnectionId();
-    return withConnectionAndLoading(id, this.loadingService, "Loading databases...", (connId) =>
-      this.api.listDatabases(connId)
-    );
-  }
-
   async createDatabase(name: string): Promise<void> {
     const connId = this.connectionState.activeConnectionId();
     return withConnectionAndLoading(
@@ -38,10 +30,6 @@ export class SchemaService {
       `Creating database ${name}...`,
       (connId) => this.api.createDatabase(connId, name)
     );
-  }
-
-  async listDatabasesForUri(providerType: string, uri: string): Promise<DatabaseMeta[]> {
-    return this.api.listDatabasesForUri(providerType, uri);
   }
 
   async describeCollection(collection: string): Promise<CollectionSchema> {

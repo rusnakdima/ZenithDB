@@ -2,9 +2,6 @@ import { Component, input, output, signal, computed, inject } from "@angular/cor
 import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
 import { CheckboxComponent } from "@shared/components/checkbox/checkbox.component";
-import { DatabaseService } from "@shared/services/database.service";
-import { ProviderType } from "@shared/models/provider.model";
-import { DatabaseMeta } from "@shared/models/connection.config";
 import { ToastService } from "@services/toast.service";
 
 @Component({
@@ -13,28 +10,9 @@ import { ToastService } from "@services/toast.service";
   imports: [FormsModule, MatIconModule, CheckboxComponent],
   template: `
     <div class="space-y-4">
-      @if (loadingDatabases()) {
-        <div class="flex items-center gap-2 text-sm text-[var(--text-dim)]">
-          <mat-icon fontIcon="sync" class="h-5! w-5! text-xl!" />
-          Loading databases...
-        </div>
-      }
-      @if (availableDatabases().length > 0) {
-        <div>
-          <label class="form-label">Available Databases</label>
-          <div
-            class="max-h-40 space-y-1 overflow-y-auto rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] p-2"
-          >
-            @for (db of availableDatabases(); track db.name) {
-              <app-checkbox
-                [checked]="isSelected(db.name)"
-                [label]="db.name"
-                (changed)="onCheckboxChange($event, db.name)"
-              />
-            }
-          </div>
-        </div>
-      }
+      <p class="text-sm text-[var(--text-dim)]">
+        You can add databases manually after creating the connection.
+      </p>
     </div>
 
     <div class="mt-4">
@@ -100,45 +78,17 @@ import { ToastService } from "@services/toast.service";
   `,
 })
 export class DatabaseSelectorComponent {
-  private db = inject(DatabaseService);
   private toast = inject(ToastService);
 
-  provider = input.required<ProviderType>();
+  provider = input.required<string>();
   uri = input.required<string>();
   selectedDatabases = input<string[]>([]);
 
   databasesChange = output<string[]>();
 
-  availableDatabases = signal<DatabaseMeta[]>([]);
-  loadingDatabases = signal(false);
-  databasesLoaded = signal(false);
-
   editingDb = signal<string | null>(null);
   editDbName = "";
   manualDatabase = "";
-
-  isSelected(dbName: string): boolean {
-    return this.selectedDatabases().includes(dbName);
-  }
-
-  onCheckboxChange(event: boolean, dbName: string) {
-    const current = this.selectedDatabases();
-    if (event) {
-      if (!current.includes(dbName)) {
-        this.databasesChange.emit([...current, dbName]);
-      }
-    } else {
-      this.databasesChange.emit(current.filter((n) => n !== dbName));
-    }
-  }
-
-  addManual() {
-    const name = this.manualDatabase.trim();
-    if (name && !this.selectedDatabases().includes(name)) {
-      this.databasesChange.emit([...this.selectedDatabases(), name]);
-    }
-    this.manualDatabase = "";
-  }
 
   startEdit(dbName: string) {
     this.editingDb.set(dbName);
@@ -173,20 +123,11 @@ export class DatabaseSelectorComponent {
     this.databasesChange.emit(this.selectedDatabases().filter((d) => d !== dbName));
   }
 
-  async loadDatabases() {
-    if (this.uri().length > 10) {
-      this.availableDatabases.set([]);
-      this.databasesLoaded.set(false);
-      this.loadingDatabases.set(true);
-      try {
-        const dbs = await this.db.listDatabasesForUri(this.provider(), this.uri());
-        this.availableDatabases.set(dbs);
-        this.databasesLoaded.set(true);
-      } catch (e) {
-        this.toast.error("Failed to load databases");
-      } finally {
-        this.loadingDatabases.set(false);
-      }
+  addManual() {
+    const name = this.manualDatabase.trim();
+    if (name && !this.selectedDatabases().includes(name)) {
+      this.databasesChange.emit([...this.selectedDatabases(), name]);
     }
+    this.manualDatabase = "";
   }
 }

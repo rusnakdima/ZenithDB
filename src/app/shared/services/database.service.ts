@@ -53,16 +53,8 @@ export class DatabaseService {
     return this.schemaService.listCollections(connId, dbName);
   }
 
-  async listDatabases(connId?: string) {
-    return this.schemaService.listDatabases(connId);
-  }
-
   async createDatabase(name: string) {
     return this.schemaService.createDatabase(name);
-  }
-
-  async listDatabasesForUri(providerType: string, uri: string) {
-    return this.schemaService.listDatabasesForUri(providerType, uri);
   }
 
   async describeCollection(collection: string) {

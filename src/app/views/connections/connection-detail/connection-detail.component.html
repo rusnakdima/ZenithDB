@@ -114,23 +114,45 @@
       <div class="mt-8">
         <div class="mb-4 flex items-center justify-between">
           <h3 class="text-lg font-semibold text-[var(--text-main)]">Databases</h3>
+          <button (click)="showAddDbModal.set(true)" class="form-btn form-btn-secondary">
+            <mat-icon fontIcon="add" class="mr-2 h-5! w-5! text-xl!" />
+            Add Database
+          </button>
         </div>
+
         <div class="space-y-2">
-          @for (db of getDbList(); track db) {
+          @for (db of databases(); track db.name) {
             <div class="rounded-xl border border-[var(--border-visible)] bg-[var(--bg-card)] p-4">
               <div
                 class="mb-3 flex cursor-pointer items-center gap-3 transition-colors hover:bg-[var(--bg-elevated)]"
-                (click)="openDatabase(db)"
+                (click)="openDatabase(db.name)"
               >
                 <mat-icon fontIcon="storage" class="h-5! w-5! text-xl! text-[var(--accent)]/70" />
-                <span class="flex-1 font-medium text-[var(--text-main)]">{{ db }}</span>
+                <span class="flex-1 font-medium text-[var(--text-main)]">{{ db.name }}</span>
+                @if (db.path) {
+                  <span class="text-xs text-[var(--text-muted)]">{{ db.path }}</span>
+                }
                 <span class="text-xs text-[var(--text-muted)]"
-                  >{{ getCollectionsForDb(db).length }} collections</span
+                  >{{ getCollectionsForDb(db.name).length }} collections</span
                 >
+                <button
+                  type="button"
+                  (click)="startEditDb(db.name); $event.stopPropagation()"
+                  class="rounded p-1 text-[var(--text-dim)] hover:text-[var(--accent)]"
+                >
+                  <mat-icon fontIcon="edit" class="h-5! w-5! text-xl!" />
+                </button>
+                <button
+                  type="button"
+                  (click)="deleteDatabase(db.name); $event.stopPropagation()"
+                  class="rounded p-1 text-[var(--text-dim)] hover:text-red-400"
+                >
+                  <mat-icon fontIcon="delete" class="h-5! w-5! text-xl!" />
+                </button>
               </div>
               <table class="w-full">
                 <tbody class="divide-y divide-[var(--border-subtle)]">
-                  @for (col of getCollectionsForDb(db); track col.name) {
+                  @for (col of getCollectionsForDb(db.name); track col.name) {
                     <tr
                       class="cursor-pointer transition-colors hover:bg-[var(--bg-elevated)]"
                       (click)="openCollection(col.name)"
@@ -152,7 +174,8 @@
             <div
               class="rounded-xl border border-[var(--border-visible)] bg-[var(--bg-card)] p-8 text-center"
             >
-              <p class="text-sm text-[var(--text-muted)]">No databases configured</p>
+              <p class="text-sm text-[var(--text-muted)]">No databases added</p>
+              <p class="mt-1 text-xs text-[var(--text-dim)]">Click "Add Database" to add one</p>
             </div>
           }
         </div>
@@ -160,3 +183,12 @@
     }
   </div>
 </div>
+
+@if (showAddDbModal()) {
+  <app-add-database-path
+    [provider]="provider()!"
+    [connectionId]="connectionId()!"
+    (added)="onAddDbModalAdded($event)"
+    (cancelled)="onAddDbModalCancelled()"
+  />
+}
