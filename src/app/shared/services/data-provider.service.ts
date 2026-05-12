@@ -70,32 +70,44 @@ export class DataProviderService {
     return entries;
   }
 
+  private evictLRUFromCache<T extends { lastAccessed: number }>(
+    cache: Map<string, T>,
+    maxSize: number
+  ): Map<string, T> {
+    if (cache.size >= maxSize) {
+      const sorted = Array.from(cache.entries()).sort(
+        (a, b) => a[1].lastAccessed - b[1].lastAccessed
+      );
+      const toRemove = sorted.slice(0, cache.size - maxSize + 1);
+      const newCache = new Map(cache);
+      for (const [key] of toRemove) {
+        newCache.delete(key);
+      }
+      return newCache;
+    }
+    return cache;
+  }
+
   private evictLRU(collection: string): void {
     const entries = this.getCollectionEntries(collection);
     if (entries.size >= this.MAX_ENTRIES_PER_COLLECTION) {
-      const sorted = Array.from(entries.entries()).sort(
-        (a, b) => a[1].lastAccessed - b[1].lastAccessed
-      );
-      const toRemove = sorted.slice(0, entries.size - this.MAX_ENTRIES_PER_COLLECTION + 1);
-      const cache = this.collectionDataCache();
-      for (const [key] of toRemove) {
-        cache.delete(key);
+      const filteredEntries = this.evictLRUFromCache(entries, this.MAX_ENTRIES_PER_COLLECTION);
+      const newCache = new Map(this.collectionDataCache());
+      for (const [key] of entries) {
+        newCache.delete(key);
       }
-      this.collectionDataCache.set(new Map(cache));
+      for (const [key, value] of filteredEntries) {
+        newCache.set(key, value);
+      }
+      this.collectionDataCache.set(newCache);
     }
   }
 
   private evictLRUColumns(): void {
     const cache = this.columnsCache();
-    if (cache.size >= this.MAX_COLUMNS_CACHE_SIZE) {
-      const sorted = Array.from(cache.entries()).sort(
-        (a, b) => a[1].lastAccessed - b[1].lastAccessed
-      );
-      const toRemove = sorted.slice(0, cache.size - this.MAX_COLUMNS_CACHE_SIZE + 1);
-      for (const [key] of toRemove) {
-        cache.delete(key);
-      }
-      this.columnsCache.set(new Map(cache));
+    const newCache = this.evictLRUFromCache(cache, this.MAX_COLUMNS_CACHE_SIZE);
+    if (newCache !== cache) {
+      this.columnsCache.set(newCache);
     }
   }
 
@@ -205,7 +217,7 @@ export class DataProviderService {
     const cache = this.collectionDataCache();
     const keysToDelete: string[] = [];
     for (const key of cache.keys()) {
-      if (key.startsWith(collection + "_")) {
+      if (key === collection || key.startsWith(collection + "_")) {
         keysToDelete.push(key);
       }
     }

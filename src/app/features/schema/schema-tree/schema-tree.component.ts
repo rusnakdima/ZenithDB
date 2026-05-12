@@ -46,7 +46,7 @@ interface ContextMenu {
 @Component({
   selector: "app-schema-tree",
   standalone: true,
-  imports: [RouterLink, FormsModule, MatIconModule, SkeletonLoaderComponent],
+  imports: [FormsModule, MatIconModule, SkeletonLoaderComponent],
   templateUrl: "./schema-tree.component.html",
 })
 export class SchemaTreeComponent implements OnInit, OnDestroy {

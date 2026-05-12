@@ -30,14 +30,7 @@ interface DbNode {
 @Component({
   selector: "app-connection-detail",
   standalone: true,
-  imports: [
-    RouterLink,
-    StatusBadgeComponent,
-    ConnectionStatusBadgeComponent,
-    TitleCasePipe,
-    MatIconModule,
-    FormsModule,
-  ],
+  imports: [RouterLink, ConnectionStatusBadgeComponent, TitleCasePipe, MatIconModule, FormsModule],
   templateUrl: "./connection-detail.component.html",
 })
 export class ConnectionDetailComponent implements OnInit, OnDestroy {
@@ -86,8 +79,10 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
             const fullConn = await this.db.getConnection(id);
             this.fullConfig.set(fullConn);
           } catch (e) {
-            console.error("Failed to load full config:", e);
+            this.errorHandler.handleError(e, "Loading full config");
           }
+
+          await this.loadConnectionDetails();
         }
       } else {
         this.connectionId.set(this.connState.activeConnectionId());
@@ -95,13 +90,7 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
         this.provider.set(this.connState.activeProvider());
         this.fullConfig.set(this.connState.activeConnectionConfig());
       }
-
-      this.updateProviderIcon();
-      await this.loadConnectionDetails();
     });
-
-    this.updateProviderIcon();
-    await this.loadConnectionDetails();
   }
 
   ngOnDestroy() {
@@ -249,7 +238,7 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
       this.showCreateDb.set(false);
       await this.loadConnectionDetails();
     } catch (e) {
-      console.error("Failed to create database:", e);
+      this.errorHandler.handleError(e, "Creating database");
     } finally {
       this.creatingDb.set(false);
     }
@@ -289,7 +278,7 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
       this.cancelEditDb();
       await this.loadConnectionDetails();
     } catch (e) {
-      console.error("Failed to rename database:", e);
+      this.errorHandler.handleError(e, "Renaming database");
       this.cancelEditDb();
     }
   }
@@ -323,7 +312,7 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
       }
       await this.loadConnectionDetails();
     } catch (e) {
-      console.error("Failed to delete database:", e);
+      this.errorHandler.handleError(e, "Deleting database");
     }
   }
 }

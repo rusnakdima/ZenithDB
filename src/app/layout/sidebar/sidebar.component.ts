@@ -24,6 +24,7 @@ import { interval, Subscription } from "rxjs";
 import { filter } from "rxjs/operators";
 import { ProviderUtils } from "@shared/utils/provider.utils";
 import { ThemeService } from "@shared/services/theme.service";
+import { ErrorHandlerService } from "@shared/services/error-handler.service";
 
 interface TreeNode {
   name: string;
@@ -47,6 +48,7 @@ export class SidebarComponent implements OnInit {
   databaseService = inject(DatabaseService);
   storage = inject(StorageService);
   themeService = inject(ThemeService);
+  private errorHandler = inject(ErrorHandlerService);
   collectionSelected = output<string>();
 
   isStatsCollapsed = signal(true);
@@ -220,7 +222,7 @@ export class SidebarComponent implements OnInit {
       const metrics = await this.databaseService.getSystemStatus();
       this.systemStatus.set(metrics);
     } catch (e) {
-      console.error("Failed to fetch system status:", e);
+      this.errorHandler.handleError(e, "Fetching system status");
     }
   }
 
@@ -228,7 +230,7 @@ export class SidebarComponent implements OnInit {
     try {
       await this.databaseService.listConnections();
     } catch (e) {
-      console.error("Failed to fetch connections:", e);
+      this.errorHandler.handleError(e, "Fetching connections");
     }
   }
 
@@ -244,7 +246,7 @@ export class SidebarComponent implements OnInit {
         }
       });
     } catch (e) {
-      console.error("Failed to refresh connection statuses:", e);
+      this.errorHandler.handleError(e, "Refreshing connection statuses");
     }
   }
 
@@ -281,7 +283,7 @@ export class SidebarComponent implements OnInit {
       }));
       this.databases.set(dbNodes);
     } catch (e) {
-      console.error("Failed to load databases:", e);
+      this.errorHandler.handleError(e, "Loading databases");
       this.databases.set([]);
     } finally {
       this.loadingDatabases.set(false);

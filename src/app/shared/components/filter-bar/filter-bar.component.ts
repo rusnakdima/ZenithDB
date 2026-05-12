@@ -95,7 +95,7 @@ export class FilterBarComponent implements OnInit, OnChanges, OnDestroy {
         this.filterHistory.set(history);
       }
     } catch (e) {
-      console.error("Failed to load filter history, continuing with defaults:", e);
+      console.warn("Failed to load filter history, continuing with defaults:", e);
     }
   }
 
@@ -103,7 +103,7 @@ export class FilterBarComponent implements OnInit, OnChanges, OnDestroy {
     try {
       this.localStorage.setFilterHistory(this.filterHistory());
     } catch (e) {
-      console.error("Failed to save filter history:", e);
+      console.warn("Failed to save filter history:", e);
     }
   }
 

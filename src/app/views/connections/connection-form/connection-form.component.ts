@@ -6,13 +6,19 @@ import { DatabaseService } from "@shared/services/database.service";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { ProviderUtils } from "@shared/utils/provider.utils";
 import { parseProviderConfig } from "@shared/utils/provider-config.utils";
-import { ConnectionHealth } from "@shared/models/connection.config";
+import {
+  ConnectionConfig,
+  ConnectionHealth,
+  TestConnectionConfig,
+} from "@shared/models/connection.config";
 import { ProviderType } from "@shared/models/provider.model";
 import { ProviderSelectorComponent } from "../provider-selector/provider-selector.component";
 import {
   ConnectionConfigFormComponent,
   ConfigFormData,
 } from "../connection-config-form/connection-config-form.component";
+import { ErrorHandlerService } from "@shared/services/error-handler.service";
+import { ToastService } from "@services/toast.service";
 
 type WizardStep = 1 | 2 | 3;
 
@@ -32,6 +38,8 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
 
   private db = inject(DatabaseService);
   private connState = inject(ConnectionStateService);
+  private errorHandler = inject(ErrorHandlerService);
+  private toast = inject(ToastService);
   providerUtils = inject(ProviderUtils);
   router = inject(Router);
   route = inject(ActivatedRoute);
@@ -102,7 +110,7 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
         this.selectedDatabases.set(parsed.database.split(",").map((d) => d.trim()));
       }
     } catch (e) {
-      console.error("Failed to load connection:", e);
+      this.errorHandler.handleError(e, "Loading connection for edit");
     }
   }
 
@@ -124,7 +132,7 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
         this.selectedDatabases.set(parsed.database.split(",").map((d) => d.trim()));
       }
     } catch (e) {
-      console.error("Failed to load connection:", e);
+      this.errorHandler.handleError(e, "Loading connection for duplicate");
     }
   }
 
@@ -176,7 +184,7 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
         this.formData.update((d) => ({ ...d, path: selected as string }));
       }
     } catch (e) {
-      console.error("File dialog error:", e);
+      this.toast.error("Failed to open file dialog");
     }
   }
 
@@ -207,7 +215,12 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
       const result = await this.db.testConnection(config);
       this.testResult.set(result);
     } catch (e) {
-      this.testResult.set({ ok: false, message: String(e) } as any);
+      this.testResult.set({
+        healthy: false,
+        provider: "",
+        server_version: String(e),
+        latency_ms: undefined,
+      });
     } finally {
       this.testing.set(false);
     }
@@ -223,22 +236,21 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
       await this.db.saveConnection(config);
       this.onClose();
     } catch (e) {
-      console.error("Save failed:", e);
+      this.errorHandler.handleError(e, "Saving connection");
     } finally {
       this.saving.set(false);
     }
   }
 
-  private buildConfig(): any {
+  private buildConfig(): TestConnectionConfig {
     const data = this.formData();
-    const configType = this.providerUtils.toConfigType(this.provider);
 
     switch (this.provider) {
       case "json":
         return {
           name: data.name,
           config: {
-            type: configType,
+            type: "Json",
             name: data.name,
             path: data.path,
             behavior: data.behavior,
@@ -248,7 +260,7 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
         return {
           name: data.name,
           config: {
-            type: configType,
+            type: "Sqlite",
             name: data.name,
             path: data.path,
           },
@@ -257,7 +269,7 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
         return {
           name: data.name,
           config: {
-            type: configType,
+            type: "Mongo",
             name: data.name,
             uri: data.uri,
             database: data.database,
@@ -267,18 +279,25 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
         return {
           name: data.name,
           config: {
-            type: configType,
+            type: "Redis",
             name: data.name,
             uri: data.uri,
-            database: data.database,
           },
         };
       case "postgres":
+        return {
+          name: data.name,
+          config: {
+            type: "Postgres",
+            name: data.name,
+            uri: data.uri,
+          },
+        };
       case "mysql":
         return {
           name: data.name,
           config: {
-            type: configType,
+            type: "MySql",
             name: data.name,
             uri: data.uri,
           },
@@ -287,7 +306,7 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
         return {
           name: data.name,
           config: {
-            type: configType,
+            type: "MySql",
             name: data.name,
             uri: data.uri,
           },

@@ -17,7 +17,7 @@ import { filter, distinctUntilChanged } from "rxjs/operators";
 @Component({
   selector: "app-database-detail",
   standalone: true,
-  imports: [RouterLink, MatIconModule, TitleCasePipe, FormsModule],
+  imports: [MatIconModule, TitleCasePipe, FormsModule],
   templateUrl: "./database-detail.component.html",
 })
 export class DatabaseDetailComponent implements OnInit, OnDestroy {
@@ -76,7 +76,7 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy {
               });
             }
           } catch (e) {
-            console.error("Failed to load connection:", e);
+            this.errorHandler.handleError(e, "Loading connection details");
           }
 
           await this.loadCollections();
@@ -160,7 +160,7 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy {
       this.closeCreateCollectionModal();
       await this.loadCollections();
     } catch (e) {
-      console.error("Failed to create collection:", e);
+      this.errorHandler.handleError(e, "Creating collection");
     }
   }
 
@@ -187,7 +187,7 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy {
       this.cancelEditCollection();
       await this.loadCollections();
     } catch (e) {
-      console.error("Failed to rename collection:", e);
+      this.errorHandler.handleError(e, "Renaming collection");
       this.cancelEditCollection();
     }
   }
@@ -207,7 +207,7 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy {
       await this.db.dropCollection(colName);
       await this.loadCollections();
     } catch (e) {
-      console.error("Failed to delete collection:", e);
+      this.errorHandler.handleError(e, "Deleting collection");
     }
   }
 }

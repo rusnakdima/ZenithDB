@@ -51,7 +51,6 @@ interface Tab {
     CollectionTabsComponent,
     ViewSwitcherComponent,
     FormatBytesPipe,
-    PaginationComponent,
   ],
   templateUrl: "./explorer.component.html",
 })

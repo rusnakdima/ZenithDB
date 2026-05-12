@@ -128,7 +128,7 @@ export class SettingsService {
         return this.mergeWithDefaults(stored);
       }
     } catch (e) {
-      console.error("Failed to load settings, continuing with defaults:", e);
+      console.warn("Failed to load settings, continuing with defaults:", e);
     }
     return structuredClone(DEFAULT_SETTINGS);
   }

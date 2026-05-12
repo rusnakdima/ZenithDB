@@ -6,6 +6,7 @@ import { DatabaseService } from "@shared/services/database.service";
 import { ProviderType } from "@shared/models/provider.model";
 import { DatabaseMeta } from "@shared/models/connection.config";
 import { DatabaseSelectorComponent } from "../database-selector/database-selector.component";
+import { ToastService } from "@services/toast.service";
 
 export interface ConfigFormData {
   name: string;
@@ -279,6 +280,7 @@ export interface ConfigFormData {
 })
 export class ConnectionConfigFormComponent {
   private db = inject(DatabaseService);
+  private toast = inject(ToastService);
 
   provider = input.required<ProviderType>();
   initialData = input<ConfigFormData>({
@@ -350,7 +352,7 @@ export class ConnectionConfigFormComponent {
         this.availableDatabases.set(dbs);
         this.databasesLoaded.set(true);
       } catch (e) {
-        console.error("Failed to load databases:", e);
+        this.toast.error("Failed to load databases");
       } finally {
         this.loadingDatabases.set(false);
       }

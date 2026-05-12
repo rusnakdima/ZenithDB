@@ -5,6 +5,7 @@ import { CheckboxComponent } from "@shared/components/checkbox/checkbox.componen
 import { DatabaseService } from "@shared/services/database.service";
 import { ProviderType } from "@shared/models/provider.model";
 import { DatabaseMeta } from "@shared/models/connection.config";
+import { ToastService } from "@services/toast.service";
 
 @Component({
   selector: "app-database-selector",
@@ -100,6 +101,7 @@ import { DatabaseMeta } from "@shared/models/connection.config";
 })
 export class DatabaseSelectorComponent {
   private db = inject(DatabaseService);
+  private toast = inject(ToastService);
 
   provider = input.required<ProviderType>();
   uri = input.required<string>();
@@ -181,7 +183,7 @@ export class DatabaseSelectorComponent {
         this.availableDatabases.set(dbs);
         this.databasesLoaded.set(true);
       } catch (e) {
-        console.error("Failed to load databases:", e);
+        this.toast.error("Failed to load databases");
       } finally {
         this.loadingDatabases.set(false);
       }

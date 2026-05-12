@@ -252,7 +252,7 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
       this.columns = schema.columns;
       this.initColumnWidths();
     } catch (e) {
-      console.error("Failed to load columns:", e);
+      console.warn("Failed to load columns, using default:", e);
     }
   }
 
