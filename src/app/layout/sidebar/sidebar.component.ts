@@ -13,7 +13,7 @@ import { Router, RouterLink, NavigationEnd } from "@angular/router";
 import { MatIconModule } from "@angular/material/icon";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { DatabaseService } from "@shared/services/database.service";
-import { StorageService } from "@services/core/storage.service";
+import { DataStoreService } from "@services/core/data-store.service";
 import {
   CollectionMeta,
   SystemMetrics,
@@ -46,7 +46,7 @@ export class SidebarComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   connectionState = inject(ConnectionStateService);
   databaseService = inject(DatabaseService);
-  storage = inject(StorageService);
+  dataStore = inject(DataStoreService);
   themeService = inject(ThemeService);
   private errorHandler = inject(ErrorHandlerService);
   collectionSelected = output<string>();
@@ -139,7 +139,7 @@ export class SidebarComponent implements OnInit {
     }
     this.isExpandingRoute.set(true);
     try {
-      const conn = this.storage.connections().find((c) => c.id === connId);
+      const conn = this.dataStore.getConnections().find((c) => c.id === connId);
       if (!conn) return;
 
       this.connectionState.setActiveConnection(conn);
@@ -182,7 +182,7 @@ export class SidebarComponent implements OnInit {
     }
     this.isLoadingConnectionRoute.set(true);
     try {
-      const conn = this.storage.connections().find((c) => c.id === connId);
+      const conn = this.dataStore.getConnections().find((c) => c.id === connId);
       if (!conn) return;
 
       if (!this.expandedConnections().has(connId)) {
@@ -213,7 +213,7 @@ export class SidebarComponent implements OnInit {
   }
 
   getActiveConnectionName(): string {
-    const conn = this.storage.connections().find((c) => c.id === this.activeConnectionId());
+    const conn = this.dataStore.getConnections().find((c) => c.id === this.activeConnectionId());
     return conn?.name || "Unknown";
   }
 
@@ -236,13 +236,13 @@ export class SidebarComponent implements OnInit {
 
   async refreshConnectionStatuses() {
     try {
-      const connections = this.storage.connections();
+      const connections = this.dataStore.getConnections();
       const results = await Promise.all(
         connections.map((conn) => this.databaseService.testConnectionStatus(conn.id))
       );
       results.forEach((result, index) => {
         if (result) {
-          this.storage.updateConnection(connections[index].id, { status: result.status });
+          this.dataStore.updateConnection(connections[index].id, { status: result.status });
         }
       });
     } catch (e) {
@@ -260,12 +260,12 @@ export class SidebarComponent implements OnInit {
   async testConnectionStatus(connId: string) {
     const result = await this.databaseService.testConnectionStatus(connId);
     if (result) {
-      this.storage.updateConnection(connId, { status: result.status });
+      this.dataStore.updateConnection(connId, { status: result.status });
     }
   }
 
   async selectConnectionById(connId: string) {
-    const conn = this.storage.connections().find((c) => c.id === connId);
+    const conn = this.dataStore.getConnections().find((c) => c.id === connId);
     if (conn) {
       this.selectConnection(conn);
     }
@@ -334,7 +334,7 @@ export class SidebarComponent implements OnInit {
         newSet.add(connId);
         return newSet;
       });
-      const conn = this.storage.connections().find((c) => c.id === connId);
+      const conn = this.dataStore.getConnections().find((c) => c.id === connId);
       if (conn) {
         this.connectionState.setActiveConnection(conn);
       }

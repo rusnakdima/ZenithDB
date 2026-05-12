@@ -18,13 +18,6 @@
           <p class="mt-1 text-sm text-[var(--text-dim)]">{{ provider() | titlecase }} connection</p>
         </div>
       </div>
-      <a
-        [routerLink]="['/connections', connectionId(), 'edit']"
-        class="form-btn form-btn-secondary"
-      >
-        <mat-icon fontIcon="edit" class="mr-2 h-5! w-5! text-xl!" />
-        Edit
-      </a>
     </div>
 
     @if (loading()) {
@@ -118,95 +111,23 @@
         </button>
       </div>
 
-      @if (showCreateDb()) {
-        <div class="mt-6 rounded-xl border border-[var(--border-visible)] bg-[var(--bg-card)] p-4">
-          <h4 class="mb-3 text-sm font-semibold text-[var(--text-main)]">Create New Database</h4>
-          <div class="flex gap-3">
-            <input
-              type="text"
-              [(ngModel)]="newDbName"
-              placeholder="database_name"
-              class="flex-1 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-2 text-sm text-[var(--text-main)] placeholder-[var(--text-muted)] focus:border-[var(--accent)] focus:outline-none"
-            />
-            <button
-              (click)="createDatabase()"
-              [disabled]="creatingDb()"
-              class="form-btn form-btn-primary"
-            >
-              @if (creatingDb()) {
-                <mat-icon fontIcon="sync" class="mr-2 h-5! w-5! text-xl!" /> Creating...
-              } @else {
-                <mat-icon fontIcon="add" class="mr-2 h-5! w-5! text-xl!" /> Create
-              }
-            </button>
-            <button (click)="showCreateDb.set(false)" class="form-btn form-btn-secondary">
-              Cancel
-            </button>
-          </div>
-        </div>
-      }
-
       <div class="mt-8">
         <div class="mb-4 flex items-center justify-between">
           <h3 class="text-lg font-semibold text-[var(--text-main)]">Databases</h3>
-          <button (click)="showCreateDb.set(true)" class="form-btn form-btn-secondary text-xs">
-            <mat-icon fontIcon="add" class="mr-1 h-4! w-4! text-xl!" />
-            Create Database
-          </button>
         </div>
         <div class="space-y-2">
-          @for (db of getSelectedDatabases(); track db) {
+          @for (db of getDbList(); track db) {
             <div class="rounded-xl border border-[var(--border-visible)] bg-[var(--bg-card)] p-4">
-              @if (editingDb() === db) {
-                <div class="mb-3 flex items-center gap-2">
-                  <input
-                    type="text"
-                    [(ngModel)]="editDbName"
-                    class="form-input flex-1"
-                    (keyup.enter)="saveEditDb()"
-                    (keyup.escape)="cancelEditDb()"
-                  />
-                  <button
-                    type="button"
-                    (click)="saveEditDb()"
-                    class="rounded p-1 text-[var(--accent)] hover:bg-[var(--bg-elevated)]"
-                  >
-                    <mat-icon fontIcon="check" class="h-5! w-5! text-xl!" />
-                  </button>
-                  <button
-                    type="button"
-                    (click)="cancelEditDb()"
-                    class="rounded p-1 text-[var(--text-dim)] hover:bg-[var(--bg-elevated)]"
-                  >
-                    <mat-icon fontIcon="close" class="h-5! w-5! text-xl!" />
-                  </button>
-                </div>
-              } @else {
-                <div
-                  class="mb-3 flex cursor-pointer items-center gap-3 transition-colors hover:bg-[var(--bg-elevated)]"
-                  (click)="openDatabase(db)"
+              <div
+                class="mb-3 flex cursor-pointer items-center gap-3 transition-colors hover:bg-[var(--bg-elevated)]"
+                (click)="openDatabase(db)"
+              >
+                <mat-icon fontIcon="storage" class="h-5! w-5! text-xl! text-[var(--accent)]/70" />
+                <span class="flex-1 font-medium text-[var(--text-main)]">{{ db }}</span>
+                <span class="text-xs text-[var(--text-muted)]"
+                  >{{ getCollectionsForDb(db).length }} collections</span
                 >
-                  <mat-icon fontIcon="storage" class="h-5! w-5! text-xl! text-[var(--accent)]/70" />
-                  <span class="flex-1 font-medium text-[var(--text-main)]">{{ db }}</span>
-                  <span class="text-xs text-[var(--text-muted)]"
-                    >{{ getCollectionsForDb(db).length }} collections</span
-                  >
-                  <button
-                    type="button"
-                    (click)="startEditDb(db); $event.stopPropagation()"
-                    class="rounded p-1 text-[var(--text-dim)] hover:text-[var(--accent)]"
-                  >
-                    <mat-icon fontIcon="edit" class="h-5! w-5! text-xl!" />
-                  </button>
-                  <button
-                    type="button"
-                    (click)="deleteDatabase(db); $event.stopPropagation()"
-                    class="rounded p-1 text-[var(--text-dim)] hover:text-red-400"
-                  >
-                    <mat-icon fontIcon="delete" class="h-5! w-5! text-xl!" />
-                  </button>
-                </div>
-              }
+              </div>
               <table class="w-full">
                 <tbody class="divide-y divide-[var(--border-subtle)]">
                   @for (col of getCollectionsForDb(db); track col.name) {

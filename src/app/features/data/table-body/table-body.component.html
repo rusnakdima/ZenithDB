@@ -14,39 +14,18 @@
             class="border-r border-[var(--border-subtle)]/50 p-3 text-sm"
             [style.width.px]="columnWidths[col.name]"
           >
-            <app-cell-editor
-              [value]="row[col.name]"
-              [isEditing]="isCellModified(rowIndex, col.name)"
-              [editValue]="isCellModified(rowIndex, col.name) ? editValue : ''"
-              (startEdit)="onStartEdit(rowIndex, col.name, row[col.name])"
-              (saveEdit)="onSaveEdit()"
-              (cancelEdit)="onCancelEdit()"
-            />
+            {{ formatValue(row[col.name]) }}
           </td>
         }
       }
       <td class="p-3" (click)="$event.stopPropagation()">
         <div class="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
           <button
-            class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-[var(--bg-elevated)] hover:text-amber-400"
-            title="Duplicate"
-            (click)="onDuplicateRow(row)"
-          >
-            <mat-icon fontIcon="content_copy" class="h-6! w-5! text-xl!" />
-          </button>
-          <button
             class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-[var(--bg-elevated)] hover:text-blue-400"
             title="View JSON"
             (click)="onViewJson(row)"
           >
             <mat-icon fontIcon="data_object" class="h-6! w-5! text-xl!" />
-          </button>
-          <button
-            class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-red-900/20 hover:text-red-400"
-            title="Delete"
-            (click)="onDeleteRow(row)"
-          >
-            <mat-icon fontIcon="delete" class="h-6! w-5! text-xl!" />
           </button>
         </div>
       </td>

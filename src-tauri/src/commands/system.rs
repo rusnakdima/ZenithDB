@@ -1,3 +1,6 @@
+use crate::commands::cancellation::cancel_query;
+use crate::commands::metrics::METRICS;
+use prometheus::Encoder;
 use serde::{Deserialize, Serialize};
 use sysinfo::{Disks, Networks, System};
 
@@ -36,46 +39,69 @@ fn calculate_status(cpu_usage: f32, ram_used: u64, ram_total: u64) -> String {
 }
 
 #[tauri::command]
-pub fn get_system_status() -> Result<SystemMetrics, String> {
-  let mut sys = System::new_all();
-  sys.refresh_cpu_all();
-  sys.refresh_memory();
+pub async fn get_system_status() -> Result<SystemMetrics, String> {
+  let sys = tokio::task::spawn_blocking(|| {
+    let mut sys = System::new_all();
+    sys.refresh_cpu_all();
+    sys.refresh_memory();
 
-  let cpu_usage = sys.global_cpu_usage();
-  let ram_used = sys.used_memory();
-  let ram_total = sys.total_memory();
+    let cpu_usage = sys.global_cpu_usage();
+    let ram_used = sys.used_memory();
+    let ram_total = sys.total_memory();
 
-  let disks = Disks::new_with_refreshed_list();
-  let (disk_used, disk_total) = disks.iter().fold((0u64, 0u64), |(used, total), disk| {
-    (
-      used + disk.total_space() - disk.available_space(),
-      total + disk.total_space(),
-    )
-  });
+    let disks = Disks::new_with_refreshed_list();
+    let (disk_used, disk_total) = disks.iter().fold((0u64, 0u64), |(used, total), disk| {
+      (
+        used + disk.total_space() - disk.available_space(),
+        total + disk.total_space(),
+      )
+    });
 
-  let networks = Networks::new_with_refreshed_list();
-  let (network_received, network_transmitted) =
-    networks
-      .iter()
-      .fold((0u64, 0u64), |(recv, trans), (_, data)| {
-        (
-          recv + data.total_received(),
-          trans + data.total_transmitted(),
-        )
-      });
+    let networks = Networks::new_with_refreshed_list();
+    let (network_received, network_transmitted) =
+      networks
+        .iter()
+        .fold((0u64, 0u64), |(recv, trans), (_, data)| {
+          (
+            recv + data.total_received(),
+            trans + data.total_transmitted(),
+          )
+        });
 
-  let uptime = System::uptime();
-  let status = calculate_status(cpu_usage, ram_used, ram_total);
+    let uptime = System::uptime();
+    let status = calculate_status(cpu_usage, ram_used, ram_total);
 
-  Ok(SystemMetrics {
-    cpu_usage,
-    ram_used,
-    ram_total,
-    disk_used,
-    disk_total,
-    network_received,
-    network_transmitted,
-    uptime,
-    status,
+    SystemMetrics {
+      cpu_usage,
+      ram_used,
+      ram_total,
+      disk_used,
+      disk_total,
+      network_received,
+      network_transmitted,
+      uptime,
+      status,
+    }
   })
+  .await
+  .map_err(|e| format!("Task join error: {}", e))?;
+
+  Ok(sys)
+}
+
+#[tauri::command]
+pub async fn get_metrics() -> Result<String, String> {
+  let metrics = METRICS.lock().await;
+  let encoder = prometheus::TextEncoder::new();
+  let metric_families = metrics.registry.gather();
+  let mut buffer = Vec::new();
+  encoder
+    .encode(&metric_families, &mut buffer)
+    .map_err(|e| format!("Failed to encode metrics: {}", e))?;
+  String::from_utf8(buffer).map_err(|e| format!("Failed to convert metrics: {}", e))
+}
+
+#[tauri::command]
+pub async fn cancel_query_cmd(query_id: &str) -> Result<bool, String> {
+  Ok(cancel_query(query_id).await)
 }

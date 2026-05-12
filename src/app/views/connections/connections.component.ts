@@ -4,7 +4,7 @@ import { MatIconModule } from "@angular/material/icon";
 import { ConnectionCardComponent } from "@views/connections/connection-card/connection-card.component";
 import { DatabaseService } from "@shared/services/database.service";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
-import { StorageService } from "@services/core/storage.service";
+import { DataStoreService } from "@services/core/data-store.service";
 import { ConnectionSummary } from "@shared/models/connection.config";
 import { ConfirmService } from "@shared/services/confirm.service";
 import { withErrorHandling } from "@shared/utils/error-handler.utils";
@@ -19,11 +19,11 @@ export class ConnectionsComponent implements OnInit {
   loading = signal(true);
   private db = inject(DatabaseService);
   private connState = inject(ConnectionStateService);
-  private storage = inject(StorageService);
+  private dataStore = inject(DataStoreService);
   private router = inject(Router);
   private confirm = inject(ConfirmService);
 
-  connections = computed(() => this.storage.connections());
+  connections = computed(() => this.dataStore.connections());
 
   async ngOnInit() {
     await withErrorHandling(() => this.db.listConnections(), {

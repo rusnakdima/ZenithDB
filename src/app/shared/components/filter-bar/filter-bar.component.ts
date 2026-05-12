@@ -15,7 +15,7 @@ import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
 import { ToastService } from "@services/toast.service";
 import { CheckboxComponent } from "@shared/components/checkbox/checkbox.component";
-import { LocalStorageService } from "@shared/services/local-storage.service";
+import { PersistentStorageService } from "@shared/services/persistent-storage.service";
 import { safeJsonParse } from "@shared/utils/json.utils";
 
 @Component({
@@ -25,7 +25,7 @@ import { safeJsonParse } from "@shared/utils/json.utils";
   templateUrl: "./filter-bar.component.html",
 })
 export class FilterBarComponent implements OnInit, OnChanges, OnDestroy {
-  private localStorage = new LocalStorageService();
+  private localStorage = new PersistentStorageService();
   @Input() filter = "";
   @Input() viewMode: "grid" | "json" = "grid";
   @Input() availableColumns: { name: string; data_type: string }[] = [];

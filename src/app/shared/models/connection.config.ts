@@ -85,7 +85,7 @@ export interface RawResult {
 
 export type ConnectionConfig =
   | { type: "json"; name: string; path: string }
-  | { type: "mongo"; name: string; uri: string; database: string }
+  | { type: "mongo"; name: string; uri: string }
   | { type: "redis"; name: string; uri: string }
   | { type: "postgres"; name: string; uri: string }
   | { type: "sqlite"; name: string; path: string }
@@ -93,7 +93,7 @@ export type ConnectionConfig =
 
 export type ConnectionConfigEnum =
   | { type: "Json"; name: string; path: string; behavior?: string }
-  | { type: "Mongo"; name: string; uri: string; database: string }
+  | { type: "Mongo"; name: string; uri: string }
   | { type: "Redis"; name: string; uri: string }
   | { type: "Postgres"; name: string; uri: string }
   | { type: "Sqlite"; name: string; path: string }

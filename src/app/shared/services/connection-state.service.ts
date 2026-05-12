@@ -8,6 +8,7 @@ export class ConnectionStateService {
   activeProvider = signal<string | null>(null);
   activeConnection = signal<ConnectionSummary | null>(null);
   activeConnectionConfig = signal<ConnectionConfig | null>(null);
+  readOnly = signal(true);
 
   setActiveConnection(connOrId: ConnectionSummary | string): void {
     if (typeof connOrId === "string") {

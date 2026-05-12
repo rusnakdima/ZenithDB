@@ -3,7 +3,7 @@ import { Router } from "@angular/router";
 import { CommonModule } from "@angular/common";
 import { MatIconModule } from "@angular/material/icon";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
-import { StorageService } from "@services/core/storage.service";
+import { DataStoreService } from "@services/core/data-store.service";
 import { ConnectionSummary } from "@shared/models/connection.config";
 import { ToastService } from "@services/toast.service";
 
@@ -22,7 +22,7 @@ interface ConnectionItem {
 export class ConnectionModalComponent {
   private router = inject(Router);
   private connState = inject(ConnectionStateService);
-  private storage = inject(StorageService);
+  private dataStore = inject(DataStoreService);
   private toast = inject(ToastService);
 
   isOpen = signal(false);
@@ -30,7 +30,7 @@ export class ConnectionModalComponent {
   selectedIndex = signal(0);
 
   connectionItems = computed<ConnectionItem[]>(() => {
-    const connections = this.storage.connections();
+    const connections = this.dataStore.connections();
     const activeId = this.connState.activeConnectionId();
     return connections.map((conn) => ({
       connection: conn,

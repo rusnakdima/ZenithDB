@@ -16,12 +16,12 @@ import {
 import { CdkDragDrop, moveItemInArray } from "@angular/cdk/drag-drop";
 import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
-import { DataProviderService } from "@shared/services/data-provider.service";
 import { DatabaseService } from "@shared/services/database.service";
+import { DataStoreService } from "@services/core/data-store.service";
 import { ClipboardService } from "@shared/services/clipboard.service";
 import { ToastService } from "@services/toast.service";
 import { ExportService } from "@shared/services/export.service";
-import { LocalStorageService } from "@shared/services/local-storage.service";
+import { PersistentStorageService } from "@shared/services/persistent-storage.service";
 import { ColumnInfo, RowData, FilterExpression } from "@shared/models/connection.config";
 import { formatJsonLines, highlightJsonLine, safeJsonParse } from "@shared/utils/json.utils";
 import { PaginationComponent } from "@shared/components/pagination/pagination.component";
@@ -51,7 +51,7 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
   private isResizingInProgress = false;
   private resizeMoveHandler: ((e: MouseEvent) => void) | null = null;
   private resizeUpHandler: (() => void) | null = null;
-  private localStorage = inject(LocalStorageService);
+  private persistentStorage = inject(PersistentStorageService);
   protected readonly MAX_PAGE_SIZE = 1000;
 
   @Input() collectionName = "";
@@ -123,8 +123,6 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
   loading = false;
   error = "";
 
-  editingCell: { row: number; col: string } | null = null;
-  editValue = "";
   sortColumn = signal("");
   sortDirection = signal<"asc" | "desc">("asc");
 
@@ -136,7 +134,7 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
   columnWidths = signal<Record<string, number>>({});
 
   private db = inject(DatabaseService);
-  private dataProvider = inject(DataProviderService);
+  private dataStore = inject(DataStoreService);
   private toast = inject(ToastService);
   private clipboard = inject(ClipboardService);
   private exportService = inject(ExportService);
@@ -224,9 +222,9 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
         }
       }
       const effectiveLimit = Math.min(this.pageSize, this.MAX_PAGE_SIZE);
-      const result = await this.dataProvider.loadData(
+      const result = await this.dataStore.queryData(
+        this.collectionName,
         {
-          collection: this.collectionName,
           filter: filterObj,
           skip: this.page * this.pageSize,
           limit: effectiveLimit,
@@ -297,52 +295,13 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
     this.loadData();
   }
 
-  startEdit(rowIndex: number, col: string, value: unknown) {
-    this.editingCell = { row: rowIndex, col };
-    this.editValue = String(value ?? "");
-  }
+  startEdit(rowIndex: number, col: string, value: unknown) {}
 
-  async saveEdit() {
-    if (!this.editingCell) return;
-    const { row, col } = this.editingCell;
-    const rowData = { ...this.data[row], [col]: this.editValue };
-    const result = await withErrorHandling(() => this.db.saveRow(this.collectionName, rowData), {
-      toast: true,
-      toastSuccess: "Cell updated",
-      errorMessage: "Failed to update cell",
-    });
-    if (result.success) {
-      this.data[row] = rowData;
-    }
-    this.editingCell = null;
-    this.editValue = "";
-  }
+  async saveEdit() {}
 
-  cancelEdit() {
-    this.editingCell = null;
-    this.editValue = "";
-  }
+  cancelEdit() {}
 
-  async deleteRow(row: RowData) {
-    const id = (row["_id"] || row["id"]) as string;
-    if (!id) return;
-    this.toast.show({
-      type: "warning",
-      message: "Are you sure you want to delete this row?",
-      action: {
-        label: "Delete",
-        callback: async () => {
-          try {
-            await this.db.deleteRow(this.collectionName, id);
-            this.toast.success("Row deleted");
-            await this.loadData();
-          } catch {
-            this.toast.error("Failed to delete row");
-          }
-        },
-      },
-    });
-  }
+  async deleteRow(row: RowData) {}
 
   onRowClick(row: RowData, event: MouseEvent) {
     const target = event.target as HTMLElement;
@@ -444,12 +403,12 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
 
   private saveColumnOrder(order: string[]) {
     if (!this.collectionName) return;
-    this.localStorage.setColumnOrder(this.collectionName, order);
+    this.persistentStorage.setColumnOrder(this.collectionName, order);
   }
 
   private loadColumnOrder(): string[] {
     if (!this.collectionName) return [];
-    const stored = this.localStorage.getColumnOrder(this.collectionName);
+    const stored = this.persistentStorage.getColumnOrder(this.collectionName);
     if (stored && stored.length > 0) {
       const valid = stored.filter((c) => this.columns.some((col) => col.name === c));
       if (valid.length > 0) return valid;
@@ -463,17 +422,7 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
     this.visibleColumns.set(visible);
   }
 
-  async duplicateRow(row: RowData) {
-    const { _id, id, ...rest } = row;
-    const newRow = { ...rest } as RowData;
-    try {
-      await this.db.saveRow(this.collectionName, newRow);
-      this.toast.success("Row duplicated");
-      await this.loadData();
-    } catch (e) {
-      this.toast.error("Failed to duplicate row");
-    }
-  }
+  async duplicateRow(row: RowData) {}
 
   viewJson(row: RowData) {
     this.documentClick.emit(row);
@@ -497,7 +446,7 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   isCellModified(rowIndex: number, col: string): boolean {
-    return this.editingCell?.row === rowIndex && this.editingCell?.col === col;
+    return false;
   }
 
   formatValue(value: unknown): string {
