@@ -11,13 +11,12 @@ import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
 import { RowData, ColumnInfo } from "@shared/models/connection.config";
 import { CheckboxComponent } from "@shared/components/checkbox/checkbox.component";
-import { CellEditorComponent } from "@app/features/data/cell-editor/cell-editor.component";
 
 @Component({
   selector: "app-table-body",
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, MatIconModule, CheckboxComponent, CellEditorComponent],
+  imports: [FormsModule, MatIconModule, CheckboxComponent],
   templateUrl: "./table-body.component.html",
 })
 export class TableBodyComponent {

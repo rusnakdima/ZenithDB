@@ -2,7 +2,7 @@ import { Injectable, inject } from "@angular/core";
 import { TauriBridgeService } from "./tauri-bridge.service";
 import { RequestCancellationService } from "./request-cancellation.service";
 import { ResponseSizeGuardService } from "./response-size-guard.service";
-import { StorageService } from "@services/core/storage.service";
+import { DataStoreService } from "@app/services/core/data-store.service";
 import { ToastService } from "@services/toast.service";
 import { ErrorHandlerService } from "@shared/services/error-handler.service";
 import {
@@ -32,7 +32,7 @@ export class ApiProvider {
   private cancellation = inject(RequestCancellationService);
   private responseSizeGuard = inject(ResponseSizeGuardService);
 
-  private storage = inject(StorageService);
+  private dataStore = inject(DataStoreService);
   private toastService: ToastService | null = null;
   private errorHandler = inject(ErrorHandlerService);
 
@@ -74,7 +74,7 @@ export class ApiProvider {
       this.errorHandler,
       []
     );
-    this.storage.setConnections(connections);
+    this.dataStore.updateConnections(connections);
     return connections;
   }
 
@@ -132,7 +132,7 @@ export class ApiProvider {
       this.errorHandler,
       undefined
     );
-    this.storage.removeConnection(id);
+    this.dataStore.removeConnection(id);
   }
 
   async testConnection(config: TestConnectionConfig): Promise<ConnectionHealth> {
@@ -168,7 +168,7 @@ export class ApiProvider {
       this.errorHandler,
       []
     );
-    this.storage.setCollections(collections);
+    this.dataStore.updateCollections(connId, collections);
     return collections;
   }
 
@@ -361,7 +361,7 @@ export class ApiProvider {
       "getSystemStatus",
       this.errorHandler
     );
-    this.storage.setSystemMetrics(metrics);
+    this.dataStore.updateSystemMetrics(metrics);
     return metrics;
   }
 

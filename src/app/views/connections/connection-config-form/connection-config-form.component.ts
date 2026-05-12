@@ -12,7 +12,7 @@ export interface ConfigFormData {
   name: string;
   path: string;
   uri: string;
-  database: string;
+  database?: string;
   behavior: string;
   useSsl: boolean;
 }
@@ -325,7 +325,7 @@ export class ConnectionConfigFormComponent {
       case "sqlite":
         return !!this.data.path.trim();
       case "mongo":
-        return !!this.data.uri.trim() && !!this.data.database.trim();
+        return !!this.data.uri.trim() && !!this.data.database?.trim();
       case "redis":
       case "postgres":
       case "mysql":

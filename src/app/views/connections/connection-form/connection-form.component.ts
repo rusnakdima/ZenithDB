@@ -55,6 +55,7 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
     name: "",
     path: "",
     uri: "",
+    database: "",
     behavior: "folders_as_databases",
     useSsl: false,
   });
