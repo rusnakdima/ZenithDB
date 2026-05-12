@@ -1,0 +1,54 @@
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+  <div
+    class="w-full max-w-md rounded-xl border border-[var(--border-visible)] bg-[var(--bg-card)] p-6 shadow-xl"
+  >
+    <h3 class="mb-4 text-lg font-semibold text-[var(--text-main)]">Add Database</h3>
+
+    <div class="space-y-4">
+      <div>
+        <label class="mb-1.5 block text-sm text-[var(--text-dim)]">Database Name</label>
+        <input
+          type="text"
+          [ngModel]="dbName()"
+          (ngModelChange)="dbName.set($event)"
+          placeholder="my_database"
+          class="form-input w-full"
+        />
+      </div>
+
+      <div>
+        <label class="mb-1.5 block text-sm text-[var(--text-dim)]">
+          @if (provider() === "json") {
+            Folder Path
+          } @else {
+            Database File Path
+          }
+        </label>
+        <div class="flex gap-2">
+          <input
+            type="text"
+            [ngModel]="dbPath()"
+            (ngModelChange)="dbPath.set($event)"
+            [placeholder]="provider() === 'json' ? '/path/to/folder' : '/path/to/database.db'"
+            class="form-input flex-1"
+          />
+          <button type="button" (click)="onBrowsePath()" class="form-btn form-btn-browse">
+            Browse
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-6 flex justify-end gap-3">
+      <button type="button" (click)="onCancel()" class="form-btn form-btn-secondary">Cancel</button>
+      <button
+        type="button"
+        (click)="onAdd()"
+        [disabled]="!dbName().trim()"
+        class="form-btn form-btn-primary"
+      >
+        Add Database
+      </button>
+    </div>
+  </div>
+</div>
