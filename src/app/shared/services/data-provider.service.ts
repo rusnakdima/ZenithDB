@@ -1,5 +1,6 @@
 import { Injectable, signal, inject } from "@angular/core";
-import { DatabaseService } from "./database.service";
+import { ApiProvider } from "@providers/api.provider";
+import { ConnectionStateService } from "./connection-state.service";
 import {
   ColumnInfo,
   RowData,
@@ -33,7 +34,8 @@ interface ColumnsCacheEntry {
 
 @Injectable({ providedIn: "root" })
 export class DataProviderService {
-  private db = inject(DatabaseService);
+  private api = inject(ApiProvider);
+  private connectionState = inject(ConnectionStateService);
 
   private readonly MAX_ENTRIES_PER_COLLECTION = 50;
   private readonly COLUMNS_CACHE_TTL = 5 * 60 * 1000;
@@ -152,7 +154,9 @@ export class DataProviderService {
           order_by: params.order_by,
           direction: params.direction,
         };
-        const result = await this.db.queryData(params.collection, queryParams);
+        const connId = this.connectionState.activeConnectionId();
+        if (!connId) throw new Error("No active connection");
+        const result = await this.api.queryData(connId, params.collection, queryParams);
 
         this.evictLRU(params.collection);
 
@@ -201,7 +205,9 @@ export class DataProviderService {
 
     this.evictLRUColumns();
 
-    const schema = await this.db.describeCollection(collection);
+    const connId = this.connectionState.activeConnectionId();
+    if (!connId) throw new Error("No active connection");
+    const schema = await this.api.describeCollection(connId, collection);
     const columns = schema.columns;
     this.columnsCache.set(
       new Map(this.columnsCache()).set(cacheKey, {
