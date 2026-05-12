@@ -1,6 +1,9 @@
 use crate::commands::connection::ConnectionConfigEnum;
 use crate::commands::error_utils::ToStringError;
+use crate::commands::get_auth_context;
 use crate::commands::get_connection_entry;
+use crate::commands::validate_conn_id;
+use crate::commands::validate_name;
 use crate::dispatch_provider;
 use nosql_orm::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -35,6 +38,12 @@ pub async fn query_data(
   collection: &str,
   query: QueryParams,
 ) -> Result<QueryResult, String> {
+  let auth = get_auth_context();
+  if !auth.can_access_connection(conn_id) {
+    return Err("Access denied to connection".to_string());
+  }
+  validate_conn_id(conn_id)?;
+  validate_name(collection)?;
   let entry = get_connection_entry(conn_id).await?;
   let filter = parse_filter(query.filter)?;
   let skip = query.skip;
@@ -66,6 +75,8 @@ pub async fn query_data(
 
 #[tauri::command]
 pub async fn save_row(conn_id: &str, collection: &str, data: Value) -> Result<Value, String> {
+  validate_conn_id(conn_id)?;
+  validate_name(collection)?;
   let entry = get_connection_entry(conn_id).await?;
   dispatch_provider!(entry, provider => {
       if let Some(id) = data.get("id").and_then(|v| v.as_str()) {
@@ -79,6 +90,8 @@ pub async fn save_row(conn_id: &str, collection: &str, data: Value) -> Result<Va
 
 #[tauri::command]
 pub async fn delete_row(conn_id: &str, collection: &str, id: &str) -> Result<(), String> {
+  validate_conn_id(conn_id)?;
+  validate_name(collection)?;
   let entry = get_connection_entry(conn_id).await?;
   dispatch_provider!(entry, provider => {
       provider.delete(collection, id).await.map_err_string()?;

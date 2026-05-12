@@ -1,7 +1,9 @@
+use crate::commands::get_auth_context;
 use crate::commands::provider::{
   create_json_provider, create_mongo_provider, create_mysql_provider, create_postgres_provider,
   create_redis_provider, create_sqlite_provider,
 };
+use crate::commands::validate_conn_id;
 use nosql_orm::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
@@ -95,7 +97,7 @@ impl ConnectionHealth {
 }
 
 pub struct ConnectionStore {
-  connections: Vec<ConnectionEntry>,
+  pub connections: Vec<ConnectionEntry>,
   path: PathBuf,
 }
 
@@ -137,13 +139,7 @@ impl ConnectionStore {
   pub async fn load_or_default() -> Self {
     match Self::load().await {
       Ok(store) => store,
-      Err(e) => {
-        eprintln!(
-          "WARNING: Failed to load connection store: {}, using empty store",
-          e
-        );
-        Self::default()
-      }
+      Err(_) => Self::default(),
     }
   }
 
@@ -172,7 +168,7 @@ impl Default for ConnectionStore {
   }
 }
 
-fn get_connection_type(config: &ConnectionConfig) -> &'static str {
+pub fn get_connection_type(config: &ConnectionConfig) -> &'static str {
   match config.config {
     ConnectionConfigEnum::Json { .. } => "json",
     ConnectionConfigEnum::Mongo { .. } => "mongodb",
@@ -199,6 +195,10 @@ pub async fn save_connection(config: ConnectionConfig) -> Result<ConnectionId, S
 
 #[tauri::command]
 pub async fn list_connections() -> Result<Vec<ConnectionSummary>, String> {
+  let auth = get_auth_context();
+  if !auth.can_access_connection("*") {
+    return Err("Access denied".to_string());
+  }
   let store = ConnectionStore::load_or_default().await;
   let mut summaries = Vec::new();
   for c in store.connections.iter() {
@@ -212,22 +212,14 @@ pub async fn list_connections() -> Result<Vec<ConnectionSummary>, String> {
   Ok(summaries)
 }
 
-async fn check_provider_health(config: &ConnectionConfig) -> ConnectionHealth {
+pub async fn check_provider_health(config: &ConnectionConfig) -> ConnectionHealth {
   match &config.config {
     ConnectionConfigEnum::Json { path, .. } => match create_json_provider(path).await {
-      Ok(p) => {
-        let healthy = match p.health_check().await {
-          Ok(h) => h,
-          Err(e) => {
-            return ConnectionHealth::err(&format!("json: health check failed: {}", e));
-          }
-        };
-        if healthy {
-          ConnectionHealth::ok("json")
-        } else {
-          ConnectionHealth::err("json: health check failed")
-        }
-      }
+      Ok(p) => match p.health_check().await {
+        Ok(true) => ConnectionHealth::ok("json"),
+        Ok(false) => ConnectionHealth::err("json: health check failed"),
+        Err(e) => ConnectionHealth::err(&format!("json: health check failed: {}", e)),
+      },
       Err(e) => ConnectionHealth::err(&e),
     },
     ConnectionConfigEnum::Mongo { uri, database, .. } => {
@@ -235,12 +227,7 @@ async fn check_provider_health(config: &ConnectionConfig) -> ConnectionHealth {
         Ok(p) => {
           let healthy = match p.health_check().await {
             Ok(h) => h,
-            Err(_) => match p.list_collections().await {
-              Ok(_) => true,
-              Err(e) => {
-                return ConnectionHealth::err(&format!("mongo: health check failed: {}", e));
-              }
-            },
+            Err(_) => matches!(p.list_collections().await, Ok(_)),
           };
           if healthy {
             ConnectionHealth::ok("mongo")
@@ -252,19 +239,11 @@ async fn check_provider_health(config: &ConnectionConfig) -> ConnectionHealth {
       }
     }
     ConnectionConfigEnum::Redis { uri, .. } => match create_redis_provider(uri).await {
-      Ok(p) => {
-        let healthy = match p.health_check().await {
-          Ok(h) => h,
-          Err(e) => {
-            return ConnectionHealth::err(&format!("redis: health check failed: {}", e));
-          }
-        };
-        if healthy {
-          ConnectionHealth::ok("redis")
-        } else {
-          ConnectionHealth::err("redis: health check failed")
-        }
-      }
+      Ok(p) => match p.health_check().await {
+        Ok(true) => ConnectionHealth::ok("redis"),
+        Ok(false) => ConnectionHealth::err("redis: health check failed"),
+        Err(e) => ConnectionHealth::err(&format!("redis: health check failed: {}", e)),
+      },
       Err(e) => ConnectionHealth::err(&e),
     },
     ConnectionConfigEnum::Postgres { uri, .. } => match create_postgres_provider(uri).await {
@@ -291,23 +270,24 @@ async fn check_provider_health(config: &ConnectionConfig) -> ConnectionHealth {
   }
 }
 
-async fn health_status_from_config(config: &ConnectionConfig) -> String {
-  let health = check_provider_health(config).await;
-  if health.healthy {
-    "connected".to_string()
-  } else {
-    "disconnected".to_string()
-  }
-}
-
 #[tauri::command]
 pub async fn test_connection_status(id: &str) -> Result<ConnectionSummary, String> {
+  let auth = get_auth_context();
+  if !auth.can_access_connection(id) {
+    return Err("Access denied to connection".to_string());
+  }
+  validate_conn_id(id)?;
   let store = ConnectionStore::load().await.map_err(|e| e.to_string())?;
   let entry = store
     .find_by_id(id)
     .ok_or_else(|| format!("Connection {} not found", id))?;
 
-  let status = health_status_from_config(&entry.config).await;
+  let health = check_provider_health(&entry.config).await;
+  let status = if health.healthy {
+    "connected".to_string()
+  } else {
+    "disconnected".to_string()
+  };
 
   Ok(ConnectionSummary {
     id: entry.id.clone(),
@@ -319,6 +299,11 @@ pub async fn test_connection_status(id: &str) -> Result<ConnectionSummary, Strin
 
 #[tauri::command]
 pub async fn delete_connection(id: &str) -> Result<(), String> {
+  let auth = get_auth_context();
+  if !auth.can_access_connection(id) {
+    return Err("Access denied to connection".to_string());
+  }
+  validate_conn_id(id)?;
   let mut store = ConnectionStore::load_or_default().await;
   if store.remove_connection(id) {
     store.save().await?;
@@ -330,6 +315,11 @@ pub async fn delete_connection(id: &str) -> Result<(), String> {
 
 #[tauri::command]
 pub async fn update_connection(id: &str, config: ConnectionConfig) -> Result<(), String> {
+  let auth = get_auth_context();
+  if !auth.can_access_connection(id) {
+    return Err("Access denied to connection".to_string());
+  }
+  validate_conn_id(id)?;
   let mut store = ConnectionStore::load_or_default().await;
   let _entry = store
     .find_by_id(id)
@@ -354,6 +344,11 @@ pub struct ConnectionConfigResult {
 
 #[tauri::command]
 pub async fn get_connection(id: &str) -> Result<ConnectionConfigResult, String> {
+  let auth = get_auth_context();
+  if !auth.can_access_connection(id) {
+    return Err("Access denied to connection".to_string());
+  }
+  validate_conn_id(id)?;
   let store = ConnectionStore::load_or_default().await;
   let entry = store
     .find_by_id(id)

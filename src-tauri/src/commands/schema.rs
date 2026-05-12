@@ -1,9 +1,18 @@
 use crate::commands::connection::ConnectionConfigEnum;
 use crate::commands::error_utils::ToStringError;
+use crate::commands::get_auth_context;
 use crate::commands::get_connection_entry;
+use crate::commands::validate_conn_id;
+use crate::commands::validate_name;
 use crate::dispatch_provider;
+use crate::infrastructure::nosql_orm_adapter::NosqlOrmAdapter;
 use nosql_orm::prelude::*;
 use serde::{Deserialize, Serialize};
+use std::path::PathBuf;
+
+fn validate_safe_path(base: &str, user_input: &str) -> Result<PathBuf, String> {
+  crate::infrastructure::nosql_orm_adapter::validate_safe_path(base, user_input)
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CollectionMeta {
@@ -70,32 +79,18 @@ fn parse_database_rows(rows: &[Vec<serde_json::Value>]) -> Vec<DatabaseMeta> {
 
 #[tauri::command]
 pub async fn list_databases(conn_id: &str) -> Result<Vec<DatabaseMeta>, String> {
+  validate_conn_id(conn_id)?;
   let entry = get_connection_entry(conn_id).await?;
 
   match &entry.config.config {
     ConnectionConfigEnum::Json { path, behavior, .. } => {
-      let path_obj = std::path::Path::new(path).to_path_buf();
-      if !path_obj.is_dir() {
-        return Ok(Vec::new());
-      }
-
+      let provider = NosqlOrmAdapter::create_provider(&entry.config.config).await?;
+      let databases = provider.list_databases().await?;
       match behavior.as_str() {
-        "files_as_collections" => {
-          let folder_name = path_obj
-            .file_name()
-            .and_then(|n| n.to_str())
-            .unwrap_or("root")
-            .to_string();
-          let count = count_json_files_in_dir(&path_obj).await;
-          Ok(vec![DatabaseMeta {
-            name: folder_name,
-            size_bytes: None,
-            table_count: Some(count),
-          }])
-        }
+        "files_as_collections" => Ok(databases),
         "folders_as_databases" | "mixed" => {
-          let databases = list_json_databases(path_obj.clone(), behavior.as_str()).await?;
           if databases.is_empty() {
+            let path_obj = std::path::Path::new(path).to_path_buf();
             let folder_name = path_obj
               .file_name()
               .and_then(|n| n.to_str())
@@ -111,10 +106,7 @@ pub async fn list_databases(conn_id: &str) -> Result<Vec<DatabaseMeta>, String> 
             Ok(databases)
           }
         }
-        _ => {
-          let databases = list_json_databases(path_obj.clone(), "folders_as_databases").await?;
-          Ok(databases)
-        }
+        _ => Ok(databases),
       }
     }
     ConnectionConfigEnum::Sqlite { .. } => Ok(vec![DatabaseMeta::from_name("default")]),
@@ -163,6 +155,12 @@ pub async fn list_databases(conn_id: &str) -> Result<Vec<DatabaseMeta>, String> 
 
 #[tauri::command]
 pub async fn create_database(conn_id: &str, name: &str) -> Result<(), String> {
+  let auth = get_auth_context();
+  if !auth.can_access_connection(conn_id) {
+    return Err("Access denied to connection".to_string());
+  }
+  validate_conn_id(conn_id)?;
+  validate_name(name)?;
   let entry = get_connection_entry(conn_id).await?;
 
   match &entry.config.config {
@@ -173,9 +171,7 @@ pub async fn create_database(conn_id: &str, name: &str) -> Result<(), String> {
       Ok(())
     }
     ConnectionConfigEnum::Json { path, .. } => {
-      let db_path = std::path::Path::new(path).join(name);
-      tokio::fs::create_dir_all(&db_path).await.map_err_string()?;
-      Ok(())
+      NosqlOrmAdapter::create_database_json(path, name).await
     }
     ConnectionConfigEnum::Redis { .. } => Ok(()),
     ConnectionConfigEnum::Mongo { uri, .. } => {
@@ -207,6 +203,13 @@ pub async fn create_database(conn_id: &str, name: &str) -> Result<(), String> {
 
 #[tauri::command]
 pub async fn rename_database(conn_id: &str, old_name: &str, new_name: &str) -> Result<(), String> {
+  let auth = get_auth_context();
+  if !auth.can_access_connection(conn_id) {
+    return Err("Access denied to connection".to_string());
+  }
+  validate_conn_id(conn_id)?;
+  validate_name(old_name)?;
+  validate_name(new_name)?;
   let entry = get_connection_entry(conn_id).await?;
 
   match &entry.config.config {
@@ -215,8 +218,8 @@ pub async fn rename_database(conn_id: &str, old_name: &str, new_name: &str) -> R
         .to_string(),
     ),
     ConnectionConfigEnum::Json { path, .. } => {
-      let old_path = std::path::Path::new(path).join(old_name);
-      let new_path = std::path::Path::new(path).join(new_name);
+      let old_path = validate_safe_path(path, old_name)?;
+      let new_path = validate_safe_path(path, new_name)?;
       if old_path.exists() {
         tokio::fs::rename(&old_path, &new_path)
           .await
@@ -250,6 +253,12 @@ pub async fn rename_database(conn_id: &str, old_name: &str, new_name: &str) -> R
 
 #[tauri::command]
 pub async fn delete_database(conn_id: &str, name: &str) -> Result<(), String> {
+  let auth = get_auth_context();
+  if !auth.can_access_connection(conn_id) {
+    return Err("Access denied to connection".to_string());
+  }
+  validate_conn_id(conn_id)?;
+  validate_name(name)?;
   let entry = get_connection_entry(conn_id).await?;
 
   match &entry.config.config {
@@ -257,11 +266,7 @@ pub async fn delete_database(conn_id: &str, name: &str) -> Result<(), String> {
       "SQLite database cannot be deleted. Delete the connection and remove the file.".to_string(),
     ),
     ConnectionConfigEnum::Json { path, .. } => {
-      let db_path = std::path::Path::new(path).join(name);
-      if db_path.exists() && db_path.is_dir() {
-        tokio::fs::remove_dir_all(&db_path).await.map_err_string()?;
-      }
-      Ok(())
+      NosqlOrmAdapter::drop_database_json(path, name).await
     }
     ConnectionConfigEnum::Redis { .. } => {
       Err("Redis does not support deleting databases.".to_string())
@@ -293,6 +298,11 @@ pub async fn list_collections(
   conn_id: &str,
   db_name: Option<String>,
 ) -> Result<Vec<CollectionMeta>, String> {
+  let auth = get_auth_context();
+  if !auth.can_access_connection(conn_id) {
+    return Err("Access denied to connection".to_string());
+  }
+  validate_conn_id(conn_id)?;
   let entry = get_connection_entry(conn_id).await?;
 
   match &entry.config.config {
@@ -357,55 +367,6 @@ pub async fn list_collections(
       })
     }
   }
-}
-
-async fn list_json_databases(
-  path_obj: std::path::PathBuf,
-  behavior: &str,
-) -> Result<Vec<DatabaseMeta>, String> {
-  let mut entries = tokio::fs::read_dir(&path_obj).await.map_err_string()?;
-  let mut databases: Vec<DatabaseMeta> = Vec::new();
-
-  while let Some(entry) = entries.next_entry().await.map_err_string()? {
-    let entry_path = entry.path();
-    if entry_path.is_dir() {
-      let name = entry.file_name().into_string().unwrap_or_default();
-
-      let collection_count = count_json_files_in_dir(&entry_path).await;
-
-      databases.push(DatabaseMeta {
-        name,
-        size_bytes: None,
-        table_count: Some(collection_count),
-      });
-    } else if behavior == "mixed" && entry_path.extension().is_some_and(|ext| ext == "json") {
-      let has_root = databases.iter().any(|d| d.name == "root");
-      if !has_root {
-        databases.insert(
-          0,
-          DatabaseMeta {
-            name: "root".to_string(),
-            size_bytes: None,
-            table_count: None,
-          },
-        );
-      }
-    }
-  }
-
-  if behavior == "mixed" {
-    if !databases.iter().any(|d| d.name == "root") {
-      let root_count = count_json_files_in_dir(&path_obj).await;
-      databases.push(DatabaseMeta {
-        name: "root".to_string(),
-        size_bytes: None,
-        table_count: Some(root_count),
-      });
-    }
-  }
-
-  databases.sort_by(|a, b| a.name.cmp(&b.name));
-  Ok(databases)
 }
 
 async fn count_json_files_in_dir(path: &std::path::Path) -> u64 {
@@ -517,15 +478,9 @@ async fn list_json_collections(
                   1
                 }
               }
-              Err(e) => {
-                eprintln!("Warning: Failed to parse {}: {}", entry_path.display(), e);
-                0
-              }
+              Err(_) => 0,
             },
-            Err(e) => {
-              eprintln!("Warning: Failed to read {}: {}", entry_path.display(), e);
-              0
-            }
+            Err(_) => 0,
           };
 
           collections.push(CollectionMeta { name, count });
@@ -542,6 +497,12 @@ pub async fn describe_collection(
   conn_id: &str,
   collection: &str,
 ) -> Result<CollectionSchema, String> {
+  let auth = get_auth_context();
+  if !auth.can_access_connection(conn_id) {
+    return Err("Access denied to connection".to_string());
+  }
+  validate_conn_id(conn_id)?;
+  validate_name(collection)?;
   let entry = get_connection_entry(conn_id).await?;
 
   let (schema, indexes) = dispatch_provider!(entry, provider => {
@@ -584,6 +545,12 @@ pub async fn get_collection_stats(
   conn_id: &str,
   collection: &str,
 ) -> Result<CollectionStats, String> {
+  let auth = get_auth_context();
+  if !auth.can_access_connection(conn_id) {
+    return Err("Access denied to connection".to_string());
+  }
+  validate_conn_id(conn_id)?;
+  validate_name(collection)?;
   let entry = get_connection_entry(conn_id).await?;
 
   let stats = dispatch_provider!(entry, provider => {
@@ -606,6 +573,7 @@ pub async fn list_databases_for_uri(
   if uri.is_empty() {
     return Err("URI cannot be empty".to_string());
   }
+  validate_name(provider_type)?;
 
   match provider_type {
     "postgres" => {
