@@ -1,203 +1,91 @@
 <app-modal
   [open]="true"
   [title]="isEditing() ? 'Edit Connection' : 'New Connection'"
-  size="md"
-  [showFooter]="false"
+  size="lg"
+  [showFooter]="true"
   (closed)="onClose()"
 >
-  <div class="space-y-6">
-    <div class="mb-8">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <div class="flex items-center">
-            <div
-              class="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--accent)] text-sm font-bold text-black transition-all"
-            >
-              @if (currentStep() > 1) {
-                <mat-icon fontIcon="check" class="h-6! w-5! text-xl!" />
-              } @else {
-                1
-              }
-            </div>
-            <div
-              class="h-1 w-8 transition-all"
-              [class.bg-[var(--accent)]]]="currentStep() > 1"
-              [class.bg-slate-700]="currentStep() <= 1"
-            ></div>
-          </div>
-          <div class="flex items-center">
-            <div
-              class="flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold transition-all"
-              [class.bg-[var(--accent)]]]="currentStep() >= 2"
-              [class.text-black]="currentStep() >= 2"
-              [class.bg-slate-700]="currentStep() < 2"
-              [class.text-slate-400]="currentStep() < 2"
-            >
-              @if (currentStep() > 2) {
-                <mat-icon fontIcon="check" class="h-6! w-5! text-xl!" />
-              } @else {
-                2
-              }
-            </div>
-            <div
-              class="h-1 w-8 transition-all"
-              [class.bg-[var(--accent)]]]="currentStep() > 2"
-              [class.bg-slate-700]="currentStep() <= 2"
-            ></div>
-          </div>
-          <div class="flex items-center">
-            <div
-              class="flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold transition-all"
-              [class.bg-[var(--accent)]]]="currentStep() >= 3"
-              [class.text-black]="currentStep() >= 3"
-              [class.bg-slate-700]="currentStep() < 3"
-              [class.text-slate-400]="currentStep() < 3"
-            >
-              3
-            </div>
-          </div>
-        </div>
-        <span class="text-sm font-medium text-[var(--text-dim)]">{{
-          stepTitles[currentStep()]
-        }}</span>
-      </div>
+  <div class="space-y-5">
+    <div>
+      <label class="form-label">Provider</label>
+      <select [ngModel]="provider" (ngModelChange)="onProviderChange($event)" class="form-input">
+        <option value="json">JSON (Local Files)</option>
+        <option value="sqlite">SQLite (Local File)</option>
+        <option value="mongo">MongoDB</option>
+        <option value="postgres">PostgreSQL</option>
+        <option value="mysql">MySQL</option>
+        <option value="redis">Redis</option>
+      </select>
     </div>
 
-    @switch (currentStep()) {
-      @case (1) {
-        <app-provider-selector
-          [selected]="provider"
-          (providerSelected)="onProviderSelected($event)"
-          (next)="nextStep()"
-          (cancelled)="onClose()"
-        />
+    <app-connection-config-form
+      [provider]="provider"
+      [initialData]="formData()"
+      (dataChange)="onFormDataChange($event)"
+      (browseFile)="onBrowseFile($event)"
+    />
+  </div>
+
+  <div class="mt-6 space-y-4">
+    <button
+      type="button"
+      (click)="testConnection()"
+      [disabled]="testing() || !isFormValid()"
+      class="w-full rounded-xl border border-[var(--border-visible)] bg-[var(--bg-elevated)] px-6 py-3 text-sm font-bold text-[var(--text-main)] transition-all hover:bg-[var(--bg-card)] disabled:opacity-50"
+    >
+      @if (testing()) {
+        <mat-icon fontIcon="sync" class="mr-2 h-6! w-5! text-xl!" />
+        Testing...
+      } @else {
+        <mat-icon fontIcon="link" class="mr-2 h-6! w-5! text-xl!" />
+        Test Connection
       }
-      @case (2) {
-        <app-connection-config-form
-          [provider]="provider"
-          [initialData]="formData()"
-          (dataChange)="onFormDataChange($event)"
-          (browseFile)="onBrowseFile($event)"
-        />
+    </button>
 
-        <div class="mt-6 flex justify-between">
-          <button (click)="prevStep()" class="form-btn form-btn-secondary">
-            <mat-icon fontIcon="arrow_back" class="mr-2 h-6! w-5! text-xl!" />
-            Back
-          </button>
-          <button
-            (click)="nextStep()"
-            [disabled]="!isStep2Valid()"
-            class="rounded-xl bg-[var(--accent)] px-6 py-3 text-sm font-bold text-black transition-all hover:opacity-90 disabled:opacity-50"
-          >
-            Next
-            <mat-icon fontIcon="arrow_forward" class="ml-2 h-6! w-5! text-xl!" />
-          </button>
-        </div>
-      }
-      @case (3) {
-        <div class="space-y-5">
-          <div class="rounded-xl border border-[var(--border-visible)] bg-[var(--bg-elevated)] p-4">
-            <h3 class="mb-3 text-sm font-semibold text-[var(--text-main)]">Connection Summary</h3>
-            <div class="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <span class="text-[var(--text-dim)]">Provider</span>
-                <p class="font-medium text-[var(--text-main)]">
-                  <mat-icon
-                    [fontIcon]="providerUtils.getProviderIcon(provider)"
-                    class="mr-1 h-6! w-5! text-xl!"
-                  />
-                  {{ provider }}
-                </p>
-              </div>
-              <div>
-                <span class="text-[var(--text-dim)]">Name</span>
-                <p class="font-medium text-[var(--text-main)]">{{ formData().name }}</p>
-              </div>
-              @if (formData().path) {
-                <div class="col-span-2">
-                  <span class="text-[var(--text-dim)]">File Path</span>
-                  <p class="font-mono text-xs text-[var(--text-dim)]">{{ formData().path }}</p>
-                </div>
-              }
-              @if (formData().uri) {
-                <div class="col-span-2">
-                  <span class="text-[var(--text-dim)]">Connection URI</span>
-                  <p class="font-mono text-xs text-[var(--text-dim)]">{{ formData().uri }}</p>
-                </div>
-              }
-            </div>
-          </div>
-
-          <div>
-            <button
-              type="button"
-              (click)="testConnection()"
-              [disabled]="testing()"
-              class="w-full rounded-xl border border-[var(--border-visible)] bg-[var(--bg-elevated)] px-6 py-3 text-sm font-bold text-[var(--text-main)] transition-all hover:bg-[var(--bg-card)] disabled:opacity-50"
-            >
-              @if (testing()) {
-                <mat-icon fontIcon="sync" class="mr-2 h-6! w-5! text-xl!" />
-                Testing...
-              } @else {
-                <mat-icon fontIcon="link" class="mr-2 h-6! w-5! text-xl!" />
-                Test Connection
-              }
-            </button>
-          </div>
-
-          @if (testResult(); as result) {
-            <div
-              class="flex items-center gap-3 rounded-xl border p-4"
-              [class]="
-                result.healthy
-                  ? 'border-emerald-800 bg-emerald-900/30'
-                  : 'border-red-800 bg-red-900/30'
-              "
-            >
-              <div class="mt-0.5">
-                @if (result.healthy) {
-                  <mat-icon fontIcon="check_circle" class="h-6! w-5! text-xl! text-green-500" />
-                } @else {
-                  <mat-icon fontIcon="error" class="h-6! w-5! text-xl! text-red-500" />
-                }
-              </div>
-              <div>
-                <p
-                  class="text-sm font-medium"
-                  [class]="result.healthy ? 'text-green-400' : 'text-red-400'"
-                >
-                  @if (result.healthy) {
-                    Connection successful!
-                  } @else {
-                    Connection failed: {{ result.message }}
-                  }
-                </p>
-              </div>
-            </div>
+    @if (testResult(); as result) {
+      <div
+        class="flex items-center gap-3 rounded-xl border p-4"
+        [class]="
+          result.healthy ? 'border-emerald-800 bg-emerald-900/30' : 'border-red-800 bg-red-900/30'
+        "
+      >
+        <div class="mt-0.5">
+          @if (result.healthy) {
+            <mat-icon fontIcon="check_circle" class="h-6! w-5! text-xl! text-green-500" />
+          } @else {
+            <mat-icon fontIcon="error" class="h-6! w-5! text-xl! text-red-500" />
           }
         </div>
-
-        <div class="mt-6 flex justify-between">
-          <button (click)="prevStep()" class="form-btn form-btn-secondary">
-            <mat-icon fontIcon="arrow_back" class="mr-2 h-6! w-5! text-xl!" />
-            Back
-          </button>
-          <button
-            (click)="save()"
-            [disabled]="!testResult()?.healthy || saving()"
-            class="rounded-xl bg-[var(--accent)] px-6 py-3 text-sm font-bold text-black transition-all hover:opacity-90 disabled:opacity-50"
+        <div>
+          <p
+            class="text-sm font-medium"
+            [class]="result.healthy ? 'text-green-400' : 'text-red-400'"
           >
-            @if (saving()) {
-              <mat-icon fontIcon="sync" class="mr-2 h-6! w-5! text-xl!" />
-              Saving...
+            @if (result.healthy) {
+              Connection successful!
             } @else {
-              <mat-icon fontIcon="save" class="mr-2 h-6! w-5! text-xl!" />
-              Save Connection
+              Connection failed: {{ result.message }}
             }
-          </button>
+          </p>
         </div>
-      }
+      </div>
     }
+  </div>
+
+  <div modal-footer class="flex justify-end gap-3">
+    <button (click)="cancel()" class="form-btn form-btn-secondary">Cancel</button>
+    <button
+      (click)="save()"
+      [disabled]="!isFormValid() || saving()"
+      class="rounded-xl bg-[var(--accent)] px-6 py-3 text-sm font-bold text-black transition-all hover:opacity-90 disabled:opacity-50"
+    >
+      @if (saving()) {
+        <mat-icon fontIcon="sync" class="mr-2 h-6! w-5! text-xl!" />
+        Saving...
+      } @else {
+        <mat-icon fontIcon="save" class="mr-2 h-6! w-5! text-xl!" />
+        Save Connection
+      }
+    </button>
   </div>
 </app-modal>

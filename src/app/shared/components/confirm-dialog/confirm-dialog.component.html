@@ -1,0 +1,33 @@
+<app-modal
+  [open]="isOpen"
+  [title]="options.title || 'Confirm'"
+  size="sm"
+  [showFooter]="true"
+  [showHeader]="true"
+  [showCloseButton]="false"
+  (closed)="onCancel()"
+>
+  <div class="text-[var(--text-main)]">
+    <p class="mb-2">{{ options.message }}</p>
+    @if (options.itemName) {
+      <p
+        class="rounded-lg bg-[var(--bg-elevated)] px-3 py-2 font-mono text-sm text-[var(--accent)]"
+      >
+        {{ options.itemName }}
+      </p>
+    }
+  </div>
+
+  <div modal-footer class="flex justify-end gap-3">
+    <button type="button" (click)="onCancel()" class="form-btn form-btn-secondary">
+      {{ options.cancelText || "Cancel" }}
+    </button>
+    <button
+      type="button"
+      (click)="onConfirm()"
+      [class]="options.confirmClass || 'form-btn form-btn-primary'"
+    >
+      {{ options.confirmText || "Confirm" }}
+    </button>
+  </div>
+</app-modal>

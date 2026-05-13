@@ -9,7 +9,9 @@ import { ConfirmService } from "@shared/services/confirm.service";
 import { ErrorHandlerService } from "@shared/services/error-handler.service";
 import { ToastService } from "@services/toast.service";
 import { ProviderUtils } from "@shared/utils/provider.utils";
-import { DecentralizationService } from "@shared/services/decentralization.service";
+import { DecentralizationApiService } from "@shared/services/decentralization-api.service";
+import { CollectionsApiService } from "@shared/services/collections-api.service";
+import { HealthApiService } from "@shared/services/health-api.service";
 import { CollectionMeta } from "@shared/models/connection.config";
 import { withErrorHandling } from "@shared/utils/error-handler.utils";
 import { AddDatabasePathComponent } from "../add-database-path/add-database-path.component";
@@ -28,7 +30,9 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy {
   private confirm = inject(ConfirmService);
   private errorHandler = inject(ErrorHandlerService);
   private toast = inject(ToastService);
-  private localDb = inject(DecentralizationService);
+  private decentralizationApi = inject(DecentralizationApiService);
+  private collectionsApi = inject(CollectionsApiService);
+  private healthApi = inject(HealthApiService);
   providerUtils = inject(ProviderUtils);
   route = inject(ActivatedRoute);
   router = inject(Router);
@@ -48,14 +52,9 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy {
   showAddDbModal = signal(false);
 
   private routeSub: Subscription | null = null;
+  private isLoadingCollections = false;
 
   async ngOnInit() {
-    try {
-      await this.localDb.initStorage();
-    } catch (e) {
-      console.error("Failed to initialize storage:", e);
-    }
-
     this.routeSub = this.route.paramMap
       .pipe(
         filter((params) => params.get("id") !== null),
@@ -96,6 +95,7 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.routeSub?.unsubscribe();
+    this.isLoadingCollections = false;
   }
 
   getProviderIcon(): string {
@@ -105,25 +105,30 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy {
   async loadCollections() {
     const connId = this.connectionId();
     const dbName = this.databaseName();
-    if (!connId || !dbName) return;
+    if (!connId || !dbName || this.isLoadingCollections) return;
 
     if (this.loading()) {
       return;
     }
 
-    const result = await withErrorHandling(
-      async () => {
-        const collections = await this.db.listCollections(connId, dbName);
-        const total = collections.reduce((sum, c) => sum + c.count, 0);
-        return { collections, total };
-      },
-      { loading: this.loading, context: "LoadCollections" },
-      { errorHandler: this.errorHandler, toastService: this.toast }
-    );
+    this.isLoadingCollections = true;
+    try {
+      const result = await withErrorHandling(
+        async () => {
+          const collections = await this.collectionsApi.listCollections(connId, dbName);
+          const total = collections.reduce((sum, c) => sum + c.count, 0);
+          return { collections, total };
+        },
+        { loading: this.loading, context: "LoadCollections" },
+        { errorHandler: this.errorHandler, toastService: this.toast }
+      );
 
-    if (result.success && result.data) {
-      this.collections.set(result.data.collections);
-      this.totalDocuments.set(result.data.total);
+      if (result.success && result.data) {
+        this.collections.set(result.data.collections);
+        this.totalDocuments.set(result.data.total);
+      }
+    } finally {
+      this.isLoadingCollections = false;
     }
   }
 
@@ -226,7 +231,7 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy {
     if (!connId) return;
 
     try {
-      await this.localDb.saveDatabase(connId, data.name, data.path || undefined);
+      await this.decentralizationApi.saveDatabase(connId, data.name, data.path || undefined);
       this.showAddDbModal.set(false);
       this.goBack();
     } catch (e) {

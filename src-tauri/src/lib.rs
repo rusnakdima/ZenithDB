@@ -1,5 +1,6 @@
 mod commands;
 mod infrastructure;
+mod logger;
 
 use commands::admin::{
   create_collection, drop_collection, execute_raw, get_server_version, rename_collection,
@@ -26,6 +27,8 @@ use commands::entities::query::routes as query_routes;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+  logger::init_logger();
+
   tauri::Builder::default()
     .plugin(tauri_plugin_opener::init())
     .plugin(tauri_plugin_dialog::init())

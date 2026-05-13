@@ -14,13 +14,17 @@ import { MatIconModule } from "@angular/material/icon";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { DatabaseService } from "@shared/services/database.service";
 import { DataStoreService } from "@services/core/data-store.service";
-import { DecentralizationService } from "@shared/services/decentralization.service";
 import { CollectionMeta, SystemMetrics, ConnectionSummary } from "@shared/models/connection.config";
 import { interval, Subscription } from "rxjs";
 import { filter } from "rxjs/operators";
 import { ProviderUtils } from "@shared/utils/provider.utils";
 import { ThemeService } from "@shared/services/theme.service";
 import { ErrorHandlerService } from "@shared/services/error-handler.service";
+import { DecentralizationApiService } from "@shared/services/decentralization-api.service";
+import { ConnectionsApiService } from "@shared/services/connections-api.service";
+import { CollectionsApiService } from "@shared/services/collections-api.service";
+import { HealthApiService } from "@shared/services/health-api.service";
+import { MetricsApiService } from "@shared/services/metrics-api.service";
 
 interface TreeNode {
   name: string;
@@ -40,9 +44,13 @@ export class SidebarComponent implements OnInit {
   providerUtils = inject(ProviderUtils);
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
-  connectionState = inject(ConnectionStateService);
-  databaseService = inject(DatabaseService);
-  private localDb = inject(DecentralizationService);
+  private decentralizationApi = inject(DecentralizationApiService);
+  private connectionsApi = inject(ConnectionsApiService);
+  private collectionsApi = inject(CollectionsApiService);
+  private healthApi = inject(HealthApiService);
+  private metricsApi = inject(MetricsApiService);
+  private db = inject(DatabaseService);
+  private connState = inject(ConnectionStateService);
   dataStore = inject(DataStoreService);
   themeService = inject(ThemeService);
   private errorHandler = inject(ErrorHandlerService);
@@ -140,8 +148,8 @@ export class SidebarComponent implements OnInit {
       const conn = this.dataStore.getConnections().find((c) => c.id === connId);
       if (!conn) return;
 
-      if (this.connectionState.activeConnectionId() !== connId) {
-        this.connectionState.setActiveConnection(conn);
+      if (this.connState.activeConnectionId() !== connId) {
+        this.connState.setActiveConnection(conn);
       }
 
       if (!this.expandedConnections().has(connId)) {
@@ -196,8 +204,8 @@ export class SidebarComponent implements OnInit {
         });
       }
 
-      if (this.connectionState.activeConnectionId() !== connId) {
-        this.connectionState.setActiveConnection(conn);
+      if (this.connState.activeConnectionId() !== connId) {
+        this.connState.setActiveConnection(conn);
       }
       await this.loadDatabases(connId);
     } finally {
@@ -224,7 +232,7 @@ export class SidebarComponent implements OnInit {
 
   async fetchSystemStatus() {
     try {
-      const metrics = await this.databaseService.getSystemStatus();
+      const metrics = await this.metricsApi.fetchMetrics();
       this.systemStatus.set(metrics);
     } catch (e) {
       this.errorHandler.handleError(e, "Fetching system status");
@@ -233,7 +241,7 @@ export class SidebarComponent implements OnInit {
 
   async fetchConnections() {
     try {
-      await this.databaseService.listConnections();
+      await this.connectionsApi.listConnectionsWithRefresh();
     } catch (e) {
       this.errorHandler.handleError(e, "Fetching connections");
     }
@@ -241,9 +249,9 @@ export class SidebarComponent implements OnInit {
 
   async refreshConnectionStatuses() {
     try {
-      const connections = this.dataStore.getConnections();
+      const connections = this.connectionsApi.getConnections();
       const results = await Promise.all(
-        connections.map((conn) => this.databaseService.testConnectionStatus(conn.id))
+        connections.map((conn) => this.db.testConnectionStatus(conn.id))
       );
       results.forEach((result, index) => {
         if (result) {
@@ -256,14 +264,14 @@ export class SidebarComponent implements OnInit {
   }
 
   async selectConnection(conn: ConnectionSummary) {
-    this.connectionState.setActiveConnection(conn);
+    this.connState.setActiveConnection(conn);
     this.router.navigate(["/connections", conn.id]);
     this.loadDatabases(conn.id);
     this.testConnectionStatus(conn.id);
   }
 
   async testConnectionStatus(connId: string) {
-    const result = await this.databaseService.testConnectionStatus(connId);
+    const result = await this.db.testConnectionStatus(connId);
     if (result) {
       this.dataStore.updateConnection(connId, { status: result.status });
     }
@@ -280,14 +288,14 @@ export class SidebarComponent implements OnInit {
     if (this.isLoadingDatabases) {
       return;
     }
-    if (this.connectionState.activeConnectionId() !== connId) {
+    if (this.connState.activeConnectionId() !== connId) {
       return;
     }
     this.isLoadingDatabases = true;
     try {
       this.loadingDatabases.set(true);
-      const databases = await this.localDb.listDatabases(connId);
-      if (this.connectionState.activeConnectionId() !== connId) {
+      const databases = this.decentralizationApi.getDatabases(connId);
+      if (this.connState.activeConnectionId() !== connId) {
         return;
       }
       const dbNodes: TreeNode[] = databases.map((db) => ({
@@ -319,7 +327,7 @@ export class SidebarComponent implements OnInit {
     });
 
     try {
-      const collections = await this.databaseService.listCollections(connId, dbNode.name);
+      const collections = await this.collectionsApi.listCollections(connId, dbNode.name);
       dbNode.children = collections.map((c) => ({
         name: c.name,
         type: "collection" as const,
@@ -352,7 +360,7 @@ export class SidebarComponent implements OnInit {
       });
       const conn = this.dataStore.getConnections().find((c) => c.id === connId);
       if (conn) {
-        this.connectionState.setActiveConnection(conn);
+        this.connState.setActiveConnection(conn);
       }
       this.loadDatabases(connId);
     }
@@ -506,7 +514,7 @@ export class SidebarComponent implements OnInit {
   private loadCollectionData(collection: string) {
     const connId = this.activeConnectionId();
     if (connId) {
-      this.databaseService.queryData(collection, { limit: 100 }).catch(console.error);
+      this.db.queryData(collection, { limit: 100 }).catch(console.error);
     }
   }
 

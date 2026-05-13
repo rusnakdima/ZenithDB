@@ -5,16 +5,16 @@ import { MatIconModule } from "@angular/material/icon";
 import { FormsModule } from "@angular/forms";
 import { DatabaseService } from "@shared/services/database.service";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
-import { ConnectionHealthService } from "@shared/services/connection-health.service";
 import { ConfirmService } from "@shared/services/confirm.service";
 import { ErrorHandlerService } from "@shared/services/error-handler.service";
 import { ToastService } from "@services/toast.service";
 import { ProviderUtils } from "@shared/utils/provider.utils";
+import { DecentralizationApiService } from "@shared/services/decentralization-api.service";
+import { ConnectionsApiService } from "@shared/services/connections-api.service";
+import { CollectionsApiService } from "@shared/services/collections-api.service";
+import { HealthApiService } from "@shared/services/health-api.service";
 import {
-  DecentralizationService,
   DatabaseMetadata,
-} from "@shared/services/decentralization.service";
-import {
   ConnectionHealth,
   CollectionMeta,
   ConnectionSummary,
@@ -25,7 +25,7 @@ import { ConnectionStatusBadgeComponent } from "@shared/components/connection-st
 import { withErrorHandling } from "@shared/utils/error-handler.utils";
 import { AddDatabasePathComponent } from "../add-database-path/add-database-path.component";
 import { Subscription } from "rxjs";
-import { distinctUntilChanged } from "rxjs/operators";
+import { distinctUntilChanged, debounceTime } from "rxjs/operators";
 
 interface DbNode {
   id?: number;
@@ -51,11 +51,13 @@ interface DbNode {
 export class ConnectionDetailComponent implements OnInit, OnDestroy {
   private db = inject(DatabaseService);
   private connState = inject(ConnectionStateService);
-  private connHealth = inject(ConnectionHealthService);
+  private connectionsApi = inject(ConnectionsApiService);
+  private decentralizationApi = inject(DecentralizationApiService);
+  private collectionsApi = inject(CollectionsApiService);
+  private healthApi = inject(HealthApiService);
   private confirm = inject(ConfirmService);
   private errorHandler = inject(ErrorHandlerService);
   private toast = inject(ToastService);
-  private localDb = inject(DecentralizationService);
   providerUtils = inject(ProviderUtils);
   route = inject(ActivatedRoute);
   router = inject(Router);
@@ -81,22 +83,16 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
   private routeSub: Subscription | null = null;
 
   async ngOnInit() {
-    try {
-      await Promise.race([
-        this.localDb.initStorage(),
-        new Promise((_, reject) => setTimeout(() => reject(new Error("Init timeout")), 5000)),
-      ]);
-    } catch (e) {
-      console.error("Failed to initialize storage:", e);
-    }
-
     this.routeSub = this.route.paramMap
-      .pipe(distinctUntilChanged((prev, curr) => prev.get("id") === curr.get("id")))
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged((prev, curr) => prev.get("id") === curr.get("id"))
+      )
       .subscribe(async (params) => {
         const id = params.get("id");
         if (id && id !== "new") {
           this.connectionId.set(id);
-          const connections = await this.db.listConnections();
+          const connections = this.connectionsApi.getConnections();
           const conn = connections.find((c) => c.id === id);
           if (conn) {
             this.connectionName.set(conn.name);
@@ -121,9 +117,9 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this.routeSub?.unsubscribe();
     this.isLoadingDetails = false;
     this.loading.set(false);
+    this.routeSub?.unsubscribe();
   }
 
   private updateProviderIcon() {
@@ -132,17 +128,19 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
 
   async loadConnectionDetails() {
     const connId = this.connectionId();
-    if (!connId || this.isLoadingDetails) return;
+    if (!connId) return;
 
+    if (this.isLoadingDetails) return;
     this.isLoadingDetails = true;
+
     try {
       const result = await withErrorHandling(
         async () => {
           const [version, collections, healthResult, localDatabases] = await Promise.all([
             this.db.getServerVersion().catch(() => null),
-            this.db.listCollections().catch(() => []),
-            this.connHealth.checkHealth(connId).catch(() => null),
-            this.localDb.listDatabases(connId).catch(() => []),
+            this.collectionsApi.listCollections(connId).catch(() => []),
+            this.healthApi.checkHealth(connId).catch(() => null),
+            this.decentralizationApi.listDatabases(connId).catch(() => []),
           ]);
           return { version, collections, healthResult, localDatabases };
         },
@@ -174,7 +172,7 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
 
     const connId = this.connectionId();
     if (connId) {
-      this.connHealth.invalidateHealth(connId);
+      this.healthApi.invalidateHealth(connId);
     }
 
     const config = {
@@ -249,7 +247,7 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
 
     this.creatingDb.set(true);
     try {
-      await this.localDb.saveDatabase(connId, data.name, data.path || undefined);
+      await this.decentralizationApi.saveDatabase(connId, data.name, data.path || undefined);
       this.showAddDbModal.set(false);
       await this.loadConnectionDetails();
     } catch (e) {
@@ -282,11 +280,11 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
     if (!connId) return;
 
     try {
-      const localDbs = await this.localDb.listDatabases(connId);
+      const localDbs = this.decentralizationApi.getDatabases(connId);
       const dbToEdit = localDbs.find((d) => d.name === oldName);
       if (dbToEdit) {
-        await this.localDb.deleteDatabase(dbToEdit.id);
-        await this.localDb.saveDatabase(connId, newName, dbToEdit.path || undefined);
+        await this.decentralizationApi.deleteDatabase(dbToEdit.id);
+        await this.decentralizationApi.saveDatabase(connId, newName, dbToEdit.path || undefined);
       }
       this.cancelEditDb();
       await this.loadConnectionDetails();
@@ -308,10 +306,10 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
     if (!connId) return;
 
     try {
-      const localDbs = await this.localDb.listDatabases(connId);
+      const localDbs = this.decentralizationApi.getDatabases(connId);
       const dbToDelete = localDbs.find((d) => d.name === dbName);
       if (dbToDelete) {
-        await this.localDb.deleteDatabase(dbToDelete.id);
+        await this.decentralizationApi.deleteDatabase(dbToDelete.id);
       }
       await this.loadConnectionDetails();
     } catch (e) {

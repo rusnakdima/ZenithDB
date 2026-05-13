@@ -23,6 +23,9 @@ import { toSignal } from "@angular/core/rxjs-interop";
 import { Router, NavigationEnd } from "@angular/router";
 import { filter, map } from "rxjs/operators";
 import { ConnectionModalComponent } from "@features/connections/connection-modal/connection-modal.component";
+import { ConnectionsApiService } from "@shared/services/connections-api.service";
+import { MetricsApiService } from "@shared/services/metrics-api.service";
+import { ConfirmDialogComponent } from "@shared/components/confirm-dialog/confirm-dialog.component";
 
 @Component({
   selector: "app-root",
@@ -37,6 +40,7 @@ import { ConnectionModalComponent } from "@features/connections/connection-modal
     HeaderComponent,
     MatIconModule,
     ConnectionModalComponent,
+    ConfirmDialogComponent,
   ],
   templateUrl: "./app.html",
 })
@@ -46,11 +50,14 @@ export class AppComponent implements OnInit, OnDestroy {
   private boundToggleTheme: (() => void) | null = null;
   private boundCloseTopModal: (() => void) | null = null;
   private boundOpenConnectionModal: (() => void) | null = null;
+  private boundVisibilityChange: (() => void) | null = null;
   connectionState = inject(ConnectionStateService);
   shortcutsService = inject(KeyboardShortcutsService);
   dialogService = inject(DialogService);
   themeService = inject(ThemeService);
   router = inject(Router);
+  private connectionsApi = inject(ConnectionsApiService);
+  private metricsApi = inject(MetricsApiService);
 
   private routerUrl = toSignal(
     this.router.events.pipe(
@@ -76,10 +83,19 @@ export class AppComponent implements OnInit, OnDestroy {
     this.boundToggleTheme = () => this.themeService.toggle();
     this.boundCloseTopModal = () => this.shortcutsService.shortcutsHelpVisible.set(false);
     this.boundOpenConnectionModal = () => this.connectionModal?.open();
+    this.boundVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        this.connectionsApi.invalidateConnections();
+        this.metricsApi.invalidateMetrics();
+        this.connectionsApi.listConnectionsWithRefresh();
+        this.metricsApi.fetchMetricsWithRefresh();
+      }
+    };
 
     document.addEventListener("zenith:toggle-theme", this.boundToggleTheme);
     document.addEventListener("zenith:close-top-modal", this.boundCloseTopModal);
     document.addEventListener("zenith:open-connection-modal", this.boundOpenConnectionModal);
+    document.addEventListener("visibilitychange", this.boundVisibilityChange);
   }
 
   ngOnDestroy(): void {
@@ -91,6 +107,9 @@ export class AppComponent implements OnInit, OnDestroy {
     }
     if (this.boundOpenConnectionModal) {
       document.removeEventListener("zenith:open-connection-modal", this.boundOpenConnectionModal);
+    }
+    if (this.boundVisibilityChange) {
+      document.removeEventListener("visibilitychange", this.boundVisibilityChange);
     }
   }
 }

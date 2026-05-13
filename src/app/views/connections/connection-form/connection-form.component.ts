@@ -1,5 +1,6 @@
 import { Component, inject, signal, OnInit, OnDestroy, output } from "@angular/core";
 import { Router, ActivatedRoute } from "@angular/router";
+import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
 import { ModalComponent } from "@shared/components/modal/modal.component";
 import { DatabaseService } from "@shared/services/database.service";
@@ -12,25 +13,17 @@ import {
   TestConnectionConfig,
 } from "@shared/models/connection.config";
 import { ProviderType } from "@shared/models/provider.model";
-import { ProviderSelectorComponent } from "../provider-selector/provider-selector.component";
 import {
   ConnectionConfigFormComponent,
-  ConfigFormData,
+  ConnectionFormData,
 } from "../connection-config-form/connection-config-form.component";
 import { ErrorHandlerService } from "@shared/services/error-handler.service";
 import { ToastService } from "@services/toast.service";
 
-type WizardStep = 1 | 2 | 3;
-
 @Component({
   selector: "app-connection-form",
   standalone: true,
-  imports: [
-    MatIconModule,
-    ModalComponent,
-    ProviderSelectorComponent,
-    ConnectionConfigFormComponent,
-  ],
+  imports: [FormsModule, MatIconModule, ModalComponent, ConnectionConfigFormComponent],
   templateUrl: "./connection-form.component.html",
 })
 export class ConnectionFormComponent implements OnInit, OnDestroy {
@@ -47,14 +40,14 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
   editingId: string | null = null;
   isEditing = signal(false);
 
-  currentStep = signal<WizardStep>(1);
   provider: ProviderType = "json";
-  selectedDatabases = signal<string[]>([]);
-
-  formData = signal<ConfigFormData>({
+  formData = signal<ConnectionFormData>({
     name: "",
     path: "",
-    uri: "",
+    host: "",
+    port: "",
+    username: "",
+    password: "",
     database: "",
     behavior: "folders_as_databases",
     useSsl: false,
@@ -63,12 +56,6 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
   testResult = signal<ConnectionHealth | null>(null);
   testing = signal(false);
   saving = signal(false);
-
-  stepTitles: Record<WizardStep, string> = {
-    1: "Choose Provider",
-    2: "Connection Details",
-    3: "Test & Save",
-  };
 
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get("id");
@@ -100,9 +87,13 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
       const parsed = parseProviderConfig(innerConfig);
       this.formData.set({
         name: conn.config.name,
-        path: parsed.path,
-        uri: parsed.uri,
-        behavior: parsed.behavior,
+        path: parsed.path || "",
+        host: parsed.host || "",
+        port: parsed.port || "",
+        username: parsed.username || "",
+        password: parsed.password || "",
+        database: parsed.database || "",
+        behavior: parsed.behavior || "folders_as_databases",
         useSsl: false,
       });
     } catch (e) {
@@ -117,10 +108,14 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
       this.provider = this.providerUtils.toProviderType(innerConfig.type);
       const parsed = parseProviderConfig(innerConfig);
       this.formData.set({
-        name: innerConfig.name + " (Copy)",
-        path: parsed.path,
-        uri: parsed.uri,
-        behavior: parsed.behavior,
+        name: conn.config.name + " (Copy)",
+        path: parsed.path || "",
+        host: parsed.host || "",
+        port: parsed.port || "",
+        username: parsed.username || "",
+        password: parsed.password || "",
+        database: parsed.database || "",
+        behavior: parsed.behavior || "folders_as_databases",
         useSsl: false,
       });
     } catch (e) {
@@ -128,38 +123,23 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
     }
   }
 
-  onProviderSelected(type: ProviderType) {
+  onProviderChange(type: ProviderType) {
     this.provider = type;
-    this.formData.set({
-      name: this.formData().name,
-      path: "",
-      uri: "",
-      behavior: "folders_as_databases",
-      useSsl: false,
-    });
   }
 
-  onFormDataChange(data: ConfigFormData) {
+  onNameChange(name: string) {
+    this.formData.update((d) => ({ ...d, name }));
+  }
+
+  onFormDataChange(data: ConnectionFormData) {
     this.formData.set(data);
   }
 
-  nextStep() {
-    if (this.currentStep() < 3) {
-      this.currentStep.update((s) => (s + 1) as WizardStep);
-    }
-  }
-
-  prevStep() {
-    if (this.currentStep() > 1) {
-      this.currentStep.update((s) => (s - 1) as WizardStep);
-    }
-  }
-
-  async onBrowseFile(directory: boolean = false) {
+  async onBrowseFile(isDirectory: boolean) {
     try {
       const { open } = await import("@tauri-apps/plugin-dialog");
       let filters: { name: string; extensions: string[] }[] = [];
-      if (!directory) {
+      if (!isDirectory) {
         if (this.provider === "sqlite") {
           filters = [{ name: "SQLite Database", extensions: ["db", "sqlite", "sqlite3"] }];
         } else {
@@ -168,7 +148,7 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
       }
       const selected = await open({
         multiple: false,
-        directory,
+        directory: isDirectory,
         filters,
       });
       if (selected) {
@@ -179,9 +159,7 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
     }
   }
 
-  isStep1Valid = signal(true);
-
-  isStep2Valid(): boolean {
+  isFormValid(): boolean {
     const data = this.formData();
     if (!data.name.trim()) return false;
     switch (this.provider) {
@@ -192,7 +170,7 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
       case "redis":
       case "postgres":
       case "mysql":
-        return !!data.uri.trim();
+        return !!data.host.trim() && !!data.port.trim();
       default:
         return false;
     }
@@ -234,6 +212,7 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
 
   private buildConfig(): TestConnectionConfig {
     const data = this.formData();
+    const uri = this.buildUriFromFields();
 
     switch (this.provider) {
       case "json":
@@ -261,7 +240,7 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
           config: {
             type: "Mongo",
             name: data.name,
-            uri: data.uri,
+            uri: uri,
           },
         };
       case "redis":
@@ -270,7 +249,7 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
           config: {
             type: "Redis",
             name: data.name,
-            uri: data.uri,
+            uri: uri,
           },
         };
       case "postgres":
@@ -279,7 +258,7 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
           config: {
             type: "Postgres",
             name: data.name,
-            uri: data.uri,
+            uri: uri,
           },
         };
       case "mysql":
@@ -288,7 +267,7 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
           config: {
             type: "MySql",
             name: data.name,
-            uri: data.uri,
+            uri: uri,
           },
         };
       default:
@@ -297,9 +276,35 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
           config: {
             type: "MySql",
             name: data.name,
-            uri: data.uri,
+            uri: uri,
           },
         };
+    }
+  }
+
+  private buildUriFromFields(): string {
+    const data = this.formData();
+    const host = data.host || "localhost";
+    const port = data.port;
+    const user = data.username;
+    const pass = data.password;
+    const db = data.database;
+
+    switch (this.provider) {
+      case "mongo":
+        const mongoAuth = user && pass ? `${user}:${pass}@` : "";
+        const mongoDb = db ? `/${db}` : "";
+        return `mongodb://${mongoAuth}${host}:${port}${mongoDb}`;
+      case "postgres":
+        const pgAuth = user && pass ? `${user}:${pass}@` : "";
+        return `postgres://${pgAuth}${host}:${port}/${db || "postgres"}`;
+      case "mysql":
+        const mysqlAuth = user && pass ? `${user}:${pass}@` : "";
+        return `mysql://${mysqlAuth}${host}:${port}/${db || ""}`;
+      case "redis":
+        return `redis://${host}:${port}`;
+      default:
+        return "";
     }
   }
 

@@ -1,0 +1,118 @@
+<div class="space-y-5">
+  <div>
+    <label class="form-label">Connection Name *</label>
+    <input
+      type="text"
+      [(ngModel)]="data.name"
+      (ngModelChange)="onFieldChange()"
+      placeholder="My Database"
+      class="form-input"
+    />
+  </div>
+
+  @if (provider() === "json" || provider() === "sqlite") {
+    <div>
+      <label class="form-label"
+        >{{ provider() === "json" ? "Folder Path" : "Database File Path" }} *</label
+      >
+      <div class="flex gap-3">
+        <input
+          type="text"
+          [(ngModel)]="data.path"
+          (ngModelChange)="onFieldChange()"
+          [placeholder]="provider() === 'json' ? '/path/to/json-databases' : '/path/to/database.db'"
+          class="form-input flex-1"
+        />
+        <button
+          type="button"
+          (click)="browseFile.emit(provider() === 'json')"
+          class="form-btn form-btn-browse"
+        >
+          Browse
+        </button>
+      </div>
+    </div>
+  }
+
+  @if (provider() === "json") {
+    <div>
+      <label class="form-label">Database Structure</label>
+      <select [(ngModel)]="data.behavior" (ngModelChange)="onFieldChange()" class="form-input">
+        <option value="folders_as_databases">Subfolders as databases</option>
+        <option value="files_as_collections">Files as collections</option>
+        <option value="mixed">Mixed (both)</option>
+      </select>
+      <p class="mt-1 text-xs text-[var(--text-dim)]">
+        @if (data.behavior === "folders_as_databases") {
+          Each subfolder = a database containing JSON files as collections
+        } @else if (data.behavior === "files_as_collections") {
+          JSON files in the folder = collections in a single database
+        } @else {
+          Subfolders are databases, plus JSON files at root level
+        }
+      </p>
+    </div>
+  }
+
+  @if (
+    provider() === "mongo" ||
+    provider() === "postgres" ||
+    provider() === "mysql" ||
+    provider() === "redis"
+  ) {
+    <div>
+      <label class="form-label">Host *</label>
+      <input
+        type="text"
+        [(ngModel)]="data.host"
+        (ngModelChange)="onFieldChange()"
+        placeholder="localhost"
+        class="form-input"
+      />
+    </div>
+
+    <div>
+      <label class="form-label">Port *</label>
+      <input
+        type="text"
+        [(ngModel)]="data.port"
+        (ngModelChange)="onFieldChange()"
+        placeholder="5432"
+        class="form-input"
+      />
+    </div>
+
+    <div>
+      <label class="form-label">Username</label>
+      <input
+        type="text"
+        [(ngModel)]="data.username"
+        (ngModelChange)="onFieldChange()"
+        placeholder="username"
+        class="form-input"
+      />
+    </div>
+
+    <div>
+      <label class="form-label">Password</label>
+      <input
+        type="password"
+        [(ngModel)]="data.password"
+        (ngModelChange)="onFieldChange()"
+        placeholder="password"
+        class="form-input"
+      />
+    </div>
+
+    <div>
+      <label class="form-label">Database</label>
+      <input
+        type="text"
+        [(ngModel)]="data.database"
+        (ngModelChange)="onFieldChange()"
+        placeholder="database name"
+        class="form-input"
+      />
+    </div>
+  }
+</div>

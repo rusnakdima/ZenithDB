@@ -142,3 +142,13 @@ export interface SystemMetrics {
 }
 
 export type RowData = Record<string, unknown>;
+
+export interface DatabaseMetadata {
+  id: number;
+  connection_id: string;
+  name: string;
+  path: string | null;
+  created_at: number;
+  updated_at: number;
+  metadata: string | null;
+}

@@ -12,9 +12,9 @@ import { filter, map } from "rxjs/operators";
 import { MatIconModule } from "@angular/material/icon";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { ThemeService } from "@shared/services/theme.service";
-import { DatabaseService } from "@shared/services/database.service";
 import { DataStoreService } from "@services/core/data-store.service";
 import { toSignal } from "@angular/core/rxjs-interop";
+import { CollectionsApiService } from "@shared/services/collections-api.service";
 
 export interface Breadcrumb {
   label: string;
@@ -32,7 +32,7 @@ export class HeaderComponent implements OnDestroy {
   connectionState = inject(ConnectionStateService);
   themeService = inject(ThemeService);
   router = inject(Router);
-  private databaseService = inject(DatabaseService);
+  private collectionsApi = inject(CollectionsApiService);
   private dataStore = inject(DataStoreService);
 
   private searchInputRef = viewChild<ElementRef<HTMLInputElement>>("searchInput");
@@ -150,10 +150,15 @@ export class HeaderComponent implements OnDestroy {
 
       let collections = this.dataStore.getCollections() || [];
       if (collections.length === 0) {
-        try {
-          const result = await this.databaseService.listCollections();
-          collections = result || [];
-        } catch {
+        const connId = this.connectionState.activeConnectionId();
+        if (connId) {
+          try {
+            const result = await this.collectionsApi.listCollections(connId);
+            collections = result || [];
+          } catch {
+            collections = [];
+          }
+        } else {
           collections = [];
         }
       }

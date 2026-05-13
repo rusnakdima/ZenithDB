@@ -19,6 +19,7 @@ import { MatIconModule } from "@angular/material/icon";
 import { SkeletonLoaderComponent } from "@shared/components/loading/skeleton-loader.component";
 import { CollectionMeta, ColumnInfo } from "@shared/models/connection.config";
 import { withErrorHandling } from "@shared/utils/error-handler.utils";
+import { CollectionsApiService } from "@shared/services/collections-api.service";
 
 interface TreeNode {
   name: string;
@@ -67,6 +68,7 @@ export class SchemaTreeComponent implements OnInit, OnDestroy {
   @Output() collectionSelect = new EventEmitter<string>();
 
   private db = inject(DatabaseService);
+  private collectionsApi = inject(CollectionsApiService);
   private toast = inject(ToastService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
@@ -88,9 +90,12 @@ export class SchemaTreeComponent implements OnInit, OnDestroy {
   }
 
   async loadCollections() {
+    const connId = this.connectionState.activeConnectionId();
+    if (!connId) return;
+
     const result = await withErrorHandling(
       async () => {
-        const cols = await this.db.listCollections();
+        const cols = await this.collectionsApi.listCollections(connId);
         return cols;
       },
       {

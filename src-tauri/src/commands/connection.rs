@@ -1,3 +1,5 @@
+use crate::commands::connection_entity::ConnectionEntity;
+use crate::commands::connections_db::ConnectionsDb;
 use crate::commands::decentralization::delete_connection_databases_metadata;
 use crate::commands::get_auth_context;
 use crate::commands::provider::{
@@ -7,8 +9,6 @@ use crate::commands::provider::{
 use crate::commands::validate_conn_id;
 use nosql_orm::prelude::*;
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
-use tokio::fs;
 
 pub type ConnectionId = String;
 
@@ -57,12 +57,6 @@ pub struct ConnectionConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ConnectionEntry {
-  pub id: String,
-  pub config: ConnectionConfig,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConnectionSummary {
   pub id: String,
   pub name: String,
@@ -97,78 +91,6 @@ impl ConnectionHealth {
   }
 }
 
-pub struct ConnectionStore {
-  pub connections: Vec<ConnectionEntry>,
-  path: PathBuf,
-}
-
-impl ConnectionStore {
-  pub fn path() -> PathBuf {
-    dirs::home_dir()
-      .unwrap_or_else(|| PathBuf::from("."))
-      .join(".zenithdb")
-      .join("connections.json")
-  }
-
-  pub async fn load() -> Result<Self, String> {
-    let path = Self::path();
-    if !path.exists() {
-      return Ok(Self::default());
-    }
-    let content = tokio::fs::read_to_string(&path)
-      .await
-      .map_err(|e| format!("Failed to read connections: {}", e))?;
-    let connections: Vec<ConnectionEntry> =
-      serde_json::from_str(&content).map_err(|e| format!("Failed to parse connections: {}", e))?;
-    Ok(Self { connections, path })
-  }
-
-  pub async fn save(&self) -> Result<(), String> {
-    if let Some(parent) = self.path.parent() {
-      fs::create_dir_all(parent)
-        .await
-        .map_err(|e| format!("Failed to create dir: {}", e))?;
-    }
-    let content = serde_json::to_string_pretty(&self.connections)
-      .map_err(|e| format!("Failed to serialize: {}", e))?;
-    tokio::fs::write(&self.path, content)
-      .await
-      .map_err(|e| format!("Failed to write connections: {}", e))?;
-    Ok(())
-  }
-
-  pub async fn load_or_default() -> Self {
-    match Self::load().await {
-      Ok(store) => store,
-      Err(_) => Self::default(),
-    }
-  }
-
-  pub fn add_connection(&mut self, entry: ConnectionEntry) {
-    self.connections.retain(|c| c.id != entry.id);
-    self.connections.push(entry);
-  }
-
-  pub fn remove_connection(&mut self, id: &str) -> bool {
-    let len = self.connections.len();
-    self.connections.retain(|c| c.id != id);
-    self.connections.len() < len
-  }
-
-  pub fn find_by_id(&self, id: &str) -> Option<&ConnectionEntry> {
-    self.connections.iter().find(|c| c.id == id)
-  }
-}
-
-impl Default for ConnectionStore {
-  fn default() -> Self {
-    Self {
-      connections: Vec::new(),
-      path: Self::path(),
-    }
-  }
-}
-
 pub fn get_connection_type(config: &ConnectionConfig) -> &'static str {
   match config.config {
     ConnectionConfigEnum::Json { .. } => "json",
@@ -180,17 +102,28 @@ pub fn get_connection_type(config: &ConnectionConfig) -> &'static str {
   }
 }
 
+fn get_type_string(config: &ConnectionConfig) -> String {
+  match config.config {
+    ConnectionConfigEnum::Json { .. } => "Json".to_string(),
+    ConnectionConfigEnum::Mongo { .. } => "Mongo".to_string(),
+    ConnectionConfigEnum::Redis { .. } => "Redis".to_string(),
+    ConnectionConfigEnum::Postgres { .. } => "Postgres".to_string(),
+    ConnectionConfigEnum::Sqlite { .. } => "Sqlite".to_string(),
+    ConnectionConfigEnum::MySql { .. } => "MySql".to_string(),
+  }
+}
+
 #[tauri::command]
 pub async fn save_connection(config: ConnectionConfig) -> Result<ConnectionId, String> {
   let id = uuid::Uuid::new_v4().to_string();
-  let entry = ConnectionEntry {
-    id: id.clone(),
-    config,
-  };
+  let type_str = get_type_string(&config);
 
-  let mut store = ConnectionStore::load_or_default().await;
-  store.add_connection(entry);
-  store.save().await?;
+  let entity = ConnectionEntity::new(id.clone(), type_str, config.name.clone(), config);
+  let db = ConnectionsDb::new()?;
+  db.init()?;
+  db.save(&entity)?;
+
+  tracing::info!("Saved connection: {} ({})", id, entity.name);
   Ok(id)
 }
 
@@ -200,16 +133,21 @@ pub async fn list_connections() -> Result<Vec<ConnectionSummary>, String> {
   if !auth.can_access_connection("*") {
     return Err("Access denied".to_string());
   }
-  let store = ConnectionStore::load_or_default().await;
-  let mut summaries = Vec::new();
-  for c in store.connections.iter() {
-    summaries.push(ConnectionSummary {
-      id: c.id.clone(),
-      name: c.config.name.clone(),
-      provider: get_connection_type(&c.config).to_string(),
+
+  let db = ConnectionsDb::new()?;
+  db.init()?;
+  let entities = db.find_all()?;
+
+  let summaries = entities
+    .into_iter()
+    .map(|e| ConnectionSummary {
+      id: e.id,
+      name: e.name,
+      provider: e.type_.to_lowercase(),
       status: "unknown".to_string(),
-    });
-  }
+    })
+    .collect();
+
   Ok(summaries)
 }
 
@@ -278,12 +216,15 @@ pub async fn test_connection_status(id: &str) -> Result<ConnectionSummary, Strin
     return Err("Access denied to connection".to_string());
   }
   validate_conn_id(id)?;
-  let store = ConnectionStore::load().await.map_err(|e| e.to_string())?;
-  let entry = store
-    .find_by_id(id)
+
+  let db = ConnectionsDb::new()?;
+  db.init()?;
+  let entity = db
+    .find_by_id(id)?
     .ok_or_else(|| format!("Connection {} not found", id))?;
 
-  let health = check_provider_health(&entry.config).await;
+  let config = &entity.config;
+  let health = check_provider_health(config).await;
   let status = if health.healthy {
     "connected".to_string()
   } else {
@@ -291,9 +232,9 @@ pub async fn test_connection_status(id: &str) -> Result<ConnectionSummary, Strin
   };
 
   Ok(ConnectionSummary {
-    id: entry.id.clone(),
-    name: entry.config.name.clone(),
-    provider: get_connection_type(&entry.config).to_string(),
+    id: entity.id,
+    name: entity.name,
+    provider: entity.type_.to_lowercase(),
     status,
   })
 }
@@ -305,15 +246,21 @@ pub async fn delete_connection(id: &str) -> Result<(), String> {
     return Err("Access denied to connection".to_string());
   }
   validate_conn_id(id)?;
-  let mut store = ConnectionStore::load_or_default().await;
-  if store.remove_connection(id) {
-    store.save().await?;
-  } else {
+
+  let db = ConnectionsDb::new()?;
+  db.init()?;
+
+  if !db.exists(id)? {
     return Err(format!("Connection {} not found", id));
   }
+
+  db.delete(id)?;
+
   if let Err(e) = delete_connection_databases_metadata(id.to_string()).await {
-    eprintln!("Warning: Failed to delete connection metadata: {}", e);
+    tracing::warn!("Failed to delete connection metadata: {}", e);
   }
+
+  tracing::info!("Deleted connection: {}", id);
   Ok(())
 }
 
@@ -324,19 +271,27 @@ pub async fn update_connection(id: &str, config: ConnectionConfig) -> Result<(),
     return Err("Access denied to connection".to_string());
   }
   validate_conn_id(id)?;
-  let mut store = ConnectionStore::load_or_default().await;
-  let _entry = store
-    .find_by_id(id)
+
+  let db = ConnectionsDb::new()?;
+  db.init()?;
+
+  let existing = db
+    .find_by_id(id)?
     .ok_or_else(|| format!("Connection {} not found", id))?;
 
-  let updated_entry = ConnectionEntry {
+  let type_str = get_type_string(&config);
+
+  let entity = ConnectionEntity {
     id: id.to_string(),
+    type_: type_str,
+    name: config.name,
     config,
+    created_at: existing.created_at,
+    updated_at: chrono::Utc::now().timestamp_millis(),
   };
 
-  store.remove_connection(id);
-  store.add_connection(updated_entry);
-  store.save().await?;
+  db.save(&entity)?;
+  tracing::info!("Updated connection: {}", id);
   Ok(())
 }
 
@@ -353,13 +308,16 @@ pub async fn get_connection(id: &str) -> Result<ConnectionConfigResult, String> 
     return Err("Access denied to connection".to_string());
   }
   validate_conn_id(id)?;
-  let store = ConnectionStore::load_or_default().await;
-  let entry = store
-    .find_by_id(id)
+
+  let db = ConnectionsDb::new()?;
+  db.init()?;
+  let entity = db
+    .find_by_id(id)?
     .ok_or_else(|| format!("Connection {} not found", id))?;
+
   Ok(ConnectionConfigResult {
-    id: entry.id.clone(),
-    config: entry.config.clone(),
+    id: entity.id,
+    config: entity.config,
   })
 }
 

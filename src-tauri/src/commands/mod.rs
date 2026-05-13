@@ -1,8 +1,11 @@
-use crate::commands::connection::ConnectionEntry;
+use crate::commands::connection_entity::ConnectionEntity;
+use crate::commands::connections_db::ConnectionsDb;
 
 pub mod admin;
 pub mod auth;
 pub mod connection;
+pub mod connection_entity;
+pub mod connections_db;
 pub mod data;
 pub mod decentralization;
 pub mod entities;
@@ -11,14 +14,21 @@ pub mod provider;
 pub mod schema;
 pub mod system;
 
+#[derive(Debug, Clone)]
+pub struct ConnectionEntry {
+  pub id: String,
+  pub config: crate::commands::connection::ConnectionConfig,
+}
+
 pub async fn get_connection_entry(conn_id: &str) -> Result<ConnectionEntry, String> {
-  let store = connection::ConnectionStore::load()
-    .await
-    .map_err(|e| e.to_string())?;
-  store
-    .find_by_id(conn_id)
-    .cloned()
-    .ok_or_else(|| format!("Connection {} not found", conn_id))
+  let db = ConnectionsDb::new().map_err(|e| e.to_string())?;
+  db.init().map_err(|e| e.to_string())?;
+  let result: Option<ConnectionEntity> = db.find_by_id(conn_id).map_err(|e| e.to_string())?;
+  let entity = result.ok_or_else(|| format!("Connection {} not found", conn_id))?;
+  Ok(ConnectionEntry {
+    id: entity.id,
+    config: entity.config,
+  })
 }
 
 pub fn validate_conn_id(id: &str) -> Result<(), String> {
@@ -78,27 +88,27 @@ pub fn get_auth_context() -> crate::commands::auth::AuthContext {
 macro_rules! dispatch_provider {
   ($entry:expr, $provider:ident => $body:block) => {
     match &$entry.config.config {
-      ConnectionConfigEnum::Json { path, .. } => {
+      crate::commands::connection::ConnectionConfigEnum::Json { path, .. } => {
         let $provider = $crate::commands::provider::create_json_provider(path).await?;
         $body
       }
-      ConnectionConfigEnum::Mongo { uri, database, .. } => {
+      crate::commands::connection::ConnectionConfigEnum::Mongo { uri, database, .. } => {
         let $provider = $crate::commands::provider::create_mongo_provider(uri, database).await?;
         $body
       }
-      ConnectionConfigEnum::Redis { uri, .. } => {
+      crate::commands::connection::ConnectionConfigEnum::Redis { uri, .. } => {
         let $provider = $crate::commands::provider::create_redis_provider(uri).await?;
         $body
       }
-      ConnectionConfigEnum::Postgres { uri, .. } => {
+      crate::commands::connection::ConnectionConfigEnum::Postgres { uri, .. } => {
         let $provider = $crate::commands::provider::create_postgres_provider(uri).await?;
         $body
       }
-      ConnectionConfigEnum::Sqlite { path, .. } => {
+      crate::commands::connection::ConnectionConfigEnum::Sqlite { path, .. } => {
         let $provider = $crate::commands::provider::create_sqlite_provider(path).await?;
         $body
       }
-      ConnectionConfigEnum::MySql { uri, .. } => {
+      crate::commands::connection::ConnectionConfigEnum::MySql { uri, .. } => {
         let $provider = $crate::commands::provider::create_mysql_provider(uri).await?;
         $body
       }
