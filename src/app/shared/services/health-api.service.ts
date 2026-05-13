@@ -9,19 +9,43 @@ export class HealthApiService extends CacheService {
   private healthSignal = signal<Map<string, ConnectionHealth>>(new Map());
   private healthTimestamps = signal<Map<string, number>>(new Map());
   private refreshCallbacks = new Map<string, Set<() => void>>();
+  private inFlightHealth = new Map<string, Promise<ConnectionHealth>>();
   private readonly HEALTH_TTL_MS = 30 * 1000;
 
   getHealth(connectionId: string): ConnectionHealth | null {
     return this.healthSignal().get(connectionId) ?? null;
   }
 
-  async checkHealth(connectionId: string): Promise<ConnectionHealth> {
+  async checkHealth(connectionId: string, timeoutMs = 10000): Promise<ConnectionHealth> {
     const cached = this.getHealth(connectionId);
     const timestamp = this.healthTimestamps().get(connectionId) ?? 0;
     if (cached && !this.isStale(timestamp, this.HEALTH_TTL_MS)) {
       return cached;
     }
-    return this.fetchHealth(connectionId);
+
+    const existing = this.inFlightHealth.get(connectionId);
+    if (existing) {
+      return existing.catch(() => null) as Promise<ConnectionHealth>;
+    }
+
+    const promise = this.checkHealthWithTimeout(connectionId, timeoutMs).finally(() => {
+      this.inFlightHealth.delete(connectionId);
+    });
+
+    this.inFlightHealth.set(connectionId, promise);
+    return promise;
+  }
+
+  async checkHealthWithTimeout(connectionId: string, timeoutMs: number): Promise<ConnectionHealth> {
+    return Promise.race([
+      this.fetchHealth(connectionId),
+      new Promise<ConnectionHealth>((_, reject) =>
+        setTimeout(
+          () => reject(new Error(`Health check timed out after ${timeoutMs}ms`)),
+          timeoutMs
+        )
+      ),
+    ]);
   }
 
   async checkHealthWithRefresh(connectionId: string): Promise<ConnectionHealth> {

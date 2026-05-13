@@ -287,7 +287,12 @@ pub async fn save_database_metadata(
 pub async fn list_databases_metadata(
   connection_id: String,
 ) -> Result<Vec<DatabaseMetadata>, String> {
-  DecentralizedStorage::list_databases(&connection_id).await
+  tokio::time::timeout(
+    std::time::Duration::from_secs(10),
+    DecentralizedStorage::list_databases(&connection_id),
+  )
+  .await
+  .map_err(|_| "List databases timed out".to_string())?
 }
 
 #[tauri::command]

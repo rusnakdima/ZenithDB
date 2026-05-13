@@ -7,6 +7,7 @@ import { CollectionMeta } from "@shared/models/connection.config";
 export class CollectionsApiService extends CacheService {
   private collectionsSignal = signal<Map<string, CollectionMeta[]>>(new Map());
   private refreshCallbacks = new Map<string, Set<() => void>>();
+  private inFlightCollections = new Map<string, Promise<CollectionMeta[]>>();
   private tauriBridge = inject(TauriBridgeService);
 
   getCollections(connectionId: string): CollectionMeta[] {
@@ -16,7 +17,18 @@ export class CollectionsApiService extends CacheService {
   async listCollections(connectionId: string, dbName?: string): Promise<CollectionMeta[]> {
     const cached = this.getCollections(connectionId);
     if (cached.length > 0) return cached;
-    return this.fetchCollections(connectionId);
+
+    const existing = this.inFlightCollections.get(connectionId);
+    if (existing) {
+      return existing.catch(() => []);
+    }
+
+    const promise = this.fetchCollections(connectionId).finally(() => {
+      this.inFlightCollections.delete(connectionId);
+    });
+
+    this.inFlightCollections.set(connectionId, promise);
+    return promise;
   }
 
   async listCollectionsWithRefresh(connectionId: string): Promise<CollectionMeta[]> {
@@ -47,7 +59,7 @@ export class CollectionsApiService extends CacheService {
     const cacheKey = `collections:${connectionId}`;
     return this.getOrFetch(cacheKey, () =>
       this.tauriBridge
-        .invoke<CollectionMeta[]>("list_collections", { connId: connectionId })
+        .invoke<CollectionMeta[]>("list_collections", { conn_id: connectionId })
         .then((result) => {
           this.collectionsSignal.update((map) => {
             const newMap = new Map(map);

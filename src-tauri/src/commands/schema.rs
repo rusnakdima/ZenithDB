@@ -305,68 +305,72 @@ pub async fn list_collections(
   validate_conn_id(conn_id)?;
   let entry = get_connection_entry(conn_id).await?;
 
-  match &entry.config.config {
-    ConnectionConfigEnum::Json { path, behavior, .. } => {
-      let path_obj = std::path::Path::new(path).to_path_buf();
-      if !path_obj.is_dir() {
-        return Ok(Vec::new());
-      }
-
-      match behavior.as_str() {
-        "files_as_collections" => {
-          let collections = list_json_collections(path_obj).await?;
-          Ok(collections)
+  tokio::time::timeout(std::time::Duration::from_secs(10), async {
+    match &entry.config.config {
+      ConnectionConfigEnum::Json { path, behavior, .. } => {
+        let path_obj = std::path::Path::new(path).to_path_buf();
+        if !path_obj.is_dir() {
+          return Ok(Vec::new());
         }
-        "folders_as_databases" => {
-          if let Some(db) = db_name {
-            let folder_name = path_obj.file_name().and_then(|n| n.to_str()).unwrap_or("");
 
-            let collections = if db == folder_name {
-              list_json_collections(path_obj).await?
-            } else {
-              let db_path = path_obj.join(&db);
-              list_json_collections(db_path).await?
-            };
+        match behavior.as_str() {
+          "files_as_collections" => {
+            let collections = list_json_collections(path_obj).await?;
             Ok(collections)
-          } else {
-            let all_collections = list_all_json_collections_recursive(path_obj).await?;
-            Ok(all_collections)
           }
-        }
-        "mixed" => {
-          if let Some(db) = db_name {
-            if db == "root" {
+          "folders_as_databases" => {
+            if let Some(db) = db_name {
+              let folder_name = path_obj.file_name().and_then(|n| n.to_str()).unwrap_or("");
+
+              let collections = if db == folder_name {
+                list_json_collections(path_obj).await?
+              } else {
+                let db_path = path_obj.join(&db);
+                list_json_collections(db_path).await?
+              };
+              Ok(collections)
+            } else {
+              let all_collections = list_all_json_collections_recursive(path_obj).await?;
+              Ok(all_collections)
+            }
+          }
+          "mixed" => {
+            if let Some(db) = db_name {
+              if db == "root" {
+                let collections = list_json_collections(path_obj).await?;
+                Ok(collections)
+              } else {
+                let db_path = path_obj.join(&db);
+                let collections = list_json_collections(db_path).await?;
+                Ok(collections)
+              }
+            } else {
               let collections = list_json_collections(path_obj).await?;
               Ok(collections)
-            } else {
-              let db_path = path_obj.join(&db);
-              let collections = list_json_collections(db_path).await?;
-              Ok(collections)
             }
-          } else {
+          }
+          _ => {
             let collections = list_json_collections(path_obj).await?;
             Ok(collections)
           }
         }
-        _ => {
-          let collections = list_json_collections(path_obj).await?;
-          Ok(collections)
-        }
+      }
+      _ => {
+        dispatch_provider!(entry, provider => {
+            let collections = provider.list_collections().await.map_err_string()?;
+            Ok(collections
+                .into_iter()
+                .map(|c| CollectionMeta {
+                    name: c.name,
+                    count: c.document_count,
+                })
+                .collect())
+        })
       }
     }
-    _ => {
-      dispatch_provider!(entry, provider => {
-          let collections = provider.list_collections().await.map_err_string()?;
-          Ok(collections
-              .into_iter()
-              .map(|c| CollectionMeta {
-                  name: c.name,
-                  count: c.document_count,
-              })
-              .collect())
-      })
-    }
-  }
+  })
+  .await
+  .map_err(|_| "List collections timed out".to_string())?
 }
 
 async fn count_json_files_in_dir(path: &std::path::Path) -> u64 {

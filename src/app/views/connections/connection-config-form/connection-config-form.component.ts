@@ -61,21 +61,42 @@ export class ConnectionConfigFormComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes["provider"] && !this.isFirstInit) {
+    if (changes["initialData"] && !this.isFirstInit) {
+      const newData = this.initialData();
+      const isJsonProvider = this.provider() === "json";
+
+      this.data = {
+        ...this.data,
+        name: newData.name,
+        path: newData.path,
+        host: newData.host,
+        port: newData.port,
+        username: newData.username,
+        password: newData.password,
+        database: newData.database,
+        useSsl: newData.useSsl,
+      };
+
+      if (isJsonProvider) {
+        this.data.behavior = newData.behavior || "folders_as_databases";
+      }
+    } else if (changes["provider"] && !this.isFirstInit) {
       this.resetDataForProvider();
     }
   }
 
   private resetDataForProvider(): void {
+    const currentName = this.data.name;
+    const currentBehavior = this.data.behavior;
     this.data = {
-      name: this.data.name,
+      name: currentName,
       path: "",
       host: "",
       port: "",
       username: "",
       password: "",
       database: "",
-      behavior: "folders_as_databases",
+      behavior: currentBehavior,
       useSsl: false,
     };
     this.setDefaultsForProvider();

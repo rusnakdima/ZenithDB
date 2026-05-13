@@ -6,8 +6,8 @@ use commands::admin::{
   create_collection, drop_collection, execute_raw, get_server_version, rename_collection,
 };
 use commands::connection::{
-  delete_connection, get_connection, list_connections, save_connection, test_connection,
-  test_connection_status, update_connection,
+  check_health, delete_connection, get_connection, list_connections, save_connection,
+  test_connection, test_connection_status, update_connection,
 };
 use commands::data::{delete_row, query_data, save_row};
 use commands::decentralization::{
@@ -40,6 +40,7 @@ pub fn run() {
       update_connection,
       test_connection,
       test_connection_status,
+      check_health,
       get_connection,
       list_collections,
       create_database,

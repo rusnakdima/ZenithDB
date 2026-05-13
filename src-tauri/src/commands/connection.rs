@@ -9,10 +9,11 @@ use crate::commands::provider::{
 use crate::commands::validate_conn_id;
 use nosql_orm::prelude::*;
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 
 pub type ConnectionId = String;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[serde(tag = "type")]
 pub enum ConnectionConfigEnum {
   Json {
@@ -50,7 +51,7 @@ fn default_json_behavior() -> String {
   "folders_as_databases".to_string()
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
 pub struct ConnectionConfig {
   pub name: String,
   pub config: ConnectionConfigEnum,
@@ -153,14 +154,24 @@ pub async fn list_connections() -> Result<Vec<ConnectionSummary>, String> {
 
 pub async fn check_provider_health(config: &ConnectionConfig) -> ConnectionHealth {
   match &config.config {
-    ConnectionConfigEnum::Json { path, .. } => match create_json_provider(path).await {
-      Ok(p) => match p.health_check().await {
-        Ok(true) => ConnectionHealth::ok("json"),
-        Ok(false) => ConnectionHealth::err("json: health check failed"),
-        Err(e) => ConnectionHealth::err(&format!("json: health check failed: {}", e)),
-      },
-      Err(e) => ConnectionHealth::err(&e),
-    },
+    ConnectionConfigEnum::Json { path, .. } => {
+      let path_obj = std::path::Path::new(path);
+      if !path_obj.exists() {
+        return ConnectionHealth::err("json: path does not exist");
+      }
+      if !path_obj.is_dir() {
+        return ConnectionHealth::err("json: path is not a directory");
+      }
+      match tokio::time::timeout(std::time::Duration::from_secs(5), async {
+        tokio::fs::read_dir(path_obj).await
+      })
+      .await
+      {
+        Ok(Ok(_)) => ConnectionHealth::ok("json"),
+        Ok(Err(e)) => ConnectionHealth::err(&format!("json: {}", e)),
+        Err(_) => ConnectionHealth::err("json: health check timed out"),
+      }
+    }
     ConnectionConfigEnum::Mongo { uri, database, .. } => {
       match create_mongo_provider(uri, database).await {
         Ok(p) => {
@@ -240,6 +251,27 @@ pub async fn test_connection_status(id: &str) -> Result<ConnectionSummary, Strin
 }
 
 #[tauri::command]
+pub async fn check_health(id: &str) -> Result<ConnectionHealth, String> {
+  let auth = get_auth_context();
+  if !auth.can_access_connection(id) {
+    return Err("Access denied to connection".to_string());
+  }
+  validate_conn_id(id)?;
+
+  let db = ConnectionsDb::new()?;
+  db.init()?;
+  let entity = db
+    .find_by_id(id)?
+    .ok_or_else(|| format!("Connection {} not found", id))?;
+
+  tokio::time::timeout(std::time::Duration::from_secs(10), async {
+    Ok(check_provider_health(&entity.config).await)
+  })
+  .await
+  .map_err(|_| "Health check timed out".to_string())?
+}
+
+#[tauri::command]
 pub async fn delete_connection(id: &str) -> Result<(), String> {
   let auth = get_auth_context();
   if !auth.can_access_connection(id) {
@@ -284,7 +316,7 @@ pub async fn update_connection(id: &str, config: ConnectionConfig) -> Result<(),
   let entity = ConnectionEntity {
     id: id.to_string(),
     type_: type_str,
-    name: config.name,
+    name: config.name.clone(),
     config,
     created_at: existing.created_at,
     updated_at: chrono::Utc::now().timestamp_millis(),

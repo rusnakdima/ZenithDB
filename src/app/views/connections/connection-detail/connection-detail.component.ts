@@ -76,7 +76,7 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
   creatingDb = signal(false);
   editingDb = signal<string | null>(null);
   editDbName = "";
-  private isLoadingDetails = false;
+  isLoadingDetails = signal(false);
 
   providerIcon = signal("dns");
 
@@ -117,7 +117,7 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this.isLoadingDetails = false;
+    this.isLoadingDetails.set(false);
     this.loading.set(false);
     this.routeSub?.unsubscribe();
   }
@@ -130,8 +130,8 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
     const connId = this.connectionId();
     if (!connId) return;
 
-    if (this.isLoadingDetails) return;
-    this.isLoadingDetails = true;
+    if (this.isLoadingDetails()) return;
+    this.isLoadingDetails.set(true);
 
     try {
       const result = await withErrorHandling(
@@ -162,7 +162,7 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
         this.databases.set(databases);
       }
     } finally {
-      this.isLoadingDetails = false;
+      this.isLoadingDetails.set(false);
     }
   }
 

@@ -7,6 +7,7 @@ import { DatabaseMetadata } from "@shared/models/connection.config";
 export class DecentralizationApiService extends CacheService {
   private databasesSignal = signal<Map<string, DatabaseMetadata[]>>(new Map());
   private refreshCallbacks = new Map<string, Set<() => void>>();
+  private inFlightDatabases = new Map<string, Promise<DatabaseMetadata[]>>();
   private tauri = inject(TauriBridgeService);
 
   getDatabases(connectionId: string): DatabaseMetadata[] {
@@ -16,7 +17,18 @@ export class DecentralizationApiService extends CacheService {
   async listDatabases(connectionId: string): Promise<DatabaseMetadata[]> {
     const cached = this.getDatabases(connectionId);
     if (cached.length > 0) return cached;
-    return this.fetchDatabases(connectionId);
+
+    const existing = this.inFlightDatabases.get(connectionId);
+    if (existing) {
+      return existing.catch(() => []);
+    }
+
+    const promise = this.fetchDatabases(connectionId).finally(() => {
+      this.inFlightDatabases.delete(connectionId);
+    });
+
+    this.inFlightDatabases.set(connectionId, promise);
+    return promise;
   }
 
   async listDatabasesWithRefresh(connectionId: string): Promise<DatabaseMetadata[]> {

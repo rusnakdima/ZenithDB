@@ -83,10 +83,25 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
       const conn = await this.db.getConnection(id);
       this.editingId = id;
       const innerConfig = conn.config.config;
+
+      if (!innerConfig || !innerConfig.type) {
+        this.errorHandler.handleError(new Error("Invalid connection config"), "Loading connection");
+        return;
+      }
+
+      const validTypes = ["Json", "Mongo", "Redis", "Postgres", "Sqlite", "MySql"];
+      if (!validTypes.includes(innerConfig.type)) {
+        this.errorHandler.handleError(
+          new Error(`Unknown provider type: ${innerConfig.type}`),
+          "Loading connection"
+        );
+        return;
+      }
+
       this.provider = this.providerUtils.toProviderType(innerConfig.type);
       const parsed = parseProviderConfig(innerConfig);
       this.formData.set({
-        name: conn.config.name,
+        name: conn.config.name || "",
         path: parsed.path || "",
         host: parsed.host || "",
         port: parsed.port || "",
@@ -105,10 +120,28 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
     try {
       const conn = await this.db.getConnection(id);
       const innerConfig = conn.config.config;
+
+      if (!innerConfig || !innerConfig.type) {
+        this.errorHandler.handleError(
+          new Error("Invalid connection config"),
+          "Duplicating connection"
+        );
+        return;
+      }
+
+      const validTypes = ["Json", "Mongo", "Redis", "Postgres", "Sqlite", "MySql"];
+      if (!validTypes.includes(innerConfig.type)) {
+        this.errorHandler.handleError(
+          new Error(`Unknown provider type: ${innerConfig.type}`),
+          "Duplicating connection"
+        );
+        return;
+      }
+
       this.provider = this.providerUtils.toProviderType(innerConfig.type);
       const parsed = parseProviderConfig(innerConfig);
       this.formData.set({
-        name: conn.config.name + " (Copy)",
+        name: (conn.config.name || "") + " (Copy)",
         path: parsed.path || "",
         host: parsed.host || "",
         port: parsed.port || "",
