@@ -91,6 +91,19 @@
                     <mat-icon fontIcon="sync" class="h-5! w-5! text-xl!" /> Loading...
                   </div>
                 } @else if (databases().length > 0) {
+                  <div
+                    class="mb-2 flex items-center justify-between px-2 text-[10px] text-[var(--text-muted)]"
+                  >
+                    <span>Showing {{ databases().length }} of {{ databaseTotalCount() }}</span>
+                    @if (databaseHasMore()) {
+                      <button
+                        class="text-[var(--accent)] hover:underline"
+                        (click)="loadMoreDatabases(activeConnectionId()!)"
+                      >
+                        Load More
+                      </button>
+                    }
+                  </div>
                   @for (db of databases(); track db.name) {
                     <div class="mb-1">
                       <div class="flex items-center gap-1">

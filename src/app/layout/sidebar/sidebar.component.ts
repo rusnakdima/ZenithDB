@@ -71,6 +71,10 @@ export class SidebarComponent implements OnInit {
   isLoadingConnectionRoute = signal(false);
   private isLoadingDatabases = false;
 
+  databaseOffset = signal(0);
+  databaseHasMore = signal(false);
+  databaseTotalCount = signal(0);
+
   private statusSubscription: Subscription | null = null;
   private connectionStatusSubscription: Subscription | null = null;
   private routerSub: Subscription | null = null;
@@ -303,15 +307,18 @@ export class SidebarComponent implements OnInit {
       return;
     }
     this.isLoadingDatabases = true;
+    this.databaseOffset.set(0);
     try {
       this.loadingDatabases.set(true);
       console.log("[Sidebar] loadDatabases about to call getDatabases");
-      const databases = this.decentralizationApi.getDatabases(connId);
-      console.log("[Sidebar] loadDatabases got databases:", databases.length);
+      const result = await this.decentralizationApi.listDatabases(connId, 0, 10);
+      console.log("[Sidebar] loadDatabases got databases:", result.databases.length);
       if (this.connState.activeConnectionId() !== connId) {
         return;
       }
-      const dbNodes: TreeNode[] = databases.map((db) => ({
+      this.databaseHasMore.set(result.hasMore);
+      this.databaseTotalCount.set(result.totalCount);
+      const dbNodes: TreeNode[] = result.databases.map((db) => ({
         name: db.name,
         type: "database" as const,
         expanded: false,
@@ -323,6 +330,32 @@ export class SidebarComponent implements OnInit {
       console.error("[Sidebar] loadDatabases error:", e);
       this.errorHandler.handleError(e, "Loading databases");
       this.databases.set([]);
+    } finally {
+      this.isLoadingDatabases = false;
+      this.loadingDatabases.set(false);
+    }
+  }
+
+  async loadMoreDatabases(connId: string) {
+    if (this.isLoadingDatabases || !this.databaseHasMore()) return;
+    this.isLoadingDatabases = true;
+    try {
+      this.loadingDatabases.set(true);
+      const newOffset = this.databaseOffset() + 10;
+      const result = await this.decentralizationApi.listDatabases(connId, newOffset, 10);
+      if (this.connState.activeConnectionId() !== connId) return;
+      this.databaseOffset.set(newOffset);
+      this.databaseHasMore.set(result.hasMore);
+      this.databaseTotalCount.set(result.totalCount);
+      const newDbNodes: TreeNode[] = result.databases.map((db) => ({
+        name: db.name,
+        type: "database" as const,
+        expanded: false,
+        children: [],
+      }));
+      this.databases.update((dbs) => [...dbs, ...newDbNodes]);
+    } catch (e) {
+      this.errorHandler.handleError(e, "Loading more databases");
     } finally {
       this.isLoadingDatabases = false;
       this.loadingDatabases.set(false);
