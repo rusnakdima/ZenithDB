@@ -3,6 +3,7 @@ import { TauriBridgeService } from "./tauri-bridge.service";
 import { RequestCancellationService } from "./request-cancellation.service";
 import { ResponseSizeGuardService } from "./response-size-guard.service";
 import { DataStoreService } from "@app/services/core/data-store.service";
+import { ConnectionsApiService } from "@shared/services/connections-api.service";
 import { ToastService } from "@services/toast.service";
 import { ErrorHandlerService } from "@shared/services/error-handler.service";
 import {
@@ -32,6 +33,7 @@ export class ApiProvider {
   private responseSizeGuard = inject(ResponseSizeGuardService);
 
   private dataStore = inject(DataStoreService);
+  private connectionsApi = inject(ConnectionsApiService);
   private toastService: ToastService | null = null;
   private errorHandler = inject(ErrorHandlerService);
 
@@ -122,7 +124,7 @@ export class ApiProvider {
       "saveConnection",
       this.errorHandler
     );
-    await this.listConnections();
+    await this.connectionsApi.listConnectionsWithRefresh();
     return id;
   }
 
@@ -138,6 +140,7 @@ export class ApiProvider {
       undefined
     );
     this.dataStore.removeConnection(id);
+    await this.connectionsApi.listConnectionsWithRefresh();
   }
 
   async testConnection(config: TestConnectionConfig): Promise<ConnectionHealth> {
@@ -354,6 +357,7 @@ export class ApiProvider {
       "updateConnection",
       this.errorHandler
     );
+    await this.connectionsApi.listConnectionsWithRefresh();
   }
 
   async renameCollection(connId: string, oldName: string, newName: string): Promise<void> {

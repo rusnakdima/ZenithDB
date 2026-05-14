@@ -8,7 +8,6 @@ export interface ProviderFormData {
   username: string;
   password: string;
   database: string;
-  behavior: string;
 }
 
 export function parseProviderConfig(config: any): ProviderFormData {
@@ -20,7 +19,6 @@ export function parseProviderConfig(config: any): ProviderFormData {
     username: "",
     password: "",
     database: "",
-    behavior: "folders_as_databases",
   };
 
   if (!config) return result;
@@ -28,9 +26,6 @@ export function parseProviderConfig(config: any): ProviderFormData {
   switch (config.type) {
     case "Json":
       result.path = config.path || "";
-      if (config.behavior) {
-        result.behavior = config.behavior;
-      }
       break;
     case "Sqlite":
       result.path = config.path || "";

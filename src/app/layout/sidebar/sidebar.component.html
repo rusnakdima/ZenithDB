@@ -145,7 +145,9 @@
         <div class="sidebar-empty-state">
           <mat-icon fontIcon="link_off" class="mb-2 h-12! w-12! text-xl!" />
           <p>No connections</p>
-          <a routerLink="/connections/new">Add Connection</a>
+          <a routerLink="/connections" class="sidebar-empty-cta" (click)="openNewConnection()"
+            >Add Connection</a
+          >
         </div>
       }
     </div>
