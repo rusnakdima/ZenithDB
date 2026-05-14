@@ -81,8 +81,10 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
   providerIcon = signal("dns");
 
   private routeSub: Subscription | null = null;
+  private loadController: AbortController | null = null;
 
   async ngOnInit() {
+    console.log("[ConnectionDetail] ngOnInit started, id:", this.connectionId());
     this.routeSub = this.route.paramMap
       .pipe(
         debounceTime(300),
@@ -90,22 +92,20 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
       )
       .subscribe(async (params) => {
         const id = params.get("id");
+        console.log("[ConnectionDetail] route params received, id:", id);
         if (id && id !== "new") {
           this.connectionId.set(id);
+          console.log("[ConnectionDetail] connectionId set to:", id);
           const connections = this.connectionsApi.getConnections();
+          console.log("[ConnectionDetail] got connections, count:", connections.length);
           const conn = connections.find((c) => c.id === id);
+          console.log("[ConnectionDetail] found conn:", conn?.name);
           if (conn) {
             this.connectionName.set(conn.name);
             this.provider.set(conn.provider);
             this.connState.setActiveConnection(conn);
-            try {
-              const fullConn = await this.db.getConnection(id);
-              this.fullConfig.set(fullConn);
-            } catch (e) {
-              this.errorHandler.handleError(e, "Loading full config");
-            }
-
-            await this.loadConnectionDetails();
+            console.log("[ConnectionDetail] state set, about to skip Tauri calls");
+            // All Tauri calls disabled - just set basic state
           }
         } else {
           this.connectionId.set(this.connState.activeConnectionId());
@@ -113,6 +113,7 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
           this.provider.set(this.connState.activeProvider());
           this.fullConfig.set(this.connState.activeConnectionConfig());
         }
+        console.log("[ConnectionDetail] ngOnInit complete");
       });
   }
 
@@ -192,7 +193,7 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
   }
 
   async refresh() {
-    await this.loadConnectionDetails();
+    // await this.loadConnectionDetails();
   }
 
   async deleteConnection() {
@@ -249,7 +250,7 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
     try {
       await this.decentralizationApi.saveDatabase(connId, data.name, data.path || undefined);
       this.showAddDbModal.set(false);
-      await this.loadConnectionDetails();
+      // await this.loadConnectionDetails();
     } catch (e) {
       this.errorHandler.handleError(e, "Adding database");
     } finally {
@@ -287,7 +288,7 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
         await this.decentralizationApi.saveDatabase(connId, newName, dbToEdit.path || undefined);
       }
       this.cancelEditDb();
-      await this.loadConnectionDetails();
+      // await this.loadConnectionDetails();
     } catch (e) {
       this.errorHandler.handleError(e, "Renaming database");
       this.cancelEditDb();
@@ -311,7 +312,7 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
       if (dbToDelete) {
         await this.decentralizationApi.deleteDatabase(dbToDelete.id);
       }
-      await this.loadConnectionDetails();
+      // await this.loadConnectionDetails();
     } catch (e) {
       this.errorHandler.handleError(e, "Deleting database");
     }

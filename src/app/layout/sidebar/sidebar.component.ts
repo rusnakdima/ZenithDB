@@ -106,11 +106,13 @@ export class SidebarComponent implements OnInit {
   private routeEffect = effect(() => {
     const dbName = this.activeDatabaseName();
     const connId = this.activeConnectionId();
-    if (dbName && connId) {
-      this.expandDatabaseForRoute(connId, dbName);
-    } else if (!dbName && connId && connId !== "new") {
-      this.loadConnectionForRoute(connId);
-    }
+    console.log("[Sidebar] routeEffect triggered, connId:", connId, "dbName:", dbName);
+    // TEMPORARILY DISABLED TO TEST FREEZE
+    // if (dbName && connId) {
+    //   this.expandDatabaseForRoute(connId, dbName);
+    // } else if (!dbName && connId && connId !== "new") {
+    //   this.loadConnectionForRoute(connId);
+    // }
   });
 
   ngOnInit() {
@@ -185,13 +187,16 @@ export class SidebarComponent implements OnInit {
   }
 
   async loadConnectionForRoute(connId: string) {
+    console.log("[Sidebar] loadConnectionForRoute called with:", connId);
     if (this.isLoadingConnectionRoute() || this.isExpandingRoute() || this.isLoadingDatabases) {
+      console.log("[Sidebar] loadConnectionForRoute early return - already loading");
       return;
     }
     this.isLoadingConnectionRoute.set(true);
     try {
       const conn = this.dataStore.getConnections().find((c) => c.id === connId);
       if (!conn) {
+        console.log("[Sidebar] loadConnectionForRoute - conn not found");
         this.isLoadingConnectionRoute.set(false);
         return;
       }
@@ -207,7 +212,9 @@ export class SidebarComponent implements OnInit {
       if (this.connState.activeConnectionId() !== connId) {
         this.connState.setActiveConnection(conn);
       }
+      console.log("[Sidebar] loadConnectionForRoute about to call loadDatabases");
       await this.loadDatabases(connId);
+      console.log("[Sidebar] loadConnectionForRoute completed");
     } finally {
       this.isLoadingConnectionRoute.set(false);
     }
@@ -285,16 +292,21 @@ export class SidebarComponent implements OnInit {
   }
 
   async loadDatabases(connId: string) {
+    console.log("[Sidebar] loadDatabases called with:", connId);
     if (this.isLoadingDatabases) {
+      console.log("[Sidebar] loadDatabases early return - already loading");
       return;
     }
     if (this.connState.activeConnectionId() !== connId) {
+      console.log("[Sidebar] loadDatabases early return - connId mismatch");
       return;
     }
     this.isLoadingDatabases = true;
     try {
       this.loadingDatabases.set(true);
+      console.log("[Sidebar] loadDatabases about to call getDatabases");
       const databases = this.decentralizationApi.getDatabases(connId);
+      console.log("[Sidebar] loadDatabases got databases:", databases.length);
       if (this.connState.activeConnectionId() !== connId) {
         return;
       }
@@ -305,7 +317,9 @@ export class SidebarComponent implements OnInit {
         children: [],
       }));
       this.databases.set(dbNodes);
+      console.log("[Sidebar] loadDatabases completed");
     } catch (e) {
+      console.error("[Sidebar] loadDatabases error:", e);
       this.errorHandler.handleError(e, "Loading databases");
       this.databases.set([]);
     } finally {

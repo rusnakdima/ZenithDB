@@ -72,23 +72,23 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy {
           this.databaseName.set(dbName);
 
           try {
-            const fullConfig = await this.db.getConnection(id);
-            if (fullConfig?.config?.config) {
-              const connConfig = fullConfig.config.config;
-              this.connectionName.set(fullConfig.config.name);
-              this.provider.set(connConfig.type);
-              this.connState.setActiveConnection({
-                id: fullConfig.id,
-                name: fullConfig.config.name,
-                provider: connConfig.type,
-                status: "connected",
-              });
-            }
+            // const fullConfig = await this.db.getConnection(id);
+            // if (fullConfig?.config?.config) {
+            //   const connConfig = fullConfig.config.config;
+            //   this.connectionName.set(fullConfig.config.name);
+            //   this.provider.set(connConfig.type);
+            //   this.connState.setActiveConnection({
+            //     id: fullConfig.id,
+            //     name: fullConfig.config.name,
+            //     provider: connConfig.type,
+            //     status: "connected",
+            //   });
+            // }
           } catch (e) {
             this.errorHandler.handleError(e, "Loading connection details");
           }
 
-          await this.loadCollections();
+          // await this.loadCollections();
         }
       });
   }
