@@ -19,8 +19,6 @@ pub enum ConnectionConfigEnum {
   Json {
     name: String,
     path: String,
-    #[serde(default = "default_json_behavior")]
-    behavior: String,
   },
   Mongo {
     name: String,
@@ -45,10 +43,6 @@ pub enum ConnectionConfigEnum {
     name: String,
     uri: String,
   },
-}
-
-fn default_json_behavior() -> String {
-  "folders_as_databases".to_string()
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]

@@ -83,33 +83,19 @@ pub async fn list_databases(conn_id: &str) -> Result<Vec<DatabaseMeta>, String> 
   let entry = get_connection_entry(conn_id).await?;
 
   match &entry.config.config {
-    ConnectionConfigEnum::Json { path, behavior, .. } => {
+    ConnectionConfigEnum::Json { path, .. } => {
       let provider = NosqlOrmAdapter::create_provider(&entry.config.config).await?;
       let databases = provider.list_databases().await?;
-      match behavior.as_str() {
-        "files_as_collections" => Ok(databases),
-        "folders_as_databases" | "mixed" => {
-          if databases.is_empty() {
-            let path_obj = std::path::Path::new(path).to_path_buf();
-            let folder_name = path_obj
-              .file_name()
-              .and_then(|n| n.to_str())
-              .unwrap_or("root")
-              .to_string();
-            let count = count_json_files_in_dir(&path_obj).await;
-            Ok(vec![DatabaseMeta {
-              name: folder_name,
-              size_bytes: None,
-              table_count: Some(count),
-            }])
-          } else {
-            Ok(databases)
-          }
-        }
-        _ => Ok(databases),
-      }
+      Ok(databases)
     }
-    ConnectionConfigEnum::Sqlite { .. } => Ok(vec![DatabaseMeta::from_name("default")]),
+    ConnectionConfigEnum::Sqlite { path, .. } => {
+      let db_name = std::path::Path::new(path)
+        .file_stem()
+        .and_then(|n| n.to_str())
+        .unwrap_or("database")
+        .to_string();
+      Ok(vec![DatabaseMeta::from_name(&db_name)])
+    }
     ConnectionConfigEnum::Redis { .. } => Ok(vec![DatabaseMeta::from_name("default")]),
     ConnectionConfigEnum::Mongo { uri, .. } => {
       let provider = crate::commands::provider::create_mongo_provider(uri, "admin").await?;
