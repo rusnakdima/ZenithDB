@@ -7,6 +7,18 @@ use crate::dispatch_provider;
 use nosql_orm::prelude::*;
 use serde::{Deserialize, Serialize};
 
+const MAX_FILES_PER_DIR: usize = 10_000;
+const MAX_COLLECTIONS_TOTAL: usize = 50_000;
+const MAX_DEPTH: usize = 5;
+const SCAN_TIMEOUT_SECS: u64 = 30;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CollectionListResult {
+  pub collections: Vec<CollectionMeta>,
+  pub has_more: bool,
+  pub total_count: usize,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CollectionMeta {
   pub name: String,
@@ -47,48 +59,49 @@ pub struct CollectionStats {
 pub async fn collection_list(
   conn_id: String,
   db_name: Option<String>,
-) -> Result<Vec<CollectionMeta>, String> {
+  offset: Option<usize>,
+  limit: Option<usize>,
+) -> Result<CollectionListResult, String> {
   validate_conn_id(&conn_id)?;
   let entry = get_connection_entry(&conn_id).await?;
+  let offset = offset.unwrap_or(0);
+  let limit = limit.unwrap_or(10);
 
   match &entry.config.config {
     crate::commands::connection::ConnectionConfigEnum::Json { path, .. } => {
       let path_obj = std::path::Path::new(path).to_path_buf();
       if !path_obj.is_dir() {
-        return Ok(Vec::new());
+        return Ok(CollectionListResult {
+          collections: Vec::new(),
+          has_more: false,
+          total_count: 0,
+        });
       }
 
       if let Some(db_name) = db_name {
         let db_path = path_obj.join(&db_name);
-        let collections = list_json_files_in_dir(db_path).await?;
-        Ok(collections)
+        let result = list_json_files_in_dir(db_path, offset, limit).await?;
+        Ok(result)
       } else {
-        let mut all_collections: Vec<CollectionMeta> = Vec::new();
-        let mut entries = match tokio::fs::read_dir(&path_obj).await {
-          Ok(e) => e,
-          Err(_) => return Ok(Vec::new()),
-        };
-
-        while let Some(entry) = entries.next_entry().await.map_err_string()? {
-          let entry_path = entry.path();
-          if entry_path.is_dir() {
-            let collections = list_json_files_in_dir(entry_path).await?;
-            all_collections.extend(collections);
-          }
-        }
-        Ok(all_collections)
+        let result = list_all_json_collections_recursive(path_obj, offset, limit).await?;
+        Ok(result)
       }
     }
     _ => {
       dispatch_provider!(entry, provider => {
-          let collections = provider.list_collections().await.map_err_string()?;
-          Ok(collections
+          let all_collections = provider.list_collections().await.map_err_string()?;
+          let total_count = all_collections.len();
+          let collections: Vec<CollectionMeta> = all_collections
               .into_iter()
+              .skip(offset)
+              .take(limit)
               .map(|c| CollectionMeta {
                   name: c.name,
                   count: c.document_count,
               })
-              .collect())
+              .collect();
+          let has_more = offset + limit < total_count;
+          Ok(CollectionListResult { collections, has_more, total_count })
       })
     }
   }
@@ -197,61 +210,124 @@ pub async fn collection_rename(
 
 async fn list_all_json_collections_recursive(
   path_obj: std::path::PathBuf,
-) -> Result<Vec<CollectionMeta>, String> {
-  let mut collections: Vec<CollectionMeta> = Vec::new();
-  let mut dirs_to_scan: Vec<std::path::PathBuf> = vec![path_obj];
+  offset: usize,
+  limit: usize,
+) -> Result<CollectionListResult, String> {
+  let timeout_result =
+    tokio::time::timeout(std::time::Duration::from_secs(SCAN_TIMEOUT_SECS), async {
+      let mut collections: Vec<CollectionMeta> = Vec::new();
+      let mut dirs_to_scan: Vec<(std::path::PathBuf, usize)> = vec![(path_obj, 0)];
+      let mut total_count = 0usize;
 
-  while let Some(current_dir) = dirs_to_scan.pop() {
-    let mut entries = match tokio::fs::read_dir(&current_dir).await {
-      Ok(e) => e,
-      Err(_) => continue,
-    };
+      while let Some((current_dir, depth)) = dirs_to_scan.pop() {
+        if depth >= MAX_DEPTH {
+          continue;
+        }
 
-    while let Some(entry) = entries.next_entry().await.map_err_string()? {
-      let entry_path = entry.path();
+        let mut entries = match tokio::fs::read_dir(&current_dir).await {
+          Ok(e) => e,
+          Err(_) => continue,
+        };
 
-      if entry_path.is_dir() {
-        dirs_to_scan.push(entry_path);
-      } else if entry_path.extension().is_some_and(|ext| ext == "json") {
-        let name = entry
-          .file_name()
-          .into_string()
-          .ok()
-          .map(|n| n.trim_end_matches(".json").to_string());
+        while let Some(entry) = entries.next_entry().await.map_err_string()? {
+          let entry_path = entry.path();
 
-        if let Some(name) = name {
-          collections.push(CollectionMeta { name, count: 0 });
+          if entry_path.is_dir() {
+            dirs_to_scan.push((entry_path, depth + 1));
+          } else if entry_path.extension().is_some_and(|ext| ext == "json") {
+            total_count += 1;
+            if total_count <= MAX_COLLECTIONS_TOTAL && collections.len() < limit * 2 {
+              let name = entry
+                .file_name()
+                .into_string()
+                .ok()
+                .map(|n| n.trim_end_matches(".json").to_string());
+
+              if let Some(name) = name {
+                collections.push(CollectionMeta { name, count: 0 });
+              }
+            }
+          }
         }
       }
-    }
-  }
 
-  Ok(collections)
+      collections.sort_by(|a, b| a.name.cmp(&b.name));
+      let total = collections.len();
+      let has_more = offset + limit < total_count.min(MAX_COLLECTIONS_TOTAL);
+      let result = collections.into_iter().skip(offset).take(limit).collect();
+
+      Ok(CollectionListResult {
+        collections: result,
+        has_more,
+        total_count: total_count.min(MAX_COLLECTIONS_TOTAL),
+      })
+    })
+    .await;
+
+  match timeout_result {
+    Ok(Ok(result)) => Ok(result),
+    Ok(Err(e)) => Err(e),
+    Err(_) => Err("Collection listing timed out".to_string()),
+  }
 }
 
 async fn list_json_files_in_dir(
   path_obj: std::path::PathBuf,
-) -> Result<Vec<CollectionMeta>, String> {
-  let mut collections: Vec<CollectionMeta> = Vec::new();
-  let mut entries = match tokio::fs::read_dir(&path_obj).await {
-    Ok(e) => e,
-    Err(_) => return Ok(Vec::new()),
-  };
+  offset: usize,
+  limit: usize,
+) -> Result<CollectionListResult, String> {
+  let timeout_result =
+    tokio::time::timeout(std::time::Duration::from_secs(SCAN_TIMEOUT_SECS), async {
+      let mut entries = match tokio::fs::read_dir(&path_obj).await {
+        Ok(e) => e,
+        Err(_) => {
+          return Ok(CollectionListResult {
+            collections: Vec::new(),
+            has_more: false,
+            total_count: 0,
+          })
+        }
+      };
 
-  while let Some(entry) = entries.next_entry().await.map_err_string()? {
-    let entry_path = entry.path();
-    if entry_path.is_file() && entry_path.extension().is_some_and(|ext| ext == "json") {
-      let file_name = entry
-        .file_name()
-        .into_string()
-        .ok()
-        .map(|n| n.trim_end_matches(".json").to_string());
+      let mut all_collections: Vec<CollectionMeta> = Vec::new();
 
-      if let Some(name) = file_name {
-        collections.push(CollectionMeta { name, count: 0 });
+      while let Some(entry) = entries.next_entry().await.map_err_string()? {
+        let entry_path = entry.path();
+        if entry_path.is_file() && entry_path.extension().is_some_and(|ext| ext == "json") {
+          if all_collections.len() < MAX_FILES_PER_DIR {
+            let file_name = entry
+              .file_name()
+              .into_string()
+              .ok()
+              .map(|n| n.trim_end_matches(".json").to_string());
+
+            if let Some(name) = file_name {
+              all_collections.push(CollectionMeta { name, count: 0 });
+            }
+          }
+        }
       }
-    }
-  }
 
-  Ok(collections)
+      all_collections.sort_by(|a, b| a.name.cmp(&b.name));
+      let total_count = all_collections.len();
+      let has_more = offset + limit < total_count;
+      let collections = all_collections
+        .into_iter()
+        .skip(offset)
+        .take(limit)
+        .collect();
+
+      Ok(CollectionListResult {
+        collections,
+        has_more,
+        total_count,
+      })
+    })
+    .await;
+
+  match timeout_result {
+    Ok(Ok(result)) => Ok(result),
+    Ok(Err(e)) => Err(e),
+    Err(_) => Err("Collection listing timed out".to_string()),
+  }
 }

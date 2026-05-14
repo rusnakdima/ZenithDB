@@ -7,6 +7,17 @@ use crate::infrastructure::nosql_orm_adapter::validate_safe_path;
 use crate::infrastructure::nosql_orm_adapter::NosqlOrmAdapter;
 use nosql_orm::prelude::*;
 
+const MAX_DIRS_PER_LEVEL: usize = 10;
+const MAX_FILES_PER_DIR: usize = 10_000;
+const SCAN_TIMEOUT_SECS: u64 = 30;
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct DatabaseListResult {
+  pub databases: Vec<DatabaseMeta>,
+  pub has_more: bool,
+  pub total_count: usize,
+}
+
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct DatabaseMeta {
   pub name: String,
@@ -35,39 +46,47 @@ fn parse_database_rows(rows: &[Vec<serde_json::Value>]) -> Vec<DatabaseMeta> {
 }
 
 #[tauri::command]
-pub async fn database_list(conn_id: String) -> Result<Vec<DatabaseMeta>, String> {
+pub async fn database_list(
+  conn_id: String,
+  offset: Option<usize>,
+  limit: Option<usize>,
+) -> Result<DatabaseListResult, String> {
   validate_conn_id(&conn_id)?;
   let entry = get_connection_entry(&conn_id).await?;
+  let offset = offset.unwrap_or(0);
+  let limit = limit.unwrap_or(MAX_DIRS_PER_LEVEL);
 
   match &entry.config.config {
-    ConnectionConfigEnum::Json { path, behavior, .. } => {
+    ConnectionConfigEnum::Json { path, .. } => {
       let path_obj = std::path::Path::new(path).to_path_buf();
       if !path_obj.is_dir() {
-        return Ok(Vec::new());
+        return Ok(DatabaseListResult {
+          databases: Vec::new(),
+          has_more: false,
+          total_count: 0,
+        });
       }
 
-      match behavior.as_str() {
-        "files_as_collections" => {
-          let folder_name = path_obj
-            .file_name()
-            .and_then(|n| n.to_str())
-            .unwrap_or("root")
-            .to_string();
-          let count = count_json_files_in_dir(&path_obj).await;
-          Ok(vec![DatabaseMeta {
-            name: folder_name,
-            size_bytes: None,
-            table_count: Some(count),
-          }])
-        }
-        _ => {
-          let databases = list_json_databases(path_obj.clone()).await?;
-          Ok(databases)
-        }
-      }
+      let result = list_json_databases(path_obj.clone(), offset, limit).await?;
+      Ok(result)
     }
-    ConnectionConfigEnum::Sqlite { .. } => Ok(vec![DatabaseMeta::from_name("default")]),
-    ConnectionConfigEnum::Redis { .. } => Ok(vec![DatabaseMeta::from_name("default")]),
+    ConnectionConfigEnum::Sqlite { path, .. } => {
+      let db_name = std::path::Path::new(path)
+        .file_stem()
+        .and_then(|n| n.to_str())
+        .unwrap_or("database")
+        .to_string();
+      Ok(DatabaseListResult {
+        databases: vec![DatabaseMeta::from_name(&db_name)],
+        has_more: false,
+        total_count: 1,
+      })
+    }
+    ConnectionConfigEnum::Redis { .. } => Ok(DatabaseListResult {
+      databases: vec![DatabaseMeta::from_name("default")],
+      has_more: false,
+      total_count: 1,
+    }),
     ConnectionConfigEnum::Mongo { uri, .. } => {
       let provider = crate::commands::provider::create_mongo_provider(uri, "admin").await?;
       let result = provider
@@ -86,7 +105,14 @@ pub async fn database_list(conn_id: String) -> Result<Vec<DatabaseMeta>, String>
           }
         }
       }
-      Ok(dbs)
+      let total_count = dbs.len();
+      let has_more = offset + dbs.len() < total_count;
+      let dbs = dbs.into_iter().skip(offset).take(limit).collect();
+      Ok(DatabaseListResult {
+        databases: dbs,
+        has_more,
+        total_count,
+      })
     }
     ConnectionConfigEnum::Postgres { uri, .. } => {
       let provider = crate::commands::provider::create_postgres_provider(uri).await?;
@@ -97,7 +123,15 @@ pub async fn database_list(conn_id: String) -> Result<Vec<DatabaseMeta>, String>
         )
         .await
         .map_err_string()?;
-      Ok(parse_database_rows(&result.rows))
+      let all_dbs = parse_database_rows(&result.rows);
+      let total_count = all_dbs.len();
+      let has_more = offset + limit < total_count;
+      let dbs = all_dbs.into_iter().skip(offset).take(limit).collect();
+      Ok(DatabaseListResult {
+        databases: dbs,
+        has_more,
+        total_count,
+      })
     }
     ConnectionConfigEnum::MySql { uri, .. } => {
       let provider = crate::commands::provider::create_mysql_provider(uri).await?;
@@ -105,7 +139,15 @@ pub async fn database_list(conn_id: String) -> Result<Vec<DatabaseMeta>, String>
         .execute_raw("SHOW DATABASES", vec![])
         .await
         .map_err_string()?;
-      Ok(parse_database_rows(&result.rows))
+      let all_dbs = parse_database_rows(&result.rows);
+      let total_count = all_dbs.len();
+      let has_more = offset + limit < total_count;
+      let dbs = all_dbs.into_iter().skip(offset).take(limit).collect();
+      Ok(DatabaseListResult {
+        databases: dbs,
+        has_more,
+        total_count,
+      })
     }
   }
 }
@@ -242,52 +284,95 @@ pub async fn database_delete(conn_id: String, name: String) -> Result<(), String
   }
 }
 
-async fn list_json_databases(path_obj: std::path::PathBuf) -> Result<Vec<DatabaseMeta>, String> {
-  let mut entries = tokio::fs::read_dir(&path_obj).await.map_err_string()?;
-  let mut databases: Vec<DatabaseMeta> = Vec::new();
-  let mut has_root_json = false;
+async fn list_json_databases(
+  path_obj: std::path::PathBuf,
+  offset: usize,
+  limit: usize,
+) -> Result<DatabaseListResult, String> {
+  let folder_name = path_obj
+    .file_name()
+    .and_then(|n| n.to_str())
+    .unwrap_or("database")
+    .to_string();
 
-  while let Some(entry) = entries.next_entry().await.map_err_string()? {
-    let entry_path = entry.path();
-    if entry_path.is_dir() {
-      let name = entry.file_name().into_string().unwrap_or_default();
-      let collection_count = count_json_files_in_dir(&entry_path).await;
-      databases.push(DatabaseMeta {
-        name,
-        size_bytes: None,
-        table_count: Some(collection_count),
-      });
-    } else if entry_path.extension().is_some_and(|ext| ext == "json") {
-      has_root_json = true;
-    }
+  let timeout_result =
+    tokio::time::timeout(std::time::Duration::from_secs(SCAN_TIMEOUT_SECS), async {
+      let mut entries = tokio::fs::read_dir(&path_obj).await.map_err_string()?;
+      let mut all_databases: Vec<DatabaseMeta> = Vec::new();
+      let mut has_root_json = false;
+
+      while let Some(entry) = entries.next_entry().await.map_err_string()? {
+        let entry_path = entry.path();
+        if entry_path.is_dir() {
+          if all_databases.len() < MAX_DIRS_PER_LEVEL * 2 || all_databases.len() < 100 {
+            let name = entry.file_name().into_string().unwrap_or_default();
+            let collection_count = count_json_files_in_dir(&entry_path).await;
+            all_databases.push(DatabaseMeta {
+              name,
+              size_bytes: None,
+              table_count: Some(collection_count),
+            });
+          }
+        } else if entry_path.extension().is_some_and(|ext| ext == "json") {
+          has_root_json = true;
+        }
+      }
+
+      if has_root_json {
+        all_databases.insert(
+          0,
+          DatabaseMeta {
+            name: folder_name.clone(),
+            size_bytes: None,
+            table_count: None,
+          },
+        );
+      }
+
+      all_databases.sort_by(|a, b| a.name.cmp(&b.name));
+      let total_count = all_databases.len();
+      let has_more = offset + limit < total_count;
+      let databases = all_databases.into_iter().skip(offset).take(limit).collect();
+
+      Ok(DatabaseListResult {
+        databases,
+        has_more,
+        total_count,
+      })
+    })
+    .await;
+
+  match timeout_result {
+    Ok(Ok(result)) => Ok(result),
+    Ok(Err(e)) => Err(e),
+    Err(_) => Err("Database listing timed out".to_string()),
   }
-
-  if has_root_json {
-    databases.insert(
-      0,
-      DatabaseMeta {
-        name: "root".to_string(),
-        size_bytes: None,
-        table_count: None,
-      },
-    );
-  }
-
-  databases.sort_by(|a, b| a.name.cmp(&b.name));
-  Ok(databases)
 }
 
 async fn count_json_files_in_dir(path: &std::path::Path) -> u64 {
-  let mut entries = match tokio::fs::read_dir(path).await {
-    Ok(e) => e,
-    Err(_) => return 0,
-  };
+  let timeout_result =
+    tokio::time::timeout(std::time::Duration::from_secs(SCAN_TIMEOUT_SECS), async {
+      let mut entries = match tokio::fs::read_dir(path).await {
+        Ok(e) => e,
+        Err(_) => return 0u64,
+      };
 
-  let mut count = 0u64;
-  while let Ok(Some(entry)) = entries.next_entry().await {
-    if entry.path().extension().is_some_and(|ext| ext == "json") {
-      count += 1;
-    }
+      let mut count = 0u64;
+      while let Ok(Some(entry)) = entries.next_entry().await {
+        if count >= MAX_FILES_PER_DIR as u64 {
+          break;
+        }
+        if entry.path().extension().is_some_and(|ext| ext == "json") {
+          count += 1;
+        }
+      }
+      count
+    })
+    .await;
+
+  match timeout_result {
+    Ok(Ok(c)) => c,
+    Ok(Err(_)) => 0,
+    Err(_) => 0,
   }
-  count
 }
