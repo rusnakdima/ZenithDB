@@ -47,12 +47,12 @@ fn parse_database_rows(rows: &[Vec<serde_json::Value>]) -> Vec<DatabaseMeta> {
 
 #[tauri::command]
 pub async fn database_list(
-  conn_id: String,
+  connId: String,
   offset: Option<usize>,
   limit: Option<usize>,
 ) -> Result<DatabaseListResult, String> {
-  validate_conn_id(&conn_id)?;
-  let entry = get_connection_entry(&conn_id).await?;
+  validate_conn_id(&connId)?;
+  let entry = get_connection_entry(&connId).await?;
   let offset = offset.unwrap_or(0);
   let limit = limit.unwrap_or(MAX_DIRS_PER_LEVEL);
 

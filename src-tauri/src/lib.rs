@@ -23,6 +23,7 @@ use commands::system::get_system_status;
 
 use commands::entities::collection::routes as collection_routes;
 use commands::entities::connection::routes as connection_routes;
+use commands::entities::database::routes as database_routes;
 use commands::entities::query::routes as query_routes;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -77,6 +78,7 @@ pub fn run() {
       collection_routes::collection_create,
       collection_routes::collection_drop,
       collection_routes::collection_rename,
+      database_routes::database_list,
       query_routes::query_execute,
       query_routes::query_save,
       query_routes::query_delete,
