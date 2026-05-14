@@ -23,7 +23,7 @@ export class CollectionsApiService extends CacheService {
       return existing.catch(() => []);
     }
 
-    const promise = this.fetchCollections(connectionId).finally(() => {
+    const promise = this.fetchCollections(connectionId, dbName).finally(() => {
       this.inFlightCollections.delete(connectionId);
     });
 
@@ -32,7 +32,7 @@ export class CollectionsApiService extends CacheService {
   }
 
   async listCollectionsWithRefresh(connectionId: string): Promise<CollectionMeta[]> {
-    const result = await this.fetchCollections(connectionId);
+    const result = await this.fetchCollections(connectionId, undefined, true);
     this.notifyRefresh(connectionId);
     return result;
   }
@@ -55,18 +55,30 @@ export class CollectionsApiService extends CacheService {
     }
   }
 
-  private async fetchCollections(connectionId: string): Promise<CollectionMeta[]> {
-    const cacheKey = `collections:${connectionId}`;
+  private async fetchCollections(
+    connectionId: string,
+    dbName?: string,
+    refresh = false
+  ): Promise<CollectionMeta[]> {
+    const cacheKey = `collections:${connectionId}:${dbName || "all"}`;
     return this.getOrFetch(cacheKey, () =>
       this.tauriBridge
-        .invoke<CollectionMeta[]>("list_collections", { conn_id: connectionId })
+        .invoke<{ collections: CollectionMeta[]; has_more: boolean; total_count: number }>(
+          "list_collections",
+          {
+            conn_id: connectionId,
+            db_name: dbName,
+            offset: refresh ? 0 : undefined,
+            limit: refresh ? 10 : undefined,
+          }
+        )
         .then((result) => {
           this.collectionsSignal.update((map) => {
             const newMap = new Map(map);
-            newMap.set(connectionId, result);
+            newMap.set(connectionId, result.collections);
             return newMap;
           });
-          return result;
+          return result.collections;
         })
     );
   }

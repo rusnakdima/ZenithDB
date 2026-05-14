@@ -22,6 +22,15 @@ export class SchemaService {
     );
   }
 
+  async listCollectionsPaginated(
+    connId: string,
+    dbName?: string,
+    offset = 0,
+    limit = 10
+  ): Promise<{ collections: CollectionMeta[]; hasMore: boolean; totalCount: number }> {
+    return this.api.listCollectionsPaginated(connId, dbName, offset, limit);
+  }
+
   async createDatabase(name: string): Promise<void> {
     const connId = this.connectionState.activeConnectionId();
     return withConnectionAndLoading(

@@ -3,36 +3,41 @@ import { CacheService } from "@shared/services/cache.service";
 import { TauriBridgeService } from "@providers/tauri-bridge.service";
 import { DatabaseMetadata } from "@shared/models/connection.config";
 
+export interface DatabaseListResult {
+  databases: DatabaseMetadata[];
+  hasMore: boolean;
+  totalCount: number;
+}
+
 @Injectable({ providedIn: "root" })
 export class DecentralizationApiService extends CacheService {
   private databasesSignal = signal<Map<string, DatabaseMetadata[]>>(new Map());
   private refreshCallbacks = new Map<string, Set<() => void>>();
-  private inFlightDatabases = new Map<string, Promise<DatabaseMetadata[]>>();
+  private inFlightDatabases = new Map<string, Promise<DatabaseListResult>>();
   private tauri = inject(TauriBridgeService);
 
   getDatabases(connectionId: string): DatabaseMetadata[] {
     return this.databasesSignal().get(connectionId) ?? [];
   }
 
-  async listDatabases(connectionId: string): Promise<DatabaseMetadata[]> {
-    const cached = this.getDatabases(connectionId);
-    if (cached.length > 0) return cached;
-
+  async listDatabases(connectionId: string, offset = 0, limit = 10): Promise<DatabaseListResult> {
     const existing = this.inFlightDatabases.get(connectionId);
-    if (existing) {
-      return existing.catch(() => []);
+    if (existing && offset === 0) {
+      return existing.catch(() => ({ databases: [], hasMore: false, totalCount: 0 }));
     }
 
-    const promise = this.fetchDatabases(connectionId).finally(() => {
+    const promise = this.fetchDatabases(connectionId, offset, limit).finally(() => {
       this.inFlightDatabases.delete(connectionId);
     });
 
-    this.inFlightDatabases.set(connectionId, promise);
+    if (offset === 0) {
+      this.inFlightDatabases.set(connectionId, promise);
+    }
     return promise;
   }
 
-  async listDatabasesWithRefresh(connectionId: string): Promise<DatabaseMetadata[]> {
-    const result = await this.fetchDatabases(connectionId);
+  async listDatabasesWithRefresh(connectionId: string): Promise<DatabaseListResult> {
+    const result = await this.fetchDatabases(connectionId, 0, 10);
     this.notifyRefresh(connectionId);
     return result;
   }
@@ -60,7 +65,7 @@ export class DecentralizationApiService extends CacheService {
       path: path || null,
       metadata: null,
     });
-    await this.fetchDatabases(connId);
+    await this.fetchDatabases(connId, 0, 10);
     this.notifyRefresh(connId);
     return result;
   }
@@ -84,7 +89,7 @@ export class DecentralizationApiService extends CacheService {
 
     await this.tauri.invoke<void>("delete_database_metadata", { id });
     if (connId) {
-      await this.fetchDatabases(connId);
+      await this.fetchDatabases(connId, 0, 10);
       this.notifyRefresh(connId);
     }
   }
@@ -111,7 +116,7 @@ export class DecentralizationApiService extends CacheService {
       metadata: null,
     });
     const connId = result.connection_id;
-    await this.fetchDatabases(connId);
+    await this.fetchDatabases(connId, 0, 10);
     this.notifyRefresh(connId);
     return result;
   }
@@ -132,18 +137,35 @@ export class DecentralizationApiService extends CacheService {
     });
   }
 
-  private async fetchDatabases(connectionId: string): Promise<DatabaseMetadata[]> {
-    const cacheKey = `databases:${connectionId}`;
+  private async fetchDatabases(
+    connectionId: string,
+    offset: number,
+    limit: number
+  ): Promise<DatabaseListResult> {
+    const cacheKey = `databases:${connectionId}:${offset}:${limit}`;
     return this.getOrFetch(cacheKey, () =>
       this.tauri
-        .invoke<DatabaseMetadata[]>("list_databases_metadata", { connectionId })
+        .invoke<{
+          databases: DatabaseMetadata[];
+          has_more: boolean;
+          total_count: number;
+        }>("database_list", { conn_id: connectionId, offset, limit })
         .then((result) => {
           this.databasesSignal.update((map) => {
             const newMap = new Map(map);
-            newMap.set(connectionId, result);
+            const existing = newMap.get(connectionId) ?? [];
+            if (offset === 0) {
+              newMap.set(connectionId, result.databases);
+            } else {
+              newMap.set(connectionId, [...existing, ...result.databases]);
+            }
             return newMap;
           });
-          return result;
+          return {
+            databases: result.databases,
+            hasMore: result.has_more,
+            totalCount: result.total_count,
+          };
         })
     );
   }
