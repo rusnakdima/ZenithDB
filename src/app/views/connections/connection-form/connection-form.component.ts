@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit, OnDestroy, output } from "@angular/core";
+import { Component, inject, signal, OnInit, OnDestroy, output, effect } from "@angular/core";
 import { Router, ActivatedRoute } from "@angular/router";
 import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
@@ -19,6 +19,7 @@ import {
 } from "../connection-config-form/connection-config-form.component";
 import { ErrorHandlerService } from "@shared/services/error-handler.service";
 import { ToastService } from "@services/toast.service";
+import { ConnectionFormService } from "@shared/services/connection-form.service";
 
 @Component({
   selector: "app-connection-form",
@@ -32,10 +33,12 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
   private db = inject(DatabaseService);
   private connState = inject(ConnectionStateService);
   private errorHandler = inject(ErrorHandlerService);
-  private toast = inject(ToastService);
+  toast = inject(ToastService);
   providerUtils = inject(ProviderUtils);
   router = inject(Router);
   route = inject(ActivatedRoute);
+
+  connectionFormService = inject(ConnectionFormService);
 
   editingId: string | null = null;
   isEditing = signal(false);
@@ -57,25 +60,74 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
   testing = signal(false);
   saving = signal(false);
 
+  constructor() {
+    effect(() => {
+      const isOpen = this.connectionFormService.isOpen();
+      const editId = this.connectionFormService.editingId();
+      const isDup = this.connectionFormService.isDuplicate();
+
+      if (isOpen) {
+        if (editId) {
+          this.editingId = editId;
+          this.isEditing.set(true);
+          this.loadConnectionForEdit(editId);
+        } else {
+          this.editingId = null;
+          this.isEditing.set(false);
+          this.resetForm();
+        }
+        if (isDup && editId) {
+          this.loadConnectionForDuplicate(editId);
+        }
+      }
+    });
+  }
+
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get("id");
     if (id && id !== "new") {
-      this.editingId = id;
-      this.isEditing.set(true);
-      this.loadConnectionForEdit(id);
+      this.connectionFormService.openForEdit(id);
     }
 
     const duplicateId = this.route.snapshot.queryParamMap.get("duplicate");
     if (duplicateId) {
-      this.loadConnectionForDuplicate(duplicateId);
+      this.connectionFormService.openForDuplicate(duplicateId);
     }
   }
 
   ngOnDestroy() {}
 
+  private resetForm() {
+    this.provider = "json";
+    this.formData.set({
+      name: "",
+      path: "",
+      host: "",
+      port: "",
+      username: "",
+      password: "",
+      database: "",
+      behavior: "folders_as_databases",
+      useSsl: false,
+    });
+    this.testResult.set(null);
+  }
+
+  openNew() {
+    this.connectionFormService.openNew();
+  }
+
+  openForEdit(id: string) {
+    this.connectionFormService.openForEdit(id);
+  }
+
+  openForDuplicate(id: string) {
+    this.connectionFormService.openForDuplicate(id);
+  }
+
   onClose() {
     this.closed.emit();
-    this.router.navigate(["/connections"]);
+    this.connectionFormService.close();
   }
 
   private async loadConnectionForEdit(id: string) {

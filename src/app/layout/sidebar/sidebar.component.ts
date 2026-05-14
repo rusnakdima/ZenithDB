@@ -25,6 +25,7 @@ import { ConnectionsApiService } from "@shared/services/connections-api.service"
 import { CollectionsApiService } from "@shared/services/collections-api.service";
 import { HealthApiService } from "@shared/services/health-api.service";
 import { MetricsApiService } from "@shared/services/metrics-api.service";
+import { ConnectionFormService } from "@shared/services/connection-form.service";
 
 interface TreeNode {
   name: string;
@@ -54,6 +55,7 @@ export class SidebarComponent implements OnInit {
   dataStore = inject(DataStoreService);
   themeService = inject(ThemeService);
   private errorHandler = inject(ErrorHandlerService);
+  private connectionFormService = inject(ConnectionFormService);
   collectionSelected = output<string>();
 
   isStatsCollapsed = signal(true);
@@ -107,12 +109,11 @@ export class SidebarComponent implements OnInit {
     const dbName = this.activeDatabaseName();
     const connId = this.activeConnectionId();
     console.log("[Sidebar] routeEffect triggered, connId:", connId, "dbName:", dbName);
-    // TEMPORARILY DISABLED TO TEST FREEZE
-    // if (dbName && connId) {
-    //   this.expandDatabaseForRoute(connId, dbName);
-    // } else if (!dbName && connId && connId !== "new") {
-    //   this.loadConnectionForRoute(connId);
-    // }
+    if (dbName && connId) {
+      this.expandDatabaseForRoute(connId, dbName);
+    } else if (!dbName && connId && connId !== "new") {
+      this.loadConnectionForRoute(connId);
+    }
   });
 
   ngOnInit() {
@@ -229,7 +230,7 @@ export class SidebarComponent implements OnInit {
   }
 
   openNewConnection() {
-    this.router.navigate(["/connections/new"]);
+    this.connectionFormService.openNew();
   }
 
   getActiveConnectionName(): string {

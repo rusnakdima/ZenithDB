@@ -26,6 +26,7 @@ import { ConnectionModalComponent } from "@features/connections/connection-modal
 import { ConnectionsApiService } from "@shared/services/connections-api.service";
 import { MetricsApiService } from "@shared/services/metrics-api.service";
 import { ConfirmDialogComponent } from "@shared/components/confirm-dialog/confirm-dialog.component";
+import { ConnectionFormComponent } from "@views/connections/connection-form/connection-form.component";
 
 @Component({
   selector: "app-root",
@@ -41,6 +42,7 @@ import { ConfirmDialogComponent } from "@shared/components/confirm-dialog/confir
     MatIconModule,
     ConnectionModalComponent,
     ConfirmDialogComponent,
+    ConnectionFormComponent,
   ],
   templateUrl: "./app.html",
 })

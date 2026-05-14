@@ -9,6 +9,7 @@ import { ConfirmService } from "@shared/services/confirm.service";
 import { withErrorHandling } from "@shared/utils/error-handler.utils";
 import { ConnectionsApiService } from "@shared/services/connections-api.service";
 import { DatabaseService } from "@shared/services/database.service";
+import { ConnectionFormService } from "@shared/services/connection-form.service";
 
 @Component({
   selector: "app-connections",
@@ -24,6 +25,7 @@ export class ConnectionsComponent implements OnInit {
   private dataStore = inject(DataStoreService);
   private router = inject(Router);
   private confirm = inject(ConfirmService);
+  private connectionFormService = inject(ConnectionFormService);
 
   connections = computed(() => this.connectionsApi.getConnections());
 
@@ -59,12 +61,10 @@ export class ConnectionsComponent implements OnInit {
   }
 
   onEdit(connection: ConnectionSummary): void {
-    this.router.navigate(["/connections", connection.id, "edit"]);
+    this.connectionFormService.openForEdit(connection.id);
   }
 
   onDuplicate(connection: ConnectionSummary): void {
-    this.router.navigate(["/connections/new"], {
-      queryParams: { duplicate: connection.id },
-    });
+    this.connectionFormService.openForDuplicate(connection.id);
   }
 }

@@ -7,19 +7,21 @@ import {
   ShortcutCategory,
 } from "./keyboard-shortcuts.models";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
+import { ConnectionFormService } from "./connection-form.service";
 
 @Injectable({ providedIn: "root" })
 export class KeyboardShortcutsService {
   private router = inject(Router);
   private zone = inject(NgZone);
   private destroyRef = inject(DestroyRef);
+  private connectionFormService = inject(ConnectionFormService);
 
   private enabled = signal(true);
 
   shortcutsHelpVisible = signal(false);
 
   private shortcutActions: Record<string, () => void> = {
-    "new-connection": () => this.router.navigate(["/connections/new"]),
+    "new-connection": () => this.connectionFormService.openNew(),
     "quick-search": () => document.dispatchEvent(new CustomEvent("zenith:focus-search")),
     "open-settings": () => document.dispatchEvent(new CustomEvent("zenith:open-settings")),
     "show-shortcuts": () => this.shortcutsHelpVisible.set(true),

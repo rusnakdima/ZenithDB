@@ -104,8 +104,8 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
             this.connectionName.set(conn.name);
             this.provider.set(conn.provider);
             this.connState.setActiveConnection(conn);
-            console.log("[ConnectionDetail] state set, about to skip Tauri calls");
-            // All Tauri calls disabled - just set basic state
+            console.log("[ConnectionDetail] state set, loading connection details");
+            await this.loadConnectionDetails();
           }
         } else {
           this.connectionId.set(this.connState.activeConnectionId());
@@ -193,7 +193,7 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
   }
 
   async refresh() {
-    // await this.loadConnectionDetails();
+    await this.loadConnectionDetails();
   }
 
   async deleteConnection() {
@@ -201,6 +201,13 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
     if (await this.confirm.confirmDelete(this.connectionName()!)) {
       await this.db.deleteConnection(this.connectionId()!);
       this.disconnect();
+    }
+  }
+
+  editConnection() {
+    const connId = this.connectionId();
+    if (connId) {
+      this.router.navigate(["/connections", connId, "edit"]);
     }
   }
 
@@ -250,7 +257,7 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
     try {
       await this.decentralizationApi.saveDatabase(connId, data.name, data.path || undefined);
       this.showAddDbModal.set(false);
-      // await this.loadConnectionDetails();
+      await this.loadConnectionDetails();
     } catch (e) {
       this.errorHandler.handleError(e, "Adding database");
     } finally {
@@ -288,7 +295,7 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
         await this.decentralizationApi.saveDatabase(connId, newName, dbToEdit.path || undefined);
       }
       this.cancelEditDb();
-      // await this.loadConnectionDetails();
+      await this.loadConnectionDetails();
     } catch (e) {
       this.errorHandler.handleError(e, "Renaming database");
       this.cancelEditDb();
@@ -312,7 +319,7 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
       if (dbToDelete) {
         await this.decentralizationApi.deleteDatabase(dbToDelete.id);
       }
-      // await this.loadConnectionDetails();
+      await this.loadConnectionDetails();
     } catch (e) {
       this.errorHandler.handleError(e, "Deleting database");
     }

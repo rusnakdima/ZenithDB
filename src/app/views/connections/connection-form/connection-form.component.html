@@ -1,5 +1,5 @@
 <app-modal
-  [open]="true"
+  [open]="connectionFormService.isOpen()"
   [title]="isEditing() ? 'Edit Connection' : 'New Connection'"
   size="lg"
   [showFooter]="true"
