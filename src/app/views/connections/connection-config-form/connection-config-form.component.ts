@@ -11,7 +11,6 @@ export interface ConnectionFormData {
   username: string;
   password: string;
   database: string;
-  behavior: string;
   useSsl: boolean;
 }
 
@@ -31,7 +30,6 @@ export class ConnectionConfigFormComponent implements OnInit, OnChanges {
     username: "",
     password: "",
     database: "",
-    behavior: "folders_as_databases",
     useSsl: false,
   });
 
@@ -46,7 +44,6 @@ export class ConnectionConfigFormComponent implements OnInit, OnChanges {
     username: "",
     password: "",
     database: "",
-    behavior: "folders_as_databases",
     useSsl: false,
   };
 
@@ -63,8 +60,6 @@ export class ConnectionConfigFormComponent implements OnInit, OnChanges {
   ngOnChanges(changes: SimpleChanges): void {
     if (changes["initialData"] && !this.isFirstInit) {
       const newData = this.initialData();
-      const isJsonProvider = this.provider() === "json";
-
       this.data = {
         ...this.data,
         name: newData.name,
@@ -76,10 +71,6 @@ export class ConnectionConfigFormComponent implements OnInit, OnChanges {
         database: newData.database,
         useSsl: newData.useSsl,
       };
-
-      if (isJsonProvider) {
-        this.data.behavior = newData.behavior || "folders_as_databases";
-      }
     } else if (changes["provider"] && !this.isFirstInit) {
       this.resetDataForProvider();
     }
@@ -87,7 +78,6 @@ export class ConnectionConfigFormComponent implements OnInit, OnChanges {
 
   private resetDataForProvider(): void {
     const currentName = this.data.name;
-    const currentBehavior = this.data.behavior;
     this.data = {
       name: currentName,
       path: "",
@@ -96,7 +86,6 @@ export class ConnectionConfigFormComponent implements OnInit, OnChanges {
       username: "",
       password: "",
       database: "",
-      behavior: currentBehavior,
       useSsl: false,
     };
     this.setDefaultsForProvider();

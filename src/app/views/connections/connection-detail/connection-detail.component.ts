@@ -249,6 +249,11 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
     return p === "sqlite" || p === "json";
   }
 
+  isSingleDatabaseProvider(): boolean {
+    const p = this.provider();
+    return p === "sqlite" || p === "json";
+  }
+
   async onAddDbModalAdded(data: { name: string; path: string }) {
     const connId = this.connectionId();
     if (!connId) return;

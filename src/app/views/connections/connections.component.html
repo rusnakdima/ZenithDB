@@ -9,7 +9,7 @@
           Manage and monitor your database clusters across regions.
         </p>
       </div>
-      <a routerLink="/connections/new" class="connections-btn">
+      <a routerLink="/connections" class="connections-btn" (click)="openNewConnection()">
         <mat-icon fontIcon="add" class="h-6! w-5! text-xl!" /> New Connection
       </a>
     </div>
@@ -28,7 +28,7 @@
         </div>
         <h3 class="empty-title">No Connections Yet</h3>
         <p class="empty-description">Create your first database connection to get started.</p>
-        <a routerLink="/connections/new" class="connections-btn">
+        <a routerLink="/connections" class="connections-btn" (click)="openNewConnection()">
           <mat-icon fontIcon="add" class="h-6! w-5! text-xl!" /> Create Connection
         </a>
       </div>

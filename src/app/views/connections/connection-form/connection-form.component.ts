@@ -52,7 +52,6 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
     username: "",
     password: "",
     database: "",
-    behavior: "folders_as_databases",
     useSsl: false,
   });
 
@@ -107,7 +106,6 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
       username: "",
       password: "",
       database: "",
-      behavior: "folders_as_databases",
       useSsl: false,
     });
     this.testResult.set(null);
@@ -160,7 +158,6 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
         username: parsed.username || "",
         password: parsed.password || "",
         database: parsed.database || "",
-        behavior: parsed.behavior || "folders_as_databases",
         useSsl: false,
       });
     } catch (e) {
@@ -200,7 +197,6 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
         username: parsed.username || "",
         password: parsed.password || "",
         database: parsed.database || "",
-        behavior: parsed.behavior || "folders_as_databases",
         useSsl: false,
       });
     } catch (e) {
@@ -307,7 +303,6 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
             type: "Json",
             name: data.name,
             path: data.path,
-            behavior: data.behavior,
           },
         };
       case "sqlite":

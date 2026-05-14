@@ -67,4 +67,8 @@ export class ConnectionsComponent implements OnInit {
   onDuplicate(connection: ConnectionSummary): void {
     this.connectionFormService.openForDuplicate(connection.id);
   }
+
+  openNewConnection(): void {
+    this.connectionFormService.openNew();
+  }
 }
