@@ -2,6 +2,8 @@ use crate::commands::connection_entity::ConnectionEntity;
 use rusqlite::{params, Connection};
 use serde_json;
 use std::path::PathBuf;
+use std::sync::Arc;
+use tokio::sync::Mutex;
 
 pub struct ConnectionsDb {
   conn: Connection,
@@ -158,4 +160,19 @@ impl ConnectionsDb {
     let exists = stmt.exists(params![id]).map_err(|e| e.to_string())?;
     Ok(exists)
   }
+}
+
+static CONNECTIONS_DB: std::sync::OnceLock<Arc<Mutex<ConnectionsDb>>> = std::sync::OnceLock::new();
+
+pub async fn get_connections_db() -> Result<Arc<Mutex<ConnectionsDb>>, String> {
+  let db = CONNECTIONS_DB.get_or_init(|| {
+    Arc::new(Mutex::new(
+      ConnectionsDb::new().expect("Failed to create ConnectionsDb"),
+    ))
+  });
+  let db = db.clone();
+  let guard = db.lock().await;
+  guard.init().map_err(|e| e.to_string())?;
+  drop(guard);
+  Ok(db)
 }

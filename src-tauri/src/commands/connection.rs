@@ -1,10 +1,10 @@
 use crate::commands::connection_entity::ConnectionEntity;
-use crate::commands::connections_db::ConnectionsDb;
+use crate::commands::connections_db::get_connections_db;
 use crate::commands::decentralization::delete_connection_databases_metadata;
 use crate::commands::get_auth_context;
 use crate::commands::provider::{
-  create_json_provider, create_mongo_provider, create_mysql_provider, create_postgres_provider,
-  create_redis_provider, create_sqlite_provider,
+  create_mongo_provider, create_mysql_provider, create_postgres_provider, create_redis_provider,
+  create_sqlite_provider,
 };
 use crate::commands::validate_conn_id;
 use nosql_orm::prelude::*;
@@ -120,9 +120,11 @@ pub async fn save_connection(config: ConnectionConfig) -> Result<ConnectionId, S
   let type_str = get_type_string(&config);
 
   let entity = ConnectionEntity::new(id.clone(), type_str, config.name.clone(), config);
-  let db = ConnectionsDb::new()?;
-  db.init()?;
-  db.save(&entity)?;
+  let db = get_connections_db().await?;
+  let db = db.clone();
+  let guard = db.lock().await;
+  guard.save(&entity)?;
+  drop(guard);
 
   tracing::info!("Saved connection: {} ({})", id, entity.name);
   Ok(id)
@@ -135,9 +137,11 @@ pub async fn list_connections() -> Result<Vec<ConnectionSummary>, String> {
     return Err("Access denied".to_string());
   }
 
-  let db = ConnectionsDb::new()?;
-  db.init()?;
-  let entities = db.find_all()?;
+  let db = get_connections_db().await?;
+  let db = db.clone();
+  let guard = db.lock().await;
+  let entities = guard.find_all()?;
+  drop(guard);
 
   let summaries = entities
     .into_iter()
@@ -228,11 +232,13 @@ pub async fn test_connection_status(id: &str) -> Result<ConnectionSummary, Strin
   }
   validate_conn_id(id)?;
 
-  let db = ConnectionsDb::new()?;
-  db.init()?;
-  let entity = db
+  let db = get_connections_db().await?;
+  let db = db.clone();
+  let guard = db.lock().await;
+  let entity = guard
     .find_by_id(id)?
     .ok_or_else(|| format!("Connection {} not found", id))?;
+  drop(guard);
 
   let config = &entity.config;
   let health = check_provider_health(config).await;
@@ -258,11 +264,13 @@ pub async fn check_health(id: &str) -> Result<ConnectionHealth, String> {
   }
   validate_conn_id(id)?;
 
-  let db = ConnectionsDb::new()?;
-  db.init()?;
-  let entity = db
+  let db = get_connections_db().await?;
+  let db = db.clone();
+  let guard = db.lock().await;
+  let entity = guard
     .find_by_id(id)?
     .ok_or_else(|| format!("Connection {} not found", id))?;
+  drop(guard);
 
   tokio::time::timeout(std::time::Duration::from_secs(10), async {
     Ok(check_provider_health(&entity.config).await)
@@ -279,14 +287,16 @@ pub async fn delete_connection(id: &str) -> Result<(), String> {
   }
   validate_conn_id(id)?;
 
-  let db = ConnectionsDb::new()?;
-  db.init()?;
+  let db = get_connections_db().await?;
+  let db = db.clone();
+  let guard = db.lock().await;
 
-  if !db.exists(id)? {
+  if !guard.exists(id)? {
     return Err(format!("Connection {} not found", id));
   }
 
-  db.delete(id)?;
+  guard.delete(id)?;
+  drop(guard);
 
   if let Err(e) = delete_connection_databases_metadata(id.to_string()).await {
     tracing::warn!("Failed to delete connection metadata: {}", e);
@@ -304,10 +314,11 @@ pub async fn update_connection(id: &str, config: ConnectionConfig) -> Result<(),
   }
   validate_conn_id(id)?;
 
-  let db = ConnectionsDb::new()?;
-  db.init()?;
+  let db = get_connections_db().await?;
+  let db = db.clone();
+  let guard = db.lock().await;
 
-  let existing = db
+  let existing = guard
     .find_by_id(id)?
     .ok_or_else(|| format!("Connection {} not found", id))?;
 
@@ -322,7 +333,8 @@ pub async fn update_connection(id: &str, config: ConnectionConfig) -> Result<(),
     updated_at: chrono::Utc::now().timestamp_millis(),
   };
 
-  db.save(&entity)?;
+  guard.save(&entity)?;
+  drop(guard);
   tracing::info!("Updated connection: {}", id);
   Ok(())
 }
@@ -341,11 +353,13 @@ pub async fn get_connection(id: &str) -> Result<ConnectionConfigResult, String> 
   }
   validate_conn_id(id)?;
 
-  let db = ConnectionsDb::new()?;
-  db.init()?;
-  let entity = db
+  let db = get_connections_db().await?;
+  let db = db.clone();
+  let guard = db.lock().await;
+  let entity = guard
     .find_by_id(id)?
     .ok_or_else(|| format!("Connection {} not found", id))?;
+  drop(guard);
 
   Ok(ConnectionConfigResult {
     id: entity.id,

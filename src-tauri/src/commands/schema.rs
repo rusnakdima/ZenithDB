@@ -303,7 +303,9 @@ pub async fn list_collections(
     return Err("Access denied to connection".to_string());
   }
   validate_conn_id(conn_id)?;
+  tracing::debug!("list_collections started for connection: {}", conn_id);
   let entry = get_connection_entry(conn_id).await?;
+  tracing::debug!("list_collections got connection entry for: {}", conn_id);
 
   tokio::time::timeout(std::time::Duration::from_secs(10), async {
     match &entry.config.config {
@@ -356,8 +358,11 @@ pub async fn list_collections(
         }
       }
       _ => {
+        tracing::debug!("list_collections dispatching provider for: {}", conn_id);
         dispatch_provider!(entry, provider => {
+            tracing::debug!("list_collections provider dispatched, calling list_collections on provider");
             let collections = provider.list_collections().await.map_err_string()?;
+            tracing::debug!("list_collections got {} collections", collections.len());
             Ok(collections
                 .into_iter()
                 .map(|c| CollectionMeta {
@@ -370,7 +375,10 @@ pub async fn list_collections(
     }
   })
   .await
-  .map_err(|_| "List collections timed out".to_string())?
+  .map_err(|_| {
+    tracing::error!("list_collections timed out for connection: {}", conn_id);
+    "List collections timed out".to_string()
+  })?
 }
 
 async fn count_json_files_in_dir(path: &std::path::Path) -> u64 {

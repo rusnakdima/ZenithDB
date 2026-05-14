@@ -1,5 +1,5 @@
 use crate::commands::connection_entity::ConnectionEntity;
-use crate::commands::connections_db::ConnectionsDb;
+use crate::commands::connections_db::get_connections_db;
 
 pub mod admin;
 pub mod auth;
@@ -21,9 +21,11 @@ pub struct ConnectionEntry {
 }
 
 pub async fn get_connection_entry(conn_id: &str) -> Result<ConnectionEntry, String> {
-  let db = ConnectionsDb::new().map_err(|e| e.to_string())?;
-  db.init().map_err(|e| e.to_string())?;
-  let result: Option<ConnectionEntity> = db.find_by_id(conn_id).map_err(|e| e.to_string())?;
+  let db = get_connections_db().await?;
+  let db = db.clone();
+  let guard = db.lock().await;
+  let result: Option<ConnectionEntity> = guard.find_by_id(conn_id).map_err(|e| e.to_string())?;
+  drop(guard);
   let entity = result.ok_or_else(|| format!("Connection {} not found", conn_id))?;
   Ok(ConnectionEntry {
     id: entity.id,
