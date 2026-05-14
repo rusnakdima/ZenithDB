@@ -371,8 +371,7 @@ async fn count_json_files_in_dir(path: &std::path::Path) -> u64 {
     .await;
 
   match timeout_result {
-    Ok(Ok(c)) => c,
-    Ok(Err(_)) => 0,
+    Ok(c) => c,
     Err(_) => 0,
   }
 }
