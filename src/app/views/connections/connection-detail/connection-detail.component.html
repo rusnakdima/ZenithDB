@@ -127,6 +127,17 @@
           }
         </div>
 
+        @if (databases().length > 0) {
+          <div class="mb-3 flex items-center justify-between px-2 text-xs text-[var(--text-muted)]">
+            <span>Showing {{ databases().length }} of {{ databaseTotalCount() }}</span>
+            @if (databaseHasMore()) {
+              <button class="text-[var(--accent)] hover:underline" (click)="loadMoreDatabases()">
+                Load More
+              </button>
+            }
+          </div>
+        }
+
         <div class="space-y-2">
           @for (db of databases(); track db.name) {
             <div class="rounded-xl border border-[var(--border-visible)] bg-[var(--bg-card)] p-4">

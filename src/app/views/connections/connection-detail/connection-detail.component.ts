@@ -77,6 +77,9 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
   editingDb = signal<string | null>(null);
   editDbName = "";
   isLoadingDetails = signal(false);
+  databaseOffset = signal(0);
+  databaseHasMore = signal(false);
+  databaseTotalCount = signal(0);
 
   providerIcon = signal("dns");
 
@@ -133,35 +136,62 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
 
     if (this.isLoadingDetails()) return;
     this.isLoadingDetails.set(true);
+    this.databaseOffset.set(0);
 
     try {
-      const result = await withErrorHandling(
-        async () => {
-          const [version, collections, healthResult, localDatabases] = await Promise.all([
-            this.db.getServerVersion().catch(() => null),
-            this.collectionsApi.listCollections(connId).catch(() => []),
-            this.healthApi.checkHealth(connId).catch(() => null),
-            this.decentralizationApi.listDatabases(connId).catch(() => []),
-          ]);
-          return { version, collections, healthResult, localDatabases };
-        },
-        { loading: this.loading, context: "ConnectionDetails" },
-        { errorHandler: this.errorHandler, toastService: this.toast }
-      );
+      const [version, collections, healthResult, localDatabasesResult] = await Promise.all([
+        this.db.getServerVersion().catch(() => null),
+        this.collectionsApi.listCollections(connId).catch(() => []),
+        this.healthApi.checkHealth(connId).catch(() => null),
+        this.decentralizationApi
+          .listDatabases(connId, 0, 10)
+          .catch(() => ({ databases: [], hasMore: false, totalCount: 0 })),
+      ]);
 
-      if (result.success && result.data) {
-        this.serverVersion.set(result.data.version);
-        this.collections.set(result.data.collections);
-        this.health.set(result.data.healthResult);
-        const databases: DbNode[] = result.data.localDatabases.map((db: DatabaseMetadata) => ({
+      if (localDatabasesResult.databases) {
+        this.databaseHasMore.set(localDatabasesResult.hasMore);
+        this.databaseTotalCount.set(localDatabasesResult.totalCount);
+        this.databases.set(
+          localDatabasesResult.databases.map((db: DatabaseMetadata) => ({
+            id: db.id,
+            name: db.name,
+            path: db.path || undefined,
+            expanded: false,
+            collections: [],
+          }))
+        );
+      }
+      this.serverVersion.set(version);
+      this.collections.set(collections);
+      this.health.set(healthResult);
+    } finally {
+      this.isLoadingDetails.set(false);
+    }
+  }
+
+  async loadMoreDatabases() {
+    const connId = this.connectionId();
+    if (!connId || this.isLoadingDetails() || !this.databaseHasMore()) return;
+
+    this.isLoadingDetails.set(true);
+    try {
+      const newOffset = this.databaseOffset() + 10;
+      const result = await this.decentralizationApi.listDatabases(connId, newOffset, 10);
+      this.databaseOffset.set(newOffset);
+      this.databaseHasMore.set(result.hasMore);
+      this.databaseTotalCount.set(result.totalCount);
+      this.databases.update((dbs) => [
+        ...dbs,
+        ...result.databases.map((db: DatabaseMetadata) => ({
           id: db.id,
           name: db.name,
           path: db.path || undefined,
           expanded: false,
           collections: [],
-        }));
-        this.databases.set(databases);
-      }
+        })),
+      ]);
+    } catch (e) {
+      this.errorHandler.handleError(e, "Loading more databases");
     } finally {
       this.isLoadingDetails.set(false);
     }
