@@ -167,17 +167,51 @@ export class ApiProvider {
   async listCollections(connId: string, dbName?: string): Promise<CollectionMeta[]> {
     const collections = await invokeWithAbortHandlingOrDefault(
       () =>
-        this.tauriBridge.invoke<CollectionMeta[]>("list_collections", {
+        this.tauriBridge.invoke<{
+          collections: CollectionMeta[];
+          has_more: boolean;
+          total_count: number;
+        }>("list_collections", {
           connId,
           dbName,
           options: { signal: this.createAbortSignal() },
         }),
       "listCollections",
       this.errorHandler,
-      []
+      { collections: [], has_more: false, total_count: 0 }
     );
-    this.dataStore.updateCollections(connId, collections);
-    return collections;
+    this.dataStore.updateCollections(connId, collections.collections);
+    return collections.collections;
+  }
+
+  async listCollectionsPaginated(
+    connId: string,
+    dbName?: string,
+    offset?: number,
+    limit?: number
+  ): Promise<{ collections: CollectionMeta[]; hasMore: boolean; totalCount: number }> {
+    const result = await invokeWithAbortHandlingOrDefault(
+      () =>
+        this.tauriBridge.invoke<{
+          collections: CollectionMeta[];
+          has_more: boolean;
+          total_count: number;
+        }>("list_collections", {
+          connId,
+          dbName,
+          offset,
+          limit,
+          options: { signal: this.createAbortSignal() },
+        }),
+      "listCollections",
+      this.errorHandler,
+      { collections: [], has_more: false, total_count: 0 }
+    );
+    return {
+      collections: result.collections,
+      hasMore: result.has_more,
+      totalCount: result.total_count,
+    };
   }
 
   async createDatabase(connId: string, name: string): Promise<void> {
