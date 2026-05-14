@@ -60,26 +60,8 @@ pub async fn database_list(conn_id: String) -> Result<Vec<DatabaseMeta>, String>
             table_count: Some(count),
           }])
         }
-        "folders_as_databases" | "mixed" => {
-          let databases = list_json_databases(path_obj.clone(), behavior.as_str()).await?;
-          if databases.is_empty() {
-            let folder_name = path_obj
-              .file_name()
-              .and_then(|n| n.to_str())
-              .unwrap_or("root")
-              .to_string();
-            let count = count_json_files_in_dir(&path_obj).await;
-            Ok(vec![DatabaseMeta {
-              name: folder_name,
-              size_bytes: None,
-              table_count: Some(count),
-            }])
-          } else {
-            Ok(databases)
-          }
-        }
         _ => {
-          let databases = list_json_databases(path_obj.clone(), "folders_as_databases").await?;
+          let databases = list_json_databases(path_obj.clone()).await?;
           Ok(databases)
         }
       }
@@ -260,49 +242,35 @@ pub async fn database_delete(conn_id: String, name: String) -> Result<(), String
   }
 }
 
-async fn list_json_databases(
-  path_obj: std::path::PathBuf,
-  behavior: &str,
-) -> Result<Vec<DatabaseMeta>, String> {
+async fn list_json_databases(path_obj: std::path::PathBuf) -> Result<Vec<DatabaseMeta>, String> {
   let mut entries = tokio::fs::read_dir(&path_obj).await.map_err_string()?;
   let mut databases: Vec<DatabaseMeta> = Vec::new();
+  let mut has_root_json = false;
 
   while let Some(entry) = entries.next_entry().await.map_err_string()? {
     let entry_path = entry.path();
     if entry_path.is_dir() {
       let name = entry.file_name().into_string().unwrap_or_default();
-
       let collection_count = count_json_files_in_dir(&entry_path).await;
-
       databases.push(DatabaseMeta {
         name,
         size_bytes: None,
         table_count: Some(collection_count),
       });
-    } else if behavior == "mixed" && entry_path.extension().is_some_and(|ext| ext == "json") {
-      let has_root = databases.iter().any(|d| d.name == "root");
-      if !has_root {
-        databases.insert(
-          0,
-          DatabaseMeta {
-            name: "root".to_string(),
-            size_bytes: None,
-            table_count: None,
-          },
-        );
-      }
+    } else if entry_path.extension().is_some_and(|ext| ext == "json") {
+      has_root_json = true;
     }
   }
 
-  if behavior == "mixed" {
-    if !databases.iter().any(|d| d.name == "root") {
-      let root_count = count_json_files_in_dir(&path_obj).await;
-      databases.push(DatabaseMeta {
+  if has_root_json {
+    databases.insert(
+      0,
+      DatabaseMeta {
         name: "root".to_string(),
         size_bytes: None,
-        table_count: Some(root_count),
-      });
-    }
+        table_count: None,
+      },
+    );
   }
 
   databases.sort_by(|a, b| a.name.cmp(&b.name));

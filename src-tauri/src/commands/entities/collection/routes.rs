@@ -52,52 +52,31 @@ pub async fn collection_list(
   let entry = get_connection_entry(&conn_id).await?;
 
   match &entry.config.config {
-    crate::commands::connection::ConnectionConfigEnum::Json { path, behavior, .. } => {
+    crate::commands::connection::ConnectionConfigEnum::Json { path, .. } => {
       let path_obj = std::path::Path::new(path).to_path_buf();
       if !path_obj.is_dir() {
         return Ok(Vec::new());
       }
 
-      match behavior.as_str() {
-        "files_as_collections" => {
-          let collections = list_json_collections(path_obj).await?;
-          Ok(collections)
-        }
-        "folders_as_databases" => {
-          if let Some(db) = db_name {
-            let folder_name = path_obj.file_name().and_then(|n| n.to_str()).unwrap_or("");
+      if let Some(db_name) = db_name {
+        let db_path = path_obj.join(&db_name);
+        let collections = list_json_files_in_dir(db_path).await?;
+        Ok(collections)
+      } else {
+        let mut all_collections: Vec<CollectionMeta> = Vec::new();
+        let mut entries = match tokio::fs::read_dir(&path_obj).await {
+          Ok(e) => e,
+          Err(_) => return Ok(Vec::new()),
+        };
 
-            let collections = if db == folder_name {
-              list_json_collections(path_obj).await?
-            } else {
-              let db_path = path_obj.join(&db);
-              list_json_collections(db_path).await?
-            };
-            Ok(collections)
-          } else {
-            let all_collections = list_all_json_collections_recursive(path_obj).await?;
-            Ok(all_collections)
+        while let Some(entry) = entries.next_entry().await.map_err_string()? {
+          let entry_path = entry.path();
+          if entry_path.is_dir() {
+            let collections = list_json_files_in_dir(entry_path).await?;
+            all_collections.extend(collections);
           }
         }
-        "mixed" => {
-          if let Some(db) = db_name {
-            if db == "root" {
-              let collections = list_json_collections(path_obj).await?;
-              Ok(collections)
-            } else {
-              let db_path = path_obj.join(&db);
-              let collections = list_json_collections(db_path).await?;
-              Ok(collections)
-            }
-          } else {
-            let collections = list_json_collections(path_obj).await?;
-            Ok(collections)
-          }
-        }
-        _ => {
-          let collections = list_json_collections(path_obj).await?;
-          Ok(collections)
-        }
+        Ok(all_collections)
       }
     }
     _ => {
@@ -241,21 +220,7 @@ async fn list_all_json_collections_recursive(
           .map(|n| n.trim_end_matches(".json").to_string());
 
         if let Some(name) = name {
-          let count = match tokio::fs::read_to_string(&entry_path).await {
-            Ok(content) => match serde_json::from_str::<serde_json::Value>(&content) {
-              Ok(v) => {
-                if let Some(arr) = v.as_array() {
-                  arr.len() as u64
-                } else {
-                  1
-                }
-              }
-              Err(_) => 0,
-            },
-            Err(_) => 0,
-          };
-
-          collections.push(CollectionMeta { name, count });
+          collections.push(CollectionMeta { name, count: 0 });
         }
       }
     }
@@ -264,59 +229,26 @@ async fn list_all_json_collections_recursive(
   Ok(collections)
 }
 
-async fn list_json_collections(
+async fn list_json_files_in_dir(
   path_obj: std::path::PathBuf,
 ) -> Result<Vec<CollectionMeta>, String> {
   let mut collections: Vec<CollectionMeta> = Vec::new();
-  let mut dirs_to_scan: Vec<(std::path::PathBuf, String)> = vec![(path_obj, String::new())];
+  let mut entries = match tokio::fs::read_dir(&path_obj).await {
+    Ok(e) => e,
+    Err(_) => return Ok(Vec::new()),
+  };
 
-  while let Some((current_dir, base_path)) = dirs_to_scan.pop() {
-    let mut entries = match tokio::fs::read_dir(&current_dir).await {
-      Ok(e) => e,
-      Err(_) => continue,
-    };
+  while let Some(entry) = entries.next_entry().await.map_err_string()? {
+    let entry_path = entry.path();
+    if entry_path.is_file() && entry_path.extension().is_some_and(|ext| ext == "json") {
+      let file_name = entry
+        .file_name()
+        .into_string()
+        .ok()
+        .map(|n| n.trim_end_matches(".json").to_string());
 
-    while let Some(entry) = entries.next_entry().await.map_err_string()? {
-      let entry_path = entry.path();
-
-      if entry_path.is_dir() {
-        let folder_name = entry.file_name().into_string().unwrap_or_default();
-        let new_base = if base_path.is_empty() {
-          folder_name.clone()
-        } else {
-          format!("{}/{}", base_path, folder_name)
-        };
-        dirs_to_scan.push((entry_path, new_base));
-      } else if entry_path.extension().is_some_and(|ext| ext == "json") {
-        let file_name = entry
-          .file_name()
-          .into_string()
-          .ok()
-          .map(|n| n.trim_end_matches(".json").to_string());
-
-        if let Some(file_name) = file_name {
-          let name = if base_path.is_empty() {
-            file_name.clone()
-          } else {
-            format!("{}/{}", base_path, file_name)
-          };
-
-          let count = match tokio::fs::read_to_string(&entry_path).await {
-            Ok(content) => match serde_json::from_str::<serde_json::Value>(&content) {
-              Ok(v) => {
-                if let Some(arr) = v.as_array() {
-                  arr.len() as u64
-                } else {
-                  1
-                }
-              }
-              Err(_) => 0,
-            },
-            Err(_) => 0,
-          };
-
-          collections.push(CollectionMeta { name, count });
-        }
+      if let Some(name) = file_name {
+        collections.push(CollectionMeta { name, count: 0 });
       }
     }
   }
