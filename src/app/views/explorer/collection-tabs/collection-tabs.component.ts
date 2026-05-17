@@ -44,7 +44,7 @@ interface Tab {
           <div
             class="absolute left-0 z-[100] mt-1 max-h-64 w-56 overflow-y-auto rounded-lg border border-[var(--border-visible)] bg-[var(--bg-card)] shadow-xl"
           >
-            @for (col of collections(); track col.name) {
+            @for (col of collections() || []; track col.name) {
               <button
                 class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-[var(--text-main)] transition-colors hover:bg-[var(--bg-elevated)]"
                 (click)="collectionSelect.emit(col.name)"
@@ -53,7 +53,7 @@ interface Tab {
                 {{ col.name }}
               </button>
             }
-            @if (collections().length === 0) {
+            @if (!collections() || collections().length === 0) {
               <div class="p-3 text-center text-sm text-[var(--text-dim)]">No collections</div>
             }
           </div>

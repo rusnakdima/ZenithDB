@@ -93,7 +93,7 @@ export type ConnectionConfig =
 
 export type ConnectionConfigEnum =
   | { type: "Json"; name: string; path: string; behavior?: string }
-  | { type: "Mongo"; name: string; uri: string }
+  | { type: "Mongo"; name: string; uri: string; database: string }
   | { type: "Redis"; name: string; uri: string }
   | { type: "Postgres"; name: string; uri: string }
   | { type: "Sqlite"; name: string; path: string }

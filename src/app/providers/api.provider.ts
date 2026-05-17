@@ -172,8 +172,8 @@ export class ApiProvider {
           has_more: boolean;
           total_count: number;
         }>("list_collections", {
-          connId,
-          dbName,
+          connId: connId,
+          dbName: dbName,
           options: { signal: this.createAbortSignal() },
         }),
       "listCollections",
@@ -197,8 +197,8 @@ export class ApiProvider {
           has_more: boolean;
           total_count: number;
         }>("list_collections", {
-          connId,
-          dbName,
+          connId: connId,
+          dbName: dbName,
           offset,
           limit,
           options: { signal: this.createAbortSignal() },
@@ -218,7 +218,7 @@ export class ApiProvider {
     await invokeWithAbortHandling(
       () =>
         this.tauriBridge.invoke<void>("create_database", {
-          connId,
+          connId: connId,
           name,
           options: { signal: this.createAbortSignal() },
         }),
@@ -231,7 +231,7 @@ export class ApiProvider {
     return invokeWithAbortHandling(
       () =>
         this.tauriBridge.invoke<CollectionSchema>("describe_collection", {
-          connId,
+          connId: connId,
           collection,
           options: { signal: this.createAbortSignal() },
         }),
@@ -244,7 +244,7 @@ export class ApiProvider {
     return invokeWithAbortHandling(
       () =>
         this.tauriBridge.invoke<CollectionStats>("get_collection_stats", {
-          connId,
+          connId: connId,
           collection,
           options: { signal: this.createAbortSignal() },
         }),
@@ -261,7 +261,7 @@ export class ApiProvider {
     const result = await invokeWithAbortHandling(
       () =>
         this.tauriBridge.invoke<QueryResult<unknown>>("query_data", {
-          connId,
+          connId: connId,
           collection,
           query: params,
           options: { signal: this.createAbortSignal() },
@@ -284,7 +284,7 @@ export class ApiProvider {
     return invokeWithAbortHandlingOrDefault(
       () =>
         this.tauriBridge.invoke<RowData>("save_row", {
-          connId,
+          connId: connId,
           collection,
           data,
           options: { signal: this.createAbortSignal() },
@@ -299,7 +299,7 @@ export class ApiProvider {
     await invokeWithAbortHandlingOrDefault(
       () =>
         this.tauriBridge.invoke<void>("delete_row", {
-          connId,
+          connId: connId,
           collection,
           id,
           options: { signal: this.createAbortSignal() },
@@ -314,7 +314,7 @@ export class ApiProvider {
     await invokeWithAbortHandlingOrDefault(
       () =>
         this.tauriBridge.invoke<void>("create_collection", {
-          connId,
+          connId: connId,
           name,
           options: { signal: this.createAbortSignal() },
         }),
@@ -329,7 +329,7 @@ export class ApiProvider {
     await invokeWithAbortHandlingOrDefault(
       () =>
         this.tauriBridge.invoke<void>("drop_collection", {
-          connId,
+          connId: connId,
           name,
           options: { signal: this.createAbortSignal() },
         }),
@@ -344,7 +344,7 @@ export class ApiProvider {
     return invokeWithAbortHandlingOrDefault(
       () =>
         this.tauriBridge.invoke<RawResult>("execute_raw", {
-          connId,
+          connId: connId,
           sql,
           options: { signal: this.createAbortSignal() },
         }),
@@ -358,7 +358,7 @@ export class ApiProvider {
     return invokeWithAbortHandlingOrDefault(
       () =>
         this.tauriBridge.invoke<string>("get_server_version", {
-          connId,
+          connId: connId,
           options: { signal: this.createAbortSignal() },
         }),
       "getServerVersion",
@@ -398,9 +398,9 @@ export class ApiProvider {
     await invokeWithAbortHandling(
       () =>
         this.tauriBridge.invoke<void>("rename_collection", {
-          conn_id: connId,
-          old_name: oldName,
-          new_name: newName,
+          connId: connId,
+          oldName: oldName,
+          newName: newName,
           options: { signal: this.createAbortSignal() },
         }),
       "renameCollection",
@@ -412,9 +412,9 @@ export class ApiProvider {
     await invokeWithAbortHandling(
       () =>
         this.tauriBridge.invoke<void>("rename_database", {
-          conn_id: connId,
-          old_name: oldName,
-          new_name: newName,
+          connId: connId,
+          oldName: oldName,
+          newName: newName,
           options: { signal: this.createAbortSignal() },
         }),
       "renameDatabase",
@@ -426,7 +426,7 @@ export class ApiProvider {
     await invokeWithAbortHandling(
       () =>
         this.tauriBridge.invoke<void>("delete_database", {
-          conn_id: connId,
+          connId: connId,
           name,
           options: { signal: this.createAbortSignal() },
         }),

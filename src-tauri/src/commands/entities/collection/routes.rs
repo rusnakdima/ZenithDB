@@ -57,13 +57,13 @@ pub struct CollectionStats {
 
 #[tauri::command]
 pub async fn collection_list(
-  conn_id: String,
-  db_name: Option<String>,
+  connId: String,
+  dbName: Option<String>,
   offset: Option<usize>,
   limit: Option<usize>,
 ) -> Result<CollectionListResult, String> {
-  validate_conn_id(&conn_id)?;
-  let entry = get_connection_entry(&conn_id).await?;
+  validate_conn_id(&connId)?;
+  let entry = get_connection_entry(&connId).await?;
   let offset = offset.unwrap_or(0);
   let limit = limit.unwrap_or(10);
 
@@ -78,8 +78,8 @@ pub async fn collection_list(
         });
       }
 
-      if let Some(db_name) = db_name {
-        let db_path = path_obj.join(&db_name);
+      if let Some(dbName) = dbName {
+        let db_path = path_obj.join(&dbName);
         let result = list_json_files_in_dir(db_path, offset, limit).await?;
         Ok(result)
       } else {
@@ -108,13 +108,10 @@ pub async fn collection_list(
 }
 
 #[tauri::command]
-pub async fn collection_describe(
-  conn_id: String,
-  name: String,
-) -> Result<CollectionSchema, String> {
-  validate_conn_id(&conn_id)?;
+pub async fn collection_describe(connId: String, name: String) -> Result<CollectionSchema, String> {
+  validate_conn_id(&connId)?;
   validate_name(&name)?;
-  let entry = get_connection_entry(&conn_id).await?;
+  let entry = get_connection_entry(&connId).await?;
 
   let (schema, indexes) = dispatch_provider!(entry, provider => {
       let schema = provider.describe_collection(&name).await.map_err_string()?;
@@ -152,10 +149,9 @@ pub async fn collection_describe(
 }
 
 #[tauri::command]
-pub async fn collection_stats(conn_id: String, name: String) -> Result<CollectionStats, String> {
-  validate_conn_id(&conn_id)?;
-  validate_name(&name)?;
-  let entry = get_connection_entry(&conn_id).await?;
+pub async fn collection_stats(connId: String, name: String) -> Result<CollectionStats, String> {
+  validate_conn_id(&connId)?;
+  let entry = get_connection_entry(&connId).await?;
 
   let stats = dispatch_provider!(entry, provider => {
       provider.get_collection_stats(&name).await.map_err_string()
@@ -170,20 +166,18 @@ pub async fn collection_stats(conn_id: String, name: String) -> Result<Collectio
 }
 
 #[tauri::command]
-pub async fn collection_create(conn_id: String, name: String) -> Result<(), String> {
-  validate_conn_id(&conn_id)?;
-  validate_name(&name)?;
-  let entry = get_connection_entry(&conn_id).await?;
+pub async fn collection_create(connId: String, name: String) -> Result<(), String> {
+  validate_conn_id(&connId)?;
+  let entry = get_connection_entry(&connId).await?;
   dispatch_provider!(entry, provider => {
       provider.create_collection(&name, None).await.map_err_string()
   })
 }
 
 #[tauri::command]
-pub async fn collection_drop(conn_id: String, name: String) -> Result<(), String> {
-  validate_conn_id(&conn_id)?;
-  validate_name(&name)?;
-  let entry = get_connection_entry(&conn_id).await?;
+pub async fn collection_drop(connId: String, name: String) -> Result<(), String> {
+  validate_conn_id(&connId)?;
+  let entry = get_connection_entry(&connId).await?;
   dispatch_provider!(entry, provider => {
       provider.drop_collection(&name).await.map_err_string()
   })
@@ -191,20 +185,20 @@ pub async fn collection_drop(conn_id: String, name: String) -> Result<(), String
 
 #[tauri::command]
 pub async fn collection_rename(
-  conn_id: String,
-  old_name: String,
-  new_name: String,
+  connId: String,
+  oldName: String,
+  newName: String,
 ) -> Result<(), String> {
-  validate_conn_id(&conn_id)?;
-  validate_name(&old_name)?;
-  validate_name(&new_name)?;
-  let entry = get_connection_entry(&conn_id).await?;
+  validate_conn_id(&connId)?;
+  validate_name(&oldName)?;
+  validate_name(&newName)?;
+  let entry = get_connection_entry(&connId).await?;
   dispatch_provider!(entry, provider => {
-      let data = provider.find_many(&old_name, None, None, None, None, true).await.map_err_string()?;
+      let data = provider.find_many(&oldName, None, None, None, None, true).await.map_err_string()?;
       for item in data {
-          provider.insert(&new_name, item.clone()).await.map_err_string()?;
+          provider.insert(&newName, item.clone()).await.map_err_string()?;
       }
-      provider.drop_collection(&old_name).await.map_err_string()
+      provider.drop_collection(&oldName).await.map_err_string()
   })
 }
 

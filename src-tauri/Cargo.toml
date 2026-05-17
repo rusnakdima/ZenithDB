@@ -26,7 +26,17 @@ tokio = { version = "1", features = ["full"] }
 sysinfo = "0.32"
 tauri-plugin-mcp-bridge = "0.11"
 
-nosql_orm = { git = "https://github.com/rusnakdima/nosql_orm", rev = "d531d08", features = [
+# nosql_orm = { git = "https://github.com/rusnakdima/nosql_orm", rev = "d531d08", features = [
+#     "json",
+#     "mongo",
+#     "redis",
+#     "sql-postgres",
+#     "sql-sqlite",
+#     "sql-mysql",
+#     "query_cache",
+#     "validators",
+# ] }
+nosql_orm = { path = "/mnt/Other/Projects/Rust/nosql_orm", features = [
     "json",
     "mongo",
     "redis",

@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit, OnDestroy, output, effect } from "@angular/core";
+import { Component, inject, signal, OnInit, OnDestroy, output, effect, ChangeDetectorRef } from "@angular/core";
 import { Router, ActivatedRoute } from "@angular/router";
 import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
@@ -39,6 +39,7 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
   route = inject(ActivatedRoute);
 
   connectionFormService = inject(ConnectionFormService);
+  private cdr = inject(ChangeDetectorRef);
 
   editingId: string | null = null;
   isEditing = signal(false);
@@ -259,10 +260,12 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
 
   async testConnection() {
     this.testing.set(true);
+    this.cdr.detectChanges();
     try {
       const config = this.buildConfig();
       const result = await this.db.testConnection(config);
       this.testResult.set(result);
+      this.cdr.detectChanges();
     } catch (e) {
       this.testResult.set({
         healthy: false,
@@ -270,13 +273,16 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
         server_version: String(e),
         latency_ms: undefined,
       });
+      this.cdr.detectChanges();
     } finally {
       this.testing.set(false);
+      this.cdr.detectChanges();
     }
   }
 
   async save() {
     this.saving.set(true);
+    this.cdr.detectChanges();
     try {
       const config = this.buildConfig();
       if (this.editingId) {
@@ -286,8 +292,10 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
       this.onClose();
     } catch (e) {
       this.errorHandler.handleError(e, "Saving connection");
+      this.cdr.detectChanges();
     } finally {
       this.saving.set(false);
+      this.cdr.detectChanges();
     }
   }
 
@@ -321,6 +329,7 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
             type: "Mongo",
             name: data.name,
             uri: uri,
+            database: data.database,
           },
         };
       case "redis":

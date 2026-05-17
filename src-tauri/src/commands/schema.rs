@@ -78,9 +78,9 @@ fn parse_database_rows(rows: &[Vec<serde_json::Value>]) -> Vec<DatabaseMeta> {
 }
 
 #[tauri::command]
-pub async fn list_databases(conn_id: &str) -> Result<Vec<DatabaseMeta>, String> {
-  validate_conn_id(conn_id)?;
-  let entry = get_connection_entry(conn_id).await?;
+pub async fn list_databases(connId: &str) -> Result<Vec<DatabaseMeta>, String> {
+  validate_conn_id(connId)?;
+  let entry = get_connection_entry(connId).await?;
 
   match &entry.config.config {
     ConnectionConfigEnum::Json { path, .. } => {
@@ -140,14 +140,14 @@ pub async fn list_databases(conn_id: &str) -> Result<Vec<DatabaseMeta>, String> 
 }
 
 #[tauri::command]
-pub async fn create_database(conn_id: &str, name: &str) -> Result<(), String> {
+pub async fn create_database(connId: &str, name: &str) -> Result<(), String> {
   let auth = get_auth_context();
-  if !auth.can_access_connection(conn_id) {
+  if !auth.can_access_connection(connId) {
     return Err("Access denied to connection".to_string());
   }
-  validate_conn_id(conn_id)?;
+  validate_conn_id(connId)?;
   validate_name(name)?;
-  let entry = get_connection_entry(conn_id).await?;
+  let entry = get_connection_entry(connId).await?;
 
   match &entry.config.config {
     ConnectionConfigEnum::Sqlite { path, .. } => {
@@ -188,15 +188,15 @@ pub async fn create_database(conn_id: &str, name: &str) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub async fn rename_database(conn_id: &str, old_name: &str, new_name: &str) -> Result<(), String> {
+pub async fn rename_database(connId: &str, oldName: &str, newName: &str) -> Result<(), String> {
   let auth = get_auth_context();
-  if !auth.can_access_connection(conn_id) {
+  if !auth.can_access_connection(connId) {
     return Err("Access denied to connection".to_string());
   }
-  validate_conn_id(conn_id)?;
-  validate_name(old_name)?;
-  validate_name(new_name)?;
-  let entry = get_connection_entry(conn_id).await?;
+  validate_conn_id(connId)?;
+  validate_name(oldName)?;
+  validate_name(newName)?;
+  let entry = get_connection_entry(connId).await?;
 
   match &entry.config.config {
     ConnectionConfigEnum::Sqlite { .. } => Err(
@@ -204,8 +204,8 @@ pub async fn rename_database(conn_id: &str, old_name: &str, new_name: &str) -> R
         .to_string(),
     ),
     ConnectionConfigEnum::Json { path, .. } => {
-      let old_path = validate_safe_path(path, old_name)?;
-      let new_path = validate_safe_path(path, new_name)?;
+      let old_path = validate_safe_path(path, oldName)?;
+      let new_path = validate_safe_path(path, newName)?;
       if old_path.exists() {
         tokio::fs::rename(&old_path, &new_path)
           .await
@@ -223,7 +223,7 @@ pub async fn rename_database(conn_id: &str, old_name: &str, new_name: &str) -> R
       let provider = crate::commands::provider::create_postgres_provider(uri).await?;
       provider
         .execute_raw(
-          &format!("ALTER DATABASE \"{}\" RENAME TO \"{}\"", old_name, new_name),
+          &format!("ALTER DATABASE \"{}\" RENAME TO \"{}\"", oldName, newName),
           vec![],
         )
         .await
@@ -238,14 +238,14 @@ pub async fn rename_database(conn_id: &str, old_name: &str, new_name: &str) -> R
 }
 
 #[tauri::command]
-pub async fn delete_database(conn_id: &str, name: &str) -> Result<(), String> {
+pub async fn delete_database(connId: &str, name: &str) -> Result<(), String> {
   let auth = get_auth_context();
-  if !auth.can_access_connection(conn_id) {
+  if !auth.can_access_connection(connId) {
     return Err("Access denied to connection".to_string());
   }
-  validate_conn_id(conn_id)?;
+  validate_conn_id(connId)?;
   validate_name(name)?;
-  let entry = get_connection_entry(conn_id).await?;
+  let entry = get_connection_entry(connId).await?;
 
   match &entry.config.config {
     ConnectionConfigEnum::Sqlite { .. } => Err(
@@ -281,17 +281,17 @@ pub async fn delete_database(conn_id: &str, name: &str) -> Result<(), String> {
 
 #[tauri::command]
 pub async fn list_collections(
-  conn_id: &str,
-  db_name: Option<String>,
+  connId: &str,
+  dbName: Option<String>,
 ) -> Result<Vec<CollectionMeta>, String> {
   let auth = get_auth_context();
-  if !auth.can_access_connection(conn_id) {
+  if !auth.can_access_connection(connId) {
     return Err("Access denied to connection".to_string());
   }
-  validate_conn_id(conn_id)?;
-  tracing::debug!("list_collections started for connection: {}", conn_id);
-  let entry = get_connection_entry(conn_id).await?;
-  tracing::debug!("list_collections got connection entry for: {}", conn_id);
+  validate_conn_id(connId)?;
+  tracing::debug!("list_collections started for connection: {}", connId);
+  let entry = get_connection_entry(connId).await?;
+  tracing::debug!("list_collections got connection entry for: {}", connId);
 
   tokio::time::timeout(std::time::Duration::from_secs(10), async {
     match &entry.config.config {
@@ -301,8 +301,8 @@ pub async fn list_collections(
           return Ok(Vec::new());
         }
 
-        if let Some(db_name) = db_name {
-          let db_path = path_obj.join(&db_name);
+        if let Some(dbName) = dbName {
+          let db_path = path_obj.join(&dbName);
           let collections = list_json_files_in_dir(db_path).await?;
           Ok(collections)
         } else {
@@ -323,7 +323,7 @@ pub async fn list_collections(
         }
       }
       _ => {
-        tracing::debug!("list_collections dispatching provider for: {}", conn_id);
+        tracing::debug!("list_collections dispatching provider for: {}", connId);
         dispatch_provider!(entry, provider => {
             tracing::debug!("list_collections provider dispatched, calling list_collections on provider");
             let collections = provider.list_collections().await.map_err_string()?;
@@ -341,7 +341,7 @@ pub async fn list_collections(
   })
   .await
   .map_err(|_| {
-    tracing::error!("list_collections timed out for connection: {}", conn_id);
+    tracing::error!("list_collections timed out for connection: {}", connId);
     "List collections timed out".to_string()
   })?
 }
@@ -390,16 +390,16 @@ async fn list_json_files_in_dir(
 
 #[tauri::command]
 pub async fn describe_collection(
-  conn_id: &str,
+  connId: &str,
   collection: &str,
 ) -> Result<CollectionSchema, String> {
   let auth = get_auth_context();
-  if !auth.can_access_connection(conn_id) {
+  if !auth.can_access_connection(connId) {
     return Err("Access denied to connection".to_string());
   }
-  validate_conn_id(conn_id)?;
+  validate_conn_id(connId)?;
   validate_name(collection)?;
-  let entry = get_connection_entry(conn_id).await?;
+  let entry = get_connection_entry(connId).await?;
 
   let (schema, indexes) = dispatch_provider!(entry, provider => {
       let schema = provider.describe_collection(collection).await.map_err_string()?;
@@ -438,16 +438,16 @@ pub async fn describe_collection(
 
 #[tauri::command]
 pub async fn get_collection_stats(
-  conn_id: &str,
+  connId: &str,
   collection: &str,
 ) -> Result<CollectionStats, String> {
   let auth = get_auth_context();
-  if !auth.can_access_connection(conn_id) {
+  if !auth.can_access_connection(connId) {
     return Err("Access denied to connection".to_string());
   }
-  validate_conn_id(conn_id)?;
+  validate_conn_id(connId)?;
   validate_name(collection)?;
-  let entry = get_connection_entry(conn_id).await?;
+  let entry = get_connection_entry(connId).await?;
 
   let stats = dispatch_provider!(entry, provider => {
       provider.get_collection_stats(collection).await.map_err_string()

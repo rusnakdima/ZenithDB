@@ -108,7 +108,7 @@ export class SchemaTreeComponent implements OnInit, OnDestroy {
 
     if (result.success && result.data) {
       this.collections.set(
-        result.data.map((c: CollectionMeta) => ({
+        result.data.collections.map((c: CollectionMeta) => ({
           name: c.name,
           type: "collection" as const,
           count: c.count,

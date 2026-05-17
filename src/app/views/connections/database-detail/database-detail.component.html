@@ -39,19 +39,9 @@
     @if (loading()) {
       <div class="glass-card p-12">
         <div class="flex flex-col items-center justify-center gap-4">
-          <div class="relative h-16 w-16">
-            <div
-              class="absolute inset-0 animate-spin rounded-full border-4 border-[var(--accent)]/20"
-            ></div>
-            <div
-              class="absolute inset-0 animate-spin rounded-full border-4 border-transparent border-t-[var(--accent)]"
-              style="animation-delay: -0.15s"
-            ></div>
-            <div
-              class="absolute inset-3 animate-spin rounded-full border-4 border-transparent border-t-[var(--accent)]/50"
-              style="animation-delay: -0.3s"
-            ></div>
-          </div>
+          <div
+            class="h-16 w-16 animate-spin rounded-full border-4 border-[var(--accent)]/20 border-t-[var(--accent)]"
+          ></div>
           <p class="text-sm text-[var(--text-dim)]">Loading collections...</p>
         </div>
       </div>
@@ -162,6 +152,20 @@
                 }
               </tbody>
             </table>
+            <div #loadMoreTrigger class="flex items-center justify-center p-4" id="load-more-trigger">
+              @if (loadingMore()) {
+                <div class="flex items-center gap-2 text-[var(--text-dim)]">
+                  <div class="h-4 w-4 animate-spin rounded-full border-2 border-[var(--accent)]/20 border-t-[var(--accent)]"></div>
+                  <span class="text-sm">Loading more...</span>
+                </div>
+              } @else if (!collectionHasMore() && collections().length > 0) {
+                <span class="text-sm text-[var(--text-muted)]">No more collections ({{ collectionTotalCount() }} total)</span>
+              } @else if (collectionHasMore()) {
+                <button (click)="loadMoreCollections()" class="form-btn form-btn-secondary">
+                  Load More
+                </button>
+              }
+            </div>
           </div>
         </div>
       } @else {

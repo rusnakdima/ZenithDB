@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit, OnDestroy } from "@angular/core";
+import { Component, inject, signal, OnInit, OnDestroy, ElementRef, ViewChild, AfterViewInit, effect } from "@angular/core";
 import { Router, RouterLink, ActivatedRoute } from "@angular/router";
 import { TitleCasePipe } from "@angular/common";
 import { MatIconModule } from "@angular/material/icon";
@@ -24,7 +24,9 @@ import { filter, distinctUntilChanged } from "rxjs/operators";
   imports: [MatIconModule, TitleCasePipe, FormsModule, AddDatabasePathComponent],
   templateUrl: "./database-detail.component.html",
 })
-export class DatabaseDetailComponent implements OnInit, OnDestroy {
+export class DatabaseDetailComponent implements OnInit, OnDestroy, AfterViewInit {
+  @ViewChild("loadMoreTrigger") loadMoreTrigger?: ElementRef;
+
   private db = inject(DatabaseService);
   private connState = inject(ConnectionStateService);
   private confirm = inject(ConfirmService);
@@ -45,6 +47,11 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy {
   loading = signal(false);
   totalDocuments = signal(0);
 
+  collectionOffset = signal(0);
+  collectionHasMore = signal(false);
+  collectionTotalCount = signal(0);
+  loadingMore = signal(false);
+
   editingCollection = signal<string | null>(null);
   editCollectionName = "";
   showCreateCollection = signal(false);
@@ -52,7 +59,37 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy {
   showAddDbModal = signal(false);
 
   private routeSub: Subscription | null = null;
+  private intersectionObserver: IntersectionObserver | null = null;
   private isLoadingCollections = false;
+
+  private collectionsEffect = effect(() => {
+    const connId = this.connectionId();
+    if (connId) {
+      const cached = this.collectionsApi.getCollections(connId);
+      if (cached.length > 0) {
+        this.collections.set(cached);
+      }
+    }
+  });
+
+  ngAfterViewInit() {
+    this.setupIntersectionObserver();
+  }
+
+  private setupIntersectionObserver() {
+    if (!this.loadMoreTrigger) return;
+
+    this.intersectionObserver = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && this.collectionHasMore() && !this.loadingMore()) {
+          this.loadMoreCollections();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    this.intersectionObserver.observe(this.loadMoreTrigger.nativeElement);
+  }
 
   async ngOnInit() {
     this.routeSub = this.route.paramMap
@@ -96,6 +133,7 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.routeSub?.unsubscribe();
     this.isLoadingCollections = false;
+    this.intersectionObserver?.disconnect();
   }
 
   getProviderIcon(): string {
@@ -112,12 +150,18 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy {
     }
 
     this.isLoadingCollections = true;
+    this.collectionOffset.set(0);
+
     try {
       const result = await withErrorHandling(
         async () => {
-          const collections = await this.collectionsApi.listCollections(connId, dbName);
-          const total = collections.reduce((sum, c) => sum + c.count, 0);
-          return { collections, total };
+          const response = await this.collectionsApi.listCollections(connId, dbName, 0, 10);
+          return {
+            collections: response.collections,
+            total: response.collections.reduce((sum, c) => sum + c.count, 0),
+            hasMore: response.hasMore,
+            totalCount: response.totalCount,
+          };
         },
         { loading: this.loading, context: "LoadCollections" },
         { errorHandler: this.errorHandler, toastService: this.toast }
@@ -126,9 +170,39 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy {
       if (result.success && result.data) {
         this.collections.set(result.data.collections);
         this.totalDocuments.set(result.data.total);
+        this.collectionHasMore.set(result.data.hasMore);
+        this.collectionTotalCount.set(result.data.totalCount);
+        this.collectionOffset.set(10);
       }
     } finally {
       this.isLoadingCollections = false;
+    }
+  }
+
+  async loadMoreCollections() {
+    const connId = this.connectionId();
+    const dbName = this.databaseName();
+    if (!connId || !dbName || this.isLoadingCollections || this.loadingMore() || !this.collectionHasMore()) {
+      return;
+    }
+
+    this.loadingMore.set(true);
+    try {
+      const response = await this.collectionsApi.listCollections(
+        connId,
+        dbName,
+        this.collectionOffset(),
+        10
+      );
+
+      this.collections.update((cols) => [...cols, ...response.collections]);
+      this.collectionHasMore.set(response.hasMore);
+      this.collectionTotalCount.set(response.totalCount);
+      this.collectionOffset.update((off) => off + 10);
+    } catch (e) {
+      this.errorHandler.handleError(e, "Loading more collections");
+    } finally {
+      this.loadingMore.set(false);
     }
   }
 

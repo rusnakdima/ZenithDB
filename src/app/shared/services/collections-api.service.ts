@@ -3,36 +3,51 @@ import { CacheService } from "@shared/services/cache.service";
 import { TauriBridgeService } from "@providers/tauri-bridge.service";
 import { CollectionMeta } from "@shared/models/connection.config";
 
+export interface CollectionListResult {
+  collections: CollectionMeta[];
+  hasMore: boolean;
+  totalCount: number;
+}
+
 @Injectable({ providedIn: "root" })
 export class CollectionsApiService extends CacheService {
   private collectionsSignal = signal<Map<string, CollectionMeta[]>>(new Map());
   private refreshCallbacks = new Map<string, Set<() => void>>();
-  private inFlightCollections = new Map<string, Promise<CollectionMeta[]>>();
+  private inFlightCollections = new Map<string, Promise<CollectionListResult>>();
   private tauriBridge = inject(TauriBridgeService);
 
   getCollections(connectionId: string): CollectionMeta[] {
     return this.collectionsSignal().get(connectionId) ?? [];
   }
 
-  async listCollections(connectionId: string, dbName?: string): Promise<CollectionMeta[]> {
-    const cached = this.getCollections(connectionId);
-    if (cached.length > 0) return cached;
-
-    const existing = this.inFlightCollections.get(connectionId);
-    if (existing) {
-      return existing.catch(() => []);
-    }
-
-    const promise = this.fetchCollections(connectionId, dbName).finally(() => {
-      this.inFlightCollections.delete(connectionId);
-    });
-
-    this.inFlightCollections.set(connectionId, promise);
-    return promise;
+  getCollectionsSignal(connectionId: string) {
+    return this.collectionsSignal;
   }
 
-  async listCollectionsWithRefresh(connectionId: string): Promise<CollectionMeta[]> {
-    const result = await this.fetchCollections(connectionId, undefined, true);
+  async listCollections(
+    connectionId: string,
+    dbName?: string,
+    offset = 0,
+    limit = 10
+  ): Promise<CollectionListResult> {
+    if (offset === 0) {
+      const cacheKey = `${connectionId}:${dbName || "all"}`;
+      const existing = this.inFlightCollections.get(cacheKey);
+      if (existing) {
+        return existing.catch(() => ({ collections: [], hasMore: false, totalCount: 0 }));
+      }
+      const promise = this.fetchCollections(connectionId, dbName, offset, limit).finally(() => {
+        this.inFlightCollections.delete(cacheKey);
+      });
+      this.inFlightCollections.set(cacheKey, promise);
+      return promise;
+    }
+    return this.fetchCollections(connectionId, dbName, offset, limit);
+  }
+
+  async listCollectionsWithRefresh(connectionId: string, dbName?: string): Promise<CollectionListResult> {
+    this.invalidateCollections(connectionId);
+    const result = await this.listCollections(connectionId, dbName, 0, 10);
     this.notifyRefresh(connectionId);
     return result;
   }
@@ -57,30 +72,41 @@ export class CollectionsApiService extends CacheService {
 
   private async fetchCollections(
     connectionId: string,
-    dbName?: string,
-    refresh = false
-  ): Promise<CollectionMeta[]> {
-    const cacheKey = `collections:${connectionId}:${dbName || "all"}`;
-    return this.getOrFetch(cacheKey, () =>
-      this.tauriBridge
-        .invoke<{ collections: CollectionMeta[]; has_more: boolean; total_count: number }>(
-          "list_collections",
-          {
-            conn_id: connectionId,
-            db_name: dbName,
-            offset: refresh ? 0 : undefined,
-            limit: refresh ? 10 : undefined,
-          }
-        )
-        .then((result) => {
-          this.collectionsSignal.update((map) => {
-            const newMap = new Map(map);
-            newMap.set(connectionId, result.collections);
-            return newMap;
-          });
-          return result.collections;
-        })
-    );
+    dbName: string | undefined,
+    offset: number,
+    limit: number
+  ): Promise<CollectionListResult> {
+    const result = await this.tauriBridge.invoke<{
+      collections: CollectionMeta[];
+      has_more: boolean;
+      total_count: number;
+    }>("collection_list", {
+      connId: connectionId,
+      dbName: dbName,
+      offset,
+      limit,
+    });
+
+    if (offset === 0) {
+      this.collectionsSignal.update((map) => {
+        const newMap = new Map(map);
+        newMap.set(connectionId, result.collections);
+        return newMap;
+      });
+    } else {
+      this.collectionsSignal.update((map) => {
+        const newMap = new Map(map);
+        const existing = newMap.get(connectionId) ?? [];
+        newMap.set(connectionId, [...existing, ...result.collections]);
+        return newMap;
+      });
+    }
+
+    return {
+      collections: result.collections,
+      hasMore: result.has_more,
+      totalCount: result.total_count,
+    };
   }
 
   private notifyRefresh(connectionId: string): void {

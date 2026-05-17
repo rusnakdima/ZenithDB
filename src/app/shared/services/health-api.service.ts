@@ -88,7 +88,7 @@ export class HealthApiService extends CacheService {
     const cacheKey = `health:${connectionId}`;
     const fetchFn = async (): Promise<ConnectionHealth> => {
       const health = await this.tauriBridge.invoke<ConnectionHealth>("check_health", {
-        connection_id: connectionId,
+        connectionId: connectionId,
       });
       this.healthSignal.update((map) => {
         const newMap = new Map(map);

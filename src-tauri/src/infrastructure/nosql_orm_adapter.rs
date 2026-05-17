@@ -32,40 +32,43 @@ impl DbProvider {
         }])
       }
       DbProvider::Mongo(provider) => {
-        let result = provider
-          .execute_raw("listDatabases", vec![])
-          .await
-          .map_err_string()?;
-        let mut dbs = Vec::new();
-        for row in result.rows {
-          if let Some(doc) = row.get(0).and_then(|v| v.as_object()) {
-            if let Some(name) = doc.get("name").and_then(|v| v.as_str()) {
-              dbs.push(LocalDatabaseMeta {
-                name: name.to_string(),
-                size_bytes: None,
-                table_count: None,
-              });
-            }
-          }
-        }
-        Ok(dbs)
+        let db_names = provider.list_databases().await.map_err_string()?;
+        Ok(
+          db_names
+            .into_iter()
+            .map(|name| LocalDatabaseMeta {
+              name,
+              size_bytes: None,
+              table_count: None,
+            })
+            .collect(),
+        )
       }
       DbProvider::Postgres(provider) => {
-        let result = provider
-          .execute_raw(
-            "SELECT datname FROM pg_database WHERE datistemplate = false",
-            vec![],
-          )
-          .await
-          .map_err_string()?;
-        parse_database_rows(&result.rows)
+        let db_names = provider.list_databases().await.map_err_string()?;
+        Ok(
+          db_names
+            .into_iter()
+            .map(|name| LocalDatabaseMeta {
+              name,
+              size_bytes: None,
+              table_count: None,
+            })
+            .collect(),
+        )
       }
       DbProvider::MySql(provider) => {
-        let result = provider
-          .execute_raw("SHOW DATABASES", vec![])
-          .await
-          .map_err_string()?;
-        parse_database_rows(&result.rows)
+        let db_names = provider.list_databases().await.map_err_string()?;
+        Ok(
+          db_names
+            .into_iter()
+            .map(|name| LocalDatabaseMeta {
+              name,
+              size_bytes: None,
+              table_count: None,
+            })
+            .collect(),
+        )
       }
       DbProvider::Redis(_) => Ok(vec![LocalDatabaseMeta {
         name: "default".to_string(),

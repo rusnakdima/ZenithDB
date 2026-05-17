@@ -69,7 +69,6 @@ export class SidebarComponent implements OnInit {
   currentUrl = signal("");
   isExpandingRoute = signal(false);
   isLoadingConnectionRoute = signal(false);
-  private isLoadingDatabases = false;
 
   databaseOffset = signal(0);
   databaseHasMore = signal(false);
@@ -147,7 +146,7 @@ export class SidebarComponent implements OnInit {
   }
 
   async expandDatabaseForRoute(connId: string, dbName: string) {
-    if (this.isExpandingRoute() || this.isLoadingConnectionRoute() || this.isLoadingDatabases) {
+    if (this.isExpandingRoute() || this.isLoadingConnectionRoute()) {
       return;
     }
     this.isExpandingRoute.set(true);
@@ -193,8 +192,12 @@ export class SidebarComponent implements OnInit {
 
   async loadConnectionForRoute(connId: string) {
     console.log("[Sidebar] loadConnectionForRoute called with:", connId);
-    if (this.isLoadingConnectionRoute() || this.isExpandingRoute() || this.isLoadingDatabases) {
+    if (this.isLoadingConnectionRoute() || this.isExpandingRoute()) {
       console.log("[Sidebar] loadConnectionForRoute early return - already loading");
+      return;
+    }
+    if (this.expandedConnections().has(connId) && this.databases().length > 0 && !this.loadingDatabases()) {
+      console.log("[Sidebar] loadConnectionForRoute early return - already loaded");
       return;
     }
     this.isLoadingConnectionRoute.set(true);
@@ -220,9 +223,20 @@ export class SidebarComponent implements OnInit {
       console.log("[Sidebar] loadConnectionForRoute about to call loadDatabases");
       await this.loadDatabases(connId);
       console.log("[Sidebar] loadConnectionForRoute completed");
+
+      if (this.isSingleDatabaseProvider() && this.databases().length === 1) {
+        const db = this.databases()[0];
+        console.log("[Sidebar] Single DB provider, auto-navigating to:", db.name);
+        this.router.navigate(["/connections", connId, "databases", db.name]);
+      }
     } finally {
       this.isLoadingConnectionRoute.set(false);
     }
+  }
+
+  isSingleDatabaseProvider(): boolean {
+    const p = this.connState.activeProvider();
+    return p === "sqlite" || p === "json";
   }
 
   navigateToWorkbench() {
@@ -278,6 +292,7 @@ export class SidebarComponent implements OnInit {
   async selectConnection(conn: ConnectionSummary) {
     this.connState.setActiveConnection(conn);
     this.router.navigate(["/connections", conn.id]);
+    this.isLoadingConnectionRoute.set(true);
     this.loadDatabases(conn.id);
     this.testConnectionStatus(conn.id);
   }
@@ -298,15 +313,10 @@ export class SidebarComponent implements OnInit {
 
   async loadDatabases(connId: string) {
     console.log("[Sidebar] loadDatabases called with:", connId);
-    if (this.isLoadingDatabases) {
-      console.log("[Sidebar] loadDatabases early return - already loading");
-      return;
-    }
     if (this.connState.activeConnectionId() !== connId) {
       console.log("[Sidebar] loadDatabases early return - connId mismatch");
       return;
     }
-    this.isLoadingDatabases = true;
     this.databaseOffset.set(0);
     try {
       this.loadingDatabases.set(true);
@@ -331,14 +341,12 @@ export class SidebarComponent implements OnInit {
       this.errorHandler.handleError(e, "Loading databases");
       this.databases.set([]);
     } finally {
-      this.isLoadingDatabases = false;
       this.loadingDatabases.set(false);
     }
   }
 
   async loadMoreDatabases(connId: string) {
-    if (this.isLoadingDatabases || !this.databaseHasMore()) return;
-    this.isLoadingDatabases = true;
+    if (!this.databaseHasMore()) return;
     try {
       this.loadingDatabases.set(true);
       const newOffset = this.databaseOffset() + 10;
@@ -357,7 +365,6 @@ export class SidebarComponent implements OnInit {
     } catch (e) {
       this.errorHandler.handleError(e, "Loading more databases");
     } finally {
-      this.isLoadingDatabases = false;
       this.loadingDatabases.set(false);
     }
   }
@@ -376,7 +383,7 @@ export class SidebarComponent implements OnInit {
 
     try {
       const collections = await this.collectionsApi.listCollections(connId, dbNode.name);
-      dbNode.children = collections.map((c) => ({
+      dbNode.children = collections.collections.map((c) => ({
         name: c.name,
         type: "collection" as const,
         expanded: false,

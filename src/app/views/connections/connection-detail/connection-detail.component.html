@@ -23,19 +23,9 @@
     @if (loading()) {
       <div class="glass-card p-12">
         <div class="flex flex-col items-center justify-center gap-4">
-          <div class="relative h-16 w-16">
-            <div
-              class="absolute inset-0 animate-spin rounded-full border-4 border-[var(--accent)]/20"
-            ></div>
-            <div
-              class="absolute inset-0 animate-spin rounded-full border-4 border-transparent border-t-[var(--accent)]"
-              style="animation-delay: -0.15s"
-            ></div>
-            <div
-              class="absolute inset-3 animate-spin rounded-full border-4 border-transparent border-t-[var(--accent)]/50"
-              style="animation-delay: -0.3s"
-            ></div>
-          </div>
+          <div
+            class="h-16 w-16 animate-spin rounded-full border-4 border-[var(--accent)]/20 border-t-[var(--accent)]"
+          ></div>
           <p class="text-sm text-[var(--text-dim)]">Loading connection...</p>
         </div>
       </div>
@@ -70,18 +60,6 @@
             </div>
           </div>
         }
-
-        <div class="glass-card p-6">
-          <span class="text-xs font-semibold tracking-wider text-[var(--text-dim)] uppercase"
-            >Collections</span
-          >
-          <div class="mt-3 flex items-center gap-2">
-            <mat-icon fontIcon="storage" class="h-5! w-5! text-xl! text-[var(--accent)]" />
-            <span class="font-mono text-lg text-[var(--text-main)]">{{
-              collections().length
-            }}</span>
-          </div>
-        </div>
       </div>
 
       <div class="mt-6 flex flex-wrap items-center gap-3">
@@ -140,19 +118,16 @@
 
         <div class="space-y-2">
           @for (db of databases(); track db.name) {
-            <div class="rounded-xl border border-[var(--border-visible)] bg-[var(--bg-card)] p-4">
-              <div
-                class="mb-3 flex cursor-pointer items-center gap-3 transition-colors hover:bg-[var(--bg-elevated)]"
-                (click)="openDatabase(db.name)"
-              >
+            <div
+              class="rounded-xl border border-[var(--border-visible)] bg-[var(--bg-card)] p-4 cursor-pointer transition-colors hover:bg-[var(--bg-elevated)]"
+              (click)="openDatabase(db.name)"
+            >
+              <div class="flex items-center gap-3">
                 <mat-icon fontIcon="storage" class="h-5! w-5! text-xl! text-[var(--accent)]/70" />
                 <span class="flex-1 font-medium text-[var(--text-main)]">{{ db.name }}</span>
                 @if (db.path) {
                   <span class="text-xs text-[var(--text-muted)]">{{ db.path }}</span>
                 }
-                <span class="text-xs text-[var(--text-muted)]"
-                  >{{ getCollectionsForDb(db.name).length }} collections</span
-                >
                 <button
                   type="button"
                   (click)="startEditDb(db.name); $event.stopPropagation()"
@@ -168,25 +143,6 @@
                   <mat-icon fontIcon="delete" class="h-5! w-5! text-xl!" />
                 </button>
               </div>
-              <table class="w-full">
-                <tbody class="divide-y divide-[var(--border-subtle)]">
-                  @for (col of getCollectionsForDb(db.name); track col.name) {
-                    <tr
-                      class="cursor-pointer transition-colors hover:bg-[var(--bg-elevated)]"
-                      (click)="openCollection(col.name)"
-                    >
-                      <td class="px-4 py-3">
-                        <span class="font-medium text-[var(--text-main)]">{{ col.name }}</span>
-                      </td>
-                      <td class="px-4 py-3 text-right">
-                        <span class="font-mono text-sm text-[var(--text-dim)]">{{
-                          col.count
-                        }}</span>
-                      </td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
             </div>
           } @empty {
             <div

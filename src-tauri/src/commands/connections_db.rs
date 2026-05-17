@@ -17,7 +17,9 @@ impl ConnectionsDb {
     }
     let conn =
       Connection::open(&db_path).map_err(|e| format!("Failed to open connections db: {}", e))?;
-    Ok(Self { conn })
+    let db = Self { conn };
+    db.init()?;
+    Ok(db)
   }
 
   fn path() -> Result<PathBuf, String> {
@@ -43,7 +45,7 @@ impl ConnectionsDb {
         [],
       )
       .map_err(|e| e.to_string())?;
-    tracing::info!("Initialized connections table");
+    tracing::trace!("Connections table ready");
     Ok(())
   }
 
@@ -170,9 +172,5 @@ pub async fn get_connections_db() -> Result<Arc<Mutex<ConnectionsDb>>, String> {
       ConnectionsDb::new().expect("Failed to create ConnectionsDb"),
     ))
   });
-  let db = db.clone();
-  let guard = db.lock().await;
-  guard.init().map_err(|e| e.to_string())?;
-  drop(guard);
-  Ok(db)
+  Ok(db.clone())
 }

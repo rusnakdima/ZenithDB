@@ -19,7 +19,10 @@
     "build:smart": "./scripts/build-optimized.sh build desktop release",
     "build:smart:debug": "./scripts/build-optimized.sh build desktop debug",
     "build:smart:android": "./scripts/build-optimized.sh build android release",
-    "build:clean": "./scripts/build-optimized.sh clean"
+    "build:clean": "./scripts/build-optimized.sh clean",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "private": true,
   "dependencies": {
@@ -47,11 +50,16 @@
     "@angular/compiler-cli": "^20.1.4",
     "@tailwindcss/postcss": "^4.1.0",
     "@tauri-apps/cli": "^2",
+    "@testing-library/angular": "^19.2.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@vitest/ui": "^4.1.6",
     "autoprefixer": "^10.5.0",
+    "jsdom": "^29.1.1",
     "postcss": "^8.5.13",
     "prettier": "^3.8.3",
     "prettier-plugin-tailwindcss": "^0.8.0",
     "tailwindcss": "^4.1.0",
-    "typescript": "~5.8.3"
+    "typescript": "~5.8.3",
+    "vitest": "^4.1.6"
   }
 }

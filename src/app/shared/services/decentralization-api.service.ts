@@ -20,20 +20,23 @@ export class DecentralizationApiService extends CacheService {
     return this.databasesSignal().get(connectionId) ?? [];
   }
 
+  getDatabasesSignal(connectionId: string) {
+    return this.databasesSignal;
+  }
+
   async listDatabases(connectionId: string, offset = 0, limit = 10): Promise<DatabaseListResult> {
-    const existing = this.inFlightDatabases.get(connectionId);
-    if (existing && offset === 0) {
-      return existing.catch(() => ({ databases: [], hasMore: false, totalCount: 0 }));
-    }
-
-    const promise = this.fetchDatabases(connectionId, offset, limit).finally(() => {
-      this.inFlightDatabases.delete(connectionId);
-    });
-
     if (offset === 0) {
+      const existing = this.inFlightDatabases.get(connectionId);
+      if (existing) {
+        return existing.catch(() => ({ databases: [], hasMore: false, totalCount: 0 }));
+      }
+      const promise = this.fetchDatabases(connectionId, offset, limit).finally(() => {
+        this.inFlightDatabases.delete(connectionId);
+      });
       this.inFlightDatabases.set(connectionId, promise);
+      return promise;
     }
-    return promise;
+    return this.fetchDatabases(connectionId, offset, limit);
   }
 
   async listDatabasesWithRefresh(connectionId: string): Promise<DatabaseListResult> {
@@ -142,32 +145,29 @@ export class DecentralizationApiService extends CacheService {
     offset: number,
     limit: number
   ): Promise<DatabaseListResult> {
-    const cacheKey = `databases:${connectionId}:${offset}:${limit}`;
-    return this.getOrFetch(cacheKey, () =>
-      this.tauri
-        .invoke<{
-          databases: DatabaseMetadata[];
-          has_more: boolean;
-          total_count: number;
-        }>("database_list", { conn_id: connectionId, offset, limit })
-        .then((result) => {
-          this.databasesSignal.update((map) => {
-            const newMap = new Map(map);
-            const existing = newMap.get(connectionId) ?? [];
-            if (offset === 0) {
-              newMap.set(connectionId, result.databases);
-            } else {
-              newMap.set(connectionId, [...existing, ...result.databases]);
-            }
-            return newMap;
-          });
-          return {
-            databases: result.databases,
-            hasMore: result.has_more,
-            totalCount: result.total_count,
-          };
-        })
-    );
+    return this.tauri
+      .invoke<{
+        databases: DatabaseMetadata[];
+        has_more: boolean;
+        total_count: number;
+      }>("database_list", { connId: connectionId, offset, limit })
+      .then((result) => {
+        this.databasesSignal.update((map) => {
+          const newMap = new Map(map);
+          const existing = newMap.get(connectionId) ?? [];
+          if (offset === 0) {
+            newMap.set(connectionId, result.databases);
+          } else {
+            newMap.set(connectionId, [...existing, ...result.databases]);
+          }
+          return newMap;
+        });
+        return {
+          databases: result.databases,
+          hasMore: result.has_more,
+          totalCount: result.total_count,
+        };
+      });
   }
 
   private notifyRefresh(connectionId: string): void {

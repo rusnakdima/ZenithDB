@@ -3110,35 +3110,35 @@ dependencies = [
 
 [[package]]
 name = "nosql_orm"
-version = "0.8.0"
-source = "git+https://github.com/rusnakdima/nosql_orm?rev=d531d08#d531d082b309a8dd0e3ad00c34ea2316b765e5e7"
+version = "0.9.0"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
  "chrono",
  "deadpool",
  "deadpool-postgres",
+ "futures",
  "futures-util",
- "log",
  "mongodb",
  "mysql_async",
  "nosql_orm_derive",
  "rand 0.8.6",
  "redis",
  "regex",
+ "ring",
  "rusqlite",
  "serde",
  "serde_json",
  "thiserror 1.0.69",
  "tokio",
  "tokio-postgres",
+ "tracing",
  "uuid",
 ]
 
 [[package]]
 name = "nosql_orm_derive"
 version = "0.1.0"
-source = "git+https://github.com/rusnakdima/nosql_orm?rev=d531d08#d531d082b309a8dd0e3ad00c34ea2316b765e5e7"
 dependencies = [
  "chrono",
  "proc-macro2",

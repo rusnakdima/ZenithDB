@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit, OnDestroy } from "@angular/core";
+import { Component, inject, signal, OnInit, OnDestroy, effect } from "@angular/core";
 import { Router, RouterLink, ActivatedRoute } from "@angular/router";
 import { TitleCasePipe } from "@angular/common";
 import { MatIconModule } from "@angular/material/icon";
@@ -11,12 +11,10 @@ import { ToastService } from "@services/toast.service";
 import { ProviderUtils } from "@shared/utils/provider.utils";
 import { DecentralizationApiService } from "@shared/services/decentralization-api.service";
 import { ConnectionsApiService } from "@shared/services/connections-api.service";
-import { CollectionsApiService } from "@shared/services/collections-api.service";
 import { HealthApiService } from "@shared/services/health-api.service";
 import {
   DatabaseMetadata,
   ConnectionHealth,
-  CollectionMeta,
   ConnectionSummary,
   ConnectionConfig,
 } from "@shared/models/connection.config";
@@ -31,8 +29,6 @@ interface DbNode {
   id?: number;
   name: string;
   path?: string;
-  expanded: boolean;
-  collections: CollectionMeta[];
 }
 
 @Component({
@@ -53,7 +49,6 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
   private connState = inject(ConnectionStateService);
   private connectionsApi = inject(ConnectionsApiService);
   private decentralizationApi = inject(DecentralizationApiService);
-  private collectionsApi = inject(CollectionsApiService);
   private healthApi = inject(HealthApiService);
   private confirm = inject(ConfirmService);
   private errorHandler = inject(ErrorHandlerService);
@@ -67,7 +62,6 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
   provider = signal<string | null>(null);
   serverVersion = signal<string | null>(null);
   health = signal<ConnectionHealth | null>(null);
-  collections = signal<CollectionMeta[]>([]);
   databases = signal<DbNode[]>([]);
   loading = signal(true);
   testing = signal(false);
@@ -85,6 +79,22 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
 
   private routeSub: Subscription | null = null;
   private loadController: AbortController | null = null;
+
+  private databasesEffect = effect(() => {
+    const connId = this.connectionId();
+    if (connId) {
+      const cached = this.decentralizationApi.getDatabases(connId);
+      if (cached.length > 0) {
+        this.databases.set(
+          cached.map((db: DatabaseMetadata) => ({
+            id: db.id,
+            name: db.name,
+            path: db.path || undefined,
+          }))
+        );
+      }
+    }
+  });
 
   async ngOnInit() {
     console.log("[ConnectionDetail] ngOnInit started, id:", this.connectionId());
@@ -136,33 +146,30 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
 
     if (this.isLoadingDetails()) return;
     this.isLoadingDetails.set(true);
-    this.databaseOffset.set(0);
 
     try {
-      const [version, collections, healthResult, localDatabasesResult] = await Promise.all([
+      const [version, healthResult] = await Promise.all([
         this.db.getServerVersion().catch(() => null),
-        this.collectionsApi.listCollections(connId).catch(() => []),
         this.healthApi.checkHealth(connId).catch(() => null),
-        this.decentralizationApi
-          .listDatabases(connId, 0, 10)
-          .catch(() => ({ databases: [], hasMore: false, totalCount: 0 })),
       ]);
 
-      if (localDatabasesResult.databases) {
-        this.databaseHasMore.set(localDatabasesResult.hasMore);
-        this.databaseTotalCount.set(localDatabasesResult.totalCount);
-        this.databases.set(
-          localDatabasesResult.databases.map((db: DatabaseMetadata) => ({
-            id: db.id,
-            name: db.name,
-            path: db.path || undefined,
-            expanded: false,
-            collections: [],
-          }))
-        );
+      const cachedDatabases = this.decentralizationApi.getDatabases(connId);
+      if (cachedDatabases.length === 0) {
+        await this.decentralizationApi.listDatabases(connId, 0, 10);
       }
+      const databasesResult = this.decentralizationApi.getDatabases(connId);
+
+      this.databaseOffset.set(0);
+      this.databaseHasMore.set(false);
+      this.databaseTotalCount.set(databasesResult.length);
+      this.databases.set(
+        databasesResult.map((db: DatabaseMetadata) => ({
+          id: db.id,
+          name: db.name,
+          path: db.path || undefined,
+        }))
+      );
       this.serverVersion.set(version);
-      this.collections.set(collections);
       this.health.set(healthResult);
     } finally {
       this.isLoadingDetails.set(false);
@@ -186,8 +193,6 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
           id: db.id,
           name: db.name,
           path: db.path || undefined,
-          expanded: false,
-          collections: [],
         })),
       ]);
     } catch (e) {
@@ -252,26 +257,11 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
     return this.health()?.healthy ? "connected" : "disconnected";
   }
 
-  openCollection(collectionName: string) {
-    const connId = this.connectionId();
-    if (connId) {
-      this.router.navigate(["/connections", connId, "explorer"], {
-        queryParams: { collection: collectionName },
-      });
-    }
-  }
-
   openDatabase(dbName: string) {
     const connId = this.connectionId();
     if (connId) {
       this.router.navigate(["/connections", connId, "databases", dbName]);
     }
-  }
-
-  getCollectionsForDb(dbName: string): CollectionMeta[] {
-    return this.collections().filter(
-      (c) => c.name.startsWith(dbName + ".") || c.name.split(".")[0] === dbName
-    );
   }
 
   needsPath(): boolean {

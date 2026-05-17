@@ -89,25 +89,19 @@ pub async fn database_list(
     }),
     ConnectionConfigEnum::Mongo { uri, .. } => {
       let provider = crate::commands::provider::create_mongo_provider(uri, "admin").await?;
-      let result = provider
-        .execute_raw("listDatabases", vec![])
-        .await
-        .map_err_string()?;
-      let mut dbs = Vec::new();
-      for row in result.rows {
-        if let Some(doc) = row.get(0).and_then(|v| v.as_object()) {
-          if let Some(name) = doc.get("name").and_then(|v| v.as_str()) {
-            dbs.push(DatabaseMeta {
-              name: name.to_string(),
-              size_bytes: None,
-              table_count: None,
-            });
-          }
-        }
-      }
-      let total_count = dbs.len();
-      let has_more = offset + dbs.len() < total_count;
-      let dbs = dbs.into_iter().skip(offset).take(limit).collect();
+      let db_names = provider.list_databases().await.map_err_string()?;
+      let total_count = db_names.len();
+      let has_more = offset + limit < total_count;
+      let dbs: Vec<DatabaseMeta> = db_names
+        .into_iter()
+        .skip(offset)
+        .take(limit)
+        .map(|name| DatabaseMeta {
+          name,
+          size_bytes: None,
+          table_count: None,
+        })
+        .collect();
       Ok(DatabaseListResult {
         databases: dbs,
         has_more,
@@ -116,17 +110,19 @@ pub async fn database_list(
     }
     ConnectionConfigEnum::Postgres { uri, .. } => {
       let provider = crate::commands::provider::create_postgres_provider(uri).await?;
-      let result = provider
-        .execute_raw(
-          "SELECT datname FROM pg_database WHERE datistemplate = false",
-          vec![],
-        )
-        .await
-        .map_err_string()?;
-      let all_dbs = parse_database_rows(&result.rows);
-      let total_count = all_dbs.len();
+      let db_names = provider.list_databases().await.map_err_string()?;
+      let total_count = db_names.len();
       let has_more = offset + limit < total_count;
-      let dbs = all_dbs.into_iter().skip(offset).take(limit).collect();
+      let dbs: Vec<DatabaseMeta> = db_names
+        .into_iter()
+        .skip(offset)
+        .take(limit)
+        .map(|name| DatabaseMeta {
+          name,
+          size_bytes: None,
+          table_count: None,
+        })
+        .collect();
       Ok(DatabaseListResult {
         databases: dbs,
         has_more,
@@ -135,14 +131,19 @@ pub async fn database_list(
     }
     ConnectionConfigEnum::MySql { uri, .. } => {
       let provider = crate::commands::provider::create_mysql_provider(uri).await?;
-      let result = provider
-        .execute_raw("SHOW DATABASES", vec![])
-        .await
-        .map_err_string()?;
-      let all_dbs = parse_database_rows(&result.rows);
-      let total_count = all_dbs.len();
+      let db_names = provider.list_databases().await.map_err_string()?;
+      let total_count = db_names.len();
       let has_more = offset + limit < total_count;
-      let dbs = all_dbs.into_iter().skip(offset).take(limit).collect();
+      let dbs: Vec<DatabaseMeta> = db_names
+        .into_iter()
+        .skip(offset)
+        .take(limit)
+        .map(|name| DatabaseMeta {
+          name,
+          size_bytes: None,
+          table_count: None,
+        })
+        .collect();
       Ok(DatabaseListResult {
         databases: dbs,
         has_more,
@@ -153,10 +154,10 @@ pub async fn database_list(
 }
 
 #[tauri::command]
-pub async fn database_create(conn_id: String, name: String) -> Result<(), String> {
-  validate_conn_id(&conn_id)?;
+pub async fn database_create(connId: String, name: String) -> Result<(), String> {
+  validate_conn_id(&connId)?;
   validate_name(&name)?;
-  let entry = get_connection_entry(&conn_id).await?;
+  let entry = get_connection_entry(&connId).await?;
 
   match &entry.config.config {
     ConnectionConfigEnum::Sqlite { path, .. } => {
@@ -198,14 +199,14 @@ pub async fn database_create(conn_id: String, name: String) -> Result<(), String
 
 #[tauri::command]
 pub async fn database_rename(
-  conn_id: String,
-  old_name: String,
-  new_name: String,
+  connId: String,
+  oldName: String,
+  newName: String,
 ) -> Result<(), String> {
-  validate_conn_id(&conn_id)?;
-  validate_name(&old_name)?;
-  validate_name(&new_name)?;
-  let entry = get_connection_entry(&conn_id).await?;
+  validate_conn_id(&connId)?;
+  validate_name(&oldName)?;
+  validate_name(&newName)?;
+  let entry = get_connection_entry(&connId).await?;
 
   match &entry.config.config {
     ConnectionConfigEnum::Sqlite { .. } => Err(
@@ -213,8 +214,8 @@ pub async fn database_rename(
         .to_string(),
     ),
     ConnectionConfigEnum::Json { path, .. } => {
-      let old_path = validate_safe_path(path, &old_name)?;
-      let new_path = validate_safe_path(path, &new_name)?;
+      let old_path = validate_safe_path(path, &oldName)?;
+      let new_path = validate_safe_path(path, &newName)?;
       if old_path.exists() {
         tokio::fs::rename(&old_path, &new_path)
           .await
@@ -232,7 +233,7 @@ pub async fn database_rename(
       let provider = crate::commands::provider::create_postgres_provider(uri).await?;
       provider
         .execute_raw(
-          &format!("ALTER DATABASE \"{}\" RENAME TO \"{}\"", old_name, new_name),
+          &format!("ALTER DATABASE \"{}\" RENAME TO \"{}\"", oldName, newName),
           vec![],
         )
         .await
@@ -247,10 +248,10 @@ pub async fn database_rename(
 }
 
 #[tauri::command]
-pub async fn database_delete(conn_id: String, name: String) -> Result<(), String> {
-  validate_conn_id(&conn_id)?;
+pub async fn database_delete(connId: String, name: String) -> Result<(), String> {
+  validate_conn_id(&connId)?;
   validate_name(&name)?;
-  let entry = get_connection_entry(&conn_id).await?;
+  let entry = get_connection_entry(&connId).await?;
 
   match &entry.config.config {
     ConnectionConfigEnum::Sqlite { .. } => Err(

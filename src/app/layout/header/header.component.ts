@@ -154,7 +154,7 @@ export class HeaderComponent implements OnDestroy {
         if (connId) {
           try {
             const result = await this.collectionsApi.listCollections(connId);
-            collections = result || [];
+            collections = result.collections || [];
           } catch {
             collections = [];
           }

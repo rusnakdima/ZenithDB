@@ -137,15 +137,21 @@ pub async fn list_connections() -> Result<Vec<ConnectionSummary>, String> {
   let entities = guard.find_all()?;
   drop(guard);
 
-  let summaries = entities
-    .into_iter()
-    .map(|e| ConnectionSummary {
+  let mut summaries = Vec::new();
+  for e in entities {
+    let health = check_provider_health(&e.config).await;
+    let status = if health.healthy {
+      "connected".to_string()
+    } else {
+      "disconnected".to_string()
+    };
+    summaries.push(ConnectionSummary {
       id: e.id,
       name: e.name,
       provider: e.type_.to_lowercase(),
-      status: "unknown".to_string(),
-    })
-    .collect();
+      status,
+    });
+  }
 
   Ok(summaries)
 }
@@ -173,10 +179,15 @@ pub async fn check_provider_health(config: &ConnectionConfig) -> ConnectionHealt
     ConnectionConfigEnum::Mongo { uri, database, .. } => {
       match create_mongo_provider(uri, database).await {
         Ok(p) => {
-          let healthy = match p.health_check().await {
-            Ok(h) => h,
-            Err(_) => matches!(p.list_collections().await, Ok(_)),
-          };
+          let healthy =
+            match tokio::time::timeout(std::time::Duration::from_secs(5), p.health_check()).await {
+              Ok(Ok(h)) => h,
+              Ok(Err(_)) => matches!(
+                tokio::time::timeout(std::time::Duration::from_secs(5), p.list_collections()).await,
+                Ok(Ok(_))
+              ),
+              Err(_) => false,
+            };
           if healthy {
             ConnectionHealth::ok("mongo")
           } else {
