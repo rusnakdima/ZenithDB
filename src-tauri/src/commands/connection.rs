@@ -262,19 +262,19 @@ pub async fn test_connection_status(id: &str) -> Result<ConnectionSummary, Strin
 }
 
 #[tauri::command]
-pub async fn check_health(id: &str) -> Result<ConnectionHealth, String> {
+pub async fn check_health(connId: &str) -> Result<ConnectionHealth, String> {
   let auth = get_auth_context();
-  if !auth.can_access_connection(id) {
+  if !auth.can_access_connection(connId) {
     return Err("Access denied to connection".to_string());
   }
-  validate_conn_id(id)?;
+  validate_conn_id(connId)?;
 
   let db = get_connections_db().await?;
   let db = db.clone();
   let guard = db.lock().await;
   let entity = guard
-    .find_by_id(id)?
-    .ok_or_else(|| format!("Connection {} not found", id))?;
+    .find_by_id(connId)?
+    .ok_or_else(|| format!("Connection {} not found", connId))?;
   drop(guard);
 
   tokio::time::timeout(std::time::Duration::from_secs(10), async {
