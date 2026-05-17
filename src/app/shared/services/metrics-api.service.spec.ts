@@ -1,6 +1,6 @@
-import { mockSystemMetrics } from '../test-utils/mock-data';
+import { mockSystemMetrics } from "../test-utils/mock-data";
 
-describe('MetricsApiService', () => {
+describe("MetricsApiService", () => {
   let service: any;
   let mockTauriBridge: any;
   let mockInvoke: jest.Mock;
@@ -44,7 +44,7 @@ describe('MetricsApiService', () => {
         service.metricsTimestamp.set(0);
       }),
       fetchMetricsInternal: jest.fn().mockImplementation(async () => {
-        const metrics = await mockTauriBridge.invoke('get_system_status', {});
+        const metrics = await mockTauriBridge.invoke("get_system_status", {});
         service.metricsSignal.set(metrics);
         service.metricsTimestamp.set(Date.now());
         return metrics;
@@ -54,22 +54,22 @@ describe('MetricsApiService', () => {
     };
   });
 
-  describe('getMetrics', () => {
-    it('should return cached metrics', () => {
+  describe("getMetrics", () => {
+    it("should return cached metrics", () => {
       service.metricsSignal.get = () => mockSystemMetrics;
 
       expect(service.getMetrics()).toEqual(mockSystemMetrics);
     });
 
-    it('should return null if not cached', () => {
+    it("should return null if not cached", () => {
       service.metricsSignal.get = () => null;
 
       expect(service.getMetrics()).toBeNull();
     });
   });
 
-  describe('fetchMetrics', () => {
-    it('should return cached metrics if fresh', async () => {
+  describe("fetchMetrics", () => {
+    it("should return cached metrics if fresh", async () => {
       service.metricsSignal.get = () => mockSystemMetrics;
       service.metricsTimestamp.get = () => Date.now();
 
@@ -79,19 +79,19 @@ describe('MetricsApiService', () => {
       expect(mockInvoke).not.toHaveBeenCalled();
     });
 
-    it('should fetch fresh metrics if stale', async () => {
+    it("should fetch fresh metrics if stale", async () => {
       service.metricsSignal.get = () => mockSystemMetrics;
       service.metricsTimestamp.get = () => Date.now() - 20000;
       mockInvoke.mockResolvedValue(mockSystemMetrics);
 
       const result = await service.fetchMetrics();
 
-      expect(mockInvoke).toHaveBeenCalledWith('get_system_status', {});
+      expect(mockInvoke).toHaveBeenCalledWith("get_system_status", {});
     });
   });
 
-  describe('fetchMetricsWithRefresh', () => {
-    it('should fetch metrics and notify listeners', async () => {
+  describe("fetchMetricsWithRefresh", () => {
+    it("should fetch metrics and notify listeners", async () => {
       const callback = jest.fn();
       service.refreshCallbacks.add(callback);
       service.metricsSignal.get = () => null;
@@ -104,8 +104,8 @@ describe('MetricsApiService', () => {
     });
   });
 
-  describe('onMetricsRefreshed', () => {
-    it('should register callback and return unsubscribe function', () => {
+  describe("onMetricsRefreshed", () => {
+    it("should register callback and return unsubscribe function", () => {
       const callback = jest.fn();
       service.refreshCallbacks = new Set();
 
@@ -117,8 +117,8 @@ describe('MetricsApiService', () => {
     });
   });
 
-  describe('invalidateMetrics', () => {
-    it('should clear metrics and timestamp', () => {
+  describe("invalidateMetrics", () => {
+    it("should clear metrics and timestamp", () => {
       service.invalidateMetrics();
 
       expect(service.metricsSignal.set).toHaveBeenCalledWith(null);

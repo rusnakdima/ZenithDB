@@ -1,4 +1,14 @@
-import { Component, inject, signal, OnInit, OnDestroy, ElementRef, ViewChild, AfterViewInit, effect } from "@angular/core";
+import {
+  Component,
+  inject,
+  signal,
+  OnInit,
+  OnDestroy,
+  ElementRef,
+  ViewChild,
+  AfterViewInit,
+  effect,
+} from "@angular/core";
 import { Router, RouterLink, ActivatedRoute } from "@angular/router";
 import { TitleCasePipe } from "@angular/common";
 import { MatIconModule } from "@angular/material/icon";
@@ -64,9 +74,10 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy, AfterViewInit
 
   private collectionsEffect = effect(() => {
     const connId = this.connectionId();
-    if (connId) {
+    const dbName = this.databaseName();
+    if (connId && dbName) {
       const cached = this.collectionsApi.getCollections(connId);
-      if (cached.length > 0) {
+      if (cached.length > 0 && this.collections().length === 0) {
         this.collections.set(cached);
       }
     }
@@ -182,7 +193,13 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy, AfterViewInit
   async loadMoreCollections() {
     const connId = this.connectionId();
     const dbName = this.databaseName();
-    if (!connId || !dbName || this.isLoadingCollections || this.loadingMore() || !this.collectionHasMore()) {
+    if (
+      !connId ||
+      !dbName ||
+      this.isLoadingCollections ||
+      this.loadingMore() ||
+      !this.collectionHasMore()
+    ) {
       return;
     }
 

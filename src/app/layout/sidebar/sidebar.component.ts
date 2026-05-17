@@ -108,15 +108,31 @@ export class SidebarComponent implements OnInit {
     return match ? match[1] : null;
   });
 
+  private lastProcessedUrl = "";
+  private routeEffectDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+
   private routeEffect = effect(() => {
     const dbName = this.activeDatabaseName();
     const connId = this.activeConnectionId();
-    console.log("[Sidebar] routeEffect triggered, connId:", connId, "dbName:", dbName);
-    if (dbName && connId) {
-      this.expandDatabaseForRoute(connId, dbName);
-    } else if (!dbName && connId && connId !== "new") {
-      this.loadConnectionForRoute(connId);
+    const currentUrl = this.currentUrl();
+
+    if (this.routeEffectDebounceTimer) {
+      clearTimeout(this.routeEffectDebounceTimer);
     }
+
+    this.routeEffectDebounceTimer = setTimeout(() => {
+      if (this.lastProcessedUrl === currentUrl) {
+        return;
+      }
+      this.lastProcessedUrl = currentUrl;
+
+      console.log("[Sidebar] routeEffect triggered, connId:", connId, "dbName:", dbName);
+      if (dbName && connId && connId !== "new") {
+        this.expandDatabaseForRoute(connId, dbName);
+      } else if (!dbName && connId && connId !== "new") {
+        this.loadConnectionForRoute(connId);
+      }
+    }, 100);
   });
 
   ngOnInit() {
@@ -142,6 +158,9 @@ export class SidebarComponent implements OnInit {
       this.routerSub?.unsubscribe();
       this.statusSubscription?.unsubscribe();
       this.connectionStatusSubscription?.unsubscribe();
+      if (this.routeEffectDebounceTimer) {
+        clearTimeout(this.routeEffectDebounceTimer);
+      }
     });
   }
 
@@ -152,7 +171,10 @@ export class SidebarComponent implements OnInit {
     this.isExpandingRoute.set(true);
     try {
       const conn = this.dataStore.getConnections().find((c) => c.id === connId);
-      if (!conn) return;
+      if (!conn) {
+        this.isExpandingRoute.set(false);
+        return;
+      }
 
       if (this.connState.activeConnectionId() !== connId) {
         this.connState.setActiveConnection(conn);
@@ -164,6 +186,9 @@ export class SidebarComponent implements OnInit {
           newSet.add(connId);
           return newSet;
         });
+      }
+
+      if (this.databases().length === 0 && !this.loadingDatabases()) {
         await this.loadDatabases(connId);
       }
 
@@ -172,6 +197,7 @@ export class SidebarComponent implements OnInit {
         dbNode.expanded = true;
         if (dbNode.children && dbNode.children.length > 0) {
           this.databases.update((dbs) => [...dbs]);
+          this.isExpandingRoute.set(false);
           return;
         }
         await this.loadCollectionsForDatabase(dbNode, connId);
@@ -196,7 +222,11 @@ export class SidebarComponent implements OnInit {
       console.log("[Sidebar] loadConnectionForRoute early return - already loading");
       return;
     }
-    if (this.expandedConnections().has(connId) && this.databases().length > 0 && !this.loadingDatabases()) {
+    if (
+      this.expandedConnections().has(connId) &&
+      this.databases().length > 0 &&
+      !this.loadingDatabases()
+    ) {
       console.log("[Sidebar] loadConnectionForRoute early return - already loaded");
       return;
     }
@@ -315,15 +345,17 @@ export class SidebarComponent implements OnInit {
     console.log("[Sidebar] loadDatabases called with:", connId);
     if (this.connState.activeConnectionId() !== connId) {
       console.log("[Sidebar] loadDatabases early return - connId mismatch");
+      this.loadingDatabases.set(false);
       return;
     }
     this.databaseOffset.set(0);
+    this.loadingDatabases.set(true);
     try {
-      this.loadingDatabases.set(true);
       console.log("[Sidebar] loadDatabases about to call getDatabases");
       const result = await this.decentralizationApi.listDatabases(connId, 0, 10);
       console.log("[Sidebar] loadDatabases got databases:", result.databases.length);
       if (this.connState.activeConnectionId() !== connId) {
+        this.loadingDatabases.set(false);
         return;
       }
       this.databaseHasMore.set(result.hasMore);
@@ -347,11 +379,15 @@ export class SidebarComponent implements OnInit {
 
   async loadMoreDatabases(connId: string) {
     if (!this.databaseHasMore()) return;
+    if (this.loadingDatabases()) return;
     try {
       this.loadingDatabases.set(true);
       const newOffset = this.databaseOffset() + 10;
       const result = await this.decentralizationApi.listDatabases(connId, newOffset, 10);
-      if (this.connState.activeConnectionId() !== connId) return;
+      if (this.connState.activeConnectionId() !== connId) {
+        this.loadingDatabases.set(false);
+        return;
+      }
       this.databaseOffset.set(newOffset);
       this.databaseHasMore.set(result.hasMore);
       this.databaseTotalCount.set(result.totalCount);

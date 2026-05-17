@@ -45,7 +45,10 @@ export class CollectionsApiService extends CacheService {
     return this.fetchCollections(connectionId, dbName, offset, limit);
   }
 
-  async listCollectionsWithRefresh(connectionId: string, dbName?: string): Promise<CollectionListResult> {
+  async listCollectionsWithRefresh(
+    connectionId: string,
+    dbName?: string
+  ): Promise<CollectionListResult> {
     this.invalidateCollections(connectionId);
     const result = await this.listCollections(connectionId, dbName, 0, 10);
     this.notifyRefresh(connectionId);

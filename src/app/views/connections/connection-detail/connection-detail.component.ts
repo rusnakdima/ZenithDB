@@ -171,6 +171,7 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
       );
       this.serverVersion.set(version);
       this.health.set(healthResult);
+      this.loading.set(false);
     } finally {
       this.isLoadingDetails.set(false);
     }

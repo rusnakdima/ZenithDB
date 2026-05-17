@@ -207,7 +207,7 @@
                       <button
                         class="flex items-center gap-1 rounded px-2 py-1 text-xs text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--accent)]"
                         title="Copy JSON"
-                        (click)="copyRowJson(doc)"
+                        (click)="copyRowJson(doc, docIndex)"
                       >
                         <mat-icon fontIcon="content_copy" class="h-6! w-5! text-xl!" />
                       </button>
@@ -221,19 +221,21 @@
                     </div>
                   </div>
                   <div class="json-body p-4">
-                    @for (line of formatJsonLinesFn(doc); track $index; let lineIndex = $index) {
-                      <div
-                        class="json-line mono flex text-sm leading-relaxed hover:bg-[var(--bg-elevated)]"
-                      >
-                        <span
-                          class="json-line-num w-10 flex-shrink-0 pr-4 text-right text-xs text-[var(--text-muted)] select-none"
-                          >{{ lineIndex + 1 }}</span
+                    @if (getDocLines(docIndex); as docData) {
+                      @for (line of docData.lines; track $index; let lineIndex = $index) {
+                        <div
+                          class="json-line mono flex text-sm leading-relaxed hover:bg-[var(--bg-elevated)]"
                         >
-                        <span
-                          class="json-line-content"
-                          [innerHTML]="highlightJsonLineFn(line)"
-                        ></span>
-                      </div>
+                          <span
+                            class="json-line-num w-10 flex-shrink-0 pr-4 text-right text-xs text-[var(--text-muted)] select-none"
+                            >{{ lineIndex + 1 }}</span
+                          >
+                          <span
+                            class="json-line-content"
+                            [innerHTML]="highlightJsonLineFn(line)"
+                          ></span>
+                        </div>
+                      }
                     }
                   </div>
                 </div>

@@ -119,7 +119,7 @@
         <div class="space-y-2">
           @for (db of databases(); track db.name) {
             <div
-              class="rounded-xl border border-[var(--border-visible)] bg-[var(--bg-card)] p-4 cursor-pointer transition-colors hover:bg-[var(--bg-elevated)]"
+              class="cursor-pointer rounded-xl border border-[var(--border-visible)] bg-[var(--bg-card)] p-4 transition-colors hover:bg-[var(--bg-elevated)]"
               (click)="openDatabase(db.name)"
             >
               <div class="flex items-center gap-3">

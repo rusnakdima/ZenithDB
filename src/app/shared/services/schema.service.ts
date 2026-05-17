@@ -17,6 +17,9 @@ export class SchemaService {
 
   async listCollections(connId?: string, dbName?: string): Promise<CollectionMeta[]> {
     const id = connId || this.connectionState.activeConnectionId();
+    if (!id) {
+      return [];
+    }
     return withConnectionAndLoading(id, this.loadingService, "Loading collections...", (connId) =>
       this.api.listCollections(connId, dbName)
     );

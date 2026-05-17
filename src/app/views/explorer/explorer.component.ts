@@ -87,6 +87,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   selectedColumns = signal<string[]>([]);
   showCollectionSelector = signal(false);
   fullJsonData = signal<RowData[]>([]);
+  jsonDocumentsMap = signal<Map<number, { lines: string[]; json: string }>>(new Map());
   jsonLoading = signal(false);
   jsonLoadProgress = signal(0);
 
@@ -159,9 +160,9 @@ export class ExplorerComponent implements OnInit, OnDestroy {
       loading: this.loading,
       errorMessage: "Failed to load collections",
     });
-    if (!result.success) return;
+    if (!result.success || !result.data) return;
 
-    const cols = result.data!;
+    const cols = result.data;
     this.collections.set(cols);
     if (cols.length > 0) {
       const collectionToSelect =
@@ -208,20 +209,28 @@ export class ExplorerComponent implements OnInit, OnDestroy {
 
   async loadFullJsonData() {
     this.fullJsonData.set([]);
+    this.jsonDocumentsMap.set(new Map());
     this.jsonLoading.set(true);
     this.jsonLoadProgress.set(0);
-    const BATCH_SIZE = 1000;
+    const BATCH_SIZE = 100;
     try {
       const result = await this.db.queryData(this.activeCollection(), {
         limit: 10000,
       });
       const allData = result.data as RowData[];
       const totalRows = allData.length;
-      const processedData: RowData[] = [];
+      const docMap = new Map<number, { lines: string[]; json: string }>();
 
       for (let i = 0; i < totalRows; i += BATCH_SIZE) {
         const batch = allData.slice(i, Math.min(i + BATCH_SIZE, totalRows));
-        processedData.push(...batch);
+        batch.forEach((doc, idx) => {
+          const docIndex = i + idx;
+          const jsonStr = JSON.stringify(doc, null, 2);
+          docMap.set(docIndex, {
+            lines: jsonStr.split("\n"),
+            json: jsonStr,
+          });
+        });
 
         const progress = Math.round(((i + batch.length) / totalRows) * 100);
         this.jsonLoadProgress.set(progress);
@@ -233,7 +242,8 @@ export class ExplorerComponent implements OnInit, OnDestroy {
         });
       }
 
-      this.fullJsonData.set(processedData);
+      this.fullJsonData.set(allData);
+      this.jsonDocumentsMap.set(docMap);
       this.jsonLoadProgress.set(100);
     } catch {
       this.toast.error("Failed to load JSON data");
@@ -262,6 +272,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   selectTab(collection: string) {
     this.activeCollection.set(collection);
     this.fullJsonData.set([]);
+    this.jsonDocumentsMap.set(new Map());
     this.page.set(0);
     this.loadStats();
     this.loadColumns();
@@ -402,8 +413,10 @@ export class ExplorerComponent implements OnInit, OnDestroy {
     this.clipboard.copyToClipboard(json, "JSON copied to clipboard");
   }
 
-  copyRowJson(doc: RowData) {
-    this.clipboard.copyToClipboard(JSON.stringify(doc, null, 2), "Copied to clipboard");
+  copyRowJson(doc: RowData, docIndex: number) {
+    const cached = this.jsonDocumentsMap().get(docIndex);
+    const json = cached ? cached.json : JSON.stringify(doc, null, 2);
+    this.clipboard.copyToClipboard(json, "Copied to clipboard");
   }
 
   getReloadTrigger(): number {
@@ -413,6 +426,10 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   formatJsonLinesFn = (obj: unknown): string[] => formatJsonLines(JSON.stringify(obj, null, 2));
   highlightJsonLineFn = highlightJsonLine;
   trackByIndex = (index: number): number => index;
+
+  getDocLines(index: number): { lines: string[]; json: string } | undefined {
+    return this.jsonDocumentsMap().get(index);
+  }
 
   handleDelete() {
     const doc = this.inspectorDocument();

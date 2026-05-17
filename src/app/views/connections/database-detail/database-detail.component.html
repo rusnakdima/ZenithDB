@@ -152,14 +152,22 @@
                 }
               </tbody>
             </table>
-            <div #loadMoreTrigger class="flex items-center justify-center p-4" id="load-more-trigger">
+            <div
+              #loadMoreTrigger
+              class="flex items-center justify-center p-4"
+              id="load-more-trigger"
+            >
               @if (loadingMore()) {
                 <div class="flex items-center gap-2 text-[var(--text-dim)]">
-                  <div class="h-4 w-4 animate-spin rounded-full border-2 border-[var(--accent)]/20 border-t-[var(--accent)]"></div>
+                  <div
+                    class="h-4 w-4 animate-spin rounded-full border-2 border-[var(--accent)]/20 border-t-[var(--accent)]"
+                  ></div>
                   <span class="text-sm">Loading more...</span>
                 </div>
               } @else if (!collectionHasMore() && collections().length > 0) {
-                <span class="text-sm text-[var(--text-muted)]">No more collections ({{ collectionTotalCount() }} total)</span>
+                <span class="text-sm text-[var(--text-muted)]"
+                  >No more collections ({{ collectionTotalCount() }} total)</span
+                >
               } @else if (collectionHasMore()) {
                 <button (click)="loadMoreCollections()" class="form-btn form-btn-secondary">
                   Load More
