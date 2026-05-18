@@ -25,18 +25,11 @@
 
   <launchable type="desktop-id">com.tcs.zenithdb.desktop</launchable>
 
-  <screenshots>
-    <screenshot type="default">
-      <image>https://via.placeholder.com/800x600</image>
-      <caption>Main database management interface</caption>
-    </screenshot>
-  </screenshots>
-
   <url type="homepage">https://github.com/rusnakdima/ZenithDB</url>
   <url type="bugtracker">https://github.com/rusnakdima/ZenithDB/issues</url>
 
   <releases>
-    <release version="0.1.0" date="2026-05-04">
+    <release version="0.1.0" date="2026-05-19">
       <description>
         <p>Initial release of ZenithDB</p>
       </description>

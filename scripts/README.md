@@ -71,6 +71,7 @@ This script ensures version consistency across all project files:
 - `package.json` (frontend version)
 - `src-tauri/Cargo.toml` (backend version)
 - `src-tauri/tauri.conf.json` (Tauri configuration)
+- `src/environments/environment.ts` (Angular environment configuration)
 - `flatpak/com.tcs.zenithdb.yml` (Flatpak manifest)
 - `flatpak/com.tcs.zenithdb.metainfo.xml` (App metadata)
 
@@ -90,7 +91,8 @@ When you run the script:
 1. Updates the version field in `package.json`
 2. Updates the version field in `Cargo.toml`
 3. Updates the version field in `tauri.conf.json`
-4. Updates the version field in the Flatpak manifest
-5. Adds a new release entry to the metainfo.xml with current date
+4. Updates the version field in `environment.ts`
+5. Updates the version field in the Flatpak manifest
+6. Adds a new release entry to the metainfo.xml with current date
 
 This ensures consistency across all version references in the project.

@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Build script for Flatpak Linux
+# This script builds your Tauri app as a Flatpak package
+# Usage: ./build.sh [build|no-build]
+#   build: Build the Tauri app first then create Flatpak (default)
+#   no-build: Skip building the Tauri app and proceed with Flatpak packaging using existing binary
+
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -42,6 +48,7 @@ APP_ID="com.tcs.zenithdb"
 MANIFEST="${APP_ID}.yml"
 BUILD_DIR="./build"
 REPO_DIR="./repo"
+VERSION="${2:-$(grep '"version"' ../src-tauri/tauri.conf.json | awk -F'"' '{print $4}')}"
 
 echo -e "${YELLOW}Step 1: Installing required runtimes...${NC}"
 flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo || true
@@ -70,13 +77,13 @@ flatpak-builder \
 	"${MANIFEST}"
 
 echo -e "${YELLOW}Step 4: Creating Flatpak bundle...${NC}"
-flatpak build-bundle "${REPO_DIR}" "${APP_ID}.flatpak" "${APP_ID}"
+flatpak build-bundle "${REPO_DIR}" "zenithdb-${VERSION}.flatpak" "${APP_ID}"
 echo -e "${GREEN}=== Build Complete! ===${NC}"
 echo ""
-echo "Created bundle: ${APP_ID}.flatpak"
+echo "Created bundle: zenithdb-${VERSION}.flatpak"
 echo ""
 echo "To install the bundle:"
-echo -e "  ${YELLOW}flatpak install ${APP_ID}.flatpak${NC}"
+echo -e "  ${YELLOW}flatpak install zenithdb-${VERSION}.flatpak${NC}"
 echo ""
 echo "To run your app:"
 echo -e "  ${YELLOW}flatpak run ${APP_ID}${NC}"

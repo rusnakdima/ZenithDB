@@ -1,7 +1,147 @@
-# Tauri + Angular
+# ZenithDB
 
-This template should help get you started developing with Tauri and Angular.
+ZenithDB is a professional database management application built with [Tauri](https://tauri.app/) that supports multiple database types including MongoDB, Redis, PostgreSQL, MySQL, and SQLite. The application provides a clean, intuitive interface for managing and organizing database operations with cross-platform support.
 
-## Recommended IDE Setup
+## Screenshots
 
-[VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer) + [Angular Language Service](https://marketplace.visualstudio.com/items?itemName=Angular.ng-template).
+<details>
+  <summary>Spoiler</summary>
+  <details>
+    <summary>Main Views</summary>
+    <h3>Dashboard</h3>
+    <img src="imgREADME/dashboard.png" alt="Dashboard">
+    <h3>Explorer</h3>
+    <img src="imgREADME/explorer.png" alt="Explorer">
+    <h3>Workbench</h3>
+    <img src="imgREADME/workbench.png" alt="Workbench">
+  </details>
+  <details>
+    <summary>Database Management</summary>
+    <h3>SQL Editor</h3>
+    <img src="imgREADME/sql-editor.png" alt="SQL Editor">
+    <h3>Collection Explorer</h3>
+    <img src="imgREADME/collection-explorer.png" alt="Collection Explorer">
+    <h3>Inspector Drawer</h3>
+    <img src="imgREADME/inspector-drawer.png" alt="Inspector Drawer">
+  </details>
+</details>
+
+## Installation
+
+#### Checking the installed tools to launch the project
+
+First make sure you have Node.js and Bun installed.
+To do this, open a command prompt or terminal and type the following commands:
+
+```bash
+node -v
+```
+
+```bash
+npm -v
+```
+
+If you are using the bun package manager, then run this command:
+
+```bash
+bun -v
+```
+
+#### Installation dependencies
+
+After that, go to the folder with this project and run the following command:
+
+```bash
+npm install
+```
+
+If you are using the bun package manager, then run this command:
+
+```bash
+bun install
+```
+
+#### Checking the Rust compiler
+
+In order to run a Rust application, you need to make sure that you have a compiler for Rust.
+To find out if you have one, enter the following command:
+
+```bash
+rustc --version
+```
+
+If you get an error instead of a version, it means that you don't have a Rust compiler. In order to set it up, go to the [official website](https://www.rust-lang.org/tools/install) and follow the instructions on the website.
+
+## Usage
+
+After installing the dependencies, use the following command to run, depending on the package manager you are using:
+
+```bash
+npm run tauri dev
+```
+
+Or
+
+```bash
+bun run tauri dev
+```
+
+## Build Optimization
+
+This project includes several optimizations to reduce build times and avoid unnecessary recompilation of Tauri components:
+
+### Smart Build Scripts
+
+Use the optimized build scripts that only rebuild components when source files have changed:
+
+```bash
+# Build desktop application (only rebuilds if files changed)
+bun run build:smart
+
+# Build desktop debug version
+bun run build:smart:debug
+
+# Build Android APK (only rebuilds if files changed)
+bun run build:smart:android
+
+# Build Android APK debug version
+bun run build:smart:android:debug
+
+# Clean all build artifacts and cache
+bun run build:clean
+```
+
+### Traditional Build Scripts
+
+For comparison, traditional build scripts are still available:
+
+```bash
+# Standard desktop build (always rebuilds everything)
+bun run tauri:build
+
+# Android APK build
+bun run tauri:build:android:apk
+
+# Android AAB build
+bun run tauri:build:android:aab
+```
+
+### Build Optimizations Applied
+
+1. **Incremental Compilation**: Rust code uses incremental compilation to avoid recompiling unchanged code
+2. **Smart Frontend Building**: Frontend is only rebuilt when source files change
+3. **Optimized Codegen Units**: Development builds use 16 codegen units for faster compilation
+4. **Build Caching**: Build timestamps are tracked to determine what needs rebuilding
+5. **CI/CD Integration**: The same optimized build script works in GitHub Actions for consistent builds across all platforms (desktop, Android, iOS)
+
+## Authors
+
+- [Dmitriy303](https://github.com/rusnakdima)
+
+## License
+
+This project is licensed under the [MIT License](LICENSE.MD).
+
+## Contact
+
+If you have any questions or comments about this project, please feel free to contact us at [rusnakdima03@gmail.com](mailto:rusnakdima03@gmail.com).
