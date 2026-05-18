@@ -77,14 +77,8 @@ pub async fn collection_list(
         });
       }
 
-      if let Some(dbName) = dbName {
-        let db_path = path_obj.join(&dbName);
-        let result = list_json_files_in_dir(db_path, offset, limit).await?;
-        Ok(result)
-      } else {
-        let result = list_all_json_collections_recursive(path_obj, offset, limit).await?;
-        Ok(result)
-      }
+      let result = list_all_json_collections_recursive(path_obj, offset, limit).await?;
+      Ok(result)
     }
     _ => {
       dispatch_provider!(entry, provider => {
