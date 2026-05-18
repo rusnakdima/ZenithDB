@@ -26,13 +26,13 @@
   <div class="flex-1 overflow-auto p-6">
     @if (viewMode === "json") {
       <div class="json-view-container h-full p-6">
-        @if (loading) {
+        @if (loading()) {
           <div class="flex h-full items-center justify-center">
             <div
               class="h-8 w-8 animate-spin rounded-full border-2 border-[var(--accent)] border-t-transparent"
             ></div>
           </div>
-        } @else if (data.length === 0) {
+        } @else if (data().length === 0) {
           <div class="flex h-full flex-col items-center justify-center text-[var(--text-dim)]">
             <mat-icon fontIcon="inbox" class="mb-4 h-12! w-12! text-xl! opacity-50" />
             <p class="text-lg font-bold">No documents found</p>
@@ -40,7 +40,7 @@
           </div>
         } @else {
           <div class="json-content space-y-4">
-            @for (row of data; track trackByRow($index, row); let docIndex = $index) {
+            @for (row of data(); track trackByRow($index, row); let docIndex = $index) {
               <div class="glass-card overflow-hidden">
                 <div
                   class="flex items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-4 py-3"
@@ -83,13 +83,13 @@
       </div>
     } @else {
       <div class="table-container w-full">
-        @if (loading) {
+        @if (loading()) {
           <div class="flex h-full items-center justify-center">
             <div
               class="h-8 w-8 animate-spin rounded-full border-2 border-[var(--accent)] border-t-transparent"
             ></div>
           </div>
-        } @else if (data.length === 0) {
+        } @else if (data().length === 0) {
           <div class="flex h-full flex-col items-center justify-center text-[var(--text-dim)]">
             <mat-icon fontIcon="table_chart" class="mb-4 h-12! w-12! text-xl! opacity-50" />
             <p class="text-lg font-bold">No data in this collection</p>
@@ -104,7 +104,7 @@
               [columnWidths]="columnWidths()"
               [sortColumn]="sortColumn()"
               [sortDirection]="sortDirection()"
-              [allSelected]="allSelected"
+              [allSelected]="allSelected()"
               (sortChange)="onSort($event)"
               (columnDrop)="onColumnDrop($event)"
               (columnResizeStart)="onColumnResizeStart($event.col, $event.event)"
@@ -116,7 +116,7 @@
             />
 
             <app-table-body
-              [data]="data"
+              [data]="data()"
               [columns]="columns"
               [visibleColumnsList]="visibleColumnsList()"
               [columnWidths]="columnWidths()"
@@ -134,7 +134,7 @@
 
   <app-pagination
     class="flex flex-shrink-0"
-    [totalItems]="total"
+    [totalItems]="total()"
     [currentPage]="page"
     [pageSize]="pageSize"
     (pageChange)="onPageChange($event)"
@@ -144,7 +144,7 @@
   <app-export-dialog
     [visible]="showExportDialog()"
     [selectedCount]="selectedRows().size"
-    [totalCount]="data.length"
+    [totalCount]="data().length"
     (exportData)="exportData($event)"
     (close)="closeExportDialog()"
   />

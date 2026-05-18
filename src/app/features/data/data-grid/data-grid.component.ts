@@ -79,7 +79,9 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
   private hasLoadedColumnOrder = false;
 
   ngOnChanges(changes: SimpleChanges) {
-    if (!this.collectionName) return;
+    if (!this.collectionName) {
+      return;
+    }
 
     const collectionChanged =
       this.hasInitialized && changes["collectionName"]?.currentValue !== this.lastCollectionName;
@@ -113,9 +115,9 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
     }
   }
 
-  data: RowData[] = [];
-  total = 0;
-  loading = false;
+  data = signal<RowData[]>([]);
+  total = signal(0);
+  loading = signal(false);
   error = "";
 
   sortColumn = signal("");
@@ -136,15 +138,11 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
 
   showExportDialog = signal(false);
 
-  get allSelected() {
-    return this.data.length > 0 && this.selectedRows().size === this.data.length;
-  }
-  get startIndex() {
-    return this.page * this.pageSize + 1;
-  }
-  get endIndex() {
-    return Math.min((this.page + 1) * this.pageSize, this.total);
-  }
+  allSelected = computed(
+    () => this.data().length > 0 && this.selectedRows().size === this.data().length
+  );
+  startIndex = computed(() => this.page * this.pageSize + 1);
+  endIndex = computed(() => Math.min((this.page + 1) * this.pageSize, this.total()));
 
   visibleColumnsList = computed(() => {
     const all = this.columns.map((c) => c.name);
@@ -204,7 +202,7 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   async loadData(forceRefresh?: boolean) {
-    this.loading = true;
+    this.loading.set(true);
     this.error = "";
     try {
       let filterObj: FilterExpression | undefined;
@@ -212,7 +210,7 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
         filterObj = safeJsonParse<FilterExpression | undefined>(this.filter, undefined);
         if (filterObj === undefined) {
           this.error = "Invalid filter JSON";
-          this.loading = false;
+          this.loading.set(false);
           return;
         }
       }
@@ -229,13 +227,13 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
         forceRefresh
       );
       this.dataTruncated = result.data.length === effectiveLimit && result.total > effectiveLimit;
-      this.data = result.data as RowData[];
-      this.total = result.total;
+      this.data.set(result.data as RowData[]);
+      this.total.set(result.total);
     } catch (e) {
       this.error = (e as Error).message || "Failed to load data";
       this.toast.error(this.error);
     } finally {
-      this.loading = false;
+      this.loading.set(false);
     }
   }
 
@@ -244,9 +242,7 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
       const schema = await this.db.describeCollection(this.collectionName);
       this.columns = schema.columns;
       this.initColumnWidths();
-    } catch (e) {
-      console.warn("Failed to load columns, using default:", e);
-    }
+    } catch (e) {}
   }
 
   async nextPage() {
@@ -268,7 +264,7 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   async lastPage() {
-    this.page = Math.ceil(this.total / this.pageSize) - 1;
+    this.page = Math.ceil(this.total() / this.pageSize) - 1;
     this.pageChange.emit(this.page);
     await this.loadData();
   }
@@ -308,10 +304,10 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   toggleSelectAll() {
-    if (this.allSelected) {
+    if (this.allSelected()) {
       this.selectedRows.set(new Set());
     } else {
-      this.selectedRows.set(new Set(this.data.map((_, i) => i)));
+      this.selectedRows.set(new Set(this.data().map((_, i) => i)));
     }
   }
 
@@ -464,11 +460,11 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
 
   getSelectedData(): RowData[] {
     const selected = Array.from(this.selectedRows());
-    return selected.map((i) => this.data[i]);
+    return selected.map((i) => this.data()[i]);
   }
 
   async exportData(format: ExportFormat) {
-    const dataToExport = this.selectedRows().size > 0 ? this.getSelectedData() : this.data;
+    const dataToExport = this.selectedRows().size > 0 ? this.getSelectedData() : this.data();
     const filename = `${this.collectionName}_export_${Date.now()}`;
 
     try {

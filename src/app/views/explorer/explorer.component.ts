@@ -307,7 +307,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   selectCollectionFromDropdown(collection: string) {
     this.addTab(collection);
     this.showCollectionSelector.set(false);
-    this.loadColumns();
+    this.selectTab(collection);
   }
 
   onFilterChange(filter: string) {
