@@ -165,13 +165,13 @@ export class ApiProvider {
   }
 
   async listCollections(connId: string, dbName?: string): Promise<CollectionMeta[]> {
-    const collections = await invokeWithAbortHandlingOrDefault(
+    const result = await invokeWithAbortHandlingOrDefault(
       () =>
         this.tauriBridge.invoke<{
           collections: CollectionMeta[];
           has_more: boolean;
           total_count: number;
-        }>("list_collections", {
+        }>("collection_list", {
           connId: connId,
           dbName: dbName,
           options: { signal: this.createAbortSignal() },
@@ -180,8 +180,8 @@ export class ApiProvider {
       this.errorHandler,
       { collections: [], has_more: false, total_count: 0 }
     );
-    this.dataStore.updateCollections(connId, collections.collections);
-    return collections.collections;
+    this.dataStore.updateCollections(connId, result.collections);
+    return result.collections;
   }
 
   async listCollectionsPaginated(
@@ -196,7 +196,7 @@ export class ApiProvider {
           collections: CollectionMeta[];
           has_more: boolean;
           total_count: number;
-        }>("list_collections", {
+        }>("collection_list", {
           connId: connId,
           dbName: dbName,
           offset,

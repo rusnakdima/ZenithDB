@@ -212,10 +212,10 @@ export class ExplorerComponent implements OnInit, OnDestroy {
     this.jsonDocumentsMap.set(new Map());
     this.jsonLoading.set(true);
     this.jsonLoadProgress.set(0);
-    const BATCH_SIZE = 100;
+    const BATCH_SIZE = 30;
     try {
       const result = await this.db.queryData(this.activeCollection(), {
-        limit: 10000,
+        limit: 30,
       });
       const allData = result.data as RowData[];
       const totalRows = allData.length;

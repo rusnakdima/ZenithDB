@@ -102,14 +102,9 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
       this.lastPageNum = this.page;
       this.lastPageSizeNum = this.pageSize;
       this.loadData();
-    }
-
-    if (visibleColumnsChanged) {
-      this.visibleColumns.set(new Set(this.inputVisibleColumns));
-    }
-
-    if (columnsChanged && this.columns.length > 0) {
+    } else if (columnsChanged && this.columns.length > 0 && this.collectionName) {
       this.initColumnWidths();
+      this.loadData();
     }
 
     if (reloadTriggerChanged) {
