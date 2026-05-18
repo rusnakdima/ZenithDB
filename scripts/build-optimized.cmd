@@ -16,6 +16,11 @@ REM Function to print success
 echo [SUCCESS] %~1
 goto :eof
 
+REM Function to print warning
+:print_warning
+echo [WARNING] %~1
+goto :eof
+
 REM Function to print error
 :print_error
 echo [ERROR] %~1
@@ -28,7 +33,7 @@ set "last_build_file=.last-frontend-build"
 set "force_build=%FORCE_BUILD%"
 
 if defined CI (
-  call :print_status "CI environment - building frontend..."
+  call :print_status "CI environment or forced build - building frontend..."
   exit /b 0
 )
 if "%force_build%"=="true" (
@@ -63,7 +68,7 @@ set "last_rust_build=.last-rust-build"
 set "force_build=%FORCE_BUILD%"
 
 if defined CI (
-  call :print_status "CI environment - building Rust code..."
+  call :print_status "CI environment or forced build - building Rust code..."
   exit /b 0
 )
 if "%force_build%"=="true" (
@@ -96,6 +101,9 @@ REM Main build function
 set "target=%~1"
 set "build_type=%~2"
 
+if "%target%"=="" set "target=desktop"
+if "%build_type%"=="" set "build_type=release"
+
 call :print_status "Building for target: %target%, type: %build_type%"
 
 call :check_frontend_changes
@@ -126,7 +134,7 @@ if "%target%"=="desktop" (
   exit /b 1
 )
 
-echo %date% %time% > .last-rust-build
+for /f "tokens=1,2" %%a in ('echo %date% %time%') do echo %%a %%b > .last-rust-build
 call :print_success "Build completed successfully!"
 goto :eof
 
@@ -161,7 +169,8 @@ echo   debug                 - Debug build
 echo.
 echo Examples:
 echo   %0 build                    # Build desktop release
-echo   %0 build android debug      # Build Android APK
+echo   %0 build android release    # Build Android APK
+echo   %0 build android debug      # Build Android APK debug
 echo   %0 clean                    # Clean all artifacts
 goto :eof
 

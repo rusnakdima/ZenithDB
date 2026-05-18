@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+# Script to synchronize version across all relevant files
+# Usage: ./sync-versions.sh <new-version>
+
 if [ $# -eq 0 ]; then
 	echo "Usage: $0 <new-version>"
 	echo "Example: $0 1.0.0"
@@ -13,26 +16,38 @@ CURRENT_DATE=$(date +%Y-%m-%d)
 echo "Synchronizing version to: $NEW_VERSION"
 echo "Release date: $CURRENT_DATE"
 
+# Update package.json
 if [ -f "package.json" ]; then
 	sed -i "s/\"version\": \"[^\"]*\"/\"version\": \"$NEW_VERSION\"/" package.json
 	echo "✓ Updated package.json"
 fi
 
+# Update Cargo.toml (app version only, not dependencies)
 if [ -f "src-tauri/Cargo.toml" ]; then
 	sed -i '0,/^version = "[^"]*"/s/version = "[^"]*"/version = "'"$NEW_VERSION"'"/' src-tauri/Cargo.toml
 	echo "✓ Updated src-tauri/Cargo.toml"
 fi
 
+# Update tauri.conf.json
 if [ -f "src-tauri/tauri.conf.json" ]; then
 	sed -i "s/\"version\": \"[^\"]*\"/\"version\": \"$NEW_VERSION\"/" src-tauri/tauri.conf.json
 	echo "✓ Updated src-tauri/tauri.conf.json"
 fi
 
+# Update environment.ts
+if [ -f "src/environments/environment.ts" ]; then
+	sed -i "s/version: '[^']*'/version: '$NEW_VERSION'/" src/environments/environment.ts
+	sed -i "s/version: \"[^\"]*\"/version: \"$NEW_VERSION\"/" src/environments/environment.ts
+	echo "✓ Updated src/environments/environment.ts"
+fi
+
+# Update Flatpak manifest
 if [ -f "flatpak/com.tcs.zenithdb.yml" ]; then
 	sed -i "s/^version: .*/version: '$NEW_VERSION'/" flatpak/com.tcs.zenithdb.yml
 	echo "Updated flatpak/com.tcs.zenithdb.yml"
 fi
 
+# Update Flatpak metainfo.xml with current date
 update_metainfo() {
 	local metainfo_file="$1"
 
