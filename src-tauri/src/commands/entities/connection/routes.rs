@@ -1,8 +1,7 @@
 use crate::commands::connection::{
-  check_provider_health, get_connection_type, ConnectionConfig, ConnectionConfigResult,
-  ConnectionHealth, ConnectionId, ConnectionSummary,
+  check_provider_health, ConnectionConfig, ConnectionConfigResult, ConnectionHealth, ConnectionId,
+  ConnectionSummary,
 };
-use crate::commands::connection_entity::ConnectionEntity;
 use crate::commands::connections_db::ConnectionsDb;
 use crate::commands::validate_conn_id;
 
