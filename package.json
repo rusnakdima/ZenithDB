@@ -19,6 +19,7 @@
     "build:smart": "./scripts/build-optimized.sh build desktop release",
     "build:smart:debug": "./scripts/build-optimized.sh build desktop debug",
     "build:smart:android": "./scripts/build-optimized.sh build android release",
+    "build:smart:android:debug": "./scripts/build-optimized.sh build android debug",
     "build:clean": "./scripts/build-optimized.sh clean",
     "test": "vitest run",
     "test:watch": "vitest",
