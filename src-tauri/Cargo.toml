@@ -5,7 +5,7 @@ edition = "2021"
 license = "MIT License"
 name = "zenithdb"
 repository = "https://github.com/TechCraft-Solutions/ZenithDB"
-version = "0.1.1"
+version = "0.1.2"
 
 [lib]
 name = "zenithdb_lib"
