@@ -107,6 +107,7 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
     } else if (columnsChanged && this.columns.length > 0 && this.collectionName) {
       this.initColumnWidths();
       this.loadData();
+      return;
     }
 
     if (reloadTriggerChanged) {
