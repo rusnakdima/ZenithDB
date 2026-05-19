@@ -1,0 +1,234 @@
+<div class="fixed inset-0 z-40" (click)="onBackdropClick($event)">
+  <div
+    class="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+    (click)="onBackdropClick($event)"
+  >
+    <div
+      class="flex max-h-[90vh] w-[900px] flex-col rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-sidebar)] shadow-2xl"
+      (click)="onDrawerClick($event)"
+    >
+      <div
+        class="flex items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-6 py-4"
+      >
+        <div class="flex items-center gap-3">
+          <mat-icon fontIcon="table_chart" class="h-6! w-5! text-xl! text-[var(--accent)]" />
+          <h3 class="text-sm font-black text-[var(--text-main)]">Compare Tables</h3>
+        </div>
+        <button
+          class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-[var(--bg-card)] hover:text-[var(--text-main)]"
+          (click)="onClose()"
+        >
+          <mat-icon fontIcon="close" class="h-6! w-5! text-xl!" />
+        </button>
+      </div>
+
+      <div class="flex items-center gap-4 border-b border-[var(--border-subtle)] px-6 py-4">
+        <div class="dropdown-container relative flex-1">
+          <label class="mb-1 block text-xs font-semibold text-[var(--text-dim)]">Left Table</label>
+          <div class="relative">
+            <input
+              type="text"
+              [value]="leftTable()"
+              (focus)="toggleLeftDropdown()"
+              (input)="leftTable.set($any($event.target).value)"
+              placeholder="Select or search table..."
+              class="w-full rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-input)] px-4 py-2.5 text-sm text-[var(--text-main)] transition-colors focus:border-[var(--accent)] focus:outline-none"
+            />
+            @if (showLeftDropdown()) {
+              <div
+                class="absolute top-full left-0 z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-[var(--border-visible)] bg-[var(--bg-card)] shadow-xl"
+              >
+                @for (col of filteredLeftCollections(); track col.name) {
+                  <button
+                    class="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-[var(--text-main)] transition-colors hover:bg-[var(--bg-elevated)]"
+                    [class.bg-[var(--bg-elevated)]]="col.name === leftTable()"
+                    (click)="selectLeftTable(col.name)"
+                  >
+                    <mat-icon
+                      fontIcon="table_chart"
+                      class="h-5! w-4! text-base! text-[var(--text-muted)]"
+                    />
+                    {{ col.name }}
+                    <span class="ml-auto text-xs text-[var(--text-muted)]"
+                      >{{ col.count }} docs</span
+                    >
+                  </button>
+                }
+                @if (filteredLeftCollections().length === 0) {
+                  <div class="px-4 py-3 text-center text-sm text-[var(--text-dim)]">
+                    No tables found
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="flex items-center justify-center pt-5">
+          <mat-icon
+            fontIcon="compare_arrows"
+            class="h-8! w-6! text-2xl! text-[var(--text-muted)]"
+          />
+        </div>
+
+        <div class="dropdown-container relative flex-1">
+          <label class="mb-1 block text-xs font-semibold text-[var(--text-dim)]">Right Table</label>
+          <div class="relative">
+            <input
+              type="text"
+              [value]="rightTable()"
+              (focus)="toggleRightDropdown()"
+              (input)="rightTable.set($any($event.target).value)"
+              placeholder="Select or search table..."
+              class="w-full rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-input)] px-4 py-2.5 text-sm text-[var(--text-main)] transition-colors focus:border-[var(--accent)] focus:outline-none"
+            />
+            @if (showRightDropdown()) {
+              <div
+                class="absolute top-full left-0 z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-[var(--border-visible)] bg-[var(--bg-card)] shadow-xl"
+              >
+                @for (col of filteredRightCollections(); track col.name) {
+                  <button
+                    class="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-[var(--text-main)] transition-colors hover:bg-[var(--bg-elevated)]"
+                    [class.bg-[var(--bg-elevated)]]="col.name === rightTable()"
+                    (click)="selectRightTable(col.name)"
+                  >
+                    <mat-icon
+                      fontIcon="table_chart"
+                      class="h-5! w-4! text-base! text-[var(--text-muted)]"
+                    />
+                    {{ col.name }}
+                    <span class="ml-auto text-xs text-[var(--text-muted)]"
+                      >{{ col.count }} docs</span
+                    >
+                  </button>
+                }
+                @if (filteredRightCollections().length === 0) {
+                  <div class="px-4 py-3 text-center text-sm text-[var(--text-dim)]">
+                    No tables found
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      @if (loading()) {
+        <div class="flex items-center justify-center py-12">
+          <div
+            class="h-8 w-8 animate-spin rounded-full border-2 border-[var(--accent)] border-t-transparent"
+          ></div>
+        </div>
+      } @else if (comparisonResult().length > 0) {
+        <div class="flex-1 overflow-auto p-6">
+          <div class="mb-4 flex items-center gap-6">
+            <div class="flex items-center gap-2">
+              <span class="rounded bg-green-900/30 px-2 py-1 text-xs font-medium text-green-400"
+                >{{ getSummary().match }} Match</span
+              >
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="rounded bg-yellow-900/30 px-2 py-1 text-xs font-medium text-yellow-400"
+                >{{ getSummary().different }} Different</span
+              >
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="rounded bg-red-900/30 px-2 py-1 text-xs font-medium text-red-400"
+                >{{ getSummary().leftOnly }} Left Only</span
+              >
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="rounded bg-red-900/30 px-2 py-1 text-xs font-medium text-red-400"
+                >{{ getSummary().rightOnly }} Right Only</span
+              >
+            </div>
+          </div>
+
+          <div class="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)]">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="border-b border-[var(--border-subtle)]">
+                  <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-dim)]">
+                    Column
+                  </th>
+                  <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-dim)]">
+                    Left Type
+                  </th>
+                  <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-dim)]">
+                    Right Type
+                  </th>
+                  <th class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-dim)]">
+                    Status
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (col of comparisonResult(); track col.name) {
+                  <tr
+                    class="border-b border-[var(--border-subtle)] last:border-b-0 hover:bg-[var(--bg-elevated)]"
+                  >
+                    <td class="px-4 py-3 font-mono text-sm text-[var(--text-main)]">
+                      {{ col.name }}
+                    </td>
+                    <td class="px-4 py-3">
+                      @if (col.leftType) {
+                        <span
+                          class="rounded bg-[var(--bg-elevated)] px-2 py-1 font-mono text-xs text-[var(--accent)]"
+                          >{{ col.leftType }}</span
+                        >
+                      } @else {
+                        <span class="text-[var(--text-muted)]">-</span>
+                      }
+                    </td>
+                    <td class="px-4 py-3">
+                      @if (col.rightType) {
+                        <span
+                          class="rounded bg-[var(--bg-elevated)] px-2 py-1 font-mono text-xs text-[var(--accent)]"
+                          >{{ col.rightType }}</span
+                        >
+                      } @else {
+                        <span class="text-[var(--text-muted)]">-</span>
+                      }
+                    </td>
+                    <td class="px-4 py-3 text-center">
+                      <div class="flex items-center justify-center gap-1">
+                        <mat-icon
+                          [fontIcon]="getStatusIcon(col.status)"
+                          class="h-5! w-4! text-base! {{ getStatusColor(col.status) }}"
+                        />
+                        <span class="text-xs {{ getStatusColor(col.status) }}">
+                          @switch (col.status) {
+                            @case ("match") {
+                              Match
+                            }
+                            @case ("different") {
+                              Different
+                            }
+                            @case ("left_only") {
+                              Left Only
+                            }
+                            @case ("right_only") {
+                              Right Only
+                            }
+                          }
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      } @else {
+        <div class="flex flex-col items-center justify-center py-16 text-[var(--text-dim)]">
+          <mat-icon fontIcon="compare" class="mb-4 h-16! w-12! text-6xl!" />
+          <p class="text-lg font-bold">Select two tables to compare</p>
+          <p class="mt-1 text-sm text-[var(--text-muted)]">
+            Schema differences will be highlighted below
+          </p>
+        </div>
+      }
+    </div>
+  </div>
+</div>

@@ -28,6 +28,7 @@ import { InspectorDrawerComponent } from "./inspector-drawer/inspector-drawer.co
 import { CollectionTabsComponent } from "./collection-tabs/collection-tabs.component";
 import { ViewSwitcherComponent } from "./view-switcher/view-switcher.component";
 import { PaginationComponent } from "@shared/components/pagination/pagination.component";
+import { CompareTablesDialogComponent } from "./compare-tables-dialog/compare-tables-dialog.component";
 import { withErrorHandling } from "@shared/utils/error-handler.utils";
 
 type ViewTab = "table" | "tree" | "json";
@@ -49,6 +50,7 @@ interface Tab {
     InspectorDrawerComponent,
     CollectionTabsComponent,
     ViewSwitcherComponent,
+    CompareTablesDialogComponent,
     FormatBytesPipe,
   ],
   templateUrl: "./explorer.component.html",
@@ -90,8 +92,10 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   jsonDocumentsMap = signal<Map<number, { lines: string[]; json: string }>>(new Map());
   jsonLoading = signal(false);
   jsonLoadProgress = signal(0);
+  showCompareTables = signal(false);
 
-  private currentConnectionId: string | null = null;
+  currentConnectionId: string | null = null;
+  private pendingCollectionSelection: string | null = null;
 
   async ngOnInit() {
     const savedSplitMode = this.persistentStorage.getExplorerSplitMode();
@@ -110,6 +114,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
     this.queryParamsSub = this.route.queryParams.subscribe(async (params) => {
       const collection = params["collection"];
       if (collection && collection !== this.activeCollection()) {
+        this.pendingCollectionSelection = collection;
         this.addTab(collection);
       }
       const view = params["view"];
@@ -164,15 +169,21 @@ export class ExplorerComponent implements OnInit, OnDestroy {
 
     const cols = result.data;
     this.collections.set(cols);
+
+    const pendingCollection = this.pendingCollectionSelection;
+    const collectionToSelect = pendingCollection || selectedCollection;
+
     if (cols.length > 0) {
-      const collectionToSelect =
-        selectedCollection && cols.some((c) => c.name === selectedCollection)
-          ? selectedCollection
-          : cols[0].name;
-      this.activeCollection.set(collectionToSelect);
-      this.activeTabs.set([{ name: collectionToSelect, collection: collectionToSelect }]);
-      await this.loadStats();
-      await this.loadColumns();
+      if (collectionToSelect && cols.some((c) => c.name === collectionToSelect)) {
+        this.activeCollection.set(collectionToSelect);
+        this.activeTabs.set([{ name: collectionToSelect, collection: collectionToSelect }]);
+        this.pendingCollectionSelection = null;
+      } else if (!collectionToSelect && cols.length > 0) {
+        this.activeCollection.set(cols[0].name);
+        this.activeTabs.set([{ name: cols[0].name, collection: cols[0].name }]);
+      }
+      this.loadStats();
+      this.loadColumns();
     }
   }
 
@@ -304,6 +315,14 @@ export class ExplorerComponent implements OnInit, OnDestroy {
     this.showCollectionSelector.update((v) => !v);
   }
 
+  openCompareTables() {
+    this.showCompareTables.set(true);
+  }
+
+  closeCompareTables() {
+    this.showCompareTables.set(false);
+  }
+
   selectCollectionFromDropdown(collection: string) {
     this.addTab(collection);
     this.showCollectionSelector.set(false);
@@ -367,6 +386,86 @@ export class ExplorerComponent implements OnInit, OnDestroy {
 
   onColumnsChange(columns: string[]) {
     this.selectedColumns.set(columns);
+    if (this.viewTab() === "table") {
+      this.reloadCounter.update((c) => c + 1);
+    }
+  }
+
+  async onImport() {
+    try {
+      const { open } = await import("@tauri-apps/plugin-dialog");
+      const { readTextFile } = await import("@tauri-apps/plugin-fs");
+
+      const filePath = await open({
+        multiple: false,
+        filters: [
+          { name: "Data Files", extensions: ["csv", "json"] },
+          { name: "CSV Files", extensions: ["csv"] },
+          { name: "JSON Files", extensions: ["json"] },
+        ],
+      });
+
+      if (!filePath) return;
+
+      const content = await readTextFile(filePath as string);
+      const filename = (filePath as string).split(/[/\\]/).pop() || "import";
+      const ext = filename.split(".").pop()?.toLowerCase();
+
+      if (ext === "csv") {
+        await this.importCsv(content);
+      } else if (ext === "json") {
+        await this.importJson(content);
+      } else {
+        this.toast.error("Unsupported file format");
+      }
+    } catch (e) {
+      this.toast.error("Import failed: " + (e as Error).message);
+    }
+  }
+
+  private async importCsv(content: string) {
+    const lines = content.split("\n").filter((l) => l.trim());
+    if (lines.length < 2) {
+      this.toast.error("CSV file must have header and at least one data row");
+      return;
+    }
+
+    const headers = lines[0].split(",").map((h) => h.trim().replace(/^"|"$/g, ""));
+    const rows = lines.slice(1).map((line) => {
+      const values = line.split(",").map((v) => v.trim().replace(/^"|"$/g, ""));
+      const row: Record<string, unknown> = {};
+      headers.forEach((h, i) => {
+        row[h] = values[i] || null;
+      });
+      return row;
+    });
+
+    await this.importData(rows);
+  }
+
+  private async importJson(content: string) {
+    try {
+      const data = JSON.parse(content);
+      const rows = Array.isArray(data) ? data : [data];
+      await this.importData(rows);
+    } catch {
+      this.toast.error("Invalid JSON format");
+    }
+  }
+
+  private async importData(rows: Record<string, unknown>[]) {
+    try {
+      let imported = 0;
+      for (const row of rows) {
+        await this.db.saveRow(this.activeCollection(), row);
+        imported++;
+      }
+      this.toast.success(`Imported ${imported} rows`);
+      this.reloadCounter.update((c) => c + 1);
+      this.loadStats();
+    } catch (e) {
+      this.toast.error("Import failed: " + (e as Error).message);
+    }
   }
 
   getDisabledColumns(): string[] {

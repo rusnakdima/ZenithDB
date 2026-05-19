@@ -14,11 +14,12 @@
     [filter]="filterText()"
     [availableColumns]="availableColumnsMeta()"
     [disabledColumns]="getDisabledColumns()"
-    [viewMode]="'grid'"
+    [viewMode]="viewTab() === 'table' ? 'grid' : 'json'"
     (filterChange)="onFilterChange($event)"
     (apply)="onFilterApply()"
     (clear)="onFilterClear()"
     (export)="onExport($event)"
+    (import)="onImport()"
     (toggleView)="onToggleView()"
     (refresh)="onRefresh()"
     (columnsChange)="onColumnsChange($event)"
@@ -53,6 +54,14 @@
           {{ formatDocumentCount(stats()!.document_count) }} Docs
         </span>
       }
+      <button
+        class="flex items-center gap-1.5 rounded bg-[var(--bg-elevated)] px-2.5 py-1 text-xs text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-card)] hover:text-[var(--accent)]"
+        (click)="openCompareTables()"
+        title="Compare Tables"
+      >
+        <mat-icon fontIcon="compare_arrows" class="h-5! w-4! text-base!" />
+        Compare
+      </button>
     </div>
   </div>
 
@@ -253,5 +262,13 @@
       (close)="closeInspector()"
       (delete)="deleteDocument(inspectorDocument()!)"
     ></app-inspector-drawer>
+  }
+
+  @if (showCompareTables()) {
+    <app-compare-tables-dialog
+      [collections]="collections()"
+      [connectionId]="currentConnectionId"
+      (close)="closeCompareTables()"
+    ></app-compare-tables-dialog>
   }
 </div>
