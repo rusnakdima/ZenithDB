@@ -94,6 +94,8 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   jsonLoadProgress = signal(0);
   showCompareTables = signal(false);
 
+  reloadTrigger = this.reloadCounter.asReadonly();
+
   currentConnectionId: string | null = null;
   private pendingCollectionSelection: string | null = null;
 
