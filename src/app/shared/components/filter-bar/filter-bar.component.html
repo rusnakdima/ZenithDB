@@ -110,16 +110,31 @@
     </button>
   </div>
 
+  <button
+    class="rounded border border-[var(--border-subtle)] bg-[var(--bg-elevated)] p-2 text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-card)] hover:text-[var(--text-main)]"
+    (click)="onRefresh()"
+    title="Refresh"
+  >
+    <mat-icon fontIcon="refresh" class="h-6! w-5! text-xl!"></mat-icon>
+  </button>
+
   <div class="h-6 w-px bg-[var(--border-subtle)]"></div>
+
+  <button
+    class="rounded border border-[var(--border-subtle)] bg-[var(--bg-elevated)] p-2 text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-card)] hover:text-[var(--text-main)]"
+    (click)="onImport(); $event.stopPropagation()"
+    title="Import"
+  >
+    <mat-icon fontIcon="upload" class="h-6! w-5! text-xl!"></mat-icon>
+  </button>
 
   <div class="dropdown-container relative overflow-visible">
     <button
-      class="flex items-center gap-2 rounded-md border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-2 text-sm text-[var(--text-main)] transition-colors hover:bg-[var(--bg-card)]"
+      class="rounded border border-[var(--border-subtle)] bg-[var(--bg-elevated)] p-2 text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-card)] hover:text-[var(--text-main)]"
       (click)="toggleExportMenu(); $event.stopPropagation()"
+      title="Export"
     >
       <mat-icon fontIcon="download" class="h-6! w-5! text-xl!"></mat-icon>
-      Export
-      <mat-icon fontIcon="expand_more" class="h-6! w-5! text-xl!"></mat-icon>
     </button>
     @if (showExportMenu()) {
       <div
@@ -153,64 +168,56 @@
     }
   </div>
 
-  <div class="h-6 w-px bg-[var(--border-subtle)]"></div>
-
-  <button
-    class="rounded border border-[var(--border-subtle)] bg-[var(--bg-elevated)] p-2 text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-card)] hover:text-[var(--text-main)]"
-    (click)="onRefresh()"
-    title="Refresh"
-  >
-    <mat-icon fontIcon="refresh" class="h-6! w-5! text-xl!"></mat-icon>
-  </button>
-
-  <div class="dropdown-container relative overflow-visible">
-    <button
-      class="flex items-center gap-2 rounded-md border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-2 text-sm text-[var(--text-main)] transition-colors hover:bg-[var(--bg-card)]"
-      (click)="toggleColumnChooser(); $event.stopPropagation()"
-    >
-      <mat-icon fontIcon="view_column" class="h-6! w-5! text-xl!"></mat-icon>
-      Columns
-      <mat-icon fontIcon="expand_more" class="h-6! w-5! text-xl!"></mat-icon>
-    </button>
-    @if (showColumnChooser()) {
-      <div
-        class="absolute right-0 z-[100] mt-1 w-56 rounded-lg border border-[var(--border-visible)] bg-[var(--bg-card)] shadow-xl"
+  @if (viewMode === "grid") {
+    <div class="dropdown-container relative overflow-visible">
+      <button
+        class="flex items-center gap-2 rounded-md border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-2 text-sm text-[var(--text-main)] transition-colors hover:bg-[var(--bg-card)]"
+        (click)="toggleColumnChooser(); $event.stopPropagation()"
       >
-        <div class="flex items-center justify-between border-b border-[var(--border-subtle)] p-2">
-          <span class="text-xs font-semibold text-[var(--text-dim)]">Visible Columns</span>
-          <div class="flex gap-2">
-            <button
-              class="text-xs text-[var(--accent)] hover:text-[var(--accent-hover)]"
-              (click)="selectAllColumns()"
-            >
-              All
-            </button>
-            <button
-              class="text-xs text-[var(--text-dim)] hover:text-[var(--text-main)]"
-              (click)="deselectAllColumns()"
-            >
-              None
-            </button>
+        <mat-icon fontIcon="view_column" class="h-6! w-5! text-xl!"></mat-icon>
+        Columns
+        <mat-icon fontIcon="expand_more" class="h-6! w-5! text-xl!"></mat-icon>
+      </button>
+      @if (showColumnChooser()) {
+        <div
+          class="absolute right-0 z-[100] mt-1 w-56 rounded-lg border border-[var(--border-visible)] bg-[var(--bg-card)] shadow-xl"
+        >
+          <div class="flex items-center justify-between border-b border-[var(--border-subtle)] p-2">
+            <span class="text-xs font-semibold text-[var(--text-dim)]">Visible Columns</span>
+            <div class="flex gap-2">
+              <button
+                class="text-xs text-[var(--accent)] hover:text-[var(--accent-hover)]"
+                (click)="selectAllColumns()"
+              >
+                All
+              </button>
+              <button
+                class="text-xs text-[var(--text-dim)] hover:text-[var(--text-main)]"
+                (click)="deselectAllColumns()"
+              >
+                None
+              </button>
+            </div>
+          </div>
+          <div class="max-h-64 overflow-y-auto p-2">
+            @for (col of availableColumns; track col) {
+              <label
+                class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 transition-colors hover:bg-[var(--bg-elevated)]"
+              >
+                <app-checkbox
+                  [checked]="selectedColumns().has(col.name)"
+                  [disabled]="isColumnDisabled(col.name)"
+                  (changed)="toggleColumn(col.name)"
+                />
+                <span class="text-sm text-[var(--text-main)]">{{ col.name }}</span>
+              </label>
+            }
+            @if (availableColumns.length === 0) {
+              <div class="p-2 text-center text-sm text-[var(--text-dim)]">No columns available</div>
+            }
           </div>
         </div>
-        <div class="max-h-64 overflow-y-auto p-2">
-          @for (col of availableColumns; track col) {
-            <label
-              class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 transition-colors hover:bg-[var(--bg-elevated)]"
-            >
-              <app-checkbox
-                [checked]="selectedColumns().has(col.name)"
-                [disabled]="isColumnDisabled(col.name)"
-                (changed)="toggleColumn(col.name)"
-              />
-              <span class="text-sm text-[var(--text-main)]">{{ col.name }}</span>
-            </label>
-          }
-          @if (availableColumns.length === 0) {
-            <div class="p-2 text-center text-sm text-[var(--text-dim)]">No columns available</div>
-          }
-        </div>
-      </div>
-    }
-  </div>
+      }
+    </div>
+  }
 </div>

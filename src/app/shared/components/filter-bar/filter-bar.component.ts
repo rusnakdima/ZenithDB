@@ -35,6 +35,7 @@ export class FilterBarComponent implements OnInit, OnChanges, OnDestroy {
   @Output() apply = new EventEmitter<void>();
   @Output() clear = new EventEmitter<void>();
   @Output() export = new EventEmitter<"csv" | "json" | "sql">();
+  @Output() import = new EventEmitter<void>();
   @Output() toggleView = new EventEmitter<void>();
   @Output() refresh = new EventEmitter<void>();
   @Output() columnsChange = new EventEmitter<string[]>();
@@ -181,7 +182,8 @@ export class FilterBarComponent implements OnInit, OnChanges, OnDestroy {
     const prefix = match ? match[1] : "";
     const afterPrefix = afterSpace.substring(prefix.length);
 
-    this.localFilter = beforeSpace + prefix + field + afterPrefix + " ";
+    const fieldName = field.split(" (")[0];
+    this.localFilter = beforeSpace + prefix + fieldName + afterPrefix + " ";
     this.filterChange.emit(this.localFilter);
     this.showAutocomplete.set(false);
     this.selectedAutocompleteIndex.set(-1);
@@ -271,6 +273,10 @@ export class FilterBarComponent implements OnInit, OnChanges, OnDestroy {
   onExport(format: "csv" | "json" | "sql") {
     this.export.emit(format);
     this.showExportMenu.set(false);
+  }
+
+  onImport() {
+    this.import.emit();
   }
 
   onColumnsChange(columns: string[]) {
