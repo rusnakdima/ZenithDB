@@ -54,11 +54,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.0-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf lib32z1 lib32stdc++6 unzip wget libssl-dev
 
-      - name: Set OpenSSL environment for Android
-        run: |
-          echo "OPENSSL_LIB_DIR=/usr/lib/x86_64-linux-gnu" >> $GITHUB_ENV
-          echo "OPENSSL_INCLUDE_DIR=/usr/include/openssl" >> $GITHUB_ENV
-
       - name: Create .env file
         run: |
           echo "NAME_APP=zenithdb" > src-tauri/.env
