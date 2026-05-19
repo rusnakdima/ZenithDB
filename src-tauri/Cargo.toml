@@ -36,16 +36,6 @@ nosql_orm = { git = "https://github.com/rusnakdima/nosql_orm", branch = "main", 
     "query_cache",
     "validators",
 ] }
-# nosql_orm = { path = "/mnt/Other/Projects/Rust/nosql_orm", features = [
-#     "json",
-#     "mongo",
-#     "redis",
-#     "sql-postgres",
-#     "sql-sqlite",
-#     "sql-mysql",
-#     "query_cache",
-#     "validators",
-# ] }
 rusqlite = { version = "0.33", features = ["bundled"] }
 ts-rs = "8"
 tracing = "0.1"
