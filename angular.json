@@ -44,11 +44,19 @@
             "outputPath": "dist/zenithdb",
             "index": "src/index.html",
             "browser": "src/main.ts",
-            "polyfills": ["zone.js"],
+            "polyfills": [
+              "zone.js"
+            ],
             "tsConfig": "tsconfig.app.json",
-            "assets": ["src/assets"],
-            "styles": ["src/styles.css"],
-            "allowedCommonJsDependencies": ["progressbar.js"]
+            "assets": [
+              "src/assets"
+            ],
+            "styles": [
+              "src/styles.css"
+            ],
+            "allowedCommonJsDependencies": [
+              "progressbar.js"
+            ]
           },
           "configurations": {
             "production": {
@@ -85,6 +93,7 @@
         "serve": {
           "builder": "@angular/build:dev-server",
           "options": {
+            "host": "0.0.0.0",
             "port": 1425
           },
           "configurations": {
