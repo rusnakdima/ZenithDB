@@ -85,7 +85,6 @@ export class FilterBarComponent implements OnInit, OnChanges, OnDestroy {
       const all = new Set<string>();
       this.availableColumns.forEach((c) => all.add(c.name));
       this.selectedColumns.set(all);
-      this.columnsChange.emit(this.getSelectedColumns());
     }
   }
 
