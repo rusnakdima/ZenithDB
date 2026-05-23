@@ -88,7 +88,8 @@ pub async fn database_list(
       total_count: 1,
     }),
     ConnectionConfigEnum::Mongo { uri, .. } => {
-      let provider = crate::commands::provider::create_mongo_provider(uri, "admin").await?;
+      let provider =
+        crate::commands::provider::get_or_create_mongo_provider(&connId, uri, "admin").await?;
       let db_names = provider.list_databases().await.map_err_string()?;
       let total_count = db_names.len();
       let has_more = offset + limit < total_count;
@@ -109,7 +110,8 @@ pub async fn database_list(
       })
     }
     ConnectionConfigEnum::Postgres { uri, .. } => {
-      let provider = crate::commands::provider::create_postgres_provider(uri).await?;
+      let provider =
+        crate::commands::provider::get_or_create_postgres_provider(&connId, uri).await?;
       let db_names = provider.list_databases().await.map_err_string()?;
       let total_count = db_names.len();
       let has_more = offset + limit < total_count;
@@ -130,7 +132,7 @@ pub async fn database_list(
       })
     }
     ConnectionConfigEnum::MySql { uri, .. } => {
-      let provider = crate::commands::provider::create_mysql_provider(uri).await?;
+      let provider = crate::commands::provider::get_or_create_mysql_provider(&connId, uri).await?;
       let db_names = provider.list_databases().await.map_err_string()?;
       let total_count = db_names.len();
       let has_more = offset + limit < total_count;

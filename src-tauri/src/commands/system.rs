@@ -48,9 +48,10 @@ pub async fn get_system_status() -> Result<SystemMetrics, String> {
 
     let disks = Disks::new_with_refreshed_list();
     let (disk_used, disk_total) = disks.iter().fold((0u64, 0u64), |(used, total), disk| {
+      let disk_used = disk.total_space().saturating_sub(disk.available_space());
       (
-        used + disk.total_space() - disk.available_space(),
-        total + disk.total_space(),
+        used.saturating_add(disk_used),
+        total.saturating_add(disk.total_space()),
       )
     });
 
@@ -60,8 +61,8 @@ pub async fn get_system_status() -> Result<SystemMetrics, String> {
         .iter()
         .fold((0u64, 0u64), |(recv, trans), (_, data)| {
           (
-            recv + data.total_received(),
-            trans + data.total_transmitted(),
+            recv.saturating_add(data.total_received()),
+            trans.saturating_add(data.total_transmitted()),
           )
         });
 

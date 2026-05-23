@@ -64,7 +64,7 @@ pub async fn collection_list(
   validate_conn_id(&connId)?;
   let entry = get_connection_entry(&connId).await?;
   let offset = offset.unwrap_or(0);
-  let limit = limit.unwrap_or(10);
+  let limit = limit.unwrap_or(10000);
 
   match &entry.config.config {
     crate::commands::connection::ConnectionConfigEnum::Json { path, .. } => {

@@ -117,3 +117,38 @@ macro_rules! dispatch_provider {
     }
   };
 }
+
+#[macro_export]
+macro_rules! dispatch_provider_cached {
+  ($entry:expr, $connId:expr, $provider:ident => $body:block) => {
+    match &$entry.config.config {
+      crate::commands::connection::ConnectionConfigEnum::Json { path, .. } => {
+        let $provider = $crate::commands::provider::create_json_provider(path).await?;
+        $body
+      }
+      crate::commands::connection::ConnectionConfigEnum::Mongo { uri, database, .. } => {
+        let $provider =
+          $crate::commands::provider::get_or_create_mongo_provider($connId, uri, database).await?;
+        $body
+      }
+      crate::commands::connection::ConnectionConfigEnum::Redis { uri, .. } => {
+        let $provider = $crate::commands::provider::create_redis_provider(uri).await?;
+        $body
+      }
+      crate::commands::connection::ConnectionConfigEnum::Postgres { uri, .. } => {
+        let $provider =
+          $crate::commands::provider::get_or_create_postgres_provider($connId, uri).await?;
+        $body
+      }
+      crate::commands::connection::ConnectionConfigEnum::Sqlite { path, .. } => {
+        let $provider = $crate::commands::provider::create_sqlite_provider(path).await?;
+        $body
+      }
+      crate::commands::connection::ConnectionConfigEnum::MySql { uri, .. } => {
+        let $provider =
+          $crate::commands::provider::get_or_create_mysql_provider($connId, uri).await?;
+        $body
+      }
+    }
+  };
+}

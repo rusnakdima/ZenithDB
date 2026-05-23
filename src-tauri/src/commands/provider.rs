@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
-use tokio::sync::Mutex;
+use tokio::sync::{Mutex, RwLock};
 use tokio::time;
 
 fn timeout_err(provider: &str, original: String) -> String {
@@ -62,6 +62,205 @@ fn get_provider_cache() -> Arc<ProviderCache> {
   PROVIDER_CACHE
     .get_or_init(|| Arc::new(ProviderCache::new()))
     .clone()
+}
+
+struct ProviderInstance<T> {
+  provider: T,
+  created_at: Instant,
+}
+
+pub struct MongoProviderCache {
+  cache: RwLock<HashMap<String, ProviderInstance<nosql_orm::providers::MongoProvider>>>,
+}
+
+impl MongoProviderCache {
+  fn new() -> Self {
+    Self {
+      cache: RwLock::new(HashMap::new()),
+    }
+  }
+
+  async fn get(&self, conn_id: &str) -> Option<nosql_orm::providers::MongoProvider> {
+    let cache = self.cache.read().await;
+    if let Some(instance) = cache.get(conn_id) {
+      if Instant::now().duration_since(instance.created_at) < Duration::from_secs(300) {
+        tracing::debug!(
+          "Reusing cached MongoDB provider for connection: {}",
+          conn_id
+        );
+        return Some(instance.provider.clone());
+      }
+    }
+    None
+  }
+
+  async fn insert(&self, conn_id: String, provider: nosql_orm::providers::MongoProvider) {
+    let mut cache = self.cache.write().await;
+    cache.insert(
+      conn_id,
+      ProviderInstance {
+        provider,
+        created_at: Instant::now(),
+      },
+    );
+  }
+
+  async fn remove(&self, conn_id: &str) {
+    let mut cache = self.cache.write().await;
+    cache.remove(conn_id);
+  }
+}
+
+pub struct PostgresProviderCache {
+  cache: RwLock<HashMap<String, ProviderInstance<nosql_orm::providers::sql::PostgresProvider>>>,
+}
+
+impl PostgresProviderCache {
+  fn new() -> Self {
+    Self {
+      cache: RwLock::new(HashMap::new()),
+    }
+  }
+
+  async fn get(&self, conn_id: &str) -> Option<nosql_orm::providers::sql::PostgresProvider> {
+    let cache = self.cache.read().await;
+    if let Some(instance) = cache.get(conn_id) {
+      if Instant::now().duration_since(instance.created_at) < Duration::from_secs(300) {
+        tracing::debug!(
+          "Reusing cached PostgreSQL provider for connection: {}",
+          conn_id
+        );
+        return Some(instance.provider.clone());
+      }
+    }
+    None
+  }
+
+  async fn insert(&self, conn_id: String, provider: nosql_orm::providers::sql::PostgresProvider) {
+    let mut cache = self.cache.write().await;
+    cache.insert(
+      conn_id,
+      ProviderInstance {
+        provider,
+        created_at: Instant::now(),
+      },
+    );
+  }
+
+  async fn remove(&self, conn_id: &str) {
+    let mut cache = self.cache.write().await;
+    cache.remove(conn_id);
+  }
+}
+
+pub struct MysqlProviderCache {
+  cache: RwLock<HashMap<String, ProviderInstance<nosql_orm::providers::sql::MySqlProvider>>>,
+}
+
+impl MysqlProviderCache {
+  fn new() -> Self {
+    Self {
+      cache: RwLock::new(HashMap::new()),
+    }
+  }
+
+  async fn get(&self, conn_id: &str) -> Option<nosql_orm::providers::sql::MySqlProvider> {
+    let cache = self.cache.read().await;
+    if let Some(instance) = cache.get(conn_id) {
+      if Instant::now().duration_since(instance.created_at) < Duration::from_secs(300) {
+        tracing::debug!("Reusing cached MySQL provider for connection: {}", conn_id);
+        return Some(instance.provider.clone());
+      }
+    }
+    None
+  }
+
+  async fn insert(&self, conn_id: String, provider: nosql_orm::providers::sql::MySqlProvider) {
+    let mut cache = self.cache.write().await;
+    cache.insert(
+      conn_id,
+      ProviderInstance {
+        provider,
+        created_at: Instant::now(),
+      },
+    );
+  }
+
+  async fn remove(&self, conn_id: &str) {
+    let mut cache = self.cache.write().await;
+    cache.remove(conn_id);
+  }
+}
+
+static MONGO_PROVIDER_CACHE: std::sync::OnceLock<Arc<MongoProviderCache>> =
+  std::sync::OnceLock::new();
+static POSTGRES_PROVIDER_CACHE: std::sync::OnceLock<Arc<PostgresProviderCache>> =
+  std::sync::OnceLock::new();
+static MYSQL_PROVIDER_CACHE: std::sync::OnceLock<Arc<MysqlProviderCache>> =
+  std::sync::OnceLock::new();
+
+fn get_mongo_provider_cache() -> Arc<MongoProviderCache> {
+  MONGO_PROVIDER_CACHE
+    .get_or_init(|| Arc::new(MongoProviderCache::new()))
+    .clone()
+}
+
+fn get_postgres_provider_cache() -> Arc<PostgresProviderCache> {
+  POSTGRES_PROVIDER_CACHE
+    .get_or_init(|| Arc::new(PostgresProviderCache::new()))
+    .clone()
+}
+
+fn get_mysql_provider_cache() -> Arc<MysqlProviderCache> {
+  MYSQL_PROVIDER_CACHE
+    .get_or_init(|| Arc::new(MysqlProviderCache::new()))
+    .clone()
+}
+
+pub async fn get_or_create_mongo_provider(
+  conn_id: &str,
+  uri: &str,
+  database: &str,
+) -> Result<nosql_orm::providers::MongoProvider, String> {
+  let cache = get_mongo_provider_cache();
+  if let Some(provider) = cache.get(conn_id).await {
+    return Ok(provider);
+  }
+  let provider = create_mongo_provider(uri, database).await?;
+  cache.insert(conn_id.to_string(), provider.clone()).await;
+  Ok(provider)
+}
+
+pub async fn get_or_create_postgres_provider(
+  conn_id: &str,
+  uri: &str,
+) -> Result<nosql_orm::providers::sql::PostgresProvider, String> {
+  let cache = get_postgres_provider_cache();
+  if let Some(provider) = cache.get(conn_id).await {
+    return Ok(provider);
+  }
+  let provider = create_postgres_provider(uri).await?;
+  cache.insert(conn_id.to_string(), provider.clone()).await;
+  Ok(provider)
+}
+
+pub async fn get_or_create_mysql_provider(
+  conn_id: &str,
+  uri: &str,
+) -> Result<nosql_orm::providers::sql::MySqlProvider, String> {
+  let cache = get_mysql_provider_cache();
+  if let Some(provider) = cache.get(conn_id).await {
+    return Ok(provider);
+  }
+  let provider = create_mysql_provider(uri).await?;
+  cache.insert(conn_id.to_string(), provider.clone()).await;
+  Ok(provider)
+}
+
+pub async fn invalidate_provider_instance(conn_id: &str) {
+  get_mongo_provider_cache().remove(conn_id).await;
+  get_postgres_provider_cache().remove(conn_id).await;
+  get_mysql_provider_cache().remove(conn_id).await;
 }
 
 pub async fn get_cached_provider(

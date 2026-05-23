@@ -30,6 +30,9 @@ use commands::entities::query::routes as query_routes;
 pub fn run() {
   logger::init_logger();
 
+  std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
+  std::env::set_var("__NV_DISABLE_EXPLICIT_SYNC", "1");
+
   tauri::Builder::default()
     .plugin(tauri_plugin_opener::init())
     .plugin(tauri_plugin_dialog::init())

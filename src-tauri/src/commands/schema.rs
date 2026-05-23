@@ -5,6 +5,7 @@ use crate::commands::get_connection_entry;
 use crate::commands::validate_conn_id;
 use crate::commands::validate_name;
 use crate::dispatch_provider;
+use crate::dispatch_provider_cached;
 use crate::infrastructure::nosql_orm_adapter::NosqlOrmAdapter;
 use nosql_orm::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -98,7 +99,8 @@ pub async fn list_databases(connId: &str) -> Result<Vec<DatabaseMeta>, String> {
     }
     ConnectionConfigEnum::Redis { .. } => Ok(vec![DatabaseMeta::from_name("default")]),
     ConnectionConfigEnum::Mongo { uri, .. } => {
-      let provider = crate::commands::provider::create_mongo_provider(uri, "admin").await?;
+      let provider =
+        crate::commands::provider::get_or_create_mongo_provider(connId, uri, "admin").await?;
       let result = provider
         .execute_raw("listDatabases", vec![])
         .await
@@ -118,7 +120,8 @@ pub async fn list_databases(connId: &str) -> Result<Vec<DatabaseMeta>, String> {
       Ok(dbs)
     }
     ConnectionConfigEnum::Postgres { uri, .. } => {
-      let provider = crate::commands::provider::create_postgres_provider(uri).await?;
+      let provider =
+        crate::commands::provider::get_or_create_postgres_provider(connId, uri).await?;
       let result = provider
         .execute_raw(
           "SELECT datname FROM pg_database WHERE datistemplate = false",
@@ -129,7 +132,7 @@ pub async fn list_databases(connId: &str) -> Result<Vec<DatabaseMeta>, String> {
       Ok(parse_database_rows(&result.rows))
     }
     ConnectionConfigEnum::MySql { uri, .. } => {
-      let provider = crate::commands::provider::create_mysql_provider(uri).await?;
+      let provider = crate::commands::provider::get_or_create_mysql_provider(connId, uri).await?;
       let result = provider
         .execute_raw("SHOW DATABASES", vec![])
         .await
@@ -324,7 +327,7 @@ pub async fn list_collections(
       }
       _ => {
         tracing::debug!("list_collections dispatching provider for: {}", connId);
-        dispatch_provider!(entry, provider => {
+        dispatch_provider_cached!(entry, connId, provider => {
             tracing::debug!("list_collections provider dispatched, calling list_collections on provider");
             let collections = provider.list_collections().await.map_err_string()?;
             tracing::debug!("list_collections got {} collections", collections.len());
