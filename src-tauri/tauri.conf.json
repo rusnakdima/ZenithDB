@@ -19,7 +19,8 @@
         "minHeight": 700,
         "resizable": true,
         "fullscreen": false,
-        "center": true
+        "center": true,
+        "devtools": true
       }
     ],
     "security": {
@@ -30,6 +31,14 @@
   "bundle": {
     "active": true,
     "targets": "all",
-    "icon": ["icons/icon.ico", "icons/icon.png", "icons/128x128.png"]
+    "icon": ["icons/icon.ico", "icons/icon.png", "icons/128x128.png"],
+    "linux": {
+      "appimage": {
+        "bundleMediaFramework": true,
+        "files": {}
+      },
+      "deb": { "files": {} },
+      "rpm": { "files": {} }
+    }
   }
 }
