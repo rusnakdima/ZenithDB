@@ -1,0 +1,9 @@
+<div class="floating-bottom-nav-container">
+  <nav class="floating-bottom-nav">
+    @for (nav of listNavs; track $index) {
+      <a class="nav-item" [routerLink]="nav.url" [class.nav-item-active]="isActiveRoute(nav)">
+        <mat-icon class="nav-icon" [fontIcon]="nav.icon" />
+      </a>
+    }
+  </nav>
+</div>
