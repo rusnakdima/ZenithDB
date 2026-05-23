@@ -1,30 +1,22 @@
-<div class="app-layout transition-colors duration-200">
-  <div class="layout-content flex min-h-0 flex-1">
-    <app-sidebar></app-sidebar>
-
-    <main
-      class="app-main flex min-h-0 flex-1 flex-col overflow-hidden transition-colors duration-200"
-    >
-      <app-header></app-header>
-
-      <div class="main-content flex-grow overflow-y-auto">
-        <router-outlet></router-outlet>
-      </div>
-    </main>
-  </div>
-
-  @for (dialog of dialogService.dialogs(); track dialog.id) {
-    @if (dialog.component) {
-      <ng-container
-        *ngComponentOutlet="dialog.component; inputs: dialog.inputs; outputs: dialog.outputs"
-      ></ng-container>
-    }
-  }
-
-  <app-connection-modal #connectionModal></app-connection-modal>
-  <app-connection-form></app-connection-form>
-  <app-confirm-dialog></app-confirm-dialog>
-  <app-loading-overlay></app-loading-overlay>
-  <app-toast-container></app-toast-container>
-  <app-shortcuts-help-dialog></app-shortcuts-help-dialog>
+<div class="theme sticky min-h-screen w-full">
+  <app-header class="sticky top-0 z-40 w-full"></app-header>
+  <main class="page-content mx-auto w-full max-w-7xl px-4 sm:px-6">
+    <router-outlet></router-outlet>
+  </main>
+  <app-floating-bottom-nav class="sticky bottom-0 z-50"></app-floating-bottom-nav>
 </div>
+
+@for (dialog of dialogService.dialogs(); track dialog.id) {
+  @if (dialog.component) {
+    <ng-container
+      *ngComponentOutlet="dialog.component; inputs: dialog.inputs; outputs: dialog.outputs"
+    ></ng-container>
+  }
+}
+
+<app-connection-modal #connectionModal></app-connection-modal>
+<app-connection-form></app-connection-form>
+<app-confirm-dialog></app-confirm-dialog>
+<app-loading-overlay></app-loading-overlay>
+<app-toast-container></app-toast-container>
+<app-shortcuts-help-dialog></app-shortcuts-help-dialog>

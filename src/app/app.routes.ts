@@ -12,4 +12,9 @@ export const routes: Routes = [
     loadComponent: () =>
       import("./views/workbench/workbench.component").then((m) => m.WorkbenchComponent),
   },
+  {
+    path: "settings",
+    loadComponent: () =>
+      import("./views/settings/settings.component").then((m) => m.SettingsComponent),
+  },
 ];
