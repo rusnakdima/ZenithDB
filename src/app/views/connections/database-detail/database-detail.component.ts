@@ -4,47 +4,41 @@ import {
   signal,
   OnInit,
   OnDestroy,
-  ElementRef,
-  ViewChild,
-  AfterViewInit,
-  effect,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
 } from "@angular/core";
-import { Router, RouterLink, ActivatedRoute } from "@angular/router";
+import { Router, ActivatedRoute } from "@angular/router";
 import { TitleCasePipe } from "@angular/common";
 import { MatIconModule } from "@angular/material/icon";
 import { FormsModule } from "@angular/forms";
-import { DatabaseService } from "@shared/services/database.service";
+import { DataStoreService } from "@services/core/data-store.service";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { ConfirmService } from "@shared/services/confirm.service";
 import { ErrorHandlerService } from "@shared/services/error-handler.service";
 import { ToastService } from "@services/toast.service";
 import { ProviderUtils } from "@shared/utils/provider.utils";
-import { DecentralizationApiService } from "@shared/services/decentralization-api.service";
-import { CollectionsApiService } from "@shared/services/collections-api.service";
-import { HealthApiService } from "@shared/services/health-api.service";
 import { CollectionMeta } from "@shared/models/connection.config";
 import { withErrorHandling } from "@shared/utils/error-handler.utils";
 import { AddDatabasePathComponent } from "../add-database-path/add-database-path.component";
+import { DiagnosticLoggerService } from "@shared/services/diagnostic-logger.service";
 import { Subscription } from "rxjs";
 import { filter, distinctUntilChanged } from "rxjs/operators";
 
 @Component({
   selector: "app-database-detail",
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [MatIconModule, TitleCasePipe, FormsModule, AddDatabasePathComponent],
   templateUrl: "./database-detail.component.html",
 })
-export class DatabaseDetailComponent implements OnInit, OnDestroy, AfterViewInit {
-  @ViewChild("loadMoreTrigger") loadMoreTrigger?: ElementRef;
-
-  private db = inject(DatabaseService);
+export class DatabaseDetailComponent implements OnInit, OnDestroy {
+  private store = inject(DataStoreService);
   private connState = inject(ConnectionStateService);
   private confirm = inject(ConfirmService);
   private errorHandler = inject(ErrorHandlerService);
   private toast = inject(ToastService);
-  private decentralizationApi = inject(DecentralizationApiService);
-  private collectionsApi = inject(CollectionsApiService);
-  private healthApi = inject(HealthApiService);
+  private diagLogger = inject(DiagnosticLoggerService);
+  private cdr = inject(ChangeDetectorRef);
   providerUtils = inject(ProviderUtils);
   route = inject(ActivatedRoute);
   router = inject(Router);
@@ -57,11 +51,6 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy, AfterViewInit
   loading = signal(false);
   totalDocuments = signal(0);
 
-  collectionOffset = signal(0);
-  collectionHasMore = signal(false);
-  collectionTotalCount = signal(0);
-  loadingMore = signal(false);
-
   editingCollection = signal<string | null>(null);
   editCollectionName = "";
   showCreateCollection = signal(false);
@@ -69,38 +58,6 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy, AfterViewInit
   showAddDbModal = signal(false);
 
   private routeSub: Subscription | null = null;
-  private intersectionObserver: IntersectionObserver | null = null;
-  private isLoadingCollections = false;
-
-  private collectionsEffect = effect(() => {
-    const connId = this.connectionId();
-    const dbName = this.databaseName();
-    if (connId && dbName) {
-      const cached = this.collectionsApi.getCollections(connId);
-      if (cached.length > 0 && this.collections().length === 0) {
-        this.collections.set(cached);
-      }
-    }
-  });
-
-  ngAfterViewInit() {
-    this.setupIntersectionObserver();
-  }
-
-  private setupIntersectionObserver() {
-    if (!this.loadMoreTrigger) return;
-
-    this.intersectionObserver = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && this.collectionHasMore() && !this.loadingMore()) {
-          this.loadMoreCollections();
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    this.intersectionObserver.observe(this.loadMoreTrigger.nativeElement);
-  }
 
   async ngOnInit() {
     this.routeSub = this.route.paramMap
@@ -118,9 +75,11 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy, AfterViewInit
         if (id) {
           this.connectionId.set(id);
           this.databaseName.set(dbName);
+          this.connState.setActiveDatabase(dbName);
+          this.cdr.markForCheck();
 
           try {
-            const fullConfig = await this.db.getConnection(id);
+            const fullConfig = await this.store.getFullConnection(id);
             if (fullConfig?.config?.config) {
               const connConfig = fullConfig.config.config;
               this.connectionName.set(fullConfig.config.name);
@@ -143,8 +102,6 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy, AfterViewInit
 
   ngOnDestroy() {
     this.routeSub?.unsubscribe();
-    this.isLoadingCollections = false;
-    this.intersectionObserver?.disconnect();
   }
 
   getProviderIcon(): string {
@@ -154,24 +111,18 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy, AfterViewInit
   async loadCollections() {
     const connId = this.connectionId();
     const dbName = this.databaseName();
-    if (!connId || !dbName || this.isLoadingCollections) return;
+    if (!connId || !dbName || this.loading()) return;
 
-    if (this.loading()) {
-      return;
-    }
-
-    this.isLoadingCollections = true;
-    this.collectionOffset.set(0);
+    this.loading.set(true);
+    const t0 = Date.now();
 
     try {
       const result = await withErrorHandling(
         async () => {
-          const response = await this.collectionsApi.listCollections(connId, dbName, 0, 10);
+          const response = await this.store.listCollectionsPaginated(connId, dbName, 0, 10000);
           return {
             collections: response.collections,
             total: response.collections.reduce((sum, c) => sum + c.count, 0),
-            hasMore: response.hasMore,
-            totalCount: response.totalCount,
           };
         },
         { loading: this.loading, context: "LoadCollections" },
@@ -179,56 +130,32 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy, AfterViewInit
       );
 
       if (result.success && result.data) {
+        this.diagLogger.logDataLoad(
+          "db-detail-loadCollections",
+          result.data.collections.length,
+          Date.now() - t0,
+          { totalDocs: result.data.total, dbName }
+        );
         this.collections.set(result.data.collections);
         this.totalDocuments.set(result.data.total);
-        this.collectionHasMore.set(result.data.hasMore);
-        this.collectionTotalCount.set(result.data.totalCount);
-        this.collectionOffset.set(10);
+        this.cdr.markForCheck();
       }
     } finally {
-      this.isLoadingCollections = false;
+      this.loading.set(false);
     }
   }
 
-  async loadMoreCollections() {
-    const connId = this.connectionId();
-    const dbName = this.databaseName();
-    if (
-      !connId ||
-      !dbName ||
-      this.isLoadingCollections ||
-      this.loadingMore() ||
-      !this.collectionHasMore()
-    ) {
-      return;
-    }
-
-    this.loadingMore.set(true);
-    try {
-      const response = await this.collectionsApi.listCollections(
-        connId,
-        dbName,
-        this.collectionOffset(),
-        10
-      );
-
-      this.collections.update((cols) => [...cols, ...response.collections]);
-      this.collectionHasMore.set(response.hasMore);
-      this.collectionTotalCount.set(response.totalCount);
-      this.collectionOffset.update((off) => off + 10);
-    } catch (e) {
-      this.errorHandler.handleError(e, "Loading more collections");
-    } finally {
-      this.loadingMore.set(false);
-    }
+  trackByCollection(index: number, col: CollectionMeta): string {
+    return col.name;
   }
 
   openCollection(collectionName: string) {
     const connId = this.connectionId();
     const dbName = this.databaseName();
-    if (connId) {
-      this.router.navigate(["/connections", connId, "explorer"], {
-        queryParams: { collection: collectionName, db: dbName },
+    if (connId && dbName) {
+      this.connState.setActiveDatabase(dbName);
+      this.router.navigate(["/connections", connId, dbName, "explorer"], {
+        queryParams: { collection: collectionName },
       });
     }
   }
@@ -247,11 +174,13 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy, AfterViewInit
   openCreateCollectionModal() {
     this.newCollectionName = "";
     this.showCreateCollection.set(true);
+    this.cdr.markForCheck();
   }
 
   closeCreateCollectionModal() {
     this.showCreateCollection.set(false);
     this.newCollectionName = "";
+    this.cdr.markForCheck();
   }
 
   async createCollection() {
@@ -262,7 +191,7 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy, AfterViewInit
     if (!connId) return;
 
     try {
-      await this.db.createCollection(name);
+      await this.store.createCollection(name);
       this.closeCreateCollectionModal();
       await this.loadCollections();
     } catch (e) {
@@ -273,6 +202,7 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy, AfterViewInit
   startEditCollection(colName: string) {
     this.editingCollection.set(colName);
     this.editCollectionName = colName;
+    this.cdr.markForCheck();
   }
 
   async saveEditCollection() {
@@ -289,7 +219,7 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy, AfterViewInit
     if (!connId) return;
 
     try {
-      await this.db.renameCollection(connId, oldName, newName);
+      await this.store.renameCollection(connId, oldName, newName);
       this.cancelEditCollection();
       await this.loadCollections();
     } catch (e) {
@@ -301,6 +231,7 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy, AfterViewInit
   cancelEditCollection() {
     this.editingCollection.set(null);
     this.editCollectionName = "";
+    this.cdr.markForCheck();
   }
 
   async deleteCollection(colName: string) {
@@ -310,7 +241,7 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy, AfterViewInit
     if (!connId) return;
 
     try {
-      await this.db.dropCollection(colName);
+      await this.store.dropCollection(colName);
       await this.loadCollections();
     } catch (e) {
       this.errorHandler.handleError(e, "Deleting collection");
@@ -322,8 +253,9 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy, AfterViewInit
     if (!connId) return;
 
     try {
-      await this.decentralizationApi.saveDatabase(connId, data.name, data.path || undefined);
+      await this.store.saveDatabase(connId, data.name, data.path || undefined);
       this.showAddDbModal.set(false);
+      this.cdr.markForCheck();
       this.goBack();
     } catch (e) {
       this.errorHandler.handleError(e, "Adding database");
@@ -332,5 +264,6 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy, AfterViewInit
 
   onAddDbModalCancelled() {
     this.showAddDbModal.set(false);
+    this.cdr.markForCheck();
   }
 }

@@ -1,7 +1,7 @@
 import { Component, input, output, signal, computed, inject } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
-import { DatabaseService } from "@shared/services/database.service";
+import { DataStoreService } from "@services/core/data-store.service";
 import { ToastService } from "@services/toast.service";
 import { CollectionMeta, ColumnInfo } from "@shared/models/connection.config";
 
@@ -21,7 +21,7 @@ interface ColumnComparison {
 export class CompareTablesDialogComponent {
   close = output<void>();
 
-  private db = inject(DatabaseService);
+  private store = inject(DataStoreService);
   private toast = inject(ToastService);
 
   collections = input<CollectionMeta[]>([]);
@@ -61,7 +61,7 @@ export class CompareTablesDialogComponent {
     if (!tableName) return;
     this.loading.set(true);
     try {
-      const schema = await this.db.describeCollection(tableName);
+      const schema = await this.store.describeCollection(tableName);
       if (side === "left") {
         this.leftColumns.set(schema.columns);
       } else {

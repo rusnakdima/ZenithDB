@@ -9,7 +9,7 @@ import {
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
-import { DatabaseService } from "@shared/services/database.service";
+import { DataStoreService } from "@services/core/data-store.service";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { ToastService } from "@services/toast.service";
 import { RawResult } from "@shared/models/connection.config";
@@ -28,7 +28,7 @@ import { formatSQL } from "@shared/utils/sql-formatter.utils";
   templateUrl: "./workbench.component.html",
 })
 export class WorkbenchComponent implements OnDestroy {
-  protected db = inject(DatabaseService);
+  protected store = inject(DataStoreService);
   protected connState = inject(ConnectionStateService);
   protected toast = inject(ToastService);
   protected tabService = inject(TabService);
@@ -73,7 +73,7 @@ export class WorkbenchComponent implements OnDestroy {
   async runCurrentTab() {
     const tab = this.activeTab();
     if (!tab || !tab.query.trim()) return;
-    await this.queryExecution.executeWithTiming(tab.query, this.db);
+    await this.queryExecution.executeWithTiming(tab.query);
   }
 
   runAllTabs() {
@@ -92,7 +92,7 @@ export class WorkbenchComponent implements OnDestroy {
 
     const startTime = performance.now();
     try {
-      const results = await this.db.executeRaw(tab.query);
+      const results = await this.store.executeRaw(tab.query);
       const executionTime = performance.now() - startTime;
 
       this.tabService.updateTab(tabId, {

@@ -1,7 +1,7 @@
 import { Injectable, inject } from "@angular/core";
 import { TabService } from "@shared/services/tab.service";
 import { ToastService } from "@services/toast.service";
-import { DatabaseService } from "@shared/services/database.service";
+import { DataStoreService } from "@services/core/data-store.service";
 import { QueryResult, RawResult } from "@shared/models/connection.config";
 
 export interface QueryExecutionResult {
@@ -15,13 +15,14 @@ export interface QueryExecutionResult {
 export class QueryExecutionService {
   private readonly tabService = inject(TabService);
   private readonly toast = inject(ToastService);
+  private readonly store = inject(DataStoreService);
 
-  async executeWithTiming(query: string, db: DatabaseService): Promise<QueryExecutionResult> {
+  async executeWithTiming(query: string): Promise<QueryExecutionResult> {
     this.tabService.updateActiveTab({ loading: true, error: "" });
 
     const startTime = performance.now();
     try {
-      const rawResults = await db.executeRaw(query);
+      const rawResults = await this.store.executeRaw(query);
       const executionTime = performance.now() - startTime;
 
       this.tabService.updateActiveTab({

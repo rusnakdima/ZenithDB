@@ -1,41 +1,5 @@
-<div class="connections-container min-h-0 flex-1 overflow-y-auto">
+<div class="connections-container min-h-0 flex-1">
   <div class="connections-max-width">
-    <div class="connections-header">
-      <div class="flex items-center gap-4">
-        <button
-          (click)="goBack()"
-          class="text-[var(--text-dim)] transition-colors hover:text-[var(--accent)]"
-        >
-          <mat-icon fontIcon="arrow_back" class="h-5! w-5! text-xl!" />
-        </button>
-        <div>
-          <h2
-            class="flex items-center gap-3 text-2xl font-bold tracking-tight text-[var(--text-main)]"
-          >
-            <mat-icon fontIcon="folder" class="h-5! w-5! text-xl! text-[var(--accent)]" />
-            {{ databaseName() || "Database" }}
-          </h2>
-          <p class="mt-1 text-sm text-[var(--text-dim)]">
-            {{ connectionName() }} / {{ provider() | titlecase }}
-          </p>
-        </div>
-      </div>
-      <div class="flex items-center gap-2">
-        <button (click)="openCreateCollectionModal()" class="form-btn form-btn-secondary">
-          <mat-icon fontIcon="add" class="mr-2 h-5! w-5! text-xl!" />
-          Create Collection
-        </button>
-        <button (click)="refresh()" class="form-btn form-btn-secondary">
-          <mat-icon fontIcon="refresh" class="mr-2 h-5! w-5! text-xl!" />
-          Refresh
-        </button>
-        <button (click)="showAddDbModal.set(true)" class="form-btn form-btn-secondary">
-          <mat-icon fontIcon="add" class="mr-2 h-5! w-5! text-xl!" />
-          Add Database
-        </button>
-      </div>
-    </div>
-
     @if (loading()) {
       <div class="glass-card p-12">
         <div class="flex flex-col items-center justify-center gap-4">
@@ -46,6 +10,17 @@
         </div>
       </div>
     } @else {
+      <div class="mb-4 flex items-center gap-2">
+        <button (click)="openCreateCollectionModal()" class="form-btn form-btn-secondary">
+          <mat-icon fontIcon="add" class="mr-2 h-5! w-5! text-xl!" />
+          Create Collection
+        </button>
+        <button (click)="refresh()" class="form-btn form-btn-secondary">
+          <mat-icon fontIcon="refresh" class="mr-2 h-5! w-5! text-xl!" />
+          Refresh
+        </button>
+      </div>
+
       <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         <div class="glass-card p-6">
           <span class="text-xs font-semibold tracking-wider text-[var(--text-dim)] uppercase"
@@ -75,7 +50,7 @@
           <h3 class="mb-4 text-lg font-semibold text-[var(--text-main)]">Collections</h3>
           <div class="rounded-xl border border-[var(--border-visible)] bg-[var(--bg-card)]">
             <table class="w-full">
-              <thead class="border-b border-[var(--border-visible)]">
+              <thead class="border-b border-[var(--border-visible)] bg-[var(--bg-elevated)]">
                 <tr
                   class="text-left text-xs font-semibold tracking-wider text-[var(--text-dim)] uppercase"
                 >
@@ -86,7 +61,7 @@
               </thead>
               <tbody class="divide-y divide-[var(--border-subtle)]">
                 @for (col of collections(); track col.name) {
-                  <tr class="transition-colors hover:bg-[var(--bg-elevated)]">
+                  <tr class="hover:bg-[var(--bg-elevated)]">
                     <td class="px-4 py-3">
                       <div class="flex items-center gap-3">
                         @if (editingCollection() === col.name) {
@@ -142,7 +117,7 @@
                         </button>
                         <button
                           (click)="openCollection(col.name)"
-                          class="rounded-lg px-3 py-1 text-xs font-medium text-[var(--accent)] transition-colors hover:bg-[var(--accent)]/10"
+                          class="rounded-lg px-3 py-1 text-xs font-medium text-[var(--accent)] hover:bg-[var(--accent)]/10"
                         >
                           Explore
                         </button>
@@ -152,28 +127,6 @@
                 }
               </tbody>
             </table>
-            <div
-              #loadMoreTrigger
-              class="flex items-center justify-center p-4"
-              id="load-more-trigger"
-            >
-              @if (loadingMore()) {
-                <div class="flex items-center gap-2 text-[var(--text-dim)]">
-                  <div
-                    class="h-4 w-4 animate-spin rounded-full border-2 border-[var(--accent)]/20 border-t-[var(--accent)]"
-                  ></div>
-                  <span class="text-sm">Loading more...</span>
-                </div>
-              } @else if (!collectionHasMore() && collections().length > 0) {
-                <span class="text-sm text-[var(--text-muted)]"
-                  >No more collections ({{ collectionTotalCount() }} total)</span
-                >
-              } @else if (collectionHasMore()) {
-                <button (click)="loadMoreCollections()" class="form-btn form-btn-secondary">
-                  Load More
-                </button>
-              }
-            </div>
           </div>
         </div>
       } @else {

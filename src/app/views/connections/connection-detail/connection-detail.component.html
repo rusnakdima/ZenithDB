@@ -1,25 +1,5 @@
-<div class="connections-container min-h-0 flex-1 overflow-y-auto">
+<div class="connections-container min-h-0 flex-1">
   <div class="connections-max-width">
-    <div class="connections-header">
-      <div class="flex items-center gap-4">
-        <a
-          routerLink="/connections"
-          class="text-[var(--text-dim)] transition-colors hover:text-[var(--accent)]"
-        >
-          <mat-icon fontIcon="arrow_back" class="h-5! w-5! text-xl!" />
-        </a>
-        <div>
-          <h2
-            class="flex items-center gap-3 text-2xl font-bold tracking-tight text-[var(--text-main)]"
-          >
-            <mat-icon [fontIcon]="providerIcon()" class="h-5! w-5! text-xl! text-[var(--accent)]" />
-            {{ connectionName() || "Connection Details" }}
-          </h2>
-          <p class="mt-1 text-sm text-[var(--text-dim)]">{{ provider() | titlecase }} connection</p>
-        </div>
-      </div>
-    </div>
-
     @if (loading()) {
       <div class="glass-card p-12">
         <div class="flex flex-col items-center justify-center gap-4">
@@ -97,19 +77,21 @@
       <div class="mt-8">
         <div class="mb-4 flex items-center justify-between">
           <h3 class="text-lg font-semibold text-[var(--text-main)]">Databases</h3>
-          @if (!isSingleDatabaseProvider()) {
-            <button (click)="showAddDbModal.set(true)" class="form-btn form-btn-secondary">
-              <mat-icon fontIcon="add" class="mr-2 h-5! w-5! text-xl!" />
-              Add Database
-            </button>
-          }
+          <button (click)="showAddDbModal.set(true)" class="form-btn form-btn-secondary">
+            <mat-icon fontIcon="add" class="mr-2 h-5! w-5! text-xl!" />
+            Add Database
+          </button>
         </div>
 
         @if (databases().length > 0) {
           <div class="mb-3 flex items-center justify-between px-2 text-xs text-[var(--text-muted)]">
             <span>Showing {{ databases().length }} of {{ databaseTotalCount() }}</span>
             @if (databaseHasMore()) {
-              <button class="text-[var(--accent)] hover:underline" (click)="loadMoreDatabases()">
+              <button
+                [disabled]="isLoadingDetails()"
+                class="text-[var(--accent)] hover:underline disabled:cursor-wait disabled:opacity-50"
+                (click)="loadMoreDatabases()"
+              >
                 Load More
               </button>
             }
@@ -117,7 +99,7 @@
         }
 
         <div class="space-y-2">
-          @for (db of databases(); track db.name) {
+          @for (db of databases(); track db.id) {
             <div
               class="cursor-pointer rounded-xl border border-[var(--border-visible)] bg-[var(--bg-card)] p-4 transition-colors hover:bg-[var(--bg-elevated)]"
               (click)="openDatabase(db.name)"

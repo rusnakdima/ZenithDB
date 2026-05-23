@@ -12,15 +12,11 @@ import { Router, ActivatedRoute } from "@angular/router";
 import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
 import { ModalComponent } from "@shared/components/modal/modal.component";
-import { DatabaseService } from "@shared/services/database.service";
+import { DataStoreService } from "@services/core/data-store.service";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { ProviderUtils } from "@shared/utils/provider.utils";
 import { parseProviderConfig } from "@shared/utils/provider-config.utils";
-import {
-  ConnectionConfig,
-  ConnectionHealth,
-  TestConnectionConfig,
-} from "@shared/models/connection.config";
+import { ConnectionHealth, TestConnectionConfig } from "@shared/models/connection.config";
 import { ProviderType } from "@shared/models/provider.model";
 import {
   ConnectionConfigFormComponent,
@@ -39,7 +35,7 @@ import { ConnectionFormService } from "@shared/services/connection-form.service"
 export class ConnectionFormComponent implements OnInit, OnDestroy {
   closed = output<void>();
 
-  private db = inject(DatabaseService);
+  private store = inject(DataStoreService);
   private connState = inject(ConnectionStateService);
   private errorHandler = inject(ErrorHandlerService);
   toast = inject(ToastService);
@@ -140,7 +136,7 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
 
   private async loadConnectionForEdit(id: string) {
     try {
-      const conn = await this.db.getConnection(id);
+      const conn = await this.store.getFullConnection(id);
       this.editingId = id;
       const innerConfig = conn.config.config;
 
@@ -177,7 +173,7 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
 
   private async loadConnectionForDuplicate(id: string) {
     try {
-      const conn = await this.db.getConnection(id);
+      const conn = await this.store.getFullConnection(id);
       const innerConfig = conn.config.config;
 
       if (!innerConfig || !innerConfig.type) {
@@ -269,12 +265,12 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
 
   async testConnection() {
     this.testing.set(true);
-    this.cdr.detectChanges();
+    this.cdr.markForCheck();
     try {
       const config = this.buildConfig();
-      const result = await this.db.testConnection(config);
+      const result = await this.store.testConnection(config);
       this.testResult.set(result);
-      this.cdr.detectChanges();
+      this.cdr.markForCheck();
     } catch (e) {
       this.testResult.set({
         healthy: false,
@@ -282,29 +278,29 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
         server_version: String(e),
         latency_ms: undefined,
       });
-      this.cdr.detectChanges();
+      this.cdr.markForCheck();
     } finally {
       this.testing.set(false);
-      this.cdr.detectChanges();
+      this.cdr.markForCheck();
     }
   }
 
   async save() {
     this.saving.set(true);
-    this.cdr.detectChanges();
+    this.cdr.markForCheck();
     try {
       const config = this.buildConfig();
       if (this.editingId) {
-        await this.db.deleteConnection(this.editingId);
+        await this.store.deleteConnection(this.editingId);
       }
-      await this.db.saveConnection(config);
+      await this.store.saveConnection(config);
       this.onClose();
     } catch (e) {
       this.errorHandler.handleError(e, "Saving connection");
-      this.cdr.detectChanges();
+      this.cdr.markForCheck();
     } finally {
       this.saving.set(false);
-      this.cdr.detectChanges();
+      this.cdr.markForCheck();
     }
   }
 

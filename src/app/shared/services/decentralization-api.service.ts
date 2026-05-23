@@ -25,6 +25,7 @@ export class DecentralizationApiService extends CacheService {
   }
 
   async listDatabases(connectionId: string, offset = 0, limit = 10): Promise<DatabaseListResult> {
+    const cacheKey = `${connectionId}:${offset}`;
     if (offset === 0) {
       const existing = this.inFlightDatabases.get(connectionId);
       if (existing) {
@@ -36,7 +37,15 @@ export class DecentralizationApiService extends CacheService {
       this.inFlightDatabases.set(connectionId, promise);
       return promise;
     }
-    return this.fetchDatabases(connectionId, offset, limit);
+    const existing = this.inFlightDatabases.get(cacheKey);
+    if (existing) {
+      return existing.catch(() => ({ databases: [], hasMore: false, totalCount: 0 }));
+    }
+    const promise = this.fetchDatabases(connectionId, offset, limit).finally(() => {
+      this.inFlightDatabases.delete(cacheKey);
+    });
+    this.inFlightDatabases.set(cacheKey, promise);
+    return promise;
   }
 
   async listDatabasesWithRefresh(connectionId: string): Promise<DatabaseListResult> {

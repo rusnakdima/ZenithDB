@@ -15,9 +15,7 @@ export class ConnectionService {
   private api = inject(ApiProvider);
 
   async listConnections(): Promise<ConnectionSummary[]> {
-    return withLoading(this.loadingService, "Loading connections...", () =>
-      this.api.listConnections()
-    );
+    return this.api.listConnections();
   }
 
   async getConnection(id: string) {

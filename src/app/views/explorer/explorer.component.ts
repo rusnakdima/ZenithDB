@@ -1,19 +1,27 @@
-import { Component, signal, computed, inject, OnInit, OnDestroy } from "@angular/core";
+import {
+  Component,
+  signal,
+  computed,
+  inject,
+  OnInit,
+  OnDestroy,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+} from "@angular/core";
 import { Router, ActivatedRoute, NavigationEnd } from "@angular/router";
 import { Subscription } from "rxjs";
 import { filter } from "rxjs/operators";
-import { ScrollingModule } from "@angular/cdk/scrolling";
 import { MatIconModule } from "@angular/material/icon";
 import { DataGridComponent } from "@features/data/data-grid/data-grid.component";
 import { SchemaTreeComponent } from "@features/schema/schema-tree/schema-tree.component";
 import { FilterBarComponent } from "@shared/components/filter-bar/filter-bar.component";
-import { DatabaseService } from "@shared/services/database.service";
-import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { DataStoreService } from "@services/core/data-store.service";
+import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { ToastService } from "@services/toast.service";
 import { ClipboardService } from "@shared/services/clipboard.service";
 import { ExportService } from "@shared/services/export.service";
 import { PersistentStorageService, SplitMode } from "@shared/services/persistent-storage.service";
+import { DiagnosticLoggerService } from "@shared/services/diagnostic-logger.service";
 import {
   CollectionMeta,
   CollectionStats,
@@ -41,8 +49,8 @@ interface Tab {
 @Component({
   selector: "app-explorer",
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    ScrollingModule,
     MatIconModule,
     DataGridComponent,
     SchemaTreeComponent,
@@ -56,15 +64,16 @@ interface Tab {
   templateUrl: "./explorer.component.html",
 })
 export class ExplorerComponent implements OnInit, OnDestroy {
-  private db = inject(DatabaseService);
+  private store = inject(DataStoreService);
   private connectionState = inject(ConnectionStateService);
-  private dataStore = inject(DataStoreService);
   private toast = inject(ToastService);
   private clipboard = inject(ClipboardService);
   private exportService = inject(ExportService);
   private persistentStorage = inject(PersistentStorageService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private cdr = inject(ChangeDetectorRef);
+  private diagLogger = inject(DiagnosticLoggerService);
   private queryParamsSub: Subscription | null = null;
   private routeSub: Subscription | null = null;
 
@@ -77,7 +86,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
 
   filterText = signal("");
   page = signal(0);
-  pageSize = signal(50);
+  pageSize = signal(25);
   private reloadCounter = signal(0);
   total = signal(0);
   loading = signal(false);
@@ -89,15 +98,22 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   selectedColumns = signal<string[]>([]);
   showCollectionSelector = signal(false);
   fullJsonData = signal<RowData[]>([]);
-  jsonDocumentsMap = signal<Map<number, { lines: string[]; json: string }>>(new Map());
+  jsonDocumentsMap = signal<
+    Map<number, { highlightedLines: { num: number; html: string }[]; json: string }>
+  >(new Map());
   jsonLoading = signal(false);
   jsonLoadProgress = signal(0);
   showCompareTables = signal(false);
+
+  jsonOffset = signal(0);
+  jsonHasMore = signal(true);
+  jsonLoadingMore = signal(false);
 
   reloadTrigger = this.reloadCounter.asReadonly();
 
   currentConnectionId: string | null = null;
   private pendingCollectionSelection: string | null = null;
+  private collectionsLoadInitiated = false;
 
   async ngOnInit() {
     const savedSplitMode = this.persistentStorage.getExplorerSplitMode();
@@ -134,6 +150,10 @@ export class ExplorerComponent implements OnInit, OnDestroy {
     this.queryParamsSub?.unsubscribe();
     this.routeSub?.unsubscribe();
     this.fullJsonData.set([]);
+    if (this.worker) {
+      this.worker.terminate();
+      this.worker = null;
+    }
   }
 
   private async handleRouteChange() {
@@ -141,10 +161,15 @@ export class ExplorerComponent implements OnInit, OnDestroy {
     const connIdIndex = segments.indexOf("connections");
     if (connIdIndex !== -1 && segments[connIdIndex + 1]) {
       this.currentConnectionId = segments[connIdIndex + 1];
-      const conn = this.dataStore.connections().find((c) => c.id === this.currentConnectionId);
+      const conn = this.store.connections().find((c) => c.id === this.currentConnectionId);
       if (conn) {
         this.connectionState.setActiveConnection(conn);
       }
+    }
+
+    const dbNameFromQuery = this.route.snapshot.queryParamMap.get("db");
+    if (dbNameFromQuery) {
+      this.connectionState.setActiveDatabase(dbNameFromQuery);
     }
 
     if (!this.currentConnectionId) {
@@ -154,46 +179,67 @@ export class ExplorerComponent implements OnInit, OnDestroy {
 
     const initialCollection = this.route.snapshot.queryParamMap.get("collection");
 
-    this.loading.set(true);
-    try {
-      await this.loadCollections(initialCollection);
-    } finally {
-      this.loading.set(false);
+    const cachedCollections = this.store.getCollections(this.currentConnectionId);
+    if (cachedCollections.length > 0) {
+      this.collections.set(cachedCollections);
+      this.applyCollectionSelection(initialCollection);
+    }
+
+    if (!this.collectionsLoadInitiated) {
+      this.collectionsLoadInitiated = true;
+      this.loadCollectionsInBackground(initialCollection);
     }
   }
 
-  async loadCollections(selectedCollection?: string | null) {
-    const result = await withErrorHandling(() => this.db.listCollections(), {
-      loading: this.loading,
-      errorMessage: "Failed to load collections",
-    });
-    if (!result.success || !result.data) return;
-
-    const cols = result.data;
-    this.collections.set(cols);
+  private applyCollectionSelection(selectedCollection: string | null) {
+    const cols = this.collections();
+    if (cols.length === 0) return;
 
     const pendingCollection = this.pendingCollectionSelection;
     const collectionToSelect = pendingCollection || selectedCollection;
 
-    if (cols.length > 0) {
-      if (collectionToSelect && cols.some((c) => c.name === collectionToSelect)) {
-        this.activeCollection.set(collectionToSelect);
-        this.activeTabs.set([{ name: collectionToSelect, collection: collectionToSelect }]);
-        this.pendingCollectionSelection = null;
-      } else if (!collectionToSelect && cols.length > 0) {
-        this.activeCollection.set(cols[0].name);
-        this.activeTabs.set([{ name: cols[0].name, collection: cols[0].name }]);
-      }
+    if (collectionToSelect && cols.some((c) => c.name === collectionToSelect)) {
+      this.activeCollection.set(collectionToSelect);
+      this.activeTabs.set([{ name: collectionToSelect, collection: collectionToSelect }]);
+      this.pendingCollectionSelection = null;
+      this.connectionState.setActiveCollection(collectionToSelect);
+    } else if (!collectionToSelect && cols.length > 0) {
+      this.activeCollection.set(cols[0].name);
+      this.activeTabs.set([{ name: cols[0].name, collection: cols[0].name }]);
+      this.connectionState.setActiveCollection(cols[0].name);
+    }
+
+    if (this.activeCollection()) {
       this.loadStats();
       this.loadColumns();
     }
+  }
+
+  private loadCollectionsInBackground(selectedCollection?: string | null) {
+    this.loading.set(true);
+    const t0 = Date.now();
+    this.store
+      .ensureCollectionsLoaded(this.currentConnectionId!)
+      .then((cols) => {
+        this.diagLogger.logDataLoad("explorer-loadCollections", cols.length, Date.now() - t0, {
+          selectedCollection,
+        });
+        this.collections.set(cols);
+        this.applyCollectionSelection(selectedCollection ?? null);
+      })
+      .catch(() => {
+        this.toast.error("Failed to load collections");
+      })
+      .finally(() => {
+        this.loading.set(false);
+      });
   }
 
   async loadStats() {
     const collection = this.activeCollection();
     if (!collection) return;
     try {
-      const s = await this.db.getCollectionStats(collection);
+      const s = await this.store.getCollectionStats(collection);
       this.stats.set(s);
       this.total.set(s.document_count);
     } catch {
@@ -206,7 +252,11 @@ export class ExplorerComponent implements OnInit, OnDestroy {
     const collection = this.activeCollection();
     if (!collection) return [];
     try {
-      const columns = await this.dataStore.loadColumns(collection);
+      const t0 = Date.now();
+      const columns = await this.store.loadColumns(collection);
+      this.diagLogger.logDataLoad("explorer-loadColumns", columns.length, Date.now() - t0, {
+        collection,
+      });
       const cols = columns.map((c) => c.name);
       this.availableColumns.set(cols);
       this.availableColumnsMeta.set(columns);
@@ -220,48 +270,166 @@ export class ExplorerComponent implements OnInit, OnDestroy {
     }
   }
 
+  private worker: Worker | null = null;
+  private pendingWorkerTasks: Map<number, any> = new Map();
+
+  constructor() {
+    if (typeof Worker !== "undefined") {
+      this.initWorker();
+    }
+  }
+
+  private initWorker() {
+    this.worker = new Worker(new URL("../../workers/json-processing.worker", import.meta.url), {
+      type: "module",
+    });
+
+    this.worker.onmessage = ({ data }) => {
+      if (data.type === "result") {
+        const docMap = new Map(this.jsonDocumentsMap());
+        data.processed.forEach((item: any) => {
+          docMap.set(item.index, {
+            highlightedLines: item.highlightedLines,
+            json: item.json,
+          });
+        });
+        this.jsonDocumentsMap.set(docMap);
+        this.cdr.markForCheck();
+      }
+    };
+  }
+
   async loadFullJsonData() {
     this.fullJsonData.set([]);
     this.jsonDocumentsMap.set(new Map());
+    this.jsonOffset.set(0);
+    this.jsonHasMore.set(true);
     this.jsonLoading.set(true);
     this.jsonLoadProgress.set(0);
     const BATCH_SIZE = 30;
     try {
-      const result = await this.db.queryData(this.activeCollection(), {
-        limit: 30,
+      const t0 = Date.now();
+      const result = await this.store.queryData(this.activeCollection(), {
+        skip: 0,
+        limit: 50,
       });
       const allData = result.data as RowData[];
       const totalRows = allData.length;
-      const docMap = new Map<number, { lines: string[]; json: string }>();
+      this.diagLogger.logDataLoad(
+        "explorer-loadFullJsonData-queryData",
+        totalRows,
+        Date.now() - t0,
+        { hasMore: result.has_more }
+      );
 
-      for (let i = 0; i < totalRows; i += BATCH_SIZE) {
-        const batch = allData.slice(i, Math.min(i + BATCH_SIZE, totalRows));
-        batch.forEach((doc, idx) => {
-          const docIndex = i + idx;
-          const jsonStr = JSON.stringify(doc, null, 2);
-          docMap.set(docIndex, {
-            lines: jsonStr.split("\n"),
-            json: jsonStr,
+      this.jsonHasMore.set(result.has_more);
+      this.jsonOffset.set(totalRows);
+
+      if (this.worker) {
+        const totalProcessed = { count: 0 };
+        const originalHandler = this.worker.onmessage;
+        this.worker.onmessage = (event) => {
+          if (event.data.type === "result") {
+            totalProcessed.count += event.data.processed.length;
+            const progress = Math.round((totalProcessed.count / totalRows) * 100);
+            this.jsonLoadProgress.set(progress);
+
+            const docMap = new Map(this.jsonDocumentsMap());
+            event.data.processed.forEach((item: any) => {
+              docMap.set(item.index, {
+                highlightedLines: item.highlightedLines,
+                json: item.json,
+              });
+            });
+            this.jsonDocumentsMap.set(docMap);
+            this.cdr.markForCheck();
+
+            if (totalProcessed.count >= totalRows) {
+              this.worker!.onmessage = originalHandler;
+            }
+          }
+        };
+
+        for (let i = 0; i < totalRows; i += BATCH_SIZE) {
+          const batch = allData.slice(i, Math.min(i + BATCH_SIZE, totalRows));
+          this.worker.postMessage({
+            type: "process",
+            documents: batch,
+            startIndex: i,
           });
-        });
-
-        const progress = Math.round(((i + batch.length) / totalRows) * 100);
-        this.jsonLoadProgress.set(progress);
-
-        await new Promise<void>((resolve) => {
-          requestAnimationFrame(() => {
-            setTimeout(() => resolve(), 0);
+        }
+      } else {
+        const docMap = new Map<
+          number,
+          { highlightedLines: { num: number; html: string }[]; json: string }
+        >();
+        for (let i = 0; i < totalRows; i += BATCH_SIZE) {
+          const batch = allData.slice(i, Math.min(i + BATCH_SIZE, totalRows));
+          batch.forEach((doc, idx) => {
+            const docIndex = i + idx;
+            const jsonStr = JSON.stringify(doc, null, 2);
+            const rawLines = jsonStr.split("\n");
+            const highlightedLines = rawLines.map((line, lineIdx) => ({
+              num: lineIdx + 1,
+              html: highlightJsonLine(line),
+            }));
+            docMap.set(docIndex, {
+              highlightedLines,
+              json: jsonStr,
+            });
           });
-        });
+
+          const progress = Math.round(((i + batch.length) / totalRows) * 100);
+          this.jsonLoadProgress.set(progress);
+
+          await new Promise<void>((resolve) => {
+            requestAnimationFrame(() => {
+              setTimeout(() => resolve(), 0);
+            });
+          });
+        }
+        this.jsonDocumentsMap.set(docMap);
       }
 
       this.fullJsonData.set(allData);
-      this.jsonDocumentsMap.set(docMap);
       this.jsonLoadProgress.set(100);
     } catch {
       this.toast.error("Failed to load JSON data");
     } finally {
       this.jsonLoading.set(false);
+    }
+  }
+
+  async loadMoreJsonData() {
+    if (this.jsonLoadingMore() || !this.jsonHasMore()) return;
+    this.jsonLoadingMore.set(true);
+    try {
+      const t0 = Date.now();
+      const result = await this.store.queryData(this.activeCollection(), {
+        skip: this.jsonOffset(),
+        limit: 50,
+      });
+      this.diagLogger.logDataLoad(
+        "explorer-loadMoreJsonData",
+        result.data.length,
+        Date.now() - t0,
+        { hasMore: result.has_more }
+      );
+      this.fullJsonData.update((current) => [...current, ...(result.data as RowData[])]);
+      this.jsonHasMore.set(result.has_more);
+      this.jsonOffset.update((o) => o + result.data.length);
+      this.cdr.markForCheck();
+
+      if (this.worker && result.data.length > 0) {
+        const startIndex = this.jsonOffset() - result.data.length;
+        this.worker.postMessage({
+          type: "process",
+          documents: result.data,
+          startIndex,
+        });
+      }
+    } finally {
+      this.jsonLoadingMore.set(false);
     }
   }
 
@@ -297,6 +465,8 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   selectViewTab(tab: ViewTab) {
     this.viewTab.set(tab);
     if (tab === "json") {
+      this.jsonOffset.set(0);
+      this.jsonHasMore.set(true);
       this.loadFullJsonData();
     }
   }
@@ -372,7 +542,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
           return;
         }
       }
-      const result = await this.db.queryData(this.activeCollection(), {
+      const result = await this.store.queryData(this.activeCollection(), {
         filter: filterObj,
         limit: 10000,
       });
@@ -459,7 +629,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
     try {
       let imported = 0;
       for (const row of rows) {
-        await this.db.saveRow(this.activeCollection(), row);
+        await this.store.saveRow(this.activeCollection(), row);
         imported++;
       }
       this.toast.success(`Imported ${imported} rows`);
@@ -525,10 +695,12 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   }
 
   formatJsonLinesFn = (obj: unknown): string[] => formatJsonLines(JSON.stringify(obj, null, 2));
-  highlightJsonLineFn = highlightJsonLine;
+
   trackByIndex = (index: number): number => index;
 
-  getDocLines(index: number): { lines: string[]; json: string } | undefined {
+  getDocLines(
+    index: number
+  ): { highlightedLines: { num: number; html: string }[]; json: string } | undefined {
     return this.jsonDocumentsMap().get(index);
   }
 

@@ -1,4 +1,4 @@
-import { Injectable, signal, NgZone, inject, DestroyRef } from "@angular/core";
+import { Injectable, signal, inject, DestroyRef } from "@angular/core";
 import { Router } from "@angular/router";
 import {
   SHORTCUT_CONFIG,
@@ -12,7 +12,6 @@ import { ConnectionFormService } from "./connection-form.service";
 @Injectable({ providedIn: "root" })
 export class KeyboardShortcutsService {
   private router = inject(Router);
-  private zone = inject(NgZone);
   private destroyRef = inject(DestroyRef);
   private connectionFormService = inject(ConnectionFormService);
 
@@ -57,15 +56,10 @@ export class KeyboardShortcutsService {
       if (action) {
         event.preventDefault();
         event.stopPropagation();
-
-        this.zone.run(() => {
-          this.dispatchAction(action, event);
-        });
+        this.dispatchAction(action, event);
       }
     };
-    this.zone.runOutsideAngular(() => {
-      document.addEventListener("keydown", this.boundHandler!);
-    });
+    document.addEventListener("keydown", this.boundHandler!);
   }
 
   private shouldIgnoreEvent(event: KeyboardEvent): boolean {

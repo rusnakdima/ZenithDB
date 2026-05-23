@@ -1,22 +1,25 @@
-import { Component, inject, signal, OnInit, OnDestroy, effect } from "@angular/core";
+import {
+  Component,
+  inject,
+  signal,
+  OnInit,
+  OnDestroy,
+  ChangeDetectionStrategy,
+} from "@angular/core";
 import { Router, RouterLink, ActivatedRoute } from "@angular/router";
 import { TitleCasePipe } from "@angular/common";
 import { MatIconModule } from "@angular/material/icon";
 import { FormsModule } from "@angular/forms";
-import { DatabaseService } from "@shared/services/database.service";
+import { DataStoreService } from "@services/core/data-store.service";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { ConfirmService } from "@shared/services/confirm.service";
 import { ErrorHandlerService } from "@shared/services/error-handler.service";
 import { ToastService } from "@services/toast.service";
 import { ProviderUtils } from "@shared/utils/provider.utils";
-import { DecentralizationApiService } from "@shared/services/decentralization-api.service";
-import { ConnectionsApiService } from "@shared/services/connections-api.service";
-import { HealthApiService } from "@shared/services/health-api.service";
 import {
   DatabaseMetadata,
   ConnectionHealth,
   ConnectionSummary,
-  ConnectionConfig,
 } from "@shared/models/connection.config";
 import { StatusBadgeComponent } from "@shared/components/status-badge/status-badge.component";
 import { ConnectionStatusBadgeComponent } from "@shared/components/connection-status-badge/connection-status-badge.component";
@@ -34,6 +37,7 @@ interface DbNode {
 @Component({
   selector: "app-connection-detail",
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     RouterLink,
     ConnectionStatusBadgeComponent,
@@ -45,11 +49,8 @@ interface DbNode {
   templateUrl: "./connection-detail.component.html",
 })
 export class ConnectionDetailComponent implements OnInit, OnDestroy {
-  private db = inject(DatabaseService);
+  private store = inject(DataStoreService);
   private connState = inject(ConnectionStateService);
-  private connectionsApi = inject(ConnectionsApiService);
-  private decentralizationApi = inject(DecentralizationApiService);
-  private healthApi = inject(HealthApiService);
   private confirm = inject(ConfirmService);
   private errorHandler = inject(ErrorHandlerService);
   private toast = inject(ToastService);
@@ -79,61 +80,59 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
 
   private routeSub: Subscription | null = null;
   private loadController: AbortController | null = null;
-
-  private databasesEffect = effect(() => {
-    const connId = this.connectionId();
-    if (connId) {
-      const cached = this.decentralizationApi.getDatabases(connId);
-      if (cached.length > 0) {
-        this.databases.set(
-          cached.map((db: DatabaseMetadata) => ({
-            id: db.id,
-            name: db.name,
-            path: db.path || undefined,
-          }))
-        );
-      }
-    }
-  });
+  private currentLoadId: string | null = null;
 
   async ngOnInit() {
     console.log("[ConnectionDetail] ngOnInit started, id:", this.connectionId());
+
     this.routeSub = this.route.paramMap
       .pipe(
         debounceTime(300),
         distinctUntilChanged((prev, curr) => prev.get("id") === curr.get("id"))
       )
-      .subscribe(async (params) => {
-        const id = params.get("id");
-        console.log("[ConnectionDetail] route params received, id:", id);
-        if (id && id !== "new") {
-          this.connectionId.set(id);
-          console.log("[ConnectionDetail] connectionId set to:", id);
-          const connections = this.connectionsApi.getConnections();
-          console.log("[ConnectionDetail] got connections, count:", connections.length);
-          const conn = connections.find((c) => c.id === id);
-          console.log("[ConnectionDetail] found conn:", conn?.name);
-          if (conn) {
-            this.connectionName.set(conn.name);
-            this.provider.set(conn.provider);
-            this.connState.setActiveConnection(conn);
-            console.log("[ConnectionDetail] state set, loading connection details");
-            await this.loadConnectionDetails();
-          }
-        } else {
-          this.connectionId.set(this.connState.activeConnectionId());
-          this.connectionName.set(this.connState.activeConnectionName());
-          this.provider.set(this.connState.activeProvider());
-          this.fullConfig.set(this.connState.activeConnectionConfig());
-        }
-        console.log("[ConnectionDetail] ngOnInit complete");
+      .subscribe((params) => {
+        this.handleRouteChange(params.get("id"));
       });
+  }
+
+  private async handleRouteChange(id: string | null): Promise<void> {
+    if (!id || id === "new") {
+      this.connectionId.set(this.connState.activeConnectionId());
+      this.connectionName.set(this.connState.activeConnectionName());
+      this.provider.set(this.connState.activeProvider());
+      this.fullConfig.set(this.connState.activeConnectionConfig());
+      return;
+    }
+
+    const loadId = id;
+    if (this.currentLoadId === loadId && this.isLoadingDetails()) {
+      console.log("[ConnectionDetail] already loading:", loadId);
+      return;
+    }
+    this.currentLoadId = loadId;
+
+    this.connectionId.set(id);
+    const connections = this.store.connections();
+    const conn = connections.find((c) => c.id === id);
+    if (conn) {
+      this.connectionName.set(conn.name);
+      this.provider.set(conn.provider);
+      this.connState.setActiveConnection(conn);
+    }
+
+    if (loadId !== this.currentLoadId) return;
+
+    await this.loadConnectionDetails();
+
+    if (loadId !== this.currentLoadId) return;
   }
 
   ngOnDestroy() {
     this.isLoadingDetails.set(false);
     this.loading.set(false);
     this.routeSub?.unsubscribe();
+    this.loadController?.abort();
+    this.currentLoadId = null;
   }
 
   private updateProviderIcon() {
@@ -141,6 +140,7 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
   }
 
   async loadConnectionDetails() {
+    console.log("[ConnectionDetail] loadConnectionDetails called");
     const connId = this.connectionId();
     if (!connId) return;
 
@@ -148,16 +148,9 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
     this.isLoadingDetails.set(true);
 
     try {
-      const [version, healthResult] = await Promise.all([
-        this.db.getServerVersion().catch(() => null),
-        this.healthApi.checkHealth(connId).catch(() => null),
-      ]);
+      this.loading.set(true);
 
-      const cachedDatabases = this.decentralizationApi.getDatabases(connId);
-      if (cachedDatabases.length === 0) {
-        await this.decentralizationApi.listDatabases(connId, 0, 10);
-      }
-      const databasesResult = this.decentralizationApi.getDatabases(connId);
+      const databasesResult = await this.store.ensureDatabasesLoaded(connId);
 
       this.databaseOffset.set(0);
       this.databaseHasMore.set(false);
@@ -169,11 +162,26 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
           path: db.path || undefined,
         }))
       );
+
+      this.loadHealthAndVersion(connId);
+    } finally {
+      this.isLoadingDetails.set(false);
+    }
+  }
+
+  private async loadHealthAndVersion(connId: string): Promise<void> {
+    try {
+      const [version, healthResult] = await Promise.all([
+        this.store.getServerVersion().catch(() => null),
+        this.store.ensureHealthLoaded(connId).catch(() => null),
+      ]);
+
       this.serverVersion.set(version);
       this.health.set(healthResult);
       this.loading.set(false);
-    } finally {
-      this.isLoadingDetails.set(false);
+    } catch (e) {
+      console.error("[ConnectionDetail] Failed to load health/version:", e);
+      this.loading.set(false);
     }
   }
 
@@ -184,7 +192,7 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
     this.isLoadingDetails.set(true);
     try {
       const newOffset = this.databaseOffset() + 10;
-      const result = await this.decentralizationApi.listDatabases(connId, newOffset, 10);
+      const result = await this.store.listDatabasesPaginated(connId, newOffset, 10);
       this.databaseOffset.set(newOffset);
       this.databaseHasMore.set(result.hasMore);
       this.databaseTotalCount.set(result.totalCount);
@@ -209,7 +217,7 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
 
     const connId = this.connectionId();
     if (connId) {
-      this.healthApi.invalidateHealth(connId);
+      this.store.invalidateHealth(connId);
     }
 
     const config = {
@@ -218,7 +226,7 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
     };
 
     const result = await withErrorHandling(
-      async () => await this.db.testConnection(config),
+      async () => await this.store.testConnection(config),
       { loading: this.testing, context: "TestConnection" },
       { errorHandler: this.errorHandler, toastService: this.toast }
     );
@@ -235,7 +243,7 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
   async deleteConnection() {
     if (!this.connectionId()) return;
     if (await this.confirm.confirmDelete(this.connectionName()!)) {
-      await this.db.deleteConnection(this.connectionId()!);
+      await this.store.deleteConnection(this.connectionId()!);
       this.disconnect();
     }
   }
@@ -261,7 +269,7 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
   openDatabase(dbName: string) {
     const connId = this.connectionId();
     if (connId) {
-      this.router.navigate(["/connections", connId, "databases", dbName]);
+      this.router.navigate(["/connections", connId, dbName]);
     }
   }
 
@@ -281,7 +289,7 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
 
     this.creatingDb.set(true);
     try {
-      await this.decentralizationApi.saveDatabase(connId, data.name, data.path || undefined);
+      await this.store.saveDatabase(connId, data.name, data.path || undefined);
       this.showAddDbModal.set(false);
       await this.loadConnectionDetails();
     } catch (e) {
@@ -314,11 +322,11 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
     if (!connId) return;
 
     try {
-      const localDbs = this.decentralizationApi.getDatabases(connId);
+      const localDbs = this.store.getDatabases(connId);
       const dbToEdit = localDbs.find((d) => d.name === oldName);
       if (dbToEdit) {
-        await this.decentralizationApi.deleteDatabase(dbToEdit.id);
-        await this.decentralizationApi.saveDatabase(connId, newName, dbToEdit.path || undefined);
+        await this.store.deleteDatabase(dbToEdit.id);
+        await this.store.saveDatabase(connId, newName, dbToEdit.path || undefined);
       }
       this.cancelEditDb();
       await this.loadConnectionDetails();
@@ -340,12 +348,12 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
     if (!connId) return;
 
     try {
-      const localDbs = this.decentralizationApi.getDatabases(connId);
+      const localDbs = this.store.getDatabases(connId);
       const dbToDelete = localDbs.find((d) => d.name === dbName);
       if (dbToDelete) {
-        await this.decentralizationApi.deleteDatabase(dbToDelete.id);
+        await this.store.deleteDatabase(dbToDelete.id);
+        await this.loadConnectionDetails();
       }
-      await this.loadConnectionDetails();
     } catch (e) {
       this.errorHandler.handleError(e, "Deleting database");
     }

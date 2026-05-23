@@ -1,0 +1,283 @@
+<div class="settings-page p-6">
+  <header class="mb-6 flex items-center justify-between">
+    <h1 class="text-2xl font-bold">Settings</h1>
+    <button
+      (click)="resetToDefaults()"
+      class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-4 py-2 text-sm font-bold text-[var(--text-dim)] transition hover:border-red-500/50 hover:text-red-500"
+    >
+      Reset to Defaults
+    </button>
+  </header>
+
+  <div class="settings-sections space-y-6">
+    <section class="glass-card p-4">
+      <h2 class="mb-4 flex items-center gap-2 text-lg font-semibold">
+        <mat-icon fontIcon="palette" class="text-xl text-[var(--accent)]" />
+        Appearance
+      </h2>
+      <div
+        class="setting-item flex items-center justify-between border-b border-[var(--border-subtle)] py-3"
+      >
+        <div>
+          <span class="font-medium">Theme</span>
+          <p class="text-xs text-[var(--text-dim)]">Choose your preferred color scheme</p>
+        </div>
+        <select
+          [value]="settings().general.theme"
+          (change)="updateGeneral({ theme: $any($event.target).value })"
+          class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-2 text-sm"
+        >
+          <option value="dark">Dark</option>
+          <option value="light">Light</option>
+          <option value="system">System</option>
+        </select>
+      </div>
+      <div class="setting-item flex items-center justify-between py-3">
+        <div>
+          <span class="font-medium">Language</span>
+          <p class="text-xs text-[var(--text-dim)]">Select application language</p>
+        </div>
+        <select
+          [value]="settings().general.language"
+          (change)="updateGeneral({ language: $any($event.target).value })"
+          class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-2 text-sm"
+        >
+          <option value="en">English</option>
+        </select>
+      </div>
+    </section>
+
+    <section class="glass-card p-4">
+      <h2 class="mb-4 flex items-center gap-2 text-lg font-semibold">
+        <mat-icon fontIcon="code" class="text-xl text-[var(--accent)]" />
+        Editor
+      </h2>
+      <div
+        class="setting-item flex items-center justify-between border-b border-[var(--border-subtle)] py-3"
+      >
+        <div>
+          <span class="font-medium">Font Size</span>
+          <p class="text-xs text-[var(--text-dim)]">Editor font size in pixels</p>
+        </div>
+        <input
+          type="number"
+          [value]="settings().editor.fontSize"
+          (change)="updateEditor({ fontSize: +$any($event.target).value })"
+          min="10"
+          max="24"
+          class="w-20 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-2 text-sm"
+        />
+      </div>
+      <div
+        class="setting-item flex items-center justify-between border-b border-[var(--border-subtle)] py-3"
+      >
+        <div>
+          <span class="font-medium">Tab Size</span>
+          <p class="text-xs text-[var(--text-dim)]">Number of spaces per tab</p>
+        </div>
+        <select
+          [value]="settings().editor.tabSize"
+          (change)="updateEditor({ tabSize: +$any($event.target).value })"
+          class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-2 text-sm"
+        >
+          <option value="2">2 spaces</option>
+          <option value="4">4 spaces</option>
+          <option value="8">8 spaces</option>
+        </select>
+      </div>
+      <div
+        class="setting-item flex items-center justify-between border-b border-[var(--border-subtle)] py-3"
+      >
+        <div>
+          <span class="font-medium">Line Numbers</span>
+          <p class="text-xs text-[var(--text-dim)]">Show line numbers in editor</p>
+        </div>
+        <label class="relative inline-flex cursor-pointer items-center">
+          <input
+            type="checkbox"
+            [checked]="settings().editor.lineNumbers"
+            (change)="updateEditor({ lineNumbers: $any($event.target).checked })"
+            class="peer sr-only"
+          />
+          <div
+            class="peer h-6 w-11 rounded-full bg-[var(--bg-elevated)] peer-checked:bg-[var(--accent)] after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-[var(--border-subtle)] after:bg-[var(--bg-card)] after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white"
+          ></div>
+        </label>
+      </div>
+      <div class="setting-item flex items-center justify-between py-3">
+        <div>
+          <span class="font-medium">Auto Save</span>
+          <p class="text-xs text-[var(--text-dim)]">Automatically save changes</p>
+        </div>
+        <label class="relative inline-flex cursor-pointer items-center">
+          <input
+            type="checkbox"
+            [checked]="settings().editor.autoSave"
+            (change)="updateEditor({ autoSave: $any($event.target).checked })"
+            class="peer sr-only"
+          />
+          <div
+            class="peer h-6 w-11 rounded-full bg-[var(--bg-elevated)] peer-checked:bg-[var(--accent)] after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-[var(--border-subtle)] after:bg-[var(--bg-card)] after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white"
+          ></div>
+        </label>
+      </div>
+    </section>
+
+    <section class="glass-card p-4">
+      <h2 class="mb-4 flex items-center gap-2 text-lg font-semibold">
+        <mat-icon fontIcon="storage" class="text-xl text-[var(--accent)]" />
+        Data
+      </h2>
+      <div
+        class="setting-item flex items-center justify-between border-b border-[var(--border-subtle)] py-3"
+      >
+        <div>
+          <span class="font-medium">Default Page Size</span>
+          <p class="text-xs text-[var(--text-dim)]">Number of items per page</p>
+        </div>
+        <select
+          [value]="settings().data.defaultPageSize"
+          (change)="updateData({ defaultPageSize: +$any($event.target).value })"
+          class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-2 text-sm"
+        >
+          <option value="10">10</option>
+          <option value="25">25</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+        </select>
+      </div>
+      <div
+        class="setting-item flex items-center justify-between border-b border-[var(--border-subtle)] py-3"
+      >
+        <div>
+          <span class="font-medium">Max Rows</span>
+          <p class="text-xs text-[var(--text-dim)]">Maximum rows to display</p>
+        </div>
+        <input
+          type="number"
+          [value]="settings().data.maxRows"
+          (change)="updateData({ maxRows: +$any($event.target).value })"
+          min="100"
+          max="10000"
+          class="w-24 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-2 text-sm"
+        />
+      </div>
+      <div class="setting-item flex items-center justify-between py-3">
+        <div>
+          <span class="font-medium">Confirm Before Delete</span>
+          <p class="text-xs text-[var(--text-dim)]">Show confirmation dialog before deleting</p>
+        </div>
+        <label class="relative inline-flex cursor-pointer items-center">
+          <input
+            type="checkbox"
+            [checked]="settings().data.confirmBeforeDelete"
+            (change)="updateData({ confirmBeforeDelete: $any($event.target).checked })"
+            class="peer sr-only"
+          />
+          <div
+            class="peer h-6 w-11 rounded-full bg-[var(--bg-elevated)] peer-checked:bg-[var(--accent)] after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-[var(--border-subtle)] after:bg-[var(--bg-card)] after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white"
+          ></div>
+        </label>
+      </div>
+    </section>
+
+    <section class="glass-card p-4">
+      <h2 class="mb-4 flex items-center gap-2 text-lg font-semibold">
+        <mat-icon fontIcon="link" class="text-xl text-[var(--accent)]" />
+        Connections
+      </h2>
+      <div
+        class="setting-item flex items-center justify-between border-b border-[var(--border-subtle)] py-3"
+      >
+        <div>
+          <span class="font-medium">Connection Timeout</span>
+          <p class="text-xs text-[var(--text-dim)]">Seconds to wait before timeout</p>
+        </div>
+        <input
+          type="number"
+          [value]="settings().connections.connectionTimeout"
+          (change)="updateConnections({ connectionTimeout: +$any($event.target).value })"
+          min="5"
+          max="60"
+          class="w-24 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-2 text-sm"
+        />
+      </div>
+      <div
+        class="setting-item flex items-center justify-between border-b border-[var(--border-subtle)] py-3"
+      >
+        <div>
+          <span class="font-medium">Max Concurrent Connections</span>
+          <p class="text-xs text-[var(--text-dim)]">Maximum simultaneous connections</p>
+        </div>
+        <input
+          type="number"
+          [value]="settings().connections.maxConcurrent"
+          (change)="updateConnections({ maxConcurrent: +$any($event.target).value })"
+          min="1"
+          max="20"
+          class="w-20 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-2 text-sm"
+        />
+      </div>
+      <div class="setting-item flex items-center justify-between py-3">
+        <div>
+          <span class="font-medium">Auto Reconnect</span>
+          <p class="text-xs text-[var(--text-dim)]">Automatically reconnect on connection loss</p>
+        </div>
+        <label class="relative inline-flex cursor-pointer items-center">
+          <input
+            type="checkbox"
+            [checked]="settings().connections.autoReconnect"
+            (change)="updateConnections({ autoReconnect: $any($event.target).checked })"
+            class="peer sr-only"
+          />
+          <div
+            class="peer h-6 w-11 rounded-full bg-[var(--bg-elevated)] peer-checked:bg-[var(--accent)] after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-[var(--border-subtle)] after:bg-[var(--bg-card)] after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white"
+          ></div>
+        </label>
+      </div>
+    </section>
+
+    <section class="glass-card p-4">
+      <h2 class="mb-4 flex items-center gap-2 text-lg font-semibold">
+        <mat-icon fontIcon="settings" class="text-xl text-[var(--accent)]" />
+        Application
+      </h2>
+      <div
+        class="setting-item flex items-center justify-between border-b border-[var(--border-subtle)] py-3"
+      >
+        <div>
+          <span class="font-medium">Start Minimized</span>
+          <p class="text-xs text-[var(--text-dim)]">Start application minimized to tray</p>
+        </div>
+        <label class="relative inline-flex cursor-pointer items-center">
+          <input
+            type="checkbox"
+            [checked]="settings().general.startMinimized"
+            (change)="updateGeneral({ startMinimized: $any($event.target).checked })"
+            class="peer sr-only"
+          />
+          <div
+            class="peer h-6 w-11 rounded-full bg-[var(--bg-elevated)] peer-checked:bg-[var(--accent)] after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-[var(--border-subtle)] after:bg-[var(--bg-card)] after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white"
+          ></div>
+        </label>
+      </div>
+      <div class="setting-item flex items-center justify-between py-3">
+        <div>
+          <span class="font-medium">Check for Updates</span>
+          <p class="text-xs text-[var(--text-dim)]">Automatically check for application updates</p>
+        </div>
+        <label class="relative inline-flex cursor-pointer items-center">
+          <input
+            type="checkbox"
+            [checked]="settings().general.checkUpdates"
+            (change)="updateGeneral({ checkUpdates: $any($event.target).checked })"
+            class="peer sr-only"
+          />
+          <div
+            class="peer h-6 w-11 rounded-full bg-[var(--bg-elevated)] peer-checked:bg-[var(--accent)] after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-[var(--border-subtle)] after:bg-[var(--bg-card)] after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white"
+          ></div>
+        </label>
+      </div>
+    </section>
+  </div>
+</div>

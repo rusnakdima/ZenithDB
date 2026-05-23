@@ -1,51 +1,55 @@
-<div class="connections-container">
-  <div class="connections-max-width">
-    <div class="connections-header">
-      <div>
-        <h2 class="connections-title">
-          My <span class="connections-title-highlight">Connections</span>
-        </h2>
-        <p class="connections-subtitle">
-          Manage and monitor your database clusters across regions.
-        </p>
-      </div>
-      <a routerLink="/connections" class="connections-btn" (click)="openNewConnection()">
-        <mat-icon fontIcon="add" class="h-6! w-5! text-xl!" /> New Connection
-      </a>
+<div class="page-container p-6">
+  <header class="mb-6 flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold">My <span class="text-[var(--accent)]">Connections</span></h1>
+      <p class="mt-1 text-sm text-[var(--text-dim)]">
+        Manage and monitor your database clusters across regions.
+      </p>
     </div>
+    <div class="flex items-center gap-3">
+      <button class="connections-btn-secondary" (click)="onRefresh()">
+        <mat-icon fontIcon="refresh" class="h-5! w-5!" />
+        Refresh
+      </button>
+      <button class="connections-btn" (click)="openNewConnection()">
+        <mat-icon fontIcon="add" class="h-5! w-5!" />
+        New Connection
+      </button>
+    </div>
+  </header>
 
-    @if (loading()) {
-      <div class="flex items-center justify-center gap-3 py-12 text-[var(--text-dim)]">
-        <mat-icon fontIcon="sync" class="h-6! w-5! text-xl!" />
-        <span>Loading connections...</span>
-      </div>
-    }
+  @if (loading()) {
+    <div class="flex items-center justify-center gap-3 py-12 text-[var(--text-dim)]">
+      <mat-icon fontIcon="sync" class="h-6! w-5! text-xl!" />
+      <span>Loading connections...</span>
+    </div>
+  }
 
-    @if (!loading() && connections().length === 0) {
-      <div class="empty-state">
-        <div class="empty-icon">
-          <mat-icon fontIcon="link_off" class="h-12! w-12! text-xl!" />
-        </div>
-        <h3 class="empty-title">No Connections Yet</h3>
-        <p class="empty-description">Create your first database connection to get started.</p>
-        <a routerLink="/connections" class="connections-btn" (click)="openNewConnection()">
-          <mat-icon fontIcon="add" class="h-6! w-5! text-xl!" /> Create Connection
-        </a>
+  @if (!loading() && connections().length === 0) {
+    <div class="empty-state">
+      <div class="empty-icon">
+        <mat-icon fontIcon="link_off" class="h-12! w-12! text-xl!" />
       </div>
-    }
+      <h3 class="empty-title">No Connections Yet</h3>
+      <p class="empty-description">Create your first database connection to get started.</p>
+      <button class="connections-btn" (click)="openNewConnection()">
+        <mat-icon fontIcon="add" class="h-5! w-5!" />
+        Create Connection
+      </button>
+    </div>
+  }
 
-    @if (!loading() && connections().length > 0) {
-      <div class="connections-grid">
-        @for (connection of connections(); track connection.id) {
-          <app-connection-card
-            [connection]="connection"
-            (connect)="onConnect($event)"
-            (delete)="onDelete($event)"
-            (edit)="onEdit($event)"
-            (duplicate)="onDuplicate($event)"
-          />
-        }
-      </div>
-    }
-  </div>
+  @if (!loading() && connections().length > 0) {
+    <div class="connections-grid">
+      @for (connection of connections(); track connection.id) {
+        <app-connection-card
+          [connection]="connection"
+          (connect)="onConnect($event)"
+          (delete)="onDelete($event)"
+          (edit)="onEdit($event)"
+          (duplicate)="onDuplicate($event)"
+        />
+      }
+    </div>
+  }
 </div>

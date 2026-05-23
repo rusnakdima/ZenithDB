@@ -1,6 +1,7 @@
-<div class="flex h-full flex-col overflow-y-auto bg-[var(--bg-deep)]">
+<div class="workbench-page flex h-screen flex-col bg-[var(--bg-deep)]">
+  <!-- toolbar -->
   <div
-    class="flex items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--bg-sidebar)] px-4 py-3"
+    class="toolbar flex items-center gap-2 border-b border-[var(--border-subtle)] bg-[var(--bg-sidebar)] px-4 py-3"
   >
     <div class="flex items-center gap-2">
       <button
@@ -39,8 +40,9 @@
     </div>
   </div>
 
+  <!-- tabs bar -->
   <div
-    class="flex items-center gap-1 border-b border-[var(--border-subtle)] bg-[var(--bg-sidebar)]/50 px-2"
+    class="tabs-bar flex items-center gap-1 border-b border-[var(--border-subtle)] bg-[var(--bg-sidebar)]/50 px-2"
   >
     <div class="flex items-center gap-1 overflow-x-auto">
       @for (tab of tabs(); track trackByTabId($index, tab)) {
@@ -76,32 +78,39 @@
     </div>
   </div>
 
-  <div #splitContainer class="flex min-h-0 flex-1 flex-col overflow-hidden">
-    <div class="overflow-hidden" [style.height.px]="editorHeight()">
-      <app-sql-editor
-        [query]="activeTab().query || ''"
-        (queryChange)="updateQuery($event)"
-      ></app-sql-editor>
-    </div>
+  <!-- main content -->
+  <div class="flex-1 overflow-hidden">
+    <div class="flex h-full flex-col">
+      <!-- editor -->
+      <div [style.height.px]="editorHeight()" class="overflow-hidden">
+        <app-sql-editor
+          [query]="activeTab().query || ''"
+          (queryChange)="updateQuery($event)"
+        ></app-sql-editor>
+      </div>
 
-    <div
-      class="h-1.5 w-full cursor-row-resize bg-[var(--border-subtle)] transition-colors hover:bg-[var(--accent)]/50"
-      (mousedown)="startResize($event)"
-    ></div>
+      <!-- resize handle -->
+      <div
+        class="h-1.5 w-full cursor-row-resize bg-[var(--border-subtle)] transition-colors hover:bg-[var(--accent)]/50"
+        (mousedown)="startResize($event)"
+      ></div>
 
-    <div class="flex-1 overflow-hidden">
-      <app-output-console
-        [results]="activeTab().results || null"
-        [loading]="activeTab().loading || false"
-        [error]="activeTab().error || ''"
-        [executionTime]="activeTab().executionTime || 0"
-        (clear)="clearEditor()"
-      ></app-output-console>
+      <!-- results -->
+      <div class="flex-1 overflow-hidden">
+        <app-output-console
+          [results]="activeTab().results || null"
+          [loading]="activeTab().loading || false"
+          [error]="activeTab().error || ''"
+          [executionTime]="activeTab().executionTime || 0"
+          (clear)="clearEditor()"
+        ></app-output-console>
+      </div>
     </div>
   </div>
 
+  <!-- status bar -->
   <div
-    class="flex items-center justify-between border-t border-[var(--border-subtle)] bg-[var(--bg-sidebar)] px-4 py-1.5 text-xs text-[var(--text-dim)]"
+    class="status-bar flex items-center justify-between border-t border-[var(--border-subtle)] bg-[var(--bg-sidebar)] px-4 py-1.5 text-xs text-[var(--text-dim)]"
   >
     <div class="flex items-center gap-4">
       @if (connState.activeConnectionName()) {

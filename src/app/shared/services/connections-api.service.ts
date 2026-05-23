@@ -34,6 +34,7 @@ export class ConnectionsApiService extends CacheService {
 
   invalidateConnections(): void {
     this.connectionsSignal.set([]);
+    this.dataStore.invalidateConnections();
   }
 
   private async fetchConnections(): Promise<ConnectionSummary[]> {

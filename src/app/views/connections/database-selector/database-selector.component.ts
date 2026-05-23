@@ -7,7 +7,7 @@ import { ToastService } from "@services/toast.service";
 @Component({
   selector: "app-database-selector",
   standalone: true,
-  imports: [FormsModule, MatIconModule, CheckboxComponent],
+  imports: [FormsModule, MatIconModule],
   template: `
     <div class="space-y-4">
       <p class="text-sm text-[var(--text-dim)]">

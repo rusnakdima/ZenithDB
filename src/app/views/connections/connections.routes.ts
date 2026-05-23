@@ -9,10 +9,9 @@ export const connectionsRoutes: Routes = [
   { path: "new", component: ConnectionFormComponent },
   { path: ":id", component: ConnectionDetailComponent },
   { path: ":id/edit", component: ConnectionFormComponent },
-  { path: ":id/databases/:dbName", component: DatabaseDetailComponent },
+  { path: ":id/:dbName", component: DatabaseDetailComponent },
   {
-    path: ":id/explorer",
-    loadComponent: () =>
-      import("../../views/explorer/explorer.component").then((m) => m.ExplorerComponent),
+    path: ":id/:dbName/explorer",
+    loadChildren: () => import("../explorer/explorer.routes").then((m) => m.explorerRoutes),
   },
 ];

@@ -1,5 +1,5 @@
-import { Component, inject, OnInit, signal, computed } from "@angular/core";
-import { Router, RouterLink } from "@angular/router";
+import { Component, inject, OnInit, signal } from "@angular/core";
+import { Router } from "@angular/router";
 import { MatIconModule } from "@angular/material/icon";
 import { ConnectionCardComponent } from "@views/connections/connection-card/connection-card.component";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
@@ -7,43 +7,34 @@ import { DataStoreService } from "@services/core/data-store.service";
 import { ConnectionSummary } from "@shared/models/connection.config";
 import { ConfirmService } from "@shared/services/confirm.service";
 import { withErrorHandling } from "@shared/utils/error-handler.utils";
-import { ConnectionsApiService } from "@shared/services/connections-api.service";
-import { DatabaseService } from "@shared/services/database.service";
 import { ConnectionFormService } from "@shared/services/connection-form.service";
 
 @Component({
   selector: "app-connections",
   standalone: true,
-  imports: [RouterLink, ConnectionCardComponent, MatIconModule],
+  imports: [ConnectionCardComponent, MatIconModule],
   templateUrl: "./connections.component.html",
 })
 export class ConnectionsComponent implements OnInit {
   loading = signal(true);
-  private db = inject(DatabaseService);
-  private connectionsApi = inject(ConnectionsApiService);
+  private store = inject(DataStoreService);
   private connState = inject(ConnectionStateService);
-  private dataStore = inject(DataStoreService);
   private router = inject(Router);
   private confirm = inject(ConfirmService);
   private connectionFormService = inject(ConnectionFormService);
 
-  connections = computed(() => this.connectionsApi.getConnections());
+  connections = this.store.connections;
 
   get connectionsEmpty(): boolean {
     return this.connections().length === 0 && !this.loading();
   }
 
   async ngOnInit() {
-    const connections = this.connectionsApi.getConnections();
-    if (connections.length === 0) {
-      await withErrorHandling(() => this.connectionsApi.listConnectionsWithRefresh(), {
-        loading: this.loading,
-        toast: true,
-        errorMessage: "Failed to load connections",
-      });
-    } else {
-      this.loading.set(false);
-    }
+    await withErrorHandling(() => this.store.refreshConnections(), {
+      loading: this.loading,
+      toast: true,
+      errorMessage: "Failed to load connections",
+    });
   }
 
   onConnect(connection: ConnectionSummary): void {
@@ -53,7 +44,7 @@ export class ConnectionsComponent implements OnInit {
 
   async onDelete(connection: ConnectionSummary): Promise<void> {
     if (await this.confirm.confirmDelete(connection.name)) {
-      await withErrorHandling(() => this.db.deleteConnection(connection.id), {
+      await withErrorHandling(() => this.store.deleteConnection(connection.id), {
         toast: true,
         toastSuccess: "Connection deleted",
       });
@@ -70,5 +61,13 @@ export class ConnectionsComponent implements OnInit {
 
   openNewConnection(): void {
     this.connectionFormService.openNew();
+  }
+
+  async onRefresh(): Promise<void> {
+    await withErrorHandling(() => this.store.refreshConnections(), {
+      loading: this.loading,
+      toast: true,
+      errorMessage: "Failed to refresh connections",
+    });
   }
 }

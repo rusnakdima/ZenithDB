@@ -1,4 +1,4 @@
-<div class="explorer-container flex h-full flex-col overflow-y-auto bg-[var(--bg-deep)]">
+<div class="explorer-page flex min-h-0 flex-1 flex-col">
   <app-collection-tabs
     [tabs]="activeTabs()"
     [activeCollection]="activeCollection()"
@@ -33,7 +33,7 @@
   ></app-view-switcher>
 
   <div
-    class="stats-breadcrumb flex items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--bg-sidebar)]/30 px-4 py-2"
+    class="explorer-header flex items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--bg-sidebar)] px-4 py-3"
   >
     <div class="flex items-center gap-3">
       <span class="text-sm text-[var(--text-dim)]">
@@ -65,195 +65,216 @@
     </div>
   </div>
 
-  <div class="min-h-0 flex-1 overflow-hidden">
-    @switch (viewTab()) {
-      @case ("table") {
-        @if (splitMode() === "none") {
-          <app-data-grid
-            [collectionName]="activeCollection()"
-            [filter]="filterText()"
-            [page]="page()"
-            [pageSize]="pageSize()"
-            [showInspector]="showInspector()"
-            [viewMode]="'grid'"
-            [inputVisibleColumns]="selectedColumns()"
-            [columns]="availableColumnsMeta()"
-            [reloadTrigger]="reloadTrigger()"
-            (documentClick)="openInspector($event)"
-            (pageChange)="onPageChange($event)"
-            (viewModeChange)="selectViewTab('json')"
-          ></app-data-grid>
-        }
-        @if (splitMode() === "horizontal") {
-          <div class="flex h-full flex-row">
-            <div class="w-1/2">
-              <app-data-grid
-                [collectionName]="activeCollection()"
-                [filter]="filterText()"
-                [page]="page()"
-                [pageSize]="pageSize()"
-                [showInspector]="showInspector()"
-                [viewMode]="'grid'"
-                [inputVisibleColumns]="selectedColumns()"
-                [columns]="availableColumnsMeta()"
-                [reloadTrigger]="reloadTrigger()"
-                (documentClick)="openInspector($event)"
-                (pageChange)="onPageChange($event)"
-                (viewModeChange)="selectViewTab('json')"
-              ></app-data-grid>
+  <div class="flex flex-1 overflow-hidden">
+    <div
+      class="explorer-tree w-64 flex-shrink-0 overflow-y-auto border-r border-[var(--border-subtle)]"
+    >
+      <app-schema-tree (collectionSelect)="onTreeCollectionSelect($event)"></app-schema-tree>
+    </div>
+
+    <div class="explorer-content flex-1 overflow-hidden">
+      @switch (viewTab()) {
+        @case ("table") {
+          @if (splitMode() === "none") {
+            <app-data-grid
+              [collectionName]="activeCollection()"
+              [filter]="filterText()"
+              [page]="page()"
+              [pageSize]="pageSize()"
+              [showInspector]="showInspector()"
+              [viewMode]="'grid'"
+              [inputVisibleColumns]="selectedColumns()"
+              [columns]="availableColumnsMeta()"
+              [reloadTrigger]="reloadTrigger()"
+              (documentClick)="openInspector($event)"
+              (pageChange)="onPageChange($event)"
+              (viewModeChange)="selectViewTab('json')"
+            ></app-data-grid>
+          }
+          @if (splitMode() === "horizontal") {
+            <div class="flex h-full flex-row">
+              <div class="w-1/2">
+                <app-data-grid
+                  [collectionName]="activeCollection()"
+                  [filter]="filterText()"
+                  [page]="page()"
+                  [pageSize]="pageSize()"
+                  [showInspector]="showInspector()"
+                  [viewMode]="'grid'"
+                  [inputVisibleColumns]="selectedColumns()"
+                  [columns]="availableColumnsMeta()"
+                  [reloadTrigger]="reloadTrigger()"
+                  (documentClick)="openInspector($event)"
+                  (pageChange)="onPageChange($event)"
+                  (viewModeChange)="selectViewTab('json')"
+                ></app-data-grid>
+              </div>
+              <div class="w-1/2">
+                <app-data-grid
+                  [collectionName]="activeCollection()"
+                  [filter]="filterText()"
+                  [page]="page()"
+                  [pageSize]="pageSize()"
+                  [showInspector]="showInspector()"
+                  [viewMode]="'grid'"
+                  [inputVisibleColumns]="selectedColumns()"
+                  [columns]="availableColumnsMeta()"
+                  [reloadTrigger]="reloadTrigger()"
+                  (documentClick)="openInspector($event)"
+                  (pageChange)="onPageChange($event)"
+                  (viewModeChange)="selectViewTab('json')"
+                ></app-data-grid>
+              </div>
             </div>
-            <div class="w-1/2">
-              <app-data-grid
-                [collectionName]="activeCollection()"
-                [filter]="filterText()"
-                [page]="page()"
-                [pageSize]="pageSize()"
-                [showInspector]="showInspector()"
-                [viewMode]="'grid'"
-                [inputVisibleColumns]="selectedColumns()"
-                [columns]="availableColumnsMeta()"
-                [reloadTrigger]="reloadTrigger()"
-                (documentClick)="openInspector($event)"
-                (pageChange)="onPageChange($event)"
-                (viewModeChange)="selectViewTab('json')"
-              ></app-data-grid>
+          }
+          @if (splitMode() === "vertical") {
+            <div class="flex h-full flex-col">
+              <div class="h-1/2">
+                <app-data-grid
+                  [collectionName]="activeCollection()"
+                  [filter]="filterText()"
+                  [page]="page()"
+                  [pageSize]="pageSize()"
+                  [showInspector]="showInspector()"
+                  [viewMode]="'grid'"
+                  [inputVisibleColumns]="selectedColumns()"
+                  [columns]="availableColumnsMeta()"
+                  [reloadTrigger]="reloadTrigger()"
+                  (documentClick)="openInspector($event)"
+                  (pageChange)="onPageChange($event)"
+                  (viewModeChange)="selectViewTab('json')"
+                ></app-data-grid>
+              </div>
+              <div class="h-1/2">
+                <app-data-grid
+                  [collectionName]="activeCollection()"
+                  [filter]="filterText()"
+                  [page]="page()"
+                  [pageSize]="pageSize()"
+                  [showInspector]="showInspector()"
+                  [viewMode]="'grid'"
+                  [inputVisibleColumns]="selectedColumns()"
+                  [columns]="availableColumnsMeta()"
+                  [reloadTrigger]="reloadTrigger()"
+                  (documentClick)="openInspector($event)"
+                  (pageChange)="onPageChange($event)"
+                  (viewModeChange)="selectViewTab('json')"
+                ></app-data-grid>
+              </div>
             </div>
-          </div>
+          }
         }
-        @if (splitMode() === "vertical") {
+        @case ("json") {
           <div class="flex h-full flex-col">
-            <div class="h-1/2">
-              <app-data-grid
-                [collectionName]="activeCollection()"
-                [filter]="filterText()"
-                [page]="page()"
-                [pageSize]="pageSize()"
-                [showInspector]="showInspector()"
-                [viewMode]="'grid'"
-                [inputVisibleColumns]="selectedColumns()"
-                [columns]="availableColumnsMeta()"
-                [reloadTrigger]="reloadTrigger()"
-                (documentClick)="openInspector($event)"
-                (pageChange)="onPageChange($event)"
-                (viewModeChange)="selectViewTab('json')"
-              ></app-data-grid>
-            </div>
-            <div class="h-1/2">
-              <app-data-grid
-                [collectionName]="activeCollection()"
-                [filter]="filterText()"
-                [page]="page()"
-                [pageSize]="pageSize()"
-                [showInspector]="showInspector()"
-                [viewMode]="'grid'"
-                [inputVisibleColumns]="selectedColumns()"
-                [columns]="availableColumnsMeta()"
-                [reloadTrigger]="reloadTrigger()"
-                (documentClick)="openInspector($event)"
-                (pageChange)="onPageChange($event)"
-                (viewModeChange)="selectViewTab('json')"
-              ></app-data-grid>
-            </div>
-          </div>
-        }
-      }
-      @case ("tree") {
-        <div class="h-full">
-          <app-schema-tree (collectionSelect)="onTreeCollectionSelect($event)"></app-schema-tree>
-        </div>
-      }
-      @case ("json") {
-        <div class="flex h-full flex-col">
-          <div
-            class="json-toolbar flex items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--bg-sidebar)]/50 px-4 py-2"
-          >
-            <div class="flex items-center gap-2">
-              <span class="text-sm text-[var(--text-dim)]">Full Collection JSON</span>
-              <span class="text-xs text-[var(--text-muted)]"
-                >({{ fullJsonData().length }} documents)</span
-              >
-            </div>
-            <div class="flex items-center gap-2">
-              <button
-                class="flex items-center gap-2 rounded bg-[var(--accent)] px-3 py-1.5 text-sm font-bold text-black transition-colors hover:bg-[var(--accent-hover)]"
-                (click)="copyJsonToClipboard()"
-              >
-                <mat-icon fontIcon="content_copy" class="h-6! w-5! text-xl!" />
-                Copy to Clipboard
-              </button>
-            </div>
-          </div>
-          <div class="flex-1 overflow-auto bg-[var(--bg-deep)]">
-            @if (jsonLoading()) {
-              <div class="flex h-full items-center justify-center">
-                <div
-                  class="h-8 w-8 animate-spin rounded-full border-2 border-[var(--accent)] border-t-transparent"
-                ></div>
-              </div>
-            } @else if (fullJsonData().length === 0) {
-              <div class="flex h-full flex-col items-center justify-center text-[var(--text-dim)]">
-                <mat-icon fontIcon="download" class="mb-2 h-12! w-12! text-xl!" />
-                <p class="text-lg font-bold">No documents found</p>
-                <p class="text-sm text-[var(--text-muted)]">This collection is empty</p>
-              </div>
-            } @else {
-              <cdk-virtual-scroll-viewport itemSize="200" class="json-content h-full p-4">
-                <div
-                  *cdkVirtualFor="
-                    let doc of fullJsonData();
-                    let docIndex = index;
-                    trackBy: trackByIndex
-                  "
-                  class="json-document mb-4 overflow-hidden rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-card)]"
+            <div
+              class="json-toolbar flex items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--bg-sidebar)]/50 px-4 py-2"
+            >
+              <div class="flex items-center gap-2">
+                <span class="text-sm text-[var(--text-dim)]">Full Collection JSON</span>
+                <span class="text-xs text-[var(--text-muted)]"
+                  >({{ fullJsonData().length }} documents)</span
                 >
+              </div>
+              <div class="flex items-center gap-2">
+                <button
+                  class="flex items-center gap-2 rounded bg-[var(--accent)] px-3 py-1.5 text-sm font-bold text-black transition-colors hover:bg-[var(--accent-hover)]"
+                  (click)="copyJsonToClipboard()"
+                >
+                  <mat-icon fontIcon="content_copy" class="h-6! w-5! text-xl!" />
+                  Copy to Clipboard
+                </button>
+              </div>
+            </div>
+            <div class="flex-1 overflow-auto bg-[var(--bg-deep)]">
+              @if (jsonLoading()) {
+                <div class="flex h-full items-center justify-center">
                   <div
-                    class="flex items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--bg-sidebar)] px-4 py-2"
-                  >
-                    <span class="mono text-sm text-[var(--text-dim)]"
-                      >Document {{ docIndex + 1 }}</span
+                    class="h-8 w-8 animate-spin rounded-full border-2 border-[var(--accent)] border-t-transparent"
+                  ></div>
+                </div>
+              } @else if (fullJsonData().length === 0) {
+                <div
+                  class="flex h-full flex-col items-center justify-center text-[var(--text-dim)]"
+                >
+                  <mat-icon fontIcon="download" class="mb-2 h-12! w-12! text-xl!" />
+                  <p class="text-lg font-bold">No documents found</p>
+                  <p class="text-sm text-[var(--text-muted)]">This collection is empty</p>
+                </div>
+              } @else {
+                <div class="json-content h-full overflow-y-auto p-4">
+                  @for (doc of fullJsonData(); track trackByIndex($index); let docIndex = $index) {
+                    <div
+                      class="json-document mb-4 overflow-hidden rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-card)]"
                     >
-                    <div class="flex items-center gap-1">
-                      <button
-                        class="flex items-center gap-1 rounded px-2 py-1 text-xs text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--accent)]"
-                        title="Copy JSON"
-                        (click)="copyRowJson(doc, docIndex)"
+                      <div
+                        class="flex items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--bg-sidebar)] px-4 py-2"
                       >
-                        <mat-icon fontIcon="content_copy" class="h-6! w-5! text-xl!" />
-                      </button>
-                      <button
-                        class="flex items-center gap-1 rounded px-2 py-1 text-xs text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--accent)]"
-                        (click)="openInspector(doc)"
-                      >
-                        <mat-icon fontIcon="visibility" class="h-6! w-5! text-xl!" />
-                        Inspect
-                      </button>
-                    </div>
-                  </div>
-                  <div class="json-body p-4">
-                    @if (getDocLines(docIndex); as docData) {
-                      @for (line of docData.lines; track $index; let lineIndex = $index) {
-                        <div
-                          class="json-line mono flex text-sm leading-relaxed hover:bg-[var(--bg-elevated)]"
+                        <span class="mono text-sm text-[var(--text-dim)]"
+                          >Document {{ docIndex + 1 }}</span
                         >
-                          <span
-                            class="json-line-num w-10 flex-shrink-0 pr-4 text-right text-xs text-[var(--text-muted)] select-none"
-                            >{{ lineIndex + 1 }}</span
+                        <div class="flex items-center gap-1">
+                          <button
+                            class="flex items-center gap-1 rounded px-2 py-1 text-xs text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--accent)]"
+                            title="Copy JSON"
+                            (click)="copyRowJson(doc, docIndex)"
                           >
-                          <span
-                            class="json-line-content"
-                            [innerHTML]="highlightJsonLineFn(line)"
-                          ></span>
+                            <mat-icon fontIcon="content_copy" class="h-6! w-5! text-xl!" />
+                          </button>
+                          <button
+                            class="flex items-center gap-1 rounded px-2 py-1 text-xs text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--accent)]"
+                            (click)="openInspector(doc)"
+                          >
+                            <mat-icon fontIcon="visibility" class="h-6! w-5! text-xl!" />
+                            Inspect
+                          </button>
                         </div>
-                      }
+                      </div>
+                      <div class="json-body p-4">
+                        @if (getDocLines(docIndex); as docData) {
+                          @for (line of docData.highlightedLines; track line.num) {
+                            <div
+                              class="json-line mono flex text-sm leading-relaxed hover:bg-[var(--bg-elevated)]"
+                            >
+                              <span
+                                class="json-line-num w-10 flex-shrink-0 pr-4 text-right text-xs text-[var(--text-muted)] select-none"
+                                >{{ line.num }}</span
+                              >
+                              <span class="json-line-content" [innerHTML]="line.html"></span>
+                            </div>
+                          }
+                        }
+                      </div>
+                    </div>
+                  }
+
+                  <div
+                    class="flex items-center justify-center border-t border-[var(--border-subtle)] p-4"
+                  >
+                    @if (jsonLoadingMore()) {
+                      <div class="flex items-center gap-2 text-[var(--text-dim)]">
+                        <div
+                          class="h-4 w-4 animate-spin rounded-full border-2 border-[var(--accent)]/20 border-t-[var(--accent)]"
+                        ></div>
+                        <span class="text-sm">Loading more...</span>
+                      </div>
+                    } @else if (jsonHasMore()) {
+                      <button
+                        (click)="loadMoreJsonData()"
+                        class="rounded bg-[var(--accent)] px-4 py-2 text-sm font-bold text-black transition-colors hover:bg-[var(--accent-hover)]"
+                      >
+                        Load More
+                      </button>
+                    } @else {
+                      <span class="text-sm text-[var(--text-muted)]">No more documents</span>
                     }
                   </div>
                 </div>
-              </cdk-virtual-scroll-viewport>
-            }
+              }
+            </div>
           </div>
-        </div>
+        }
       }
-    }
+    </div>
   </div>
 
   @if (showInspector() && inspectorDocument()) {

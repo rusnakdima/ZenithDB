@@ -8,8 +8,20 @@ import {
   QueryParams,
   QueryResult,
   RowData,
+  DatabaseMetadata,
+  CollectionStats,
+  TestConnectionConfig,
+  CollectionSchema,
 } from "@shared/models/connection.config";
 import { DatabaseService } from "@shared/services/database.service";
+import {
+  DecentralizationApiService,
+  DatabaseListResult,
+} from "@shared/services/decentralization-api.service";
+import {
+  CollectionsApiService,
+  CollectionListResult,
+} from "@shared/services/collections-api.service";
 
 export interface CacheEntry<T> {
   data: T;
@@ -38,6 +50,8 @@ interface ColumnsCacheEntry {
 @Injectable({ providedIn: "root" })
 export class DataStoreService {
   private injector = inject(Injector);
+  private decentralizationApi = inject(DecentralizationApiService);
+  private collectionsApi = inject(CollectionsApiService);
 
   private get db(): DatabaseService {
     return this.injector.get(DatabaseService);
@@ -52,6 +66,7 @@ export class DataStoreService {
 
   private connectionsSignal = signal<ConnectionSummary[]>([]);
   private collectionsSignal = signal<Map<string, CollectionMeta[]>>(new Map());
+  private databasesSignal = signal<Map<string, DatabaseMetadata[]>>(new Map());
   private systemMetricsSignal = signal<SystemMetrics | null>(null);
   private healthCacheSignal = signal<Map<string, HealthCacheEntry>>(new Map());
   private columnsCacheSignal = signal<Map<string, ColumnsCacheEntry>>(new Map());
@@ -66,6 +81,14 @@ export class DataStoreService {
     const result: CollectionMeta[] = [];
     for (const collections of map.values()) {
       result.push(...collections);
+    }
+    return result;
+  });
+  readonly databases = computed(() => {
+    const map = this.databasesSignal();
+    const result: DatabaseMetadata[] = [];
+    for (const dbs of map.values()) {
+      result.push(...dbs);
     }
     return result;
   });
@@ -101,6 +124,18 @@ export class DataStoreService {
     this.connectionsSignal.update((conns) =>
       conns.map((c) => (c.id === id ? { ...c, ...updates } : c))
     );
+  }
+
+  getDatabases(connectionId: string): DatabaseMetadata[] {
+    return this.databasesSignal().get(connectionId) ?? [];
+  }
+
+  updateDatabases(connectionId: string, databases: DatabaseMetadata[]): void {
+    this.databasesSignal.update((map) => {
+      const newMap = new Map(map);
+      newMap.set(connectionId, databases);
+      return newMap;
+    });
   }
 
   getCollections(connectionId?: string): CollectionMeta[] {
@@ -219,6 +254,7 @@ export class DataStoreService {
     this.columnsCacheSignal.set(new Map());
     this.collectionDataCacheSignal.set(new Map());
     this.collectionsSignal.set(new Map());
+    this.databasesSignal.set(new Map());
     this.connectionsSignal.set([]);
     this.systemMetricsSignal.set(null);
   }
@@ -309,7 +345,7 @@ export class DataStoreService {
     collection: string,
     params: QueryParams = {},
     forceRefresh = false
-  ): Promise<QueryResult> {
+  ): Promise<QueryResult<RowData>> {
     const cacheKey = `query:${collection}_${JSON.stringify(params)}`;
 
     if (!forceRefresh) {
@@ -324,7 +360,7 @@ export class DataStoreService {
     }
 
     if (this.inFlightRequests.has(cacheKey)) {
-      return this.inFlightRequests.get(cacheKey) as Promise<QueryResult>;
+      return this.inFlightRequests.get(cacheKey) as Promise<QueryResult<RowData>>;
     }
 
     const requestPromise = (async () => {
@@ -340,7 +376,7 @@ export class DataStoreService {
           });
           return newMap;
         });
-        return result;
+        return result as QueryResult<RowData>;
       } finally {
         this.inFlightRequests.delete(cacheKey);
       }
@@ -421,6 +457,19 @@ export class DataStoreService {
     }
   }
 
+  invalidateDatabases(connectionId?: string): void {
+    if (connectionId) {
+      this.databasesSignal.update((map) => {
+        const newMap = new Map(map);
+        newMap.delete(connectionId);
+        return newMap;
+      });
+      this.decentralizationApi.invalidateDatabases(connectionId);
+    } else {
+      this.databasesSignal.set(new Map());
+    }
+  }
+
   invalidateHealth(connectionId: string): void {
     this.healthCacheSignal.update((map) => {
       const newMap = new Map(map);
@@ -435,5 +484,162 @@ export class DataStoreService {
 
   updateSystemMetrics(metrics: SystemMetrics): void {
     this.systemMetricsSignal.set(metrics);
+  }
+
+  async ensureConnectionsLoaded(): Promise<ConnectionSummary[]> {
+    const cached = this.connectionsSignal();
+    if (cached.length > 0) return cached;
+    return this.refreshConnections();
+  }
+
+  async ensureDatabasesLoaded(connectionId: string): Promise<DatabaseMetadata[]> {
+    const cached = this.databasesSignal().get(connectionId);
+    if (cached && cached.length > 0) return cached;
+    const result = await this.decentralizationApi.listDatabases(connectionId, 0, 50);
+    this.updateDatabases(connectionId, result.databases);
+    return result.databases;
+  }
+
+  async ensureCollectionsLoaded(connectionId: string, dbName?: string): Promise<CollectionMeta[]> {
+    const cached = this.collectionsSignal().get(connectionId);
+    if (cached && cached.length > 0) return cached;
+    const collections = await this.db.listCollections(connectionId, dbName);
+    this.updateCollections(connectionId, collections);
+    return collections;
+  }
+
+  async ensureHealthLoaded(connectionId: string): Promise<ConnectionHealth> {
+    return this.checkHealth(connectionId);
+  }
+
+  async ensureSchemaLoaded(collection: string): Promise<ColumnInfo[]> {
+    return this.loadColumns(collection);
+  }
+
+  async ensureDataLoaded(
+    collection: string,
+    params: QueryParams = {}
+  ): Promise<QueryResult<RowData>> {
+    return this.queryData(collection, params, false);
+  }
+
+  async refreshConnections(): Promise<ConnectionSummary[]> {
+    const connections = await this.db.listConnections();
+    this.connectionsSignal.set(connections);
+    return connections;
+  }
+
+  async refreshDatabases(connectionId: string): Promise<DatabaseMetadata[]> {
+    this.invalidateDatabases(connectionId);
+    const result = await this.decentralizationApi.listDatabases(connectionId, 0, 50);
+    this.updateDatabases(connectionId, result.databases);
+    return result.databases;
+  }
+
+  async refreshCollections(connectionId: string, dbName?: string): Promise<CollectionMeta[]> {
+    this.invalidateCollections(connectionId);
+    const collections = await this.db.listCollections(connectionId, dbName);
+    this.updateCollections(connectionId, collections);
+    return collections;
+  }
+
+  async refreshHealth(connectionId: string): Promise<ConnectionHealth> {
+    this.invalidateHealth(connectionId);
+    return this.checkHealth(connectionId);
+  }
+
+  async listDatabasesPaginated(
+    connectionId: string,
+    offset = 0,
+    limit = 10
+  ): Promise<DatabaseListResult> {
+    return this.decentralizationApi.listDatabases(connectionId, offset, limit);
+  }
+
+  async listCollectionsPaginated(
+    connectionId: string,
+    dbName?: string,
+    offset = 0,
+    limit = 10
+  ): Promise<CollectionListResult> {
+    return this.collectionsApi.listCollections(connectionId, dbName, offset, limit);
+  }
+
+  async getFullConnection(id: string): Promise<any> {
+    return this.db.getConnection(id);
+  }
+
+  async testConnection(config: TestConnectionConfig): Promise<ConnectionHealth> {
+    return this.db.testConnection(config);
+  }
+
+  async saveConnection(config: TestConnectionConfig): Promise<string> {
+    const result = await this.db.saveConnection(config);
+    await this.refreshConnections();
+    return result;
+  }
+
+  async deleteConnection(id: string): Promise<void> {
+    await this.db.deleteConnection(id);
+    this.removeConnection(id);
+  }
+
+  async saveDatabase(connId: string, name: string, path?: string): Promise<DatabaseMetadata> {
+    const result = await this.decentralizationApi.saveDatabase(connId, name, path);
+    await this.refreshDatabases(connId);
+    return result;
+  }
+
+  async deleteDatabase(id: number): Promise<void> {
+    await this.decentralizationApi.deleteDatabase(id);
+  }
+
+  async updateDatabase(id: number, name: string, path?: string): Promise<DatabaseMetadata> {
+    const result = await this.decentralizationApi.updateDatabase(id, name, path);
+    return result;
+  }
+
+  async getServerVersion(): Promise<string> {
+    return this.db.getServerVersion();
+  }
+
+  async createCollection(name: string): Promise<void> {
+    return this.db.createCollection(name);
+  }
+
+  async renameCollection(connId: string, oldName: string, newName: string): Promise<void> {
+    return this.db.renameCollection(connId, oldName, newName);
+  }
+
+  async dropCollection(name: string): Promise<void> {
+    return this.db.dropCollection(name);
+  }
+
+  async getCollectionStats(collection: string): Promise<CollectionStats> {
+    return this.db.getCollectionStats(collection);
+  }
+
+  async describeCollection(collection: string): Promise<CollectionSchema> {
+    return this.db.describeCollection(collection);
+  }
+
+  async saveRow(collection: string, data: Record<string, unknown>): Promise<unknown> {
+    return this.db.saveRow(collection, data);
+  }
+
+  async deleteRow(collection: string, id: string): Promise<void> {
+    return this.db.deleteRow(collection, id);
+  }
+
+  async executeRaw(sql: string): Promise<any> {
+    return this.db.executeRaw(sql);
+  }
+
+  async testConnectionById(connId: string): Promise<ConnectionHealth | null> {
+    return this.db.testConnectionById(connId);
+  }
+
+  async testConnectionStatus(connId: string): Promise<ConnectionSummary | null> {
+    return this.db.testConnectionStatus(connId);
   }
 }

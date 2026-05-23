@@ -10,6 +10,9 @@ export class ConnectionStateService {
   activeConnectionConfig = signal<ConnectionConfig | null>(null);
   readOnly = signal(true);
 
+  activeDatabaseName = signal<string | null>(null);
+  activeCollectionName = signal<string | null>(null);
+
   setActiveConnection(connOrId: ConnectionSummary | string): void {
     if (typeof connOrId === "string") {
       this.activeConnectionId.set(connOrId);
@@ -23,5 +26,13 @@ export class ConnectionStateService {
 
   setActiveConnectionConfig(config: ConnectionConfig) {
     this.activeConnectionConfig.set(config);
+  }
+
+  setActiveDatabase(dbName: string | null): void {
+    this.activeDatabaseName.set(dbName);
+  }
+
+  setActiveCollection(collectionName: string | null): void {
+    this.activeCollectionName.set(collectionName);
   }
 }
