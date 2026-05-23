@@ -10,7 +10,7 @@ import {
 } from "@angular/core";
 import { Router, RouterLink, ActivatedRoute } from "@angular/router";
 import { FormsModule } from "@angular/forms";
-import { DatabaseService } from "@shared/services/database.service";
+import { DataStoreService } from "@services/core/data-store.service";
 import { ToastService } from "@services/toast.service";
 import { ConfirmService } from "@shared/services/confirm.service";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
@@ -19,7 +19,6 @@ import { MatIconModule } from "@angular/material/icon";
 import { SkeletonLoaderComponent } from "@shared/components/loading/skeleton-loader.component";
 import { CollectionMeta, ColumnInfo } from "@shared/models/connection.config";
 import { withErrorHandling } from "@shared/utils/error-handler.utils";
-import { CollectionsApiService } from "@shared/services/collections-api.service";
 
 interface TreeNode {
   name: string;
@@ -67,8 +66,7 @@ export class SchemaTreeComponent implements OnInit, OnDestroy {
 
   @Output() collectionSelect = new EventEmitter<string>();
 
-  private db = inject(DatabaseService);
-  private collectionsApi = inject(CollectionsApiService);
+  private store = inject(DataStoreService);
   private toast = inject(ToastService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
@@ -95,7 +93,7 @@ export class SchemaTreeComponent implements OnInit, OnDestroy {
 
     const result = await withErrorHandling(
       async () => {
-        const cols = await this.collectionsApi.listCollections(connId);
+        const cols = await this.store.listCollectionsPaginated(connId);
         return cols;
       },
       {
@@ -125,7 +123,7 @@ export class SchemaTreeComponent implements OnInit, OnDestroy {
   async loadCollectionFields(collection: TreeNode) {
     if (collection.fields && collection.fields.length > 0) return;
     try {
-      const schema = await this.db.describeCollection(collection.name);
+      const schema = await this.store.describeCollection(collection.name);
       collection.fields = schema.columns.map((col: ColumnInfo) => ({
         name: col.name,
         dataType: col.data_type,
@@ -195,7 +193,7 @@ export class SchemaTreeComponent implements OnInit, OnDestroy {
       return;
     }
     try {
-      await this.db.createCollection(name);
+      await this.store.createCollection(name);
       this.toast.success(`Collection "${name}" created`);
       this.showNewCollectionModal.set(false);
       this.loadCollections();
@@ -223,8 +221,8 @@ export class SchemaTreeComponent implements OnInit, OnDestroy {
       return;
     }
     try {
-      await this.db.dropCollection(oldName);
-      await this.db.createCollection(newName);
+      await this.store.dropCollection(oldName);
+      await this.store.createCollection(newName);
       this.toast.success(`Renamed to "${newName}"`);
       this.renamingCollection.set(null);
       this.loadCollections();
@@ -241,12 +239,17 @@ export class SchemaTreeComponent implements OnInit, OnDestroy {
     this.closeContextMenu();
     if (await this.confirm.confirmDelete(node.name)) {
       try {
-        await this.db.dropCollection(node.name);
+        await this.store.dropCollection(node.name);
         this.toast.success(`Collection "${node.name}" dropped`);
         if (this.selectedCollection() === node.name) {
           this.selectedCollection.set(null);
           const connId = this.connectionState.activeConnectionId();
-          this.router.navigate(connId ? ["/connections", connId, "explorer"] : ["/connections"]);
+          const dbName = this.connectionState.activeDatabaseName();
+          if (connId && dbName) {
+            this.router.navigate(["/connections", connId, dbName, "explorer"]);
+          } else {
+            this.router.navigate(["/connections"]);
+          }
         }
         this.loadCollections();
       } catch {
@@ -257,8 +260,9 @@ export class SchemaTreeComponent implements OnInit, OnDestroy {
 
   viewData(collection: TreeNode) {
     const connId = this.connectionState.activeConnectionId();
-    if (connId) {
-      this.router.navigate(["/connections", connId, "explorer"], {
+    const dbName = this.connectionState.activeDatabaseName();
+    if (connId && dbName) {
+      this.router.navigate(["/connections", connId, dbName, "explorer"], {
         queryParams: { collection: collection.name },
       });
     }
@@ -266,8 +270,9 @@ export class SchemaTreeComponent implements OnInit, OnDestroy {
 
   viewDetails(collection: TreeNode) {
     const connId = this.connectionState.activeConnectionId();
-    if (connId) {
-      this.router.navigate(["/connections", connId, "explorer"], {
+    const dbName = this.connectionState.activeDatabaseName();
+    if (connId && dbName) {
+      this.router.navigate(["/connections", connId, dbName, "explorer"], {
         queryParams: { collection: collection.name, view: "schema" },
       });
     }

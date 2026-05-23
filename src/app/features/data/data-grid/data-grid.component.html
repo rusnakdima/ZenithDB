@@ -11,18 +11,6 @@
     </div>
   }
 
-  @if (dataTruncated) {
-    <div
-      class="m-4 flex items-center gap-2 rounded-xl border border-amber-900/50 bg-amber-900/20 px-4 py-3 text-amber-400"
-    >
-      <mat-icon fontIcon="warning" class="h-6! w-5! text-xl!" />
-      <span
-        >Data is truncated due to size limits. Only the first {{ MAX_PAGE_SIZE }} rows are
-        shown.</span
-      >
-    </div>
-  }
-
   <div class="flex-1 overflow-auto p-6">
     @if (viewMode === "json") {
       <div class="json-view-container h-full p-6">
@@ -98,7 +86,7 @@
         } @else {
           <table class="data-table w-full border-collapse">
             <app-column-manager
-              [columns]="columns"
+              [columns]="visibleColumnsFiltered()"
               [visibleColumnsList]="visibleColumnsList()"
               [columnOrder]="columnOrder()"
               [columnWidths]="columnWidths()"
@@ -117,8 +105,7 @@
 
             <app-table-body
               [data]="data()"
-              [columns]="columns"
-              [visibleColumnsList]="visibleColumnsList()"
+              [columns]="visibleColumnsFiltered()"
               [columnWidths]="columnWidths()"
               [selectedRows]="selectedRows()"
               (rowClick)="onRowClick($event.row, $event.event)"

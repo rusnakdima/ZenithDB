@@ -14,7 +14,6 @@ import { ConnectionStateService } from "@shared/services/connection-state.servic
 import { ThemeService } from "@shared/services/theme.service";
 import { DataStoreService } from "@services/core/data-store.service";
 import { toSignal } from "@angular/core/rxjs-interop";
-import { CollectionsApiService } from "@shared/services/collections-api.service";
 
 export interface Breadcrumb {
   label: string;
@@ -32,7 +31,6 @@ export class HeaderComponent implements OnDestroy {
   connectionState = inject(ConnectionStateService);
   themeService = inject(ThemeService);
   router = inject(Router);
-  private collectionsApi = inject(CollectionsApiService);
   private dataStore = inject(DataStoreService);
 
   private searchInputRef = viewChild<ElementRef<HTMLInputElement>>("searchInput");
@@ -113,17 +111,6 @@ export class HeaderComponent implements OnDestroy {
     }
   }
 
-  showExplorerBreadcrumb = computed(() => {
-    const segments = this.getUrlSegments(this.routerUrl() || "");
-    return (
-      !!this.connectionState.activeConnectionName() &&
-      (segments[0] === "schema" ||
-        segments[0] === "query" ||
-        segments[0] === "explorer" ||
-        segments[0] === "data")
-    );
-  });
-
   isDarkMode = computed(() => this.themeService.isDarkMode());
 
   goHome() {
@@ -153,7 +140,7 @@ export class HeaderComponent implements OnDestroy {
         const connId = this.connectionState.activeConnectionId();
         if (connId) {
           try {
-            const result = await this.collectionsApi.listCollections(connId);
+            const result = await this.dataStore.listCollectionsPaginated(connId);
             collections = result.collections || [];
           } catch {
             collections = [];
@@ -188,8 +175,9 @@ export class HeaderComponent implements OnDestroy {
 
   navigateToCollection(name: string): void {
     const connId = this.connectionState.activeConnectionId();
-    if (connId) {
-      this.router.navigate(["/connections", connId, "explorer"], {
+    const dbName = this.connectionState.activeDatabaseName();
+    if (connId && dbName) {
+      this.router.navigate(["/connections", connId, dbName, "explorer"], {
         queryParams: { collection: name },
       });
     }

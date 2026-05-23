@@ -11,18 +11,18 @@ import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
 import { RowData, ColumnInfo } from "@shared/models/connection.config";
 import { CheckboxComponent } from "@shared/components/checkbox/checkbox.component";
+import { FormatValuePipe } from "@shared/pipes/format-value.pipe";
 
 @Component({
   selector: "app-table-body",
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, MatIconModule, CheckboxComponent],
+  imports: [FormsModule, MatIconModule, CheckboxComponent, FormatValuePipe],
   templateUrl: "./table-body.component.html",
 })
 export class TableBodyComponent {
   @Input() data: RowData[] = [];
   @Input() columns: ColumnInfo[] = [];
-  @Input() visibleColumnsList: string[] = [];
   @Input() columnWidths: Record<string, number> = {};
   @Input() selectedRows: Set<number> = new Set();
 
@@ -35,12 +35,6 @@ export class TableBodyComponent {
 
   trackByRow(index: number, row: RowData): string {
     return String(row["_id"] || row["id"] || index);
-  }
-
-  formatValue(value: unknown): string {
-    if (value === null || value === undefined) return "null";
-    if (typeof value === "object") return JSON.stringify(value);
-    return String(value);
   }
 
   isSelected(index: number): boolean {

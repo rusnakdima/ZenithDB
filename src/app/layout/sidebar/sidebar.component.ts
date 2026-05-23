@@ -12,7 +12,6 @@ import {
 import { Router, RouterLink, NavigationEnd } from "@angular/router";
 import { MatIconModule } from "@angular/material/icon";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
-import { DatabaseService } from "@shared/services/database.service";
 import { DataStoreService } from "@services/core/data-store.service";
 import { CollectionMeta, SystemMetrics, ConnectionSummary } from "@shared/models/connection.config";
 import { interval, Subscription } from "rxjs";
@@ -20,10 +19,6 @@ import { filter } from "rxjs/operators";
 import { ProviderUtils } from "@shared/utils/provider.utils";
 import { ThemeService } from "@shared/services/theme.service";
 import { ErrorHandlerService } from "@shared/services/error-handler.service";
-import { DecentralizationApiService } from "@shared/services/decentralization-api.service";
-import { ConnectionsApiService } from "@shared/services/connections-api.service";
-import { CollectionsApiService } from "@shared/services/collections-api.service";
-import { HealthApiService } from "@shared/services/health-api.service";
 import { MetricsApiService } from "@shared/services/metrics-api.service";
 import { ConnectionFormService } from "@shared/services/connection-form.service";
 
@@ -45,12 +40,7 @@ export class SidebarComponent implements OnInit {
   providerUtils = inject(ProviderUtils);
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
-  private decentralizationApi = inject(DecentralizationApiService);
-  private connectionsApi = inject(ConnectionsApiService);
-  private collectionsApi = inject(CollectionsApiService);
-  private healthApi = inject(HealthApiService);
   private metricsApi = inject(MetricsApiService);
-  private db = inject(DatabaseService);
   private connState = inject(ConnectionStateService);
   dataStore = inject(DataStoreService);
   themeService = inject(ThemeService);
@@ -88,13 +78,12 @@ export class SidebarComponent implements OnInit {
   isAtConnections = computed(
     () => this.currentUrl() === "/connections" || this.currentUrl() === "/connections/"
   );
-  isAtConnectionPage = computed(
+  isAtConnectionPage = computed(() => /^\/connections\/[^/]+$/.test(this.currentUrl()));
+  isAtExplorer = computed(() => /^\/connections\/[^/]+\/[^/]+\/explorer$/.test(this.currentUrl()));
+  isAtDatabasePage = computed(
     () =>
-      /^\/connections\/[^/]+$/.test(this.currentUrl()) && !this.currentUrl().endsWith("/explorer")
-  );
-  isAtExplorer = computed(() => /^\/connections\/[^/]+\/explorer$/.test(this.currentUrl()));
-  isAtDatabasePage = computed(() =>
-    /^\/connections\/[^/]+\/databases\/[^/]+$/.test(this.currentUrl())
+      /^\/connections\/[^/]+\/[^/]+$/.test(this.currentUrl()) &&
+      !this.currentUrl().endsWith("/explorer")
   );
   isAtQuery = computed(() => this.currentUrl().startsWith("/query"));
 
@@ -104,7 +93,7 @@ export class SidebarComponent implements OnInit {
   });
 
   activeDatabaseName = computed(() => {
-    const match = this.currentUrl().match(/^\/connections\/[^/]+\/databases\/([^/]+)$/);
+    const match = this.currentUrl().match(/^\/connections\/[^/]+\/([^/]+)$/);
     return match ? match[1] : null;
   });
 
@@ -136,8 +125,8 @@ export class SidebarComponent implements OnInit {
   });
 
   ngOnInit() {
-    this.fetchSystemStatus();
-    this.fetchConnections();
+    // DISABLED: No automatic background fetching
+    // this.fetchConnectionsInBackground();
 
     this.routerSub = this.router.events
       .pipe(filter((e) => e instanceof NavigationEnd))
@@ -146,13 +135,7 @@ export class SidebarComponent implements OnInit {
       });
     this.currentUrl.set(this.router.url);
 
-    this.statusSubscription = interval(5000).subscribe(() => {
-      this.fetchSystemStatus();
-    });
-
-    this.connectionStatusSubscription = interval(5000).subscribe(() => {
-      this.refreshConnectionStatuses();
-    });
+    this.fetchSystemStatusInBackground();
 
     this.destroyRef.onDestroy(() => {
       this.routerSub?.unsubscribe();
@@ -189,7 +172,7 @@ export class SidebarComponent implements OnInit {
       }
 
       if (this.databases().length === 0 && !this.loadingDatabases()) {
-        await this.loadDatabases(connId);
+        this.loadDatabasesInBackground(connId);
       }
 
       const dbNode = this.databases().find((d) => d.name === dbName);
@@ -200,7 +183,7 @@ export class SidebarComponent implements OnInit {
           this.isExpandingRoute.set(false);
           return;
         }
-        await this.loadCollectionsForDatabase(dbNode, connId);
+        this.loadCollectionsInBackground(dbNode, connId);
         this.databases.update((dbs) => [...dbs]);
       }
     } finally {
@@ -217,7 +200,6 @@ export class SidebarComponent implements OnInit {
   }
 
   async loadConnectionForRoute(connId: string) {
-    console.log("[Sidebar] loadConnectionForRoute called with:", connId);
     if (this.isLoadingConnectionRoute() || this.isExpandingRoute()) {
       console.log("[Sidebar] loadConnectionForRoute early return - already loading");
       return;
@@ -230,37 +212,43 @@ export class SidebarComponent implements OnInit {
       console.log("[Sidebar] loadConnectionForRoute early return - already loaded");
       return;
     }
-    this.isLoadingConnectionRoute.set(true);
-    try {
-      const conn = this.dataStore.getConnections().find((c) => c.id === connId);
-      if (!conn) {
-        console.log("[Sidebar] loadConnectionForRoute - conn not found");
-        this.isLoadingConnectionRoute.set(false);
-        return;
-      }
 
-      if (!this.expandedConnections().has(connId)) {
-        this.expandedConnections.update((set) => {
-          const newSet = new Set(set);
-          newSet.add(connId);
-          return newSet;
-        });
-      }
+    const conn = this.dataStore.getConnections().find((c) => c.id === connId);
+    if (!conn) {
+      console.log("[Sidebar] loadConnectionForRoute - conn not found");
+      return;
+    }
 
-      if (this.connState.activeConnectionId() !== connId) {
-        this.connState.setActiveConnection(conn);
-      }
-      console.log("[Sidebar] loadConnectionForRoute about to call loadDatabases");
-      await this.loadDatabases(connId);
-      console.log("[Sidebar] loadConnectionForRoute completed");
+    if (!this.expandedConnections().has(connId)) {
+      this.expandedConnections.update((set) => {
+        const newSet = new Set(set);
+        newSet.add(connId);
+        return newSet;
+      });
+    }
 
-      if (this.isSingleDatabaseProvider() && this.databases().length === 1) {
-        const db = this.databases()[0];
-        console.log("[Sidebar] Single DB provider, auto-navigating to:", db.name);
-        this.router.navigate(["/connections", connId, "databases", db.name]);
-      }
-    } finally {
-      this.isLoadingConnectionRoute.set(false);
+    if (this.connState.activeConnectionId() !== connId) {
+      this.connState.setActiveConnection(conn);
+    }
+
+    const cachedDatabases = this.dataStore.getDatabases(connId);
+    if (cachedDatabases.length > 0) {
+      this.databases.set(
+        cachedDatabases.map((db) => ({
+          name: typeof db === "string" ? db : db.name,
+          type: "database" as const,
+          expanded: false,
+          children: [],
+        }))
+      );
+    }
+
+    this.loadDatabasesInBackground(connId);
+
+    if (this.isSingleDatabaseProvider() && this.databases().length === 1) {
+      const db = this.databases()[0];
+      console.log("[Sidebar] Single DB provider, auto-navigating to:", db.name);
+      this.router.navigate(["/connections", connId, db.name]);
     }
   }
 
@@ -286,28 +274,69 @@ export class SidebarComponent implements OnInit {
     return conn?.name || "Unknown";
   }
 
-  async fetchSystemStatus() {
-    try {
-      const metrics = await this.metricsApi.fetchMetrics();
-      this.systemStatus.set(metrics);
-    } catch (e) {
-      this.errorHandler.handleError(e, "Fetching system status");
+  async fetchSystemStatusInBackground() {
+    this.metricsApi
+      .fetchMetrics()
+      .then((metrics) => {
+        this.systemStatus.set(metrics);
+      })
+      .catch(() => {});
+  }
+
+  fetchConnectionsInBackground() {
+    // DISABLED: No automatic connection fetching
+    console.log("[Sidebar] fetchConnectionsInBackground called (DISABLED)");
+    // this.connectionsApi.listConnectionsWithRefresh().then(() => {}).catch(() => {});
+  }
+
+  refreshConnectionStatusesInBackground() {
+    const connections = this.dataStore.connections();
+    for (const conn of connections) {
+      this.dataStore
+        .testConnectionStatus(conn.id)
+        .then((result) => {
+          if (result) {
+            this.dataStore.updateConnection(conn.id, { status: result.status });
+          }
+        })
+        .catch(() => {});
     }
   }
 
-  async fetchConnections() {
-    try {
-      await this.connectionsApi.listConnectionsWithRefresh();
-    } catch (e) {
-      this.errorHandler.handleError(e, "Fetching connections");
-    }
+  loadDatabasesInBackground(connId: string) {
+    this.loadingDatabases.set(true);
+    this.dataStore
+      .listDatabasesPaginated(connId, 0, 10)
+      .then((result) => {
+        if (this.connState.activeConnectionId() !== connId) {
+          this.loadingDatabases.set(false);
+          return;
+        }
+        this.databaseHasMore.set(result.hasMore);
+        this.databaseTotalCount.set(result.totalCount);
+        const dbNodes: TreeNode[] = result.databases.map((db) => ({
+          name: db.name,
+          type: "database" as const,
+          expanded: false,
+          children: [],
+        }));
+        this.databases.set(dbNodes);
+        this.dataStore.updateDatabases(connId, result.databases);
+      })
+      .catch((e) => {
+        this.errorHandler.handleError(e, "Loading databases");
+        this.databases.set([]);
+      })
+      .finally(() => {
+        this.loadingDatabases.set(false);
+      });
   }
 
   async refreshConnectionStatuses() {
     try {
-      const connections = this.connectionsApi.getConnections();
+      const connections = this.dataStore.connections();
       const results = await Promise.all(
-        connections.map((conn) => this.db.testConnectionStatus(conn.id))
+        connections.map((conn) => this.dataStore.testConnectionStatus(conn.id))
       );
       results.forEach((result, index) => {
         if (result) {
@@ -319,19 +348,21 @@ export class SidebarComponent implements OnInit {
     }
   }
 
-  async selectConnection(conn: ConnectionSummary) {
+  selectConnection(conn: ConnectionSummary) {
     this.connState.setActiveConnection(conn);
     this.router.navigate(["/connections", conn.id]);
-    this.isLoadingConnectionRoute.set(true);
-    this.loadDatabases(conn.id);
-    this.testConnectionStatus(conn.id);
+    this.loadDatabasesInBackground(conn.id);
   }
 
-  async testConnectionStatus(connId: string) {
-    const result = await this.db.testConnectionStatus(connId);
-    if (result) {
-      this.dataStore.updateConnection(connId, { status: result.status });
-    }
+  testConnectionStatusInBackground(connId: string) {
+    this.dataStore
+      .testConnectionStatus(connId)
+      .then((result) => {
+        if (result) {
+          this.dataStore.updateConnection(connId, { status: result.status });
+        }
+      })
+      .catch(() => {});
   }
 
   async selectConnectionById(connId: string) {
@@ -342,39 +373,7 @@ export class SidebarComponent implements OnInit {
   }
 
   async loadDatabases(connId: string) {
-    console.log("[Sidebar] loadDatabases called with:", connId);
-    if (this.connState.activeConnectionId() !== connId) {
-      console.log("[Sidebar] loadDatabases early return - connId mismatch");
-      this.loadingDatabases.set(false);
-      return;
-    }
-    this.databaseOffset.set(0);
-    this.loadingDatabases.set(true);
-    try {
-      console.log("[Sidebar] loadDatabases about to call getDatabases");
-      const result = await this.decentralizationApi.listDatabases(connId, 0, 10);
-      console.log("[Sidebar] loadDatabases got databases:", result.databases.length);
-      if (this.connState.activeConnectionId() !== connId) {
-        this.loadingDatabases.set(false);
-        return;
-      }
-      this.databaseHasMore.set(result.hasMore);
-      this.databaseTotalCount.set(result.totalCount);
-      const dbNodes: TreeNode[] = result.databases.map((db) => ({
-        name: db.name,
-        type: "database" as const,
-        expanded: false,
-        children: [],
-      }));
-      this.databases.set(dbNodes);
-      console.log("[Sidebar] loadDatabases completed");
-    } catch (e) {
-      console.error("[Sidebar] loadDatabases error:", e);
-      this.errorHandler.handleError(e, "Loading databases");
-      this.databases.set([]);
-    } finally {
-      this.loadingDatabases.set(false);
-    }
+    this.loadDatabasesInBackground(connId);
   }
 
   async loadMoreDatabases(connId: string) {
@@ -383,7 +382,7 @@ export class SidebarComponent implements OnInit {
     try {
       this.loadingDatabases.set(true);
       const newOffset = this.databaseOffset() + 10;
-      const result = await this.decentralizationApi.listDatabases(connId, newOffset, 10);
+      const result = await this.dataStore.listDatabasesPaginated(connId, newOffset, 10);
       if (this.connState.activeConnectionId() !== connId) {
         this.loadingDatabases.set(false);
         return;
@@ -405,7 +404,7 @@ export class SidebarComponent implements OnInit {
     }
   }
 
-  async loadCollectionsForDatabase(dbNode: TreeNode, connId: string) {
+  loadCollectionsInBackground(dbNode: TreeNode, connId: string) {
     const key = `${connId}:${dbNode.name}`;
     if (this.loadingCollections().has(key)) {
       return;
@@ -417,22 +416,25 @@ export class SidebarComponent implements OnInit {
       return newSet;
     });
 
-    try {
-      const collections = await this.collectionsApi.listCollections(connId, dbNode.name);
-      dbNode.children = collections.collections.map((c) => ({
-        name: c.name,
-        type: "collection" as const,
-        expanded: false,
-        collection: c,
-      }));
-      this.databases.update((dbs) => [...dbs]);
-    } finally {
-      this.loadingCollections.update((set) => {
-        const newSet = new Set(set);
-        newSet.delete(key);
-        return newSet;
+    this.dataStore
+      .listCollectionsPaginated(connId, dbNode.name)
+      .then((collections) => {
+        dbNode.children = collections.collections.map((c) => ({
+          name: c.name,
+          type: "collection" as const,
+          expanded: false,
+          collection: c,
+        }));
+        this.databases.update((dbs) => [...dbs]);
+      })
+      .catch(() => {})
+      .finally(() => {
+        this.loadingCollections.update((set) => {
+          const newSet = new Set(set);
+          newSet.delete(key);
+          return newSet;
+        });
       });
-    }
   }
 
   async toggleConnection(connId: string, event: Event) {
@@ -468,7 +470,7 @@ export class SidebarComponent implements OnInit {
     ) {
       const connId = this.activeConnectionId();
       if (connId) {
-        this.loadCollectionsForDatabase(node, connId);
+        this.loadCollectionsInBackground(node, connId);
       }
     }
 
@@ -480,8 +482,9 @@ export class SidebarComponent implements OnInit {
       this.activeCollection.set(node.name);
       this.collectionSelected.emit(node.name);
       const connId = this.activeConnectionId();
-      if (connId) {
-        this.router.navigate(["/connections", connId, "explorer"], {
+      const dbName = this.activeDatabaseName();
+      if (connId && dbName) {
+        this.router.navigate(["/connections", connId, dbName, "explorer"], {
           queryParams: { collection: node.name },
         });
       }
@@ -492,7 +495,7 @@ export class SidebarComponent implements OnInit {
     event.stopPropagation();
     const connId = this.activeConnectionId();
     if (connId) {
-      this.router.navigate(["/connections", connId, "databases", node.name]);
+      this.router.navigate(["/connections", connId, node.name]);
     }
   }
 
@@ -605,7 +608,7 @@ export class SidebarComponent implements OnInit {
   private loadCollectionData(collection: string) {
     const connId = this.activeConnectionId();
     if (connId) {
-      this.db.queryData(collection, { limit: 100 }).catch(console.error);
+      this.dataStore.queryData(collection, { limit: 100 }).catch(console.error);
     }
   }
 

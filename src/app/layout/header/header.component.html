@@ -1,7 +1,6 @@
 <header class="app-header">
   <div class="flex items-center gap-3">
     @for (crumb of getBreadcrumbs(); track crumb.label; let last = $last) {
-      <mat-icon fontIcon="chevron_right" class="h-5! w-5! text-xl! !text-[var(--text-muted)]" />
       @if (crumb.route && !last) {
         <button
           type="button"
@@ -14,6 +13,9 @@
         <span class="text-xs font-black tracking-widest text-[var(--text-main)] uppercase">{{
           crumb.label
         }}</span>
+      }
+      @if (!last) {
+        <mat-icon fontIcon="chevron_right" class="h-5! w-5! text-xl! !text-[var(--text-muted)]" />
       }
     }
   </div>

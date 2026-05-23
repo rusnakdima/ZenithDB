@@ -9,14 +9,12 @@
         <app-checkbox [checked]="isSelected(rowIndex)" (changed)="onToggleRow(rowIndex)" />
       </td>
       @for (col of columns; track col.name) {
-        @if (visibleColumnsList.includes(col.name)) {
-          <td
-            class="border-r border-[var(--border-subtle)]/50 p-3 text-sm"
-            [style.width.px]="columnWidths[col.name]"
-          >
-            {{ formatValue(row[col.name]) }}
-          </td>
-        }
+        <td
+          class="border-r border-[var(--border-subtle)]/50 p-3 text-sm"
+          [style.width.px]="columnWidths[col.name]"
+        >
+          {{ row[col.name] | formatValue }}
+        </td>
       }
       <td class="p-3" (click)="$event.stopPropagation()">
         <div class="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">

@@ -1,7 +1,6 @@
 import { Injectable, inject } from "@angular/core";
 import { TauriBridgeService } from "./tauri-bridge.service";
 import { RequestCancellationService } from "./request-cancellation.service";
-import { ResponseSizeGuardService } from "./response-size-guard.service";
 import { DataStoreService } from "@app/services/core/data-store.service";
 import { ConnectionsApiService } from "@shared/services/connections-api.service";
 import { ToastService } from "@services/toast.service";
@@ -30,7 +29,6 @@ import {
 export class ApiProvider {
   private tauriBridge = inject(TauriBridgeService);
   private cancellation = inject(RequestCancellationService);
-  private responseSizeGuard = inject(ResponseSizeGuardService);
 
   private dataStore = inject(DataStoreService);
   private connectionsApi = inject(ConnectionsApiService);
@@ -61,26 +59,13 @@ export class ApiProvider {
     return this.toastService;
   }
 
-  private checkResponseSize(data: unknown) {
-    return this.responseSizeGuard.checkResponseSize(data);
-  }
-
   async listConnections(): Promise<ConnectionSummary[]> {
-    const withTimeout = Promise.race([
-      invokeWithAbortHandlingOrDefault(
-        () =>
-          this.tauriBridge.invoke<ConnectionSummary[]>("list_connections", {
-            options: { signal: this.createAbortSignal() },
-          }),
-        "listConnections",
-        this.errorHandler,
-        []
-      ),
-      new Promise<ConnectionSummary[]>((_, reject) =>
-        setTimeout(() => reject(new Error("listConnections timeout")), 5000)
-      ),
-    ]);
-    const connections = await withTimeout;
+    const connections = await invokeWithAbortHandlingOrDefault(
+      () => this.tauriBridge.invoke<ConnectionSummary[]>("list_connections", {}),
+      "listConnections",
+      this.errorHandler,
+      []
+    );
     this.dataStore.updateConnections(connections);
     return connections;
   }
@@ -269,14 +254,6 @@ export class ApiProvider {
       "queryData",
       this.errorHandler
     );
-    const sizeCheck = this.checkResponseSize(result.data);
-    if (sizeCheck.truncated) {
-      this.getToastService().warning(sizeCheck.message!);
-      const maxItems = this.responseSizeGuard.getMaxItems();
-      if (result.data.length > maxItems) {
-        result.data = result.data.slice(0, maxItems) as RowData[];
-      }
-    }
     return result as QueryResult<RowData>;
   }
 
@@ -369,10 +346,7 @@ export class ApiProvider {
 
   async getSystemStatus(): Promise<SystemMetrics> {
     const metrics = await invokeWithAbortHandling(
-      () =>
-        this.tauriBridge.invoke<SystemMetrics>("get_system_status", {
-          options: { signal: this.createAbortSignal() },
-        }),
+      () => this.tauriBridge.invoke<SystemMetrics>("get_system_status", {}),
       "getSystemStatus",
       this.errorHandler
     );

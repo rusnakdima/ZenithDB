@@ -16,12 +16,12 @@ import {
 import { CdkDragDrop, moveItemInArray } from "@angular/cdk/drag-drop";
 import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
-import { DatabaseService } from "@shared/services/database.service";
 import { DataStoreService } from "@services/core/data-store.service";
 import { ClipboardService } from "@shared/services/clipboard.service";
 import { ToastService } from "@services/toast.service";
 import { ExportService } from "@shared/services/export.service";
 import { PersistentStorageService } from "@shared/services/persistent-storage.service";
+import { DiagnosticLoggerService } from "@shared/services/diagnostic-logger.service";
 import { ColumnInfo, RowData, FilterExpression } from "@shared/models/connection.config";
 import { formatJsonLines, highlightJsonLine, safeJsonParse } from "@shared/utils/json.utils";
 import { PaginationComponent } from "@shared/components/pagination/pagination.component";
@@ -51,9 +51,10 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
   private isResizingInProgress = false;
   private resizeMoveHandler: ((e: MouseEvent) => void) | null = null;
   private resizeUpHandler: (() => void) | null = null;
+  private resizeRAFId: number | null = null;
+  private resizeLastWidth = 0;
   private persistentStorage = inject(PersistentStorageService);
-  protected readonly MAX_PAGE_SIZE = 1000;
-
+  private diagLogger = inject(DiagnosticLoggerService);
   @Input() collectionName = "";
   @Input() filter = "";
   @Input() page = 0;
@@ -67,8 +68,6 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
   @Output() pageChange = new EventEmitter<number>();
   @Output() viewModeChange = new EventEmitter<"grid" | "json">();
   @Output() columnsOrderChange = new EventEmitter<string[]>();
-
-  dataTruncated = false;
 
   private lastCollectionName = "";
   private lastFilter = "";
@@ -131,7 +130,6 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
   resizingColumn = signal<string | null>(null);
   columnWidths = signal<Record<string, number>>({});
 
-  private db = inject(DatabaseService);
   private dataStore = inject(DataStoreService);
   private toast = inject(ToastService);
   private clipboard = inject(ClipboardService);
@@ -154,6 +152,11 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
     }
     if (visible.size === 0) return [];
     return all.filter((c) => visible.has(c));
+  });
+
+  visibleColumnsFiltered = computed(() => {
+    const visible = this.visibleColumnsList();
+    return this.columns.filter((c) => visible.includes(c.name));
   });
 
   async ngOnInit() {
@@ -205,6 +208,7 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
   async loadData(forceRefresh?: boolean) {
     this.loading.set(true);
     this.error = "";
+    const t0 = Date.now();
     try {
       let filterObj: FilterExpression | undefined;
       if (this.filter) {
@@ -215,19 +219,22 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
           return;
         }
       }
-      const effectiveLimit = Math.min(this.pageSize, this.MAX_PAGE_SIZE);
       const result = await this.dataStore.queryData(
         this.collectionName,
         {
           filter: filterObj,
           skip: this.page * this.pageSize,
-          limit: effectiveLimit,
+          limit: this.pageSize,
           order_by: this.sortColumn() || undefined,
           direction: this.sortDirection(),
         },
         forceRefresh
       );
-      this.dataTruncated = result.data.length === effectiveLimit && result.total > effectiveLimit;
+      this.diagLogger.logDataLoad("datagrid-loadData", result.data.length, Date.now() - t0, {
+        total: result.total,
+        page: this.page,
+        pageSize: this.pageSize,
+      });
       this.data.set(result.data as RowData[]);
       this.total.set(result.total);
     } catch (e) {
@@ -240,7 +247,7 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
 
   async loadColumnsFallback() {
     try {
-      const schema = await this.db.describeCollection(this.collectionName);
+      const schema = await this.dataStore.describeCollection(this.collectionName);
       this.columns = schema.columns;
       this.initColumnWidths();
     } catch (e) {}
@@ -332,13 +339,25 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
     this.isResizingInProgress = true;
     const startX = event.clientX;
     const startWidth = this.columnWidths()[col] || 150;
+    this.resizeLastWidth = startWidth;
 
     this.resizeMoveHandler = (e: MouseEvent) => {
-      const newWidth = Math.max(80, startWidth + (e.clientX - startX));
-      this.columnWidths.update((w) => ({ ...w, [col]: newWidth }));
+      if (this.resizeRAFId !== null) return;
+      this.resizeRAFId = requestAnimationFrame(() => {
+        this.resizeRAFId = null;
+        const newWidth = Math.max(80, startWidth + (e.clientX - startX));
+        if (Math.abs(newWidth - this.resizeLastWidth) >= 5) {
+          this.resizeLastWidth = newWidth;
+          this.columnWidths.update((w) => ({ ...w, [col]: newWidth }));
+        }
+      });
     };
 
     const upHandler = () => {
+      if (this.resizeRAFId !== null) {
+        cancelAnimationFrame(this.resizeRAFId);
+        this.resizeRAFId = null;
+      }
       this.resizingColumn.set(null);
       this.isResizingInProgress = false;
       if (this.resizeMoveHandler) {
@@ -362,6 +381,10 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
     if (this.resizeUpHandler) {
       document.removeEventListener("mouseup", this.resizeUpHandler);
       this.resizeUpHandler = null;
+    }
+    if (this.resizeRAFId !== null) {
+      cancelAnimationFrame(this.resizeRAFId);
+      this.resizeRAFId = null;
     }
     this.isResizingInProgress = false;
   }

@@ -1,7 +1,7 @@
 import { Component, inject, signal, HostListener, OnInit, OnDestroy } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { DatePipe } from "@angular/common";
-import { DatabaseService } from "@shared/services/database.service";
+import { DataStoreService } from "@services/core/data-store.service";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { ToastService } from "@services/toast.service";
 import { PersistentStorageService } from "@shared/services/persistent-storage.service";
@@ -27,7 +27,7 @@ interface HistoryItem {
   templateUrl: "./query-editor.component.html",
 })
 export class QueryEditorComponent implements OnInit, OnDestroy {
-  protected db = inject(DatabaseService);
+  protected store = inject(DataStoreService);
   protected connState = inject(ConnectionStateService);
   protected toast = inject(ToastService);
   protected storage = inject(PersistentStorageService);
@@ -133,7 +133,7 @@ export class QueryEditorComponent implements OnInit, OnDestroy {
   async executeCurrentTab() {
     const tab = this.activeTab();
     if (!tab || !tab.query.trim()) return;
-    const result = await this.queryExecution.executeWithTiming(tab.query, this.db);
+    const result = await this.queryExecution.executeWithTiming(tab.query);
     if (result.success) {
       this.addToHistory(tab.query, true);
     } else {
