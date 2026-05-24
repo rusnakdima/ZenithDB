@@ -12,7 +12,7 @@ import { filter, Subscription } from "rxjs";
 
 import { MatIconModule } from "@angular/material/icon";
 
-import { FloatingNavItem } from "./floating-bottom-nav.model";
+import { FloatingNavItem, NavRouteConfig } from "./floating-bottom-nav.model";
 
 @Component({
   selector: "app-floating-bottom-nav",
@@ -30,14 +30,59 @@ export class FloatingBottomNavComponent implements OnInit, OnDestroy {
 
   get listNavs(): Array<FloatingNavItem> {
     return [
-      { url: "/connections", icon: "link", label: "Connections" },
-      { url: "/query", icon: "code", label: "Query" },
+      {
+        url: "/connections",
+        icon: "link",
+        label: "Connections",
+        childRoutes: [
+          { pattern: /^\/connections$/, icon: "link", label: "Connections" },
+          { pattern: /^\/connections\/new$/, icon: "add", label: "New" },
+          { pattern: /^\/connections\/[^/]+$/, icon: "storage", label: "Detail" },
+          { pattern: /^\/connections\/[^/]+\/edit$/, icon: "edit", label: "Edit" },
+          { pattern: /^\/connections\/[^/]+\/[^/]+$/, icon: "storage", label: "Database" },
+          {
+            pattern: /^\/connections\/[^/]+\/[^/]+\/explorer/,
+            icon: "explore",
+            label: "Explorer",
+          },
+        ],
+      },
+      {
+        url: "/query",
+        icon: "code",
+        label: "Query",
+        childRoutes: [{ pattern: /^\/query$/, icon: "code", label: "Query" }],
+      },
       { url: "/settings", icon: "settings", label: "Settings" },
     ];
   }
 
+  getLabel(nav: FloatingNavItem): string {
+    if (nav.childRoutes) {
+      const match = this.findRouteMatch(nav.childRoutes);
+      return match?.label ?? nav.label;
+    }
+    return nav.label;
+  }
+
+  getIcon(nav: FloatingNavItem): string {
+    if (nav.childRoutes) {
+      const match = this.findRouteMatch(nav.childRoutes);
+      return match?.icon ?? nav.icon;
+    }
+    return nav.icon;
+  }
+
+  private findRouteMatch(routes: NavRouteConfig[]): NavRouteConfig | undefined {
+    return routes.find((r) => r.pattern.test(this.url()));
+  }
+
   isActiveRoute(nav: FloatingNavItem): boolean {
-    return this.url() === nav.url;
+    if (this.url() === nav.url) return true;
+    if (nav.childRoutes) {
+      return this.findRouteMatch(nav.childRoutes) !== undefined;
+    }
+    return false;
   }
 
   ngOnInit(): void {

@@ -65,3 +65,8 @@
 .nav-item.nav-item-active .nav-icon {
   color: var(--accent);
 }
+
+.nav-label {
+  font-size: 10px;
+  margin-top: 2px;
+}

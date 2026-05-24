@@ -2,7 +2,8 @@
   <nav class="floating-bottom-nav">
     @for (nav of listNavs; track $index) {
       <a class="nav-item" [routerLink]="nav.url" [class.nav-item-active]="isActiveRoute(nav)">
-        <mat-icon class="nav-icon" [fontIcon]="nav.icon" />
+        <mat-icon class="nav-icon" [fontIcon]="getIcon(nav)" />
+        <span class="nav-label">{{ getLabel(nav) }}</span>
       </a>
     }
   </nav>
