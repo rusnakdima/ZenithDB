@@ -5,6 +5,7 @@ use crate::commands::validate_name;
 use crate::dispatch_provider;
 use nosql_orm::prelude::*;
 use serde::{Deserialize, Serialize};
+use tokio::io::{AsyncBufReadExt, BufReader};
 
 const MAX_FILES_PER_DIR: usize = 10_000;
 const MAX_COLLECTIONS_TOTAL: usize = 50_000;
@@ -231,7 +232,8 @@ async fn list_all_json_collections_recursive(
                 .map(|n| n.trim_end_matches(".json").to_string());
 
               if let Some(name) = name {
-                collections.push(CollectionMeta { name, count: 0 });
+                let count = count_jsonl_documents(&entry_path).await.unwrap_or(0);
+                collections.push(CollectionMeta { name, count });
               }
             }
           }
@@ -256,6 +258,20 @@ async fn list_all_json_collections_recursive(
     Ok(Err(e)) => Err(e),
     Err(_) => Err("Collection listing timed out".to_string()),
   }
+}
+
+async fn count_jsonl_documents(path: &std::path::Path) -> Result<u64, String> {
+  let file = tokio::fs::File::open(path).await.map_err_string()?;
+  let reader = BufReader::new(file);
+  let mut lines = reader.lines();
+  let mut count = 0u64;
+  while let Some(line) = lines.next_line().await.map_err_string()? {
+    let trimmed = line.trim();
+    if !trimmed.is_empty() && trimmed.starts_with('{') {
+      count += 1;
+    }
+  }
+  Ok(count)
 }
 
 async fn list_json_files_in_dir(
@@ -289,7 +305,8 @@ async fn list_json_files_in_dir(
               .map(|n| n.trim_end_matches(".json").to_string());
 
             if let Some(name) = file_name {
-              all_collections.push(CollectionMeta { name, count: 0 });
+              let count = count_jsonl_documents(&entry_path).await.unwrap_or(0);
+              all_collections.push(CollectionMeta { name, count });
             }
           }
         }
