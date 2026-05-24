@@ -1,81 +1,162 @@
-<div class="explorer-page flex min-h-0 flex-1 flex-col">
-  <app-collection-tabs
-    [tabs]="activeTabs()"
-    [activeCollection]="activeCollection()"
-    [collections]="collections()"
-    [showSelector]="showCollectionSelector()"
-    (tabSelect)="selectTab($event)"
-    (tabClose)="closeTab($event)"
-    (toggleSelector)="toggleCollectionSelector()"
-    (collectionSelect)="selectCollectionFromDropdown($event)"
-  ></app-collection-tabs>
-
-  <app-filter-bar
-    [filter]="filterText()"
-    [availableColumns]="availableColumnsMeta()"
-    [disabledColumns]="getDisabledColumns()"
-    [viewMode]="viewTab() === 'table' ? 'grid' : 'json'"
-    (filterChange)="onFilterChange($event)"
-    (apply)="onFilterApply()"
-    (clear)="onFilterClear()"
-    (export)="onExport($event)"
-    (import)="onImport()"
-    (toggleView)="onToggleView()"
-    (refresh)="onRefresh()"
-    (columnsChange)="onColumnsChange($event)"
-  ></app-filter-bar>
-
-  <app-view-switcher
-    [activeView]="viewTab()"
-    [splitMode]="splitMode()"
-    (viewChange)="selectViewTab($event)"
-    (splitChange)="setSplitMode($event)"
-  ></app-view-switcher>
-
+<div class="explorer-page flex h-screen flex-row bg-[var(--bg-deep)]">
   <div
-    class="explorer-header flex items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--bg-sidebar)] px-4 py-3"
+    class="flex h-full w-72 flex-shrink-0 flex-col border-r border-[var(--border-subtle)] bg-[var(--bg-sidebar)]"
+    [class.hidden]="treeCollapsed()"
   >
-    <div class="flex items-center gap-3">
-      <span class="text-sm text-[var(--text-dim)]">
-        Viewing: <span class="font-medium text-[var(--accent)]">{{ activeCollection() }}</span>
-      </span>
-      <span class="rounded bg-[var(--bg-elevated)] px-2 py-0.5 text-xs text-[var(--text-dim)]"
-        >Collection</span
-      >
-    </div>
-    <div class="flex items-center gap-4 text-sm text-[var(--text-dim)]">
-      @if (stats()) {
-        <span class="flex items-center gap-1.5">
-          <mat-icon fontIcon="format_align_left" class="h-6! w-5! text-xl!" />
-          {{ stats()!.size_bytes | formatBytes }}
-        </span>
-        <span class="flex items-center gap-1.5">
-          <mat-icon fontIcon="grid_view" class="h-6! w-5! text-xl!" />
-          {{ formatDocumentCount(stats()!.document_count) }} Docs
-        </span>
-      }
-      <button
-        class="flex items-center gap-1.5 rounded bg-[var(--bg-elevated)] px-2.5 py-1 text-xs text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-card)] hover:text-[var(--accent)]"
-        (click)="openCompareTables()"
-        title="Compare Tables"
-      >
-        <mat-icon fontIcon="compare_arrows" class="h-5! w-4! text-base!" />
-        Compare
-      </button>
+    <div class="flex-1 overflow-hidden">
+      <app-schema-tree (collectionSelect)="onTreeCollectionSelect($event)"></app-schema-tree>
     </div>
   </div>
 
-  <div class="flex flex-1 overflow-hidden">
+  <div class="flex flex-1 flex-col overflow-hidden">
     <div
-      class="explorer-tree w-64 flex-shrink-0 overflow-y-auto border-r border-[var(--border-subtle)]"
+      class="flex items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--bg-sidebar)] px-4 py-3"
     >
-      <app-schema-tree (collectionSelect)="onTreeCollectionSelect($event)"></app-schema-tree>
+      <div class="flex items-center gap-4">
+        <button
+          class="flex items-center rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] p-2 transition-all hover:border-[var(--accent)]/50 hover:text-[var(--accent)]"
+          (click)="toggleTreeCollapse()"
+          [title]="treeCollapsed() ? 'Expand sidebar' : 'Collapse sidebar'"
+        >
+          <mat-icon
+            [fontIcon]="treeCollapsed() ? 'menu' : 'menu_open'"
+            class="h-5! w-4! text-base!"
+          />
+        </button>
+        <h1 class="text-xl font-bold text-white">Explorer</h1>
+        @if (stats()) {
+          <div
+            class="flex items-center gap-3 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-4 py-2"
+          >
+            <span class="flex items-center gap-1.5 text-sm text-[var(--text-dim)]">
+              <mat-icon fontIcon="format_align_left" class="h-5! w-4! text-base!" />
+              {{ stats()!.size_bytes | formatBytes }}
+            </span>
+            <span class="h-4 w-px bg-[var(--border-subtle)]"></span>
+            <span class="flex items-center gap-1.5 text-sm text-[var(--text-dim)]">
+              <mat-icon fontIcon="grid_view" class="h-5! w-4! text-base!" />
+              {{ formatDocumentCount(stats()!.document_count) }} Docs
+            </span>
+          </div>
+        }
+      </div>
+      <div class="flex items-center gap-3">
+        <button
+          class="flex items-center gap-2 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-2 text-sm font-medium text-[var(--text-dim)] transition-all hover:border-[var(--accent)]/50 hover:text-[var(--accent)]"
+          (click)="openCompareTables()"
+        >
+          <mat-icon fontIcon="compare_arrows" class="h-5! w-4! text-base!" />
+          Compare
+        </button>
+        <button
+          class="flex items-center gap-2 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-2 text-sm font-medium text-[var(--text-dim)] transition-all hover:border-[var(--accent)]/50 hover:text-[var(--accent)]"
+          (click)="onImport()"
+        >
+          <mat-icon fontIcon="upload" class="h-5! w-4! text-base!" />
+          Import
+        </button>
+        <div class="relative">
+          <button
+            class="flex items-center gap-2 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-2 text-sm font-medium text-[var(--text-dim)] transition-all hover:border-[var(--accent)]/50 hover:text-[var(--accent)]"
+            (click)="toggleExportMenu()"
+          >
+            <mat-icon fontIcon="download" class="h-5! w-4! text-base!" />
+            Export
+            <mat-icon fontIcon="expand_more" class="h-4! w-4! text-xs!" />
+          </button>
+          @if (showExportMenu()) {
+            <div
+              class="absolute top-full right-0 z-50 mt-1 w-40 rounded-lg border border-[var(--border-visible)] bg-[var(--bg-card)] shadow-xl"
+            >
+              <button
+                class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-[var(--text-main)] hover:bg-[var(--bg-elevated)]"
+                (click)="onExport('csv'); showExportMenu.set(false)"
+              >
+                <mat-icon
+                  fontIcon="table_chart"
+                  class="h-5! w-4! text-base! text-[var(--accent)]"
+                ></mat-icon>
+                CSV
+              </button>
+              <button
+                class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-[var(--text-main)] hover:bg-[var(--bg-elevated)]"
+                (click)="onExport('json'); showExportMenu.set(false)"
+              >
+                <mat-icon
+                  fontIcon="data_object"
+                  class="h-5! w-4! text-base! text-blue-400"
+                ></mat-icon>
+                JSON
+              </button>
+              <button
+                class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-[var(--text-main)] hover:bg-[var(--bg-elevated)]"
+                (click)="onExport('sql'); showExportMenu.set(false)"
+              >
+                <mat-icon fontIcon="code" class="h-5! w-4! text-base! text-amber-400"></mat-icon>
+                SQL
+              </button>
+            </div>
+          }
+        </div>
+      </div>
     </div>
 
-    <div class="explorer-content flex-1 overflow-hidden">
-      @switch (viewTab()) {
-        @case ("table") {
-          @if (splitMode() === "none") {
+    <app-collection-tabs
+      [tabs]="activeTabs()"
+      [activeCollection]="activeCollection()"
+      (tabSelect)="selectTab($event)"
+      (tabClose)="closeTab($event)"
+    ></app-collection-tabs>
+
+    <div
+      class="flex flex-wrap items-center gap-3 overflow-visible border-b border-[var(--border-subtle)] bg-[var(--bg-sidebar)] px-4 py-2"
+    >
+      <div class="flex min-w-0 flex-1 items-center gap-2">
+        <app-filter-bar
+          [filter]="filterText()"
+          [availableColumns]="availableColumnsMeta()"
+          [disabledColumns]="getDisabledColumns()"
+          [viewMode]="viewTab() === 'table' ? 'grid' : 'json'"
+          (filterChange)="onFilterChange($event)"
+          (apply)="onFilterApply()"
+          (clear)="onFilterClear()"
+          (toggleView)="onToggleView()"
+          (refresh)="onRefresh()"
+          (columnsChange)="onColumnsChange($event)"
+        ></app-filter-bar>
+      </div>
+      <div class="flex items-center gap-2">
+        <div
+          class="flex items-center rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] p-1"
+        >
+          <button
+            class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors"
+            [class.bg-[var(--accent)]]="viewTab() === 'table'"
+            [class.text-black]="viewTab() === 'table'"
+            [class.text-[var(--text-dim)]]="viewTab() !== 'table'"
+            [class.hover:bg-[var(--bg-card)]]="viewTab() !== 'table'"
+            (click)="selectViewTab('table')"
+          >
+            Table
+          </button>
+          <button
+            class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors"
+            [class.bg-[var(--accent)]]="viewTab() === 'json'"
+            [class.text-black]="viewTab() === 'json'"
+            [class.text-[var(--text-dim)]]="viewTab() !== 'json'"
+            [class.hover:bg-[var(--bg-card)]]="viewTab() !== 'json'"
+            (click)="selectViewTab('json')"
+          >
+            JSON
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex flex-1 overflow-hidden">
+      <div class="explorer-content flex flex-1 flex-col overflow-hidden">
+        @switch (viewTab()) {
+          @case ("table") {
             <app-data-grid
               [collectionName]="activeCollection()"
               [filter]="filterText()"
@@ -91,189 +172,116 @@
               (viewModeChange)="selectViewTab('json')"
             ></app-data-grid>
           }
-          @if (splitMode() === "horizontal") {
-            <div class="flex h-full flex-row">
-              <div class="w-1/2">
-                <app-data-grid
-                  [collectionName]="activeCollection()"
-                  [filter]="filterText()"
-                  [page]="page()"
-                  [pageSize]="pageSize()"
-                  [showInspector]="showInspector()"
-                  [viewMode]="'grid'"
-                  [inputVisibleColumns]="selectedColumns()"
-                  [columns]="availableColumnsMeta()"
-                  [reloadTrigger]="reloadTrigger()"
-                  (documentClick)="openInspector($event)"
-                  (pageChange)="onPageChange($event)"
-                  (viewModeChange)="selectViewTab('json')"
-                ></app-data-grid>
-              </div>
-              <div class="w-1/2">
-                <app-data-grid
-                  [collectionName]="activeCollection()"
-                  [filter]="filterText()"
-                  [page]="page()"
-                  [pageSize]="pageSize()"
-                  [showInspector]="showInspector()"
-                  [viewMode]="'grid'"
-                  [inputVisibleColumns]="selectedColumns()"
-                  [columns]="availableColumnsMeta()"
-                  [reloadTrigger]="reloadTrigger()"
-                  (documentClick)="openInspector($event)"
-                  (pageChange)="onPageChange($event)"
-                  (viewModeChange)="selectViewTab('json')"
-                ></app-data-grid>
-              </div>
-            </div>
-          }
-          @if (splitMode() === "vertical") {
-            <div class="flex h-full flex-col">
-              <div class="h-1/2">
-                <app-data-grid
-                  [collectionName]="activeCollection()"
-                  [filter]="filterText()"
-                  [page]="page()"
-                  [pageSize]="pageSize()"
-                  [showInspector]="showInspector()"
-                  [viewMode]="'grid'"
-                  [inputVisibleColumns]="selectedColumns()"
-                  [columns]="availableColumnsMeta()"
-                  [reloadTrigger]="reloadTrigger()"
-                  (documentClick)="openInspector($event)"
-                  (pageChange)="onPageChange($event)"
-                  (viewModeChange)="selectViewTab('json')"
-                ></app-data-grid>
-              </div>
-              <div class="h-1/2">
-                <app-data-grid
-                  [collectionName]="activeCollection()"
-                  [filter]="filterText()"
-                  [page]="page()"
-                  [pageSize]="pageSize()"
-                  [showInspector]="showInspector()"
-                  [viewMode]="'grid'"
-                  [inputVisibleColumns]="selectedColumns()"
-                  [columns]="availableColumnsMeta()"
-                  [reloadTrigger]="reloadTrigger()"
-                  (documentClick)="openInspector($event)"
-                  (pageChange)="onPageChange($event)"
-                  (viewModeChange)="selectViewTab('json')"
-                ></app-data-grid>
-              </div>
-            </div>
-          }
-        }
-        @case ("json") {
-          <div class="flex h-full flex-col">
-            <div
-              class="json-toolbar flex items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--bg-sidebar)]/50 px-4 py-2"
-            >
-              <div class="flex items-center gap-2">
-                <span class="text-sm text-[var(--text-dim)]">Full Collection JSON</span>
-                <span class="text-xs text-[var(--text-muted)]"
-                  >({{ fullJsonData().length }} documents)</span
-                >
-              </div>
-              <div class="flex items-center gap-2">
+          @case ("json") {
+            <div class="flex h-full w-full flex-col">
+              <div
+                class="flex items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--bg-sidebar)]/50 px-4 py-2"
+              >
+                <div class="flex items-center gap-2">
+                  <span class="text-sm text-[var(--text-dim)]">Full Collection JSON</span>
+                  <span class="text-xs text-[var(--text-muted)]"
+                    >({{ fullJsonData().length }} documents)</span
+                  >
+                </div>
                 <button
                   class="flex items-center gap-2 rounded bg-[var(--accent)] px-3 py-1.5 text-sm font-bold text-black transition-colors hover:bg-[var(--accent-hover)]"
                   (click)="copyJsonToClipboard()"
                 >
-                  <mat-icon fontIcon="content_copy" class="h-6! w-5! text-xl!" />
+                  <mat-icon fontIcon="content_copy" class="h-5! w-4! text-base!" />
                   Copy to Clipboard
                 </button>
               </div>
-            </div>
-            <div class="flex-1 overflow-auto bg-[var(--bg-deep)]">
-              @if (jsonLoading()) {
-                <div class="flex h-full items-center justify-center">
-                  <div
-                    class="h-8 w-8 animate-spin rounded-full border-2 border-[var(--accent)] border-t-transparent"
-                  ></div>
-                </div>
-              } @else if (fullJsonData().length === 0) {
-                <div
-                  class="flex h-full flex-col items-center justify-center text-[var(--text-dim)]"
-                >
-                  <mat-icon fontIcon="download" class="mb-2 h-12! w-12! text-xl!" />
-                  <p class="text-lg font-bold">No documents found</p>
-                  <p class="text-sm text-[var(--text-muted)]">This collection is empty</p>
-                </div>
-              } @else {
-                <div class="json-content h-full overflow-y-auto p-4">
-                  @for (doc of fullJsonData(); track trackByIndex($index); let docIndex = $index) {
+              <div class="flex-1 overflow-y-auto bg-[var(--bg-deep)]">
+                @if (jsonLoading()) {
+                  <div class="flex h-full items-center justify-center">
                     <div
-                      class="json-document mb-4 overflow-hidden rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-card)]"
-                    >
+                      class="h-8 w-8 animate-spin rounded-full border-2 border-[var(--accent)] border-t-transparent"
+                    ></div>
+                  </div>
+                } @else if (fullJsonData().length === 0) {
+                  <div
+                    class="flex h-full flex-col items-center justify-center text-[var(--text-dim)]"
+                  >
+                    <mat-icon fontIcon="download" class="mb-2 h-12! w-12! text-xl!" />
+                    <p class="text-lg font-bold">No documents found</p>
+                    <p class="text-sm text-[var(--text-muted)]">This collection is empty</p>
+                  </div>
+                } @else {
+                  <div class="p-4">
+                    @for (
+                      doc of fullJsonData();
+                      track trackByIndex($index);
+                      let docIndex = $index
+                    ) {
                       <div
-                        class="flex items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--bg-sidebar)] px-4 py-2"
+                        class="json-document mb-4 overflow-hidden rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-card)]"
                       >
-                        <span class="mono text-sm text-[var(--text-dim)]"
-                          >Document {{ docIndex + 1 }}</span
+                        <div
+                          class="flex items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--bg-sidebar)] px-4 py-2"
                         >
-                        <div class="flex items-center gap-1">
-                          <button
-                            class="flex items-center gap-1 rounded px-2 py-1 text-xs text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--accent)]"
-                            title="Copy JSON"
-                            (click)="copyRowJson(doc, docIndex)"
+                          <span class="mono text-sm text-[var(--text-dim)]"
+                            >Document {{ docIndex + 1 }}</span
                           >
-                            <mat-icon fontIcon="content_copy" class="h-6! w-5! text-xl!" />
-                          </button>
-                          <button
-                            class="flex items-center gap-1 rounded px-2 py-1 text-xs text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--accent)]"
-                            (click)="openInspector(doc)"
-                          >
-                            <mat-icon fontIcon="visibility" class="h-6! w-5! text-xl!" />
-                            Inspect
-                          </button>
+                          <div class="flex items-center gap-1">
+                            <button
+                              class="flex items-center gap-1 rounded px-2 py-1 text-xs text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--accent)]"
+                              title="Copy JSON"
+                              (click)="copyRowJson(doc, docIndex)"
+                            >
+                              <mat-icon fontIcon="content_copy" class="h-4! w-3! text-xs!" />
+                            </button>
+                            <button
+                              class="flex items-center gap-1 rounded px-2 py-1 text-xs text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--accent)]"
+                              (click)="openInspector(doc)"
+                            >
+                              <mat-icon fontIcon="visibility" class="h-4! w-3! text-xs!" />
+                              Inspect
+                            </button>
+                          </div>
+                        </div>
+                        <div class="json-body p-4">
+                          @if (getDocLines(docIndex); as docData) {
+                            @for (line of docData.highlightedLines; track line.num) {
+                              <div
+                                class="json-line mono flex text-sm leading-relaxed hover:bg-[var(--bg-elevated)]"
+                              >
+                                <span
+                                  class="json-line-num w-10 flex-shrink-0 pr-4 text-right text-xs text-[var(--text-muted)] select-none"
+                                  >{{ line.num }}</span
+                                >
+                                <span class="json-line-content" [innerHTML]="line.html"></span>
+                              </div>
+                            }
+                          }
                         </div>
                       </div>
-                      <div class="json-body p-4">
-                        @if (getDocLines(docIndex); as docData) {
-                          @for (line of docData.highlightedLines; track line.num) {
-                            <div
-                              class="json-line mono flex text-sm leading-relaxed hover:bg-[var(--bg-elevated)]"
-                            >
-                              <span
-                                class="json-line-num w-10 flex-shrink-0 pr-4 text-right text-xs text-[var(--text-muted)] select-none"
-                                >{{ line.num }}</span
-                              >
-                              <span class="json-line-content" [innerHTML]="line.html"></span>
-                            </div>
-                          }
-                        }
-                      </div>
-                    </div>
-                  }
-
-                  <div
-                    class="flex items-center justify-center border-t border-[var(--border-subtle)] p-4"
-                  >
+                    }
                     @if (jsonLoadingMore()) {
-                      <div class="flex items-center gap-2 text-[var(--text-dim)]">
+                      <div
+                        class="flex items-center justify-center gap-2 py-4 text-[var(--text-dim)]"
+                      >
                         <div
                           class="h-4 w-4 animate-spin rounded-full border-2 border-[var(--accent)]/20 border-t-[var(--accent)]"
                         ></div>
                         <span class="text-sm">Loading more...</span>
                       </div>
                     } @else if (jsonHasMore()) {
-                      <button
-                        (click)="loadMoreJsonData()"
-                        class="rounded bg-[var(--accent)] px-4 py-2 text-sm font-bold text-black transition-colors hover:bg-[var(--accent-hover)]"
-                      >
-                        Load More
-                      </button>
-                    } @else {
-                      <span class="text-sm text-[var(--text-muted)]">No more documents</span>
+                      <div class="flex justify-center py-4">
+                        <button
+                          (click)="loadMoreJsonData()"
+                          class="rounded bg-[var(--accent)] px-4 py-2 text-sm font-bold text-black transition-colors hover:bg-[var(--accent-hover)]"
+                        >
+                          Load More
+                        </button>
+                      </div>
                     }
                   </div>
-                </div>
-              }
+                }
+              </div>
             </div>
-          </div>
+          }
         }
-      }
+      </div>
     </div>
   </div>
 

@@ -742,39 +742,35 @@ input[type="checkbox"] {
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: 100%;
-  overflow: hidden;
+  height: 100vh;
+  overflow: visible;
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: 8px;
 }
 
-/* Scroll wrapper - SINGLE horizontal scroll container for header and body */
-.table-scroll-wrapper {
-  display: flex;
-  flex-direction: column;
+/* Single scroll container for both axes */
+.table-scroll-container {
   flex: 1;
   min-height: 0;
-  overflow-x: auto;
-  overflow-y: hidden;
+  overflow: auto;
 }
 
-/* Header row - sticky at top, scrolls horizontally with wrapper */
+/* Header row - sticky at top, scrolls horizontally with container */
 .grid-header-row {
   display: grid;
   position: sticky;
   top: 0;
   z-index: 20;
-  flex-shrink: 0;
-  min-width: 100%;
-  background: var(--bg-sidebar);
+  min-width: max-content;
+  background: var(--bg-elevated);
   border-bottom: 2px solid var(--border-visible);
 }
 
-/* Each Data Row as Grid - full width */
+/* Each Data Row as Grid */
 .grid-row {
   display: grid;
-  min-width: 100%;
+  min-width: max-content;
   border-bottom: 1px solid var(--border-subtle);
   transition: background-color 0.15s ease;
 }
@@ -812,142 +808,73 @@ input[type="checkbox"] {
 }
 
 /* Cell Types */
-.checkbox-cell {
+.checkbox-cell,
+.actions-cell {
+  position: relative;
   width: 40px;
   min-width: 40px;
   max-width: 40px;
   justify-content: center;
   flex-shrink: 0;
+  background: var(--bg-elevated);
 }
 
 .data-cell {
   min-width: 80px;
   flex: 1;
   width: auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.actions-cell {
-  width: 56px;
-  min-width: 56px;
-  max-width: 56px;
-  justify-content: center;
-  flex-shrink: 0;
+/* Sticky columns */
+.sticky-left {
+  position: sticky;
+  left: 0;
+  z-index: 10;
 }
 
+.sticky-right {
+  position: sticky;
+  right: 0;
+  z-index: 10;
+}
+
+/* Header cell backgrounds */
 .header-cell {
-  background: var(--bg-sidebar);
-}
-
-/* Each Data Row as Grid */
-.grid-row {
-  display: grid;
-  min-width: 100%;
-  border-bottom: 1px solid var(--border-subtle);
-  transition: background-color 0.15s ease;
-}
-
-/* Body scroll area - vertical scroll only */
-.grid-body-scroll {
-  flex: 1;
-  overflow-x: hidden;
-  overflow-y: auto;
-  min-height: 0;
-}
-
-/* Each Data Row as Grid - full width */
-.grid-row {
-  display: grid;
-  min-width: 100%;
-  border-bottom: 1px solid var(--border-subtle);
-  transition: background-color 0.15s ease;
-}
-
-/* Header row - no independent overflow */
-.grid-header {
-  display: grid;
-  flex-shrink: 0;
-  min-width: 100%;
-  background: var(--bg-sidebar);
-  border-bottom: 2px solid var(--border-visible);
-}
-
-/* Each Data Row as Grid - full width of table */
-.grid-row {
-  display: grid;
-  min-width: 100%;
-  border-bottom: 1px solid var(--border-subtle);
-  transition: background-color 0.15s ease;
-}
-
-.grid-row:last-child {
-  border-bottom: none;
-}
-
-.grid-row.zebra {
-  background-color: rgba(255, 255, 255, 0.02);
-}
-
-.grid-row.hovered {
-  background-color: rgba(255, 107, 0, 0.05);
-}
-
-.grid-row.selected {
-  background-color: rgba(255, 107, 0, 0.1);
-}
-
-/* Grid Cell */
-.grid-cell {
-  display: flex;
-  align-items: center;
-  padding: 10px 12px;
-  font-size: 13px;
-  font-family: var(--font-mono);
-  color: var(--text-main);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  background: inherit;
-  flex-shrink: 0;
-  min-height: 44px;
-}
-
-/* Cell Types */
-.checkbox-cell {
-  width: 40px;
-  min-width: 40px;
-  max-width: 40px;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.data-cell {
-  min-width: 80px;
-  flex: 1;
-  width: auto;
-}
-
-.actions-cell {
-  width: 56px;
-  min-width: 56px;
-  max-width: 56px;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-/* Cell Content */
-.cell-content {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* Header Cell Content */
-.th-content {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 8px;
   overflow: hidden;
   flex: 1;
+  background: var(--bg-elevated);
+}
+
+/* Data cell text overflow */
+.data-cell {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Body row sticky cell backgrounds */
+.grid-row.zebra > .sticky-left,
+.grid-row.zebra > .sticky-right {
+  background: var(--bg-elevated);
+}
+
+.grid-row.hovered > .sticky-left,
+.grid-row.hovered > .sticky-right {
+  background: var(--bg-elevated);
+}
+
+.grid-row.selected > .sticky-left,
+.grid-row.selected > .sticky-right {
+  background: rgba(255, 107, 0, 0.15);
 }
 
 /* Resize Handle */

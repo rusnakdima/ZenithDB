@@ -76,7 +76,7 @@ export class DataTableGridComponent {
   gridTemplateColumns = computed(() => {
     const widths = this.columnWidths;
     const cols = this.visibleColumnsList().map((col) => `${widths[col] || 150}px`);
-    return `40px ${cols.join(" ")} 56px`;
+    return `40px ${cols.join(" ")} 40px`;
   });
 
   headerColsStyle = computed(() => "40px");

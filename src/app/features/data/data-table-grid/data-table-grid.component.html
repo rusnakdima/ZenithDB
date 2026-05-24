@@ -17,37 +17,34 @@
 
 <div class="table-container">
   <div
-    class="table-scroll-wrapper"
+    class="table-scroll-container"
     cdkDropList
     cdkDropListOrientation="horizontal"
     (cdkDropListDropped)="onColumnDrop($event)"
   >
-    <!-- Header Row -->
     <div class="grid-header-row" [style.grid-template-columns]="gridTemplateColumns()">
-      <div class="grid-cell checkbox-cell header-cell">
+      <div class="grid-cell checkbox-cell sticky-left header-cell">
         <app-checkbox [checked]="allSelected()" (changed)="onToggleSelectAll()" />
       </div>
       @for (col of columns; track col.name) {
         <div
-          class="grid-cell data-cell header-cell"
+          class="grid-cell header-cell"
           cdkDrag
           [cdkDragData]="col.name"
           (cdkDragStarted)="onDragStarted(col.name, columnWidths[col.name])"
           (cdkDragReleased)="onDragReleased()"
         >
-          <div class="th-content">
-            <app-sortable-header
-              [column]="col.name"
-              [currentSort]="sortColumn"
-              [direction]="sortColumn === col.name ? sortDirection : 'none'"
-              (sortChange)="onSort($event)"
-            />
-            <app-data-type-badge [dataType]="col.data_type" variant="icon" />
-          </div>
+          <app-sortable-header
+            [column]="col.name"
+            [currentSort]="sortColumn"
+            [direction]="sortColumn === col.name ? sortDirection : 'none'"
+            (sortChange)="onSort($event)"
+          />
+          <app-data-type-badge [dataType]="col.data_type" variant="icon" />
           <div class="resize-handle" (mousedown)="onColumnResizeStart(col.name, $event)"></div>
         </div>
       }
-      <div class="grid-cell actions-cell header-cell" style="position: relative">
+      <div class="grid-cell actions-cell sticky-right header-cell">
         <button class="menu-btn" (click)="onToggleColumnMenu()" title="Show/Hide columns">
           <mat-icon fontIcon="view_column" class="icon"></mat-icon>
         </button>
@@ -76,7 +73,6 @@
       </div>
     </div>
 
-    <!-- Data Rows -->
     @for (row of data; track trackByRow($index, row); let rowIndex = $index) {
       <div
         class="grid-row"
@@ -88,15 +84,15 @@
         (mouseleave)="onRowLeave()"
         (click)="onRowClick(row, $event, rowIndex)"
       >
-        <div class="grid-cell checkbox-cell" (click)="$event.stopPropagation()">
+        <div class="grid-cell checkbox-cell sticky-left" (click)="$event.stopPropagation()">
           <app-checkbox [checked]="isSelected(rowIndex)" (changed)="onToggleRow(rowIndex)" />
         </div>
         @for (col of columns; track col.name) {
           <div class="grid-cell data-cell">
-            <span class="cell-content">{{ formatValue(row[col.name]) }}</span>
+            {{ formatValue(row[col.name]) }}
           </div>
         }
-        <div class="grid-cell actions-cell" (click)="$event.stopPropagation()">
+        <div class="grid-cell actions-cell sticky-right" (click)="$event.stopPropagation()">
           <button class="action-btn" title="View JSON" (click)="onViewJson(row)">
             <mat-icon fontIcon="data_object" class="icon"></mat-icon>
           </button>
