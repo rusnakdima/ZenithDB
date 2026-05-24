@@ -734,3 +734,1235 @@ input[type="checkbox"] {
 .dark input[type="checkbox"] {
   accent-color: var(--accent);
 }
+
+/* ============================================
+   Table Grid - Scrollable with sticky header & columns
+   ============================================ */
+.table-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+}
+
+/* Scroll wrapper - SINGLE horizontal scroll container for header and body */
+.table-scroll-wrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+/* Header row - sticky at top, scrolls horizontally with wrapper */
+.grid-header-row {
+  display: grid;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  flex-shrink: 0;
+  min-width: 100%;
+  background: var(--bg-sidebar);
+  border-bottom: 2px solid var(--border-visible);
+}
+
+/* Each Data Row as Grid - full width */
+.grid-row {
+  display: grid;
+  min-width: 100%;
+  border-bottom: 1px solid var(--border-subtle);
+  transition: background-color 0.15s ease;
+}
+
+.grid-row:last-child {
+  border-bottom: none;
+}
+
+.grid-row.zebra {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.grid-row.hovered {
+  background-color: rgba(255, 107, 0, 0.05);
+}
+
+.grid-row.selected {
+  background-color: rgba(255, 107, 0, 0.1);
+}
+
+/* Cell */
+.grid-cell {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-family: var(--font-mono);
+  color: var(--text-main);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: inherit;
+  flex-shrink: 0;
+  min-height: 44px;
+}
+
+/* Cell Types */
+.checkbox-cell {
+  width: 40px;
+  min-width: 40px;
+  max-width: 40px;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.data-cell {
+  min-width: 80px;
+  flex: 1;
+  width: auto;
+}
+
+.actions-cell {
+  width: 56px;
+  min-width: 56px;
+  max-width: 56px;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.header-cell {
+  background: var(--bg-sidebar);
+}
+
+/* Each Data Row as Grid */
+.grid-row {
+  display: grid;
+  min-width: 100%;
+  border-bottom: 1px solid var(--border-subtle);
+  transition: background-color 0.15s ease;
+}
+
+/* Body scroll area - vertical scroll only */
+.grid-body-scroll {
+  flex: 1;
+  overflow-x: hidden;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+/* Each Data Row as Grid - full width */
+.grid-row {
+  display: grid;
+  min-width: 100%;
+  border-bottom: 1px solid var(--border-subtle);
+  transition: background-color 0.15s ease;
+}
+
+/* Header row - no independent overflow */
+.grid-header {
+  display: grid;
+  flex-shrink: 0;
+  min-width: 100%;
+  background: var(--bg-sidebar);
+  border-bottom: 2px solid var(--border-visible);
+}
+
+/* Each Data Row as Grid - full width of table */
+.grid-row {
+  display: grid;
+  min-width: 100%;
+  border-bottom: 1px solid var(--border-subtle);
+  transition: background-color 0.15s ease;
+}
+
+.grid-row:last-child {
+  border-bottom: none;
+}
+
+.grid-row.zebra {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.grid-row.hovered {
+  background-color: rgba(255, 107, 0, 0.05);
+}
+
+.grid-row.selected {
+  background-color: rgba(255, 107, 0, 0.1);
+}
+
+/* Grid Cell */
+.grid-cell {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-family: var(--font-mono);
+  color: var(--text-main);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: inherit;
+  flex-shrink: 0;
+  min-height: 44px;
+}
+
+/* Cell Types */
+.checkbox-cell {
+  width: 40px;
+  min-width: 40px;
+  max-width: 40px;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.data-cell {
+  min-width: 80px;
+  flex: 1;
+  width: auto;
+}
+
+.actions-cell {
+  width: 56px;
+  min-width: 56px;
+  max-width: 56px;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Cell Content */
+.cell-content {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Header Cell Content */
+.th-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+  flex: 1;
+}
+
+/* Resize Handle */
+.resize-handle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 4px;
+  cursor: col-resize;
+  background: transparent;
+  transition: background 0.15s ease;
+}
+
+.resize-handle:hover {
+  background: var(--accent);
+}
+
+/* Menu Button */
+.menu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.menu-btn:hover {
+  background: var(--bg-elevated);
+  color: var(--accent);
+}
+
+.menu-btn .icon {
+  width: 18px;
+  height: 18px;
+  font-size: 18px;
+}
+
+/* Action Button */
+.action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.action-btn:hover {
+  background: rgba(255, 107, 0, 0.15);
+  color: var(--accent);
+}
+
+.action-btn .icon {
+  width: 16px;
+  height: 16px;
+  font-size: 16px;
+}
+
+/* Column Dropdown */
+.column-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 1000;
+  min-width: 200px;
+  margin-top: 4px;
+  padding: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-visible);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.column-dropdown-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 8px;
+  padding: 0 8px;
+}
+
+.column-dropdown-actions {
+  display: flex;
+  gap: 12px;
+  padding: 0 8px 8px;
+  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: 8px;
+}
+
+.column-dropdown-actions button {
+  font-size: 11px;
+  color: var(--text-dim);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.column-dropdown-actions button:hover {
+  color: var(--accent);
+  background: var(--bg-elevated);
+}
+
+.column-dropdown-list {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.column-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.column-dropdown-item:hover {
+  background: var(--bg-elevated);
+}
+
+.column-dropdown-item .col-name {
+  flex: 1;
+  font-size: 13px;
+  font-family: var(--font-mono);
+  color: var(--text-main);
+}
+
+.column-dropdown-item .col-type {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+/* Column Drag Preview */
+.column-drag-preview {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-card);
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  opacity: 0.9;
+}
+
+.preview-header-cell {
+  padding: 8px 12px;
+  background: var(--bg-sidebar);
+  border-bottom: 1px solid var(--border-visible);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.preview-data-cell {
+  padding: 6px 12px;
+  font-size: 12px;
+  color: var(--text-dim);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.preview-data-cell:last-child {
+  border-bottom: none;
+}
+
+.preview-cell-content {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Column Drag Placeholder */
+.column-drag-placeholder {
+  width: 100px;
+  height: 40px;
+  background: var(--bg-elevated);
+  border: 2px dashed var(--accent);
+  border-radius: 4px;
+  opacity: 0.5;
+}
+
+/* ============================================
+   DEPRECATED styles - kept for compatibility
+   ============================================ */
+
+.column-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 1000;
+  min-width: 200px;
+  margin-top: 4px;
+  padding: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-visible);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.column-dropdown-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 8px;
+  padding: 0 8px;
+}
+
+.column-dropdown-actions {
+  display: flex;
+  gap: 12px;
+  padding: 0 8px 8px;
+  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: 8px;
+}
+
+.column-dropdown-actions button {
+  font-size: 11px;
+  color: var(--text-dim);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.column-dropdown-actions button:hover {
+  color: var(--accent);
+  background: var(--bg-elevated);
+}
+
+.column-dropdown-list {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.column-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.column-dropdown-item:hover {
+  background: var(--bg-elevated);
+}
+
+.column-dropdown-item .col-name {
+  flex: 1;
+  font-size: 13px;
+  font-family: var(--font-mono);
+  color: var(--text-main);
+}
+
+.column-dropdown-item .col-type {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.column-drag-preview {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-card);
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  opacity: 0.9;
+}
+
+.preview-header-cell {
+  padding: 8px 12px;
+  background: var(--bg-sidebar);
+  border-bottom: 1px solid var(--border-visible);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.preview-data-cell {
+  padding: 6px 12px;
+  font-size: 12px;
+  color: var(--text-dim);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.preview-data-cell:last-child {
+  border-bottom: none;
+}
+
+.preview-cell-content {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.column-drag-placeholder {
+  width: 100px;
+  height: 40px;
+  background: var(--bg-elevated);
+  border: 2px dashed var(--accent);
+  border-radius: 4px;
+  opacity: 0.5;
+}
+
+/* ============================================
+   DEPRECATED styles - kept for compatibility
+   ============================================ */
+
+/* Column Dropdown */
+.column-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 1000;
+  min-width: 200px;
+  margin-top: 4px;
+  padding: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-visible);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.column-dropdown-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 8px;
+  padding: 0 8px;
+}
+
+.column-dropdown-actions {
+  display: flex;
+  gap: 12px;
+  padding: 0 8px 8px;
+  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: 8px;
+}
+
+.column-dropdown-actions button {
+  font-size: 11px;
+  color: var(--text-dim);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.column-dropdown-actions button:hover {
+  color: var(--accent);
+  background: var(--bg-elevated);
+}
+
+.column-dropdown-list {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.column-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.column-dropdown-item:hover {
+  background: var(--bg-elevated);
+}
+
+.column-dropdown-item .col-name {
+  flex: 1;
+  font-size: 13px;
+  font-family: var(--font-mono);
+  color: var(--text-main);
+}
+
+.column-dropdown-item .col-type {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+/* Column Drag Preview */
+.column-drag-preview {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-card);
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  opacity: 0.9;
+}
+
+.preview-header-cell {
+  padding: 8px 12px;
+  background: var(--bg-sidebar);
+  border-bottom: 1px solid var(--border-visible);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.preview-data-cell {
+  padding: 6px 12px;
+  font-size: 12px;
+  color: var(--text-dim);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.preview-data-cell:last-child {
+  border-bottom: none;
+}
+
+.preview-cell-content {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Column Drag Placeholder */
+.column-drag-placeholder {
+  width: 100px;
+  height: 40px;
+  background: var(--bg-elevated);
+  border: 2px dashed var(--accent);
+  border-radius: 4px;
+  opacity: 0.5;
+}
+
+/* Column Dropdown */
+.column-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 1000;
+  min-width: 200px;
+  margin-top: 4px;
+  padding: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-visible);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.column-dropdown-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 8px;
+  padding: 0 8px;
+}
+
+.column-dropdown-actions {
+  display: flex;
+  gap: 12px;
+  padding: 0 8px 8px;
+  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: 8px;
+}
+
+.column-dropdown-actions button {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.column-dropdown-actions button:hover {
+  text-decoration: underline;
+}
+
+.column-dropdown-list {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.column-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.column-dropdown-item:hover {
+  background: var(--bg-elevated);
+}
+
+.column-dropdown-item .col-name {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text-main);
+}
+
+.column-dropdown-item .col-type {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+/* Column Drag Preview */
+.column-drag-preview {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-card);
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  opacity: 0.9;
+}
+
+.preview-header-cell {
+  padding: 8px 12px;
+  background: var(--bg-sidebar);
+  border-bottom: 1px solid var(--border-visible);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.preview-data-cell {
+  padding: 6px 12px;
+  font-size: 12px;
+  color: var(--text-dim);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.preview-data-cell:last-child {
+  border-bottom: none;
+}
+
+.preview-cell-content {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Column Drag Placeholder */
+.column-drag-placeholder {
+  width: 100px;
+  height: 40px;
+  background: var(--bg-elevated);
+  border: 2px dashed var(--accent);
+  border-radius: 4px;
+  opacity: 0.5;
+}
+
+/* DEPRECATED styles - kept for compatibility but superseded by .data-grid styles above */
+
+/* Header Cells - DEPRECATED, use .grid-cell instead */
+.data-table th {
+  flex-shrink: 0;
+  padding: 10px 12px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  position: relative;
+  background: var(--bg-sidebar);
+}
+
+/* DEPRECATED - use .checkbox-cell instead */
+.checkbox-col {
+  width: 40px;
+  min-width: 40px;
+  text-align: center;
+  padding: 8px;
+  position: sticky;
+  left: 0;
+  z-index: 10;
+  background: var(--bg-elevated);
+  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+}
+
+/* DEPRECATED - use .actions-cell instead */
+.actions-col {
+  width: 56px;
+  min-width: 56px;
+  text-align: center;
+  padding: 8px;
+  position: sticky;
+  right: 0;
+  z-index: 15;
+  background: var(--bg-elevated);
+  box-shadow: -2px 0 4px rgba(0, 0, 0, 0.1);
+}
+
+/* DEPRECATED */
+thead th.actions-col {
+  z-index: 25;
+}
+
+/* DEPRECATED - use .data-cell instead */
+.data-col {
+  min-width: 0;
+  width: 150px;
+}
+
+/* DEPRECATED - table body styles */
+.data-table td {
+  flex-shrink: 0;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-family: var(--font-mono);
+  color: var(--text-main);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: inherit;
+}
+
+/* DEPRECATED */
+tbody td.checkbox-col,
+tbody td.sticky-left {
+  position: sticky;
+  left: 0;
+  z-index: 11;
+  background: var(--bg-card);
+}
+
+/* DEPRECATED */
+tbody td.actions-col,
+tbody td.sticky-right {
+  position: sticky;
+  right: 0;
+  z-index: 16;
+  background: var(--bg-elevated);
+}
+
+/* DEPRECATED */
+tbody tr.zebra {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+/* DEPRECATED */
+tbody tr.zebra td.checkbox-col,
+tbody tr.zebra td.actions-col {
+  background: var(--bg-elevated);
+}
+
+/* DEPRECATED */
+tbody tr.hovered {
+  background-color: rgba(255, 107, 0, 0.05);
+}
+
+/* DEPRECATED */
+tbody tr.hovered td.checkbox-col,
+tbody tr.hovered td.actions-col {
+  background: var(--bg-elevated);
+}
+
+/* DEPRECATED */
+tbody tr.selected {
+  background-color: rgba(255, 107, 0, 0.1);
+  border-left: 2px solid var(--accent);
+}
+
+/* DEPRECATED */
+tbody tr.selected td.checkbox-col,
+tbody tr.selected td.actions-col {
+  background: rgba(255, 107, 0, 0.15);
+}
+
+/* DEPRECATED */
+tbody tr.selected td:first-child {
+  padding-left: 10px;
+}
+
+/* DEPRECATED */
+thead tr th.actions-col {
+  background: var(--bg-elevated);
+  box-shadow: -2px 0 4px rgba(0, 0, 0, 0.1);
+}
+
+.menu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.menu-btn:hover {
+  background: var(--bg-elevated);
+  color: var(--accent);
+}
+
+.menu-btn .icon {
+  width: 18px;
+  height: 18px;
+  font-size: 18px;
+}
+
+.th-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+}
+
+.resize-handle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 4px;
+  cursor: col-resize;
+  background: transparent;
+  transition: background 0.15s ease;
+}
+
+.resize-handle:hover {
+  background: var(--accent);
+}
+
+/* Data Cells */
+.data-table td {
+  flex-shrink: 0;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-family: var(--font-mono);
+  color: var(--text-main);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: inherit;
+}
+
+.data-col {
+  min-width: 0;
+  width: 150px;
+}
+
+/* Body checkbox col sticky */
+tbody td.checkbox-col,
+tbody td.sticky-left {
+  position: sticky;
+  left: 0;
+  z-index: 11;
+  background: var(--bg-card);
+}
+
+/* Body actions col sticky */
+tbody td.actions-col,
+tbody td.sticky-right {
+  position: sticky;
+  right: 0;
+  z-index: 16;
+  background: var(--bg-elevated);
+}
+
+/* Row States */
+tbody tr.zebra {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+tbody tr.zebra td.checkbox-col,
+tbody tr.zebra td.actions-col {
+  background: var(--bg-elevated);
+}
+
+tbody tr.hovered {
+  background-color: rgba(255, 107, 0, 0.05);
+}
+
+tbody tr.hovered td.checkbox-col,
+tbody tr.hovered td.actions-col {
+  background: var(--bg-elevated);
+}
+
+tbody tr.selected {
+  background-color: rgba(255, 107, 0, 0.1);
+  border-left: 2px solid var(--accent);
+}
+
+tbody tr.selected td.checkbox-col,
+tbody tr.selected td.actions-col {
+  background: rgba(255, 107, 0, 0.15);
+}
+
+tbody tr.selected td:first-child {
+  padding-left: 10px;
+}
+
+/* Theader Actions - Fixed Background */
+thead tr th.actions-col {
+  background: var(--bg-elevated);
+  box-shadow: -2px 0 4px rgba(0, 0, 0, 0.1);
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.action-btn:hover {
+  background: var(--bg-card);
+  color: #3b82f6;
+}
+
+.action-btn .icon {
+  width: 18px;
+  height: 18px;
+  font-size: 18px;
+}
+
+/* Cell Content */
+.cell-content {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Column Drag Preview */
+.column-drag-preview {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-card);
+  border: 1px solid var(--border-visible);
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  min-width: 100px;
+  max-width: 300px;
+}
+
+.column-drag-placeholder {
+  width: 100%;
+  min-height: 40px;
+  background: var(--accent-muted);
+  border: 2px dashed var(--accent);
+  border-radius: 8px;
+}
+
+.preview-header-cell {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border-visible);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+}
+
+.preview-col-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.preview-data-cell {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 13px;
+  font-family: var(--font-mono);
+  color: var(--text-main);
+  min-height: 36px;
+}
+
+.preview-data-cell:last-child {
+  border-bottom: none;
+}
+
+.preview-cell-content {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Column Drag Preview */
+.column-drag-preview {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-card);
+  border: 1px solid var(--border-visible);
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  min-width: 100px;
+  max-width: 300px;
+}
+
+.column-drag-placeholder {
+  width: 100%;
+  min-height: 40px;
+  background: var(--accent-muted);
+  border: 2px dashed var(--accent);
+  border-radius: 8px;
+}
+
+.preview-header-cell {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border-visible);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+}
+
+.preview-col-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.preview-data-cell {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 13px;
+  font-family: var(--font-mono);
+  color: var(--text-main);
+  min-height: 36px;
+}
+
+.preview-data-cell:last-child {
+  border-bottom: none;
+}
+
+.preview-cell-content {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Data Table Styles */
+.data-table {
+  font-family: var(--font-mono);
+}
+
+.data-table .data-row {
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.data-table .data-row:hover {
+  background-color: rgba(255, 107, 0, 0.05);
+}
+
+.data-table .data-row.zebra {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.data-table .data-row.selected {
+  background-color: rgba(255, 107, 0, 0.1);
+  border-left: 2px solid var(--accent);
+}
+
+.data-table .data-row.selected td:first-child {
+  padding-left: calc(12px - 2px);
+}
