@@ -1,0 +1,107 @@
+<ng-template cdkDragPlaceholder>
+  <div class="column-drag-placeholder"></div>
+</ng-template>
+
+<ng-template cdkDragPreview>
+  <div class="column-drag-preview" [style.width.px]="previewWidth()">
+    <div class="preview-header-cell">
+      <span class="preview-col-name">{{ draggedColumnName() }}</span>
+    </div>
+    @for (row of previewRows(); track $index) {
+      <div class="preview-data-cell">
+        <span class="preview-cell-content">{{ getCellValue(row, draggedColumnName()) }}</span>
+      </div>
+    }
+  </div>
+</ng-template>
+
+<div class="table-container">
+  <div
+    class="table-scroll-wrapper"
+    cdkDropList
+    cdkDropListOrientation="horizontal"
+    (cdkDropListDropped)="onColumnDrop($event)"
+  >
+    <!-- Header Row -->
+    <div class="grid-header-row" [style.grid-template-columns]="gridTemplateColumns()">
+      <div class="grid-cell checkbox-cell header-cell">
+        <app-checkbox [checked]="allSelected()" (changed)="onToggleSelectAll()" />
+      </div>
+      @for (col of columns; track col.name) {
+        <div
+          class="grid-cell data-cell header-cell"
+          cdkDrag
+          [cdkDragData]="col.name"
+          (cdkDragStarted)="onDragStarted(col.name, columnWidths[col.name])"
+          (cdkDragReleased)="onDragReleased()"
+        >
+          <div class="th-content">
+            <app-sortable-header
+              [column]="col.name"
+              [currentSort]="sortColumn"
+              [direction]="sortColumn === col.name ? sortDirection : 'none'"
+              (sortChange)="onSort($event)"
+            />
+            <app-data-type-badge [dataType]="col.data_type" variant="icon" />
+          </div>
+          <div class="resize-handle" (mousedown)="onColumnResizeStart(col.name, $event)"></div>
+        </div>
+      }
+      <div class="grid-cell actions-cell header-cell" style="position: relative">
+        <button class="menu-btn" (click)="onToggleColumnMenu()" title="Show/Hide columns">
+          <mat-icon fontIcon="view_column" class="icon"></mat-icon>
+        </button>
+        @if (showColumnMenu()) {
+          <div class="column-dropdown" (click)="$event.stopPropagation()">
+            <div class="column-dropdown-title">Visible Columns</div>
+            <div class="column-dropdown-actions">
+              <button (click)="showAllCols()">All</button>
+              <button (click)="hideAllCols()">None</button>
+            </div>
+            <div class="column-dropdown-list">
+              @for (col of columns; track col.name) {
+                <label class="column-dropdown-item">
+                  <app-checkbox
+                    [checked]="visibleColumns().has(col.name)"
+                    [disabled]="col.is_primary_key"
+                    (changed)="toggleColVisibility(col.name)"
+                  />
+                  <span class="col-name">{{ col.name }}</span>
+                  <span class="col-type">{{ col.data_type }}</span>
+                </label>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Data Rows -->
+    @for (row of data; track trackByRow($index, row); let rowIndex = $index) {
+      <div
+        class="grid-row"
+        [style.grid-template-columns]="gridTemplateColumns()"
+        [class.zebra]="rowIndex % 2 === 1"
+        [class.selected]="isSelected(rowIndex)"
+        [class.hovered]="hoveredRowIndex() === rowIndex"
+        (mouseenter)="onRowHover(rowIndex)"
+        (mouseleave)="onRowLeave()"
+        (click)="onRowClick(row, $event, rowIndex)"
+      >
+        <div class="grid-cell checkbox-cell" (click)="$event.stopPropagation()">
+          <app-checkbox [checked]="isSelected(rowIndex)" (changed)="onToggleRow(rowIndex)" />
+        </div>
+        @for (col of columns; track col.name) {
+          <div class="grid-cell data-cell">
+            <span class="cell-content">{{ formatValue(row[col.name]) }}</span>
+          </div>
+        }
+        <div class="grid-cell actions-cell" (click)="$event.stopPropagation()">
+          <button class="action-btn" title="View JSON" (click)="onViewJson(row)">
+            <mat-icon fontIcon="data_object" class="icon"></mat-icon>
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+</div>

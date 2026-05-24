@@ -25,13 +25,22 @@ export class TableBodyComponent {
   @Input() columns: ColumnInfo[] = [];
   @Input() columnWidths: Record<string, number> = {};
   @Input() selectedRows: Set<number> = new Set();
+  @Input() visibleColumnsList: string[] = [];
 
   @Output() rowClick = new EventEmitter<{ row: RowData; event: MouseEvent }>();
   @Output() toggleRow = new EventEmitter<number>();
   @Output() toggleSelectAll = new EventEmitter<void>();
   @Output() viewJson = new EventEmitter<RowData>();
 
+  hoveredRowIndex = signal<number | null>(null);
+
   allSelected = computed(() => this.data.length > 0 && this.selectedRows.size === this.data.length);
+
+  gridTemplateColumns = computed(() => {
+    const widths = this.columnWidths;
+    const cols = this.visibleColumnsList.map((col) => `${widths[col] || 150}px`);
+    return `40px ${cols.join(" ")} 56px`;
+  });
 
   trackByRow(index: number, row: RowData): string {
     return String(row["_id"] || row["id"] || index);
@@ -39,6 +48,14 @@ export class TableBodyComponent {
 
   isSelected(index: number): boolean {
     return this.selectedRows.has(index);
+  }
+
+  onRowHover(rowIndex: number) {
+    this.hoveredRowIndex.set(rowIndex);
+  }
+
+  onRowLeave() {
+    this.hoveredRowIndex.set(null);
   }
 
   isCellModified(rowIndex: number, col: string): boolean {

@@ -1,22 +1,26 @@
-<tbody class="mono">
+<div class="table-body-grid mono" [style.grid-template-columns]="gridTemplateColumns()">
   @for (row of data; track trackByRow($index, row); let rowIndex = $index) {
-    <tr
-      class="data-row group border-b border-[var(--border-subtle)] transition-colors hover:bg-[var(--accent)]/5"
-      [class.bg-[var(--accent)]/10]="isSelected(rowIndex)"
+    <div
+      class="grid-row table-row"
+      [class.zebra]="rowIndex % 2 === 1"
+      [class.selected]="isSelected(rowIndex)"
+      [class.hovered]="hoveredRowIndex() === rowIndex"
+      (mouseenter)="onRowHover(rowIndex)"
+      (mouseleave)="onRowLeave()"
       (click)="onRowClick(row, $event, rowIndex)"
     >
-      <td class="p-3 text-center" (click)="$event.stopPropagation()">
+      <div class="grid-cell checkbox-cell" (click)="$event.stopPropagation()">
         <app-checkbox [checked]="isSelected(rowIndex)" (changed)="onToggleRow(rowIndex)" />
-      </td>
+      </div>
       @for (col of columns; track col.name) {
-        <td
-          class="border-r border-[var(--border-subtle)]/50 p-3 text-sm"
+        <div
+          class="grid-cell border-r border-[var(--border-subtle)]/50"
           [style.width.px]="columnWidths[col.name]"
         >
-          {{ row[col.name] | formatValue }}
-        </td>
+          <span class="cell-content">{{ row[col.name] | formatValue }}</span>
+        </div>
       }
-      <td class="p-3" (click)="$event.stopPropagation()">
+      <div class="grid-cell actions-cell" (click)="$event.stopPropagation()">
         <div class="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
           <button
             class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-[var(--bg-elevated)] hover:text-blue-400"
@@ -26,7 +30,7 @@
             <mat-icon fontIcon="data_object" class="h-6! w-5! text-xl!" />
           </button>
         </div>
-      </td>
-    </tr>
+      </div>
+    </div>
   }
-</tbody>
+</div>

@@ -11,112 +11,40 @@
     </div>
   }
 
-  <div class="flex-1 overflow-auto p-6">
-    @if (viewMode === "json") {
-      <div class="json-view-container h-full p-6">
-        @if (loading()) {
-          <div class="flex h-full items-center justify-center">
-            <div
-              class="h-8 w-8 animate-spin rounded-full border-2 border-[var(--accent)] border-t-transparent"
-            ></div>
-          </div>
-        } @else if (data().length === 0) {
-          <div class="flex h-full flex-col items-center justify-center text-[var(--text-dim)]">
-            <mat-icon fontIcon="inbox" class="mb-4 h-12! w-12! text-xl! opacity-50" />
-            <p class="text-lg font-bold">No documents found</p>
-            <p class="mt-1 text-sm text-[var(--text-muted)]">This collection is empty</p>
-          </div>
-        } @else {
-          <div class="json-content space-y-4">
-            @for (row of data(); track trackByRow($index, row); let docIndex = $index) {
-              <div class="glass-card overflow-hidden">
-                <div
-                  class="flex items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-4 py-3"
-                >
-                  <span class="mono text-sm text-[var(--text-dim)]"
-                    >Document {{ docIndex + 1 }}</span
-                  >
-                  <div class="flex items-center gap-2">
-                    <button
-                      class="flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs text-[var(--text-dim)] transition-all hover:bg-[var(--bg-card)] hover:text-[var(--accent)]"
-                      title="Copy JSON"
-                      (click)="copyRowJson(row)"
-                    >
-                      <mat-icon fontIcon="content_copy" class="h-6! w-5! text-xl!" />
-                    </button>
-                    <button
-                      class="flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs text-[var(--text-dim)] transition-all hover:bg-[var(--bg-card)] hover:text-[var(--accent)]"
-                      (click)="viewJson(row)"
-                    >
-                      <mat-icon fontIcon="visibility" class="h-6! w-5! text-xl!" />
-                      Inspect
-                    </button>
-                  </div>
-                </div>
-                <div class="json-body p-4">
-                  @for (line of formatJsonLines(row); track $index; let lineIndex = $index) {
-                    <div class="json-line mono flex text-sm leading-relaxed">
-                      <span
-                        class="json-line-num w-10 flex-shrink-0 pr-4 text-right text-xs text-[var(--text-muted)] select-none"
-                        >{{ lineIndex + 1 }}</span
-                      >
-                      <span class="json-line-content" [innerHTML]="highlightJsonLine(line)"></span>
-                    </div>
-                  }
-                </div>
-              </div>
-            }
-          </div>
-        }
-      </div>
-    } @else {
-      <div class="table-container w-full">
-        @if (loading()) {
-          <div class="flex h-full items-center justify-center">
-            <div
-              class="h-8 w-8 animate-spin rounded-full border-2 border-[var(--accent)] border-t-transparent"
-            ></div>
-          </div>
-        } @else if (data().length === 0) {
-          <div class="flex h-full flex-col items-center justify-center text-[var(--text-dim)]">
-            <mat-icon fontIcon="table_chart" class="mb-4 h-12! w-12! text-xl! opacity-50" />
-            <p class="text-lg font-bold">No data in this collection</p>
-            <p class="mt-1 text-sm text-[var(--text-muted)]">Try adjusting your filter</p>
-          </div>
-        } @else {
-          <table class="data-table w-full border-collapse">
-            <app-column-manager
-              [columns]="visibleColumnsFiltered()"
-              [visibleColumnsList]="visibleColumnsList()"
-              [columnOrder]="columnOrder()"
-              [columnWidths]="columnWidths()"
-              [sortColumn]="sortColumn()"
-              [sortDirection]="sortDirection()"
-              [allSelected]="allSelected()"
-              (sortChange)="onSort($event)"
-              (columnDrop)="onColumnDrop($event)"
-              (columnResizeStart)="onColumnResizeStart($event.col, $event.event)"
-              (toggleSelectAll)="toggleSelectAll()"
-              (showAllColumns)="showAllColumns()"
-              (toggleColumnVisibility)="toggleColumnVisibility($event)"
-              (columnsOrderChange)="columnsOrderChange.emit($event)"
-              (toggleColumnMenu)="toggleColumnMenu()"
-            />
-
-            <app-table-body
-              [data]="data()"
-              [columns]="visibleColumnsFiltered()"
-              [columnWidths]="columnWidths()"
-              [selectedRows]="selectedRows()"
-              (rowClick)="onRowClick($event.row, $event.event)"
-              (toggleRow)="toggleRow($event)"
-              (toggleSelectAll)="toggleSelectAll()"
-              (viewJson)="viewJson($event)"
-            />
-          </table>
-        }
-      </div>
-    }
+  <div class="flex-1 overflow-hidden">
+    <div class="table-wrapper h-full">
+      @if (loading()) {
+        <div class="flex h-64 items-center justify-center">
+          <div
+            class="h-8 w-8 animate-spin rounded-full border-2 border-[var(--accent)] border-t-transparent"
+          ></div>
+        </div>
+      } @else if (data().length === 0) {
+        <div class="flex h-64 flex-col items-center justify-center text-[var(--text-dim)]">
+          <mat-icon fontIcon="table_chart" class="mb-4 h-12! w-12! text-xl! opacity-50" />
+          <p class="text-lg font-bold">No data in this collection</p>
+          <p class="mt-1 text-sm text-[var(--text-muted)]">Try adjusting your filter</p>
+        </div>
+      } @else {
+        <app-data-table-grid
+          [data]="data()"
+          [columns]="visibleColumnsFiltered()"
+          [columnWidths]="columnWidths()"
+          [columnOrder]="columnOrder()"
+          [sortColumn]="sortColumn()"
+          [sortDirection]="sortDirection()"
+          [selectedRows]="selectedRows()"
+          [previewData]="data()"
+          (sortChange)="onSort($event)"
+          (columnDrop)="onColumnDrop($event)"
+          (columnResizeStart)="onColumnResizeStart($event.col, $event.event)"
+          (toggleSelectAll)="toggleSelectAll()"
+          (toggleRow)="toggleRow($event)"
+          (rowClick)="onRowClick($event.row, $event.event)"
+          (viewJson)="viewJson($event)"
+        />
+      }
+    </div>
   </div>
 
   <app-pagination

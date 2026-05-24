@@ -26,8 +26,8 @@ import { ColumnInfo, RowData, FilterExpression } from "@shared/models/connection
 import { formatJsonLines, highlightJsonLine, safeJsonParse } from "@shared/utils/json.utils";
 import { PaginationComponent } from "@shared/components/pagination/pagination.component";
 import { withErrorHandling } from "@shared/utils/error-handler.utils";
-import { TableBodyComponent } from "@app/features/data/table-body/table-body.component";
-import { ColumnManagerComponent } from "@app/features/data/column-manager/column-manager.component";
+import { DataTableGridComponent } from "@app/features/data/data-table-grid/data-table-grid.component";
+import { CheckboxComponent } from "@shared/components/checkbox/checkbox.component";
 import {
   ExportDialogComponent,
   ExportFormat,
@@ -41,8 +41,8 @@ import {
     FormsModule,
     MatIconModule,
     PaginationComponent,
-    TableBodyComponent,
-    ColumnManagerComponent,
+    DataTableGridComponent,
+    CheckboxComponent,
     ExportDialogComponent,
   ],
   templateUrl: "./data-grid.component.html",
@@ -154,9 +154,22 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
     return all.filter((c) => visible.has(c));
   });
 
+  gridColumnsStyle = computed(() => {
+    const widths = this.columnWidths();
+    const cols = this.visibleColumnsList().map((col) => `${widths[col] || 150}px`);
+    return `40px ${cols.join(" ")} 56px`;
+  });
+
   visibleColumnsFiltered = computed(() => {
-    const visible = this.visibleColumnsList();
-    return this.columns.filter((c) => visible.includes(c.name));
+    const order = this.columnOrder();
+    const visible = this.visibleColumns();
+    if (order.length > 0) {
+      return order
+        .filter((c) => visible.has(c))
+        .map((name) => this.columns.find((c) => c.name === name))
+        .filter(Boolean) as ColumnInfo[];
+    }
+    return this.columns.filter((c) => visible.has(c.name));
   });
 
   async ngOnInit() {
@@ -434,6 +447,11 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
   showAllColumns() {
     const visible = new Set<string>();
     this.columns.forEach((c) => visible.add(c.name));
+    this.visibleColumns.set(visible);
+  }
+
+  hideAllColumns() {
+    const visible = new Set<string>();
     this.visibleColumns.set(visible);
   }
 
