@@ -20,7 +20,7 @@ import { ConnectionStateService } from "@shared/services/connection-state.servic
 import { ToastService } from "@services/toast.service";
 import { ClipboardService } from "@shared/services/clipboard.service";
 import { ExportService } from "@shared/services/export.service";
-import { PersistentStorageService, SplitMode } from "@shared/services/persistent-storage.service";
+import { PersistentStorageService } from "@shared/services/persistent-storage.service";
 import { DiagnosticLoggerService } from "@shared/services/diagnostic-logger.service";
 import {
   CollectionMeta,
@@ -76,6 +76,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   private diagLogger = inject(DiagnosticLoggerService);
   private queryParamsSub: Subscription | null = null;
   private routeSub: Subscription | null = null;
+  private routeParamSub: Subscription | null = null;
 
   activeTabs = signal<Tab[]>([]);
   activeCollection = signal<string>("");
@@ -92,11 +93,11 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   loading = signal(false);
 
   viewTab = signal<ViewTab>("table");
-  splitMode = signal<SplitMode>("none");
   availableColumns = signal<string[]>([]);
   availableColumnsMeta = signal<ColumnInfo[]>([]);
   selectedColumns = signal<string[]>([]);
   showCollectionSelector = signal(false);
+  showExportMenu = signal(false);
   fullJsonData = signal<RowData[]>([]);
   jsonDocumentsMap = signal<
     Map<number, { highlightedLines: { num: number; html: string }[]; json: string }>
@@ -108,6 +109,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   jsonOffset = signal(0);
   jsonHasMore = signal(true);
   jsonLoadingMore = signal(false);
+  treeCollapsed = signal(false);
 
   reloadTrigger = this.reloadCounter.asReadonly();
 
@@ -116,11 +118,6 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   private collectionsLoadInitiated = false;
 
   async ngOnInit() {
-    const savedSplitMode = this.persistentStorage.getExplorerSplitMode();
-    if (savedSplitMode) {
-      this.splitMode.set(savedSplitMode);
-    }
-
     this.routeSub = this.router.events
       .pipe(filter((e) => e instanceof NavigationEnd))
       .subscribe((e: any) => {
@@ -144,11 +141,20 @@ export class ExplorerComponent implements OnInit, OnDestroy {
         }
       }
     });
+
+    this.route.paramMap.subscribe(async (params) => {
+      const collection = params.get("collection");
+      if (collection && collection !== this.activeCollection()) {
+        this.pendingCollectionSelection = collection;
+        this.addTab(collection);
+      }
+    });
   }
 
   ngOnDestroy() {
     this.queryParamsSub?.unsubscribe();
     this.routeSub?.unsubscribe();
+    this.routeParamSub?.unsubscribe();
     this.fullJsonData.set([]);
     if (this.worker) {
       this.worker.terminate();
@@ -308,10 +314,15 @@ export class ExplorerComponent implements OnInit, OnDestroy {
     this.jsonLoadProgress.set(0);
     const BATCH_SIZE = 30;
     try {
+      let filterObj: FilterExpression | undefined;
+      if (this.filterText()) {
+        filterObj = safeJsonParse(this.filterText(), undefined);
+      }
       const t0 = Date.now();
       const result = await this.store.queryData(this.activeCollection(), {
         skip: 0,
         limit: 50,
+        filter: filterObj,
       });
       const allData = result.data as RowData[];
       const totalRows = allData.length;
@@ -404,10 +415,15 @@ export class ExplorerComponent implements OnInit, OnDestroy {
     if (this.jsonLoadingMore() || !this.jsonHasMore()) return;
     this.jsonLoadingMore.set(true);
     try {
+      let filterObj: FilterExpression | undefined;
+      if (this.filterText()) {
+        filterObj = safeJsonParse(this.filterText(), undefined);
+      }
       const t0 = Date.now();
       const result = await this.store.queryData(this.activeCollection(), {
         skip: this.jsonOffset(),
         limit: 50,
+        filter: filterObj,
       });
       this.diagLogger.logDataLoad(
         "explorer-loadMoreJsonData",
@@ -471,20 +487,16 @@ export class ExplorerComponent implements OnInit, OnDestroy {
     }
   }
 
-  toggleSplitMode() {
-    const modes: SplitMode[] = ["none", "horizontal", "vertical"];
-    const current = this.splitMode();
-    const idx = modes.indexOf(current);
-    this.splitMode.set(modes[(idx + 1) % modes.length]);
-  }
-
-  setSplitMode(mode: SplitMode) {
-    this.splitMode.set(mode);
-    this.persistentStorage.setExplorerSplitMode(mode);
+  toggleExportMenu() {
+    this.showExportMenu.update((v) => !v);
   }
 
   toggleCollectionSelector() {
     this.showCollectionSelector.update((v) => !v);
+  }
+
+  toggleTreeCollapse() {
+    this.treeCollapsed.update((v) => !v);
   }
 
   openCompareTables() {
@@ -508,6 +520,9 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   onFilterApply() {
     this.reloadCounter.update((c) => c + 1);
     this.page.set(0);
+    if (this.viewTab() === "json") {
+      this.loadFullJsonData();
+    }
   }
 
   onFilterClear() {
