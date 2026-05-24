@@ -260,21 +260,39 @@ export class SchemaTreeComponent implements OnInit, OnDestroy {
 
   viewData(collection: TreeNode) {
     const connId = this.connectionState.activeConnectionId();
-    const dbName = this.connectionState.activeDatabaseName();
+    let dbName = this.connectionState.activeDatabaseName();
+    if (!dbName) {
+      const segments = this.router.url.split("/").filter((s) => s);
+      const dbIndex = segments.indexOf("explorer");
+      if (dbIndex > 0) dbName = segments[dbIndex - 1];
+    }
     if (connId && dbName) {
-      this.router.navigate(["/connections", connId, dbName, "explorer"], {
-        queryParams: { collection: collection.name },
-      });
+      this.router.navigate([
+        "/connections",
+        connId,
+        dbName,
+        "explorer",
+        "collection",
+        collection.name,
+      ]);
     }
   }
 
   viewDetails(collection: TreeNode) {
     const connId = this.connectionState.activeConnectionId();
-    const dbName = this.connectionState.activeDatabaseName();
+    let dbName = this.connectionState.activeDatabaseName();
+    if (!dbName) {
+      const segments = this.router.url.split("/").filter((s) => s);
+      const dbIndex = segments.indexOf("explorer");
+      if (dbIndex > 0) dbName = segments[dbIndex - 1];
+    }
     if (connId && dbName) {
-      this.router.navigate(["/connections", connId, dbName, "explorer"], {
-        queryParams: { collection: collection.name, view: "schema" },
-      });
+      this.router.navigate(
+        ["/connections", connId, dbName, "explorer", "collection", collection.name],
+        {
+          queryParams: { view: "schema" },
+        }
+      );
     }
   }
 

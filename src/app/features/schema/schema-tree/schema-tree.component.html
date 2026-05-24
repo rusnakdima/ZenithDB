@@ -106,6 +106,14 @@
               ></mat-icon>
               <span class="flex-1 truncate text-sm">{{ col.name }}</span>
               <span class="text-xs text-[var(--text-dim)]">{{ col.count || 0 }}</span>
+              <button
+                type="button"
+                class="pointer-events-auto min-w-[24px] rounded p-1 transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--accent)]"
+                (click)="viewData(col); $event.stopPropagation()"
+                title="Browse Data"
+              >
+                <mat-icon fontIcon="open_in_new" class="h-4! w-4! text-sm!"></mat-icon>
+              </button>
               <mat-icon
                 fontIcon="chevron_right"
                 class="h-6! w-5! flex-shrink-0 text-xl! text-[var(--text-dim)] transition-transform duration-200"
@@ -151,29 +159,6 @@
                   Loading fields...
                 </div>
               }
-
-              <button
-                type="button"
-                class="flex items-center gap-2 rounded px-3 py-1.5 text-sm text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--text-main)]"
-                (click)="viewData(col); $event.stopPropagation()"
-              >
-                <mat-icon
-                  fontIcon="table_chart"
-                  class="h-6! w-5! flex-shrink-0 text-xl! text-[var(--text-muted)]"
-                ></mat-icon>
-                Browse Data
-              </button>
-              <button
-                type="button"
-                class="flex items-center gap-2 rounded px-3 py-1.5 text-sm text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--text-main)]"
-                (click)="viewDetails(col); $event.stopPropagation()"
-              >
-                <mat-icon
-                  fontIcon="info"
-                  class="h-6! w-5! flex-shrink-0 text-xl! text-[var(--text-muted)]"
-                ></mat-icon>
-                Details
-              </button>
             </div>
           }
         </div>
