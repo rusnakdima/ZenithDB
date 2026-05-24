@@ -54,23 +54,16 @@
 }
 
 .checkmark {
+  display: none;
   width: 12px;
   height: 10px;
   color: white;
-  opacity: 0;
   transform: scale(0.5);
   transition: all 0.15s ease;
 }
 
-.custom-checkbox.checkbox-accent input:checked + .checkbox-box .checkmark {
-  color: white;
-}
-
-.custom-checkbox.checkbox-gray input:checked + .checkbox-box .checkmark {
-  color: var(--bg-deep);
-}
-
 .custom-checkbox input:checked + .checkbox-box .checkmark {
+  display: block;
   opacity: 1;
   transform: scale(1);
 }

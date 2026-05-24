@@ -10,6 +10,9 @@ import {
   OnDestroy,
   SimpleChanges,
   HostListener,
+  ViewChild,
+  ElementRef,
+  AfterViewInit,
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
@@ -24,12 +27,14 @@ import { safeJsonParse } from "@shared/utils/json.utils";
   imports: [FormsModule, MatIconModule, CheckboxComponent],
   templateUrl: "./filter-bar.component.html",
 })
-export class FilterBarComponent implements OnInit, OnChanges, OnDestroy {
+export class FilterBarComponent implements OnInit, OnChanges, OnDestroy, AfterViewInit {
   private localStorage = new PersistentStorageService();
   @Input() filter = "";
   @Input() viewMode: "grid" | "json" = "grid";
   @Input() availableColumns: { name: string; data_type: string }[] = [];
   @Input() disabledColumns: string[] = [];
+
+  @ViewChild("fieldDropdownList") fieldDropdownList!: ElementRef<HTMLDivElement>;
 
   @Output() filterChange = new EventEmitter<string>();
   @Output() apply = new EventEmitter<void>();
@@ -51,6 +56,9 @@ export class FilterBarComponent implements OnInit, OnChanges, OnDestroy {
   showAutocomplete = signal(false);
   autocompleteFiltered = signal<string[]>([]);
   selectedAutocompleteIndex = signal(-1);
+  showFieldDropdown = signal(false);
+  fieldDropdownIndex = signal(-1);
+  fieldFilterText = signal("");
   private readonly MAX_HISTORY = 10;
   private readonly FILTER_DEBOUNCE_MS = 300;
   private filterDebounceTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -79,6 +87,8 @@ export class FilterBarComponent implements OnInit, OnChanges, OnDestroy {
     this.loadHistory();
     this.localFilter = this.filter;
   }
+
+  ngAfterViewInit() {}
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes["availableColumns"] && this.availableColumns.length > 0) {
@@ -110,6 +120,8 @@ export class FilterBarComponent implements OnInit, OnChanges, OnDestroy {
   onFilterInput(value: string) {
     this.localFilter = value;
     this.validateFilter(value);
+    this.updateFieldDropdown(value);
+    console.log(`[Filter Input] Value: "${value}"`);
 
     if (this.autocompleteTimeout) {
       clearTimeout(this.autocompleteTimeout);
@@ -143,10 +155,22 @@ export class FilterBarComponent implements OnInit, OnChanges, OnDestroy {
         .slice(0, 10)
         .map((col) => `${col.name} (${col.data_type})`);
 
+      console.log(
+        `[Filter Autocomplete] Input: "${lastPart}" | Matched ${suggestions.length} fields:`,
+        suggestions
+      );
       this.autocompleteFiltered.set(suggestions);
       this.showAutocomplete.set(suggestions.length > 0);
     } else {
       this.showAutocomplete.set(false);
+    }
+  }
+
+  onFilterKeydown(event: KeyboardEvent): void {
+    if (this.showFieldDropdown()) {
+      this.onFieldDropdownKeydown(event);
+    } else {
+      this.onAutocompleteKeydown(event);
     }
   }
 
@@ -171,7 +195,136 @@ export class FilterBarComponent implements OnInit, OnChanges, OnDestroy {
     }
   }
 
+  updateFieldDropdown(value: string): void {
+    const lastBraceIndex = value.lastIndexOf("{");
+    if (lastBraceIndex === -1) {
+      this.showFieldDropdown.set(false);
+      return;
+    }
+
+    const afterBrace = value.substring(lastBraceIndex + 1);
+    const hasCloseBrace = afterBrace.includes("}");
+    if (hasCloseBrace) {
+      this.showFieldDropdown.set(false);
+      return;
+    }
+
+    this.fieldFilterText.set(afterBrace);
+    const searchText = afterBrace.toLowerCase();
+    const suggestions = this.availableColumns
+      .filter((col) => col.name.toLowerCase().includes(searchText))
+      .slice(0, 15)
+      .map((col) => col.name);
+
+    console.log(
+      `[Filter Field Dropdown] Input: "${afterBrace}" | Matched ${suggestions.length} fields:`,
+      suggestions
+    );
+
+    if (suggestions.length === 0) {
+      this.showFieldDropdown.set(false);
+      return;
+    }
+
+    this.showFieldDropdown.set(true);
+    this.fieldDropdownIndex.set(-1);
+    const currentFilter = this.fieldFilterText();
+    if (
+      currentFilter &&
+      suggestions.length === 1 &&
+      suggestions[0].toLowerCase() === currentFilter.toLowerCase()
+    ) {
+      this.fieldDropdownIndex.set(0);
+    }
+  }
+
+  onFieldDropdownKeydown(event: KeyboardEvent): void {
+    if (!this.showFieldDropdown()) return;
+
+    const suggestions = this.getFieldSuggestions();
+    const currentIndex = this.fieldDropdownIndex();
+    const lastIndex = suggestions.length - 1;
+
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      event.stopPropagation();
+      this.fieldDropdownIndex.update((i) => (i >= lastIndex ? 0 : i + 1));
+      this.scrollActiveItemIntoView();
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      event.stopPropagation();
+      this.fieldDropdownIndex.update((i) => (i <= 0 ? lastIndex : i - 1));
+      this.scrollActiveItemIntoView();
+    } else if (event.key === "Tab" || event.key === "Enter") {
+      event.preventDefault();
+      event.stopPropagation();
+      const idx = this.fieldDropdownIndex();
+      if (idx >= 0 && idx < suggestions.length) {
+        console.log(
+          `[Filter Field Dropdown] Keyboard select: "${suggestions[idx]}" via ${event.key}`
+        );
+        this.selectField(suggestions[idx]);
+      } else if (suggestions.length === 1) {
+        console.log(
+          `[Filter Field Dropdown] Keyboard select (single): "${suggestions[0]}" via ${event.key}`
+        );
+        this.selectField(suggestions[0]);
+      }
+    } else if (event.key === "Escape") {
+      event.stopPropagation();
+      this.showFieldDropdown.set(false);
+    }
+  }
+
+  private scrollActiveItemIntoView(): void {
+    if (!this.fieldDropdownList) return;
+    const list = this.fieldDropdownList.nativeElement;
+    const activeIndex = this.fieldDropdownIndex();
+    if (activeIndex < 0) return;
+    const items = list.querySelectorAll("button");
+    if (items.length === 0) return;
+    const activeItem = items[activeIndex] as HTMLElement;
+    if (!activeItem) return;
+
+    const listRect = list.getBoundingClientRect();
+    const itemRect = activeItem.getBoundingClientRect();
+    const isAbove = itemRect.top < listRect.top;
+    const isBelow = itemRect.bottom > listRect.bottom;
+
+    if (isAbove) {
+      activeItem.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else if (isBelow) {
+      activeItem.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
+  }
+
+  getFieldSuggestions(): string[] {
+    const searchText = this.fieldFilterText().toLowerCase();
+    return this.availableColumns
+      .filter((col) => col.name.toLowerCase().includes(searchText))
+      .slice(0, 15)
+      .map((col) => col.name);
+  }
+
+  getFieldType(fieldName: string): string {
+    const col = this.availableColumns.find((c) => c.name === fieldName);
+    return col?.data_type || "any";
+  }
+
+  selectField(fieldName: string): void {
+    const value = this.localFilter;
+    const lastBraceIndex = value.lastIndexOf("{");
+    const beforeBrace = value.substring(0, lastBraceIndex);
+    const fieldType = this.getFieldType(fieldName);
+    console.log(`[Filter Field Select] Selected: "${fieldName}" (${fieldType})`);
+    this.localFilter = beforeBrace + "{" + fieldName + ": ";
+    this.filterChange.emit(this.localFilter);
+    this.showFieldDropdown.set(false);
+    this.fieldDropdownIndex.set(-1);
+  }
+
   selectAutocomplete(field: string): void {
+    console.log(`[Filter Autocomplete] Selected: "${field}"`);
     const value = this.localFilter;
     const lastSpaceIndex = value.lastIndexOf(" ");
     const beforeSpace = lastSpaceIndex >= 0 ? value.substring(0, lastSpaceIndex + 1) : "";
@@ -339,6 +492,7 @@ export class FilterBarComponent implements OnInit, OnChanges, OnDestroy {
       this.showExportMenu.set(false);
       this.showColumnChooser.set(false);
       this.showAutocomplete.set(false);
+      this.showFieldDropdown.set(false);
     }
   }
 }

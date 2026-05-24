@@ -1,7 +1,9 @@
-import { Component, input, output, signal, computed } from "@angular/core";
+import { Component, input, output } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 
 export type CheckboxVariant = "accent" | "gray";
+
+let checkboxIdCounter = 0;
 
 @Component({
   selector: "app-checkbox",
@@ -20,7 +22,7 @@ export class CheckboxComponent {
 
   changed = output<boolean>();
 
-  private uniqueId = `checkbox-${Math.random().toString(36).substring(2, 9)}`;
+  private uniqueId = `checkbox-${++checkboxIdCounter}`;
 
   get inputId(): string {
     return this.id() || this.uniqueId;
