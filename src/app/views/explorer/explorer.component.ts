@@ -36,6 +36,10 @@ import { InspectorDrawerComponent } from "./inspector-drawer/inspector-drawer.co
 import { CollectionTabsComponent } from "./collection-tabs/collection-tabs.component";
 import { ViewSwitcherComponent } from "./view-switcher/view-switcher.component";
 import { PaginationComponent } from "@shared/components/pagination/pagination.component";
+import {
+  ExportDialogComponent,
+  ExportFormat,
+} from "@app/features/data/export-dialog/export-dialog.component";
 import { CompareTablesDialogComponent } from "./compare-tables-dialog/compare-tables-dialog.component";
 import { withErrorHandling } from "@shared/utils/error-handler.utils";
 
@@ -59,6 +63,8 @@ interface Tab {
     CollectionTabsComponent,
     ViewSwitcherComponent,
     CompareTablesDialogComponent,
+    PaginationComponent,
+    ExportDialogComponent,
     FormatBytesPipe,
   ],
   templateUrl: "./explorer.component.html",
@@ -547,7 +553,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
     }
   }
 
-  async onExport(format: "csv" | "json" | "sql") {
+  async onExport(format: ExportFormat) {
     try {
       let filterObj: FilterExpression | undefined;
       if (this.filterText()) {
