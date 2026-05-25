@@ -15,15 +15,25 @@
   </div>
 </ng-template>
 
-<div class="table-container">
-  <div
-    class="table-scroll-container"
-    cdkDropList
-    cdkDropListOrientation="horizontal"
-    (cdkDropListDropped)="onColumnDrop($event)"
-  >
-    <div class="grid-header-row" [style.grid-template-columns]="gridTemplateColumns()">
-      <div class="grid-cell checkbox-cell sticky-left header-cell">
+<div
+  class="table-grid-wrapper"
+  [class.header-mode]="renderMode === 'header-only'"
+  [class.body-mode]="renderMode === 'body-only'"
+  [class.show-scrollbar]="showScrollbar"
+  [style.display]="renderMode === 'body-only' ? 'block' : 'flex'"
+  [style.flexDirection]="renderMode === 'body-only' ? 'unset' : 'column'"
+  [style.height]="renderMode === 'body-only' ? '100%' : 'auto'"
+>
+  @if (renderMode !== "body-only") {
+    <div
+      class="grid-header-row"
+      cdkDropList
+      cdkDropListOrientation="horizontal"
+      [cdkDropListData]="columns"
+      (cdkDropListDropped)="onColumnDrop($event)"
+      [style.grid-template-columns]="gridTemplateColumns()"
+    >
+      <div class="grid-cell checkbox-cell header-cell">
         <app-checkbox [checked]="allSelected()" (changed)="onToggleSelectAll()" />
       </div>
       @for (col of columns; track col.name) {
@@ -41,10 +51,13 @@
             (sortChange)="onSort($event)"
           />
           <app-data-type-badge [dataType]="col.data_type" variant="icon" />
-          <div class="resize-handle" (mousedown)="onColumnResizeStart(col.name, $event)"></div>
+          <div
+            class="resize-handle"
+            (mousedown)="onColumnResizeStart(col.name, $event); $event.stopPropagation()"
+          ></div>
         </div>
       }
-      <div class="grid-cell actions-cell sticky-right header-cell">
+      <div class="grid-cell actions-cell header-cell">
         <button class="menu-btn" (click)="onToggleColumnMenu()" title="Show/Hide columns">
           <mat-icon fontIcon="view_column" class="icon"></mat-icon>
         </button>
@@ -72,32 +85,36 @@
         }
       </div>
     </div>
+  }
 
-    @for (row of data; track trackByRow($index, row); let rowIndex = $index) {
-      <div
-        class="grid-row"
-        [style.grid-template-columns]="gridTemplateColumns()"
-        [class.zebra]="rowIndex % 2 === 1"
-        [class.selected]="isSelected(rowIndex)"
-        [class.hovered]="hoveredRowIndex() === rowIndex"
-        (mouseenter)="onRowHover(rowIndex)"
-        (mouseleave)="onRowLeave()"
-        (click)="onRowClick(row, $event, rowIndex)"
-      >
-        <div class="grid-cell checkbox-cell sticky-left" (click)="$event.stopPropagation()">
-          <app-checkbox [checked]="isSelected(rowIndex)" (changed)="onToggleRow(rowIndex)" />
-        </div>
-        @for (col of columns; track col.name) {
-          <div class="grid-cell data-cell">
-            {{ formatValue(row[col.name]) }}
+  @if (renderMode !== "header-only") {
+    <div class="grid-body">
+      @for (row of data; track trackByRow($index, row); let rowIndex = $index) {
+        <div
+          class="grid-row"
+          [style.grid-template-columns]="gridTemplateColumns()"
+          [class.zebra]="rowIndex % 2 === 1"
+          [class.selected]="isSelected(rowIndex)"
+          [class.hovered]="hoveredRowIndex() === rowIndex"
+          (mouseenter)="onRowHover(rowIndex)"
+          (mouseleave)="onRowLeave()"
+          (click)="onRowClick(row, $event, rowIndex)"
+        >
+          <div class="grid-cell checkbox-cell" (click)="$event.stopPropagation()">
+            <app-checkbox [checked]="isSelected(rowIndex)" (changed)="onToggleRow(rowIndex)" />
           </div>
-        }
-        <div class="grid-cell actions-cell sticky-right" (click)="$event.stopPropagation()">
-          <button class="action-btn" title="View JSON" (click)="onViewJson(row)">
-            <mat-icon fontIcon="data_object" class="icon"></mat-icon>
-          </button>
+          @for (col of columns; track col.name) {
+            <div class="grid-cell data-cell">
+              {{ formatValue(row[col.name]) }}
+            </div>
+          }
+          <div class="grid-cell actions-cell" (click)="$event.stopPropagation()">
+            <button class="action-btn" title="View JSON" (click)="onViewJson(row)">
+              <mat-icon fontIcon="data_object" class="icon"></mat-icon>
+            </button>
+          </div>
         </div>
-      </div>
-    }
-  </div>
+      }
+    </div>
+  }
 </div>

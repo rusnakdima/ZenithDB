@@ -27,6 +27,10 @@ import { DataTypeBadgeComponent } from "@shared/components/data-type-badge/data-
   selector: "app-data-table-grid",
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    class: "table-container",
+    style: "display: flex; flex-direction: column; height: 100%;",
+  },
   imports: [
     FormsModule,
     MatIconModule,
@@ -50,9 +54,11 @@ export class DataTableGridComponent {
   @Input() sortDirection: "asc" | "desc" = "asc";
   @Input() selectedRows: Set<number> = new Set();
   @Input() previewData: RowData[] = [];
+  @Input() renderMode: "full" | "header-only" | "body-only" = "full";
+  @Input() showScrollbar = false;
 
   @Output() sortChange = new EventEmitter<{ column: string; direction: "asc" | "desc" }>();
-  @Output() columnDrop = new EventEmitter<CdkDragDrop<string[]>>();
+  @Output() columnDrop = new EventEmitter<CdkDragDrop<ColumnInfo[]>>();
   @Output() columnResizeStart = new EventEmitter<{ col: string; event: MouseEvent }>();
   @Output() toggleSelectAll = new EventEmitter<void>();
   @Output() toggleRow = new EventEmitter<number>();
@@ -99,7 +105,7 @@ export class DataTableGridComponent {
     this.sortChange.emit(event);
   }
 
-  onColumnDrop(event: CdkDragDrop<string[]>) {
+  onColumnDrop(event: CdkDragDrop<ColumnInfo[]>) {
     if (event.previousIndex === event.currentIndex) return;
     const currentOrder = [...this.columnOrder];
     moveItemInArray(currentOrder, event.previousIndex, event.currentIndex);

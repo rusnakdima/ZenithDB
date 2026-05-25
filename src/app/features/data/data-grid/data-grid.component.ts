@@ -12,6 +12,9 @@ import {
   SimpleChanges,
   ChangeDetectionStrategy,
   input,
+  ViewChild,
+  ElementRef,
+  AfterViewInit,
 } from "@angular/core";
 import { CdkDragDrop, moveItemInArray } from "@angular/cdk/drag-drop";
 import { FormsModule } from "@angular/forms";
@@ -47,7 +50,10 @@ import {
   ],
   templateUrl: "./data-grid.component.html",
 })
-export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
+export class DataGridComponent implements OnInit, OnChanges, OnDestroy, AfterViewInit {
+  @ViewChild("headerScroll") headerScrollRef!: ElementRef<HTMLDivElement>;
+  @ViewChild("bodyScroll") bodyScrollRef!: ElementRef<HTMLDivElement>;
+
   private isResizingInProgress = false;
   private resizeMoveHandler: ((e: MouseEvent) => void) | null = null;
   private resizeUpHandler: (() => void) | null = null;
@@ -182,6 +188,43 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
         this.initColumnWidths();
       }
       await this.loadData();
+    }
+  }
+
+  ngAfterViewInit() {
+    this.syncScrollPositions();
+  }
+
+  onBodyScroll(event: Event) {
+    const target = event.target as HTMLDivElement;
+    if (this.headerScrollRef?.nativeElement) {
+      this.headerScrollRef.nativeElement.scrollLeft = target.scrollLeft;
+    }
+  }
+
+  onHeaderScroll(event: Event) {
+    const target = event.target as HTMLDivElement;
+    if (this.bodyScrollRef?.nativeElement) {
+      this.bodyScrollRef.nativeElement.scrollLeft = target.scrollLeft;
+    }
+  }
+
+  onWheel(event: WheelEvent) {
+    if (event.shiftKey) {
+      event.preventDefault();
+      const delta = event.shiftKey ? event.deltaY : event.deltaX;
+      if (this.bodyScrollRef?.nativeElement) {
+        this.bodyScrollRef.nativeElement.scrollLeft += delta;
+      }
+      if (this.headerScrollRef?.nativeElement) {
+        this.headerScrollRef.nativeElement.scrollLeft += delta;
+      }
+    }
+  }
+
+  private syncScrollPositions() {
+    if (this.bodyScrollRef?.nativeElement && this.headerScrollRef?.nativeElement) {
+      this.headerScrollRef.nativeElement.scrollLeft = this.bodyScrollRef.nativeElement.scrollLeft;
     }
   }
 
@@ -419,7 +462,7 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
     });
   }
 
-  onColumnDrop(event: CdkDragDrop<string[]>) {
+  onColumnDrop(event: CdkDragDrop<ColumnInfo[]>) {
     if (event.previousIndex === event.currentIndex) return;
     const currentOrder = [...this.columnOrder()];
     moveItemInArray(currentOrder, event.previousIndex, event.currentIndex);
