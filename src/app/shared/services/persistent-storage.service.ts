@@ -8,6 +8,7 @@ const KEYS = {
   FILTER_HISTORY: "zenithdb_filter_history",
   EXPLORER_SPLIT_MODE: "explorer_split_mode",
   COLUMN_ORDER: (collectionName: string) => `col_order_${collectionName}`,
+  ROW_ORDER: (collectionName: string) => `row_order_${collectionName}`,
 } as const;
 
 @Injectable({ providedIn: "root" })
@@ -64,5 +65,13 @@ export class PersistentStorageService {
 
   setColumnOrder(collectionName: string, order: string[]): void {
     this.set(KEYS.COLUMN_ORDER(collectionName), order);
+  }
+
+  getRowOrder(collectionName: string): string[] {
+    return this.get<string[]>(KEYS.ROW_ORDER(collectionName)) ?? [];
+  }
+
+  setRowOrder(collectionName: string, order: string[]): void {
+    this.set(KEYS.ROW_ORDER(collectionName), order);
   }
 }
