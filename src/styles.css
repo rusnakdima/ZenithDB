@@ -743,6 +743,8 @@ input[type="checkbox"] {
   flex-direction: column;
   overflow: hidden;
   height: 100%;
+  min-height: 0;
+  flex: 1;
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: 8px;
@@ -755,6 +757,7 @@ input[type="checkbox"] {
   flex: 1;
   min-height: 0;
   overflow: hidden;
+  height: 100%;
 }
 
 /* Header scroll area - horizontal only, no vertical scroll */
@@ -764,6 +767,7 @@ input[type="checkbox"] {
   overflow-y: hidden;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  height: 46px;
 }
 .table-header-scroll::-webkit-scrollbar {
   display: none;
@@ -774,6 +778,8 @@ input[type="checkbox"] {
   flex: 1;
   min-height: 0;
   overflow: auto;
+  height: 100%;
+  background: var(--bg-card);
 }
 
 /* Wrapper for grid to work properly in scroll containers */
@@ -783,7 +789,7 @@ input[type="checkbox"] {
   min-width: max-content;
 }
 .table-grid-wrapper.body-mode {
-  display: block;
+  display: contents;
   min-width: max-content;
 }
 .table-grid-wrapper.header-mode {
@@ -824,6 +830,8 @@ input[type="checkbox"] {
   min-width: max-content;
   background: var(--bg-elevated);
   border-bottom: 2px solid var(--border-visible);
+  height: 44px;
+  align-items: center;
 }
 
 /* Each Data Row as Grid */
@@ -832,6 +840,14 @@ input[type="checkbox"] {
   min-width: max-content;
   border-bottom: 1px solid var(--border-subtle);
   transition: background-color 0.15s ease;
+  height: 44px;
+  align-items: center;
+}
+
+/* Grid body container - holds rows */
+.grid-body {
+  display: flex;
+  flex-direction: column;
 }
 
 .grid-row:last-child {
