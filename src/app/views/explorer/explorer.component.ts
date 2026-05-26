@@ -212,12 +212,12 @@ export class ExplorerComponent implements OnInit, OnDestroy {
 
     if (collectionToSelect && cols.some((c) => c.name === collectionToSelect)) {
       this.activeCollection.set(collectionToSelect);
-      this.activeTabs.set([{ name: collectionToSelect, collection: collectionToSelect }]);
+      this.addTab(collectionToSelect);
       this.pendingCollectionSelection = null;
       this.connectionState.setActiveCollection(collectionToSelect);
     } else if (!collectionToSelect && cols.length > 0) {
       this.activeCollection.set(cols[0].name);
-      this.activeTabs.set([{ name: cols[0].name, collection: cols[0].name }]);
+      this.addTab(cols[0].name);
       this.connectionState.setActiveCollection(cols[0].name);
     }
 

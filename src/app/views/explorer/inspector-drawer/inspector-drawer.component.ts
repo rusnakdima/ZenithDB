@@ -4,7 +4,7 @@ import { MatIconModule } from "@angular/material/icon";
 import { ClipboardService } from "@shared/services/clipboard.service";
 import { ToastService } from "@services/toast.service";
 import { ExportService } from "@shared/services/export.service";
-import { formatJsonLines, highlightJsonLine, safeJsonParse } from "@shared/utils/json.utils";
+import { formatJsonLines, highlightJsonLine } from "@shared/utils/json.utils";
 
 @Component({
   selector: "app-inspector-drawer",
@@ -77,7 +77,8 @@ export class InspectorDrawerComponent {
     this.showDeleteConfirm.set(false);
   }
 
-  resetEdit() {}
+  formatJsonLinesFn = (json: string): string[] => formatJsonLines(json);
+  highlightJsonLineFn = (line: string): string => highlightJsonLine(line);
 
   togglePath(path: string) {
     this.expandedPaths.update((paths) => {
@@ -116,13 +117,5 @@ export class InspectorDrawerComponent {
         this.toast.error("Export failed");
       }
     }
-  }
-
-  formatJsonLines(json: string): string[] {
-    return formatJsonLines(json);
-  }
-
-  highlightJsonLine(line: string): string {
-    return highlightJsonLine(line);
   }
 }

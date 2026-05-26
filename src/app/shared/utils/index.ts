@@ -5,3 +5,4 @@ export * from "./json.utils";
 export * from "./sql-formatter.utils";
 export * from "./error-handler.utils";
 export * from "./number.utils";
+export * from "./collection.utils";

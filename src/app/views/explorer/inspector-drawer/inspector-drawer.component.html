@@ -121,7 +121,7 @@
           class="overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)]"
         >
           <div class="json-display p-4">
-            @for (line of formatJsonLines(jsonPayload()); track $index; let i = $index) {
+            @for (line of formatJsonLinesFn(jsonPayload()); track $index; let i = $index) {
               <div class="json-line flex" [class.bg-[var(--bg-elevated)]]="i % 2 === 0">
                 <span
                   class="json-line-num w-10 flex-shrink-0 pr-4 text-right text-xs text-[var(--text-muted)] select-none"
@@ -129,7 +129,7 @@
                 >
                 <span
                   class="json-line-content flex-1 text-[var(--text-main)]"
-                  [innerHTML]="highlightJsonLine(line)"
+                  [innerHTML]="highlightJsonLineFn(line)"
                 ></span>
               </div>
             }

@@ -142,6 +142,7 @@ export class SchemaTreeComponent implements OnInit, OnDestroy {
     if (current.has(name)) {
       current.delete(name);
     } else {
+      current.clear();
       current.add(name);
       const col = this.collections().find((c) => c.name === name);
       if (col) this.loadCollectionFields(col);
