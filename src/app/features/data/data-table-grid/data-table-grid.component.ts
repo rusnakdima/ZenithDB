@@ -18,10 +18,8 @@ import {
   moveItemInArray,
 } from "@angular/cdk/drag-drop";
 import { ColumnInfo, RowData } from "@shared/models/connection.config";
-import { CheckboxComponent } from "@shared/components/checkbox/checkbox.component";
 import { FormatValuePipe } from "@shared/pipes/format-value.pipe";
-import { SortableHeaderComponent } from "@shared/components/sortable-header/sortable-header.component";
-import { DataTypeBadgeComponent } from "@shared/components/data-type-badge/data-type-badge.component";
+import { trackByRow } from "@shared/utils/collection.utils";
 
 @Component({
   selector: "app-data-table-grid",
@@ -29,7 +27,8 @@ import { DataTypeBadgeComponent } from "@shared/components/data-type-badge/data-
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     class: "table-container",
-    style: "display: flex; flex-direction: column; height: 100%;",
+    style:
+      "display: flex; flex-direction: column; height: 100%; width: max-content; max-width: max-content; box-sizing: border-box; overflow-x: auto;",
   },
   imports: [
     FormsModule,
@@ -38,10 +37,7 @@ import { DataTypeBadgeComponent } from "@shared/components/data-type-badge/data-
     CdkDropList,
     CdkDragPreview,
     CdkDragPlaceholder,
-    CheckboxComponent,
     FormatValuePipe,
-    SortableHeaderComponent,
-    DataTypeBadgeComponent,
   ],
   templateUrl: "./data-table-grid.component.html",
 })
@@ -93,16 +89,23 @@ export class DataTableGridComponent {
 
   previewRows = computed(() => this.previewData.slice(0, 5));
 
-  trackByRow(index: number, row: RowData): string {
-    return String(row["_id"] || row["id"] || index);
-  }
-
   isSelected(index: number): boolean {
     return this.selectedRows.has(index);
   }
 
   onSort(event: { column: string; direction: "asc" | "desc" }) {
     this.sortChange.emit(event);
+  }
+
+  onSortByColumn(column: string) {
+    const newDirection: "asc" | "desc" =
+      this.sortColumn === column && this.sortDirection === "asc" ? "desc" : "asc";
+    this.sortChange.emit({ column, direction: newDirection });
+  }
+
+  getSortIcon(column: string): "asc" | "desc" | "none" {
+    if (this.sortColumn !== column) return "none";
+    return this.sortDirection;
   }
 
   onColumnDrop(event: CdkDragDrop<ColumnInfo[]>) {
@@ -190,5 +193,30 @@ export class DataTableGridComponent {
     if (value === null || value === undefined) return "null";
     if (typeof value === "object") return JSON.stringify(value);
     return String(value);
+  }
+
+  trackRow = trackByRow;
+
+  getTypeIcon(dataType: string): string {
+    const t = dataType.toLowerCase();
+    if (t === "string" || t === "text") return "Aa";
+    if (t === "number" || t === "integer" || t === "decimal" || t === "float") return "#";
+    if (t === "boolean") return "T/F";
+    if (t === "date" || t === "datetime" || t === "timestamp") return "dt";
+    if (t === "object" || t === "json") return "{}";
+    if (t === "array") return "[]";
+    return "?";
+  }
+
+  getTypeColor(dataType: string): string {
+    const t = dataType.toLowerCase();
+    if (t === "string" || t === "text") return "text-blue-400";
+    if (t === "number" || t === "integer" || t === "decimal" || t === "float")
+      return "text-emerald-400";
+    if (t === "boolean") return "text-orange-400";
+    if (t === "date" || t === "datetime" || t === "timestamp") return "text-purple-400";
+    if (t === "object" || t === "json") return "text-yellow-400";
+    if (t === "array") return "text-pink-400";
+    return "text-slate-400";
   }
 }

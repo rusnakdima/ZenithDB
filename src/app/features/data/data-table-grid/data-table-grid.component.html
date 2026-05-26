@@ -20,9 +20,7 @@
   [class.header-mode]="renderMode === 'header-only'"
   [class.body-mode]="renderMode === 'body-only'"
   [class.show-scrollbar]="showScrollbar"
-  [style.display]="renderMode === 'body-only' ? 'block' : 'flex'"
-  [style.flexDirection]="renderMode === 'body-only' ? 'unset' : 'column'"
-  [style.height]="renderMode === 'body-only' ? '100%' : 'auto'"
+  style="width: max-content; min-width: max-content"
 >
   @if (renderMode !== "body-only") {
     <div
@@ -34,7 +32,16 @@
       [style.grid-template-columns]="gridTemplateColumns()"
     >
       <div class="grid-cell checkbox-cell header-cell">
-        <app-checkbox [checked]="allSelected()" (changed)="onToggleSelectAll()" />
+        <label class="custom-check" for="select-all-checkbox">
+          <input
+            type="checkbox"
+            id="select-all-checkbox"
+            [checked]="allSelected()"
+            (change)="onToggleSelectAll()"
+            class="sr-only"
+          />
+          <span class="check-mark"></span>
+        </label>
       </div>
       @for (col of columns; track col.name) {
         <div
@@ -44,13 +51,30 @@
           (cdkDragStarted)="onDragStarted(col.name, columnWidths[col.name])"
           (cdkDragReleased)="onDragReleased()"
         >
-          <app-sortable-header
-            [column]="col.name"
-            [currentSort]="sortColumn"
-            [direction]="sortColumn === col.name ? sortDirection : 'none'"
-            (sortChange)="onSort($event)"
-          />
-          <app-data-type-badge [dataType]="col.data_type" variant="icon" />
+          <div
+            class="flex cursor-pointer items-center gap-1 transition-colors hover:text-white"
+            (click)="onSortByColumn(col.name)"
+          >
+            <span>{{ col.name }}</span>
+            <svg
+              class="sort-icon h-3 w-3"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              @if (getSortIcon(col.name) === "asc") {
+                <path d="M12 19V5M5 12l7-7 7 7" />
+              } @else if (getSortIcon(col.name) === "desc") {
+                <path d="M12 5v14M5 12l7 7 7-7" />
+              } @else {
+                <path d="M8 9l4-4 4 4M8 15l4 4 4-4" />
+              }
+            </svg>
+          </div>
+          <span class="type-badge" [class]="getTypeColor(col.data_type)">{{
+            getTypeIcon(col.data_type)
+          }}</span>
           <div
             class="resize-handle"
             (mousedown)="onColumnResizeStart(col.name, $event); $event.stopPropagation()"
@@ -71,10 +95,11 @@
             <div class="column-dropdown-list">
               @for (col of columns; track col.name) {
                 <label class="column-dropdown-item">
-                  <app-checkbox
+                  <input
+                    type="checkbox"
                     [checked]="visibleColumns().has(col.name)"
                     [disabled]="col.is_primary_key"
-                    (changed)="toggleColVisibility(col.name)"
+                    (change)="toggleColVisibility(col.name)"
                   />
                   <span class="col-name">{{ col.name }}</span>
                   <span class="col-type">{{ col.data_type }}</span>
@@ -89,7 +114,7 @@
 
   @if (renderMode !== "header-only") {
     <div class="grid-body">
-      @for (row of data; track trackByRow($index, row); let rowIndex = $index) {
+      @for (row of data; track trackRow($index, row); let rowIndex = $index) {
         <div
           class="grid-row"
           [style.grid-template-columns]="gridTemplateColumns()"
@@ -101,11 +126,20 @@
           (click)="onRowClick(row, $event, rowIndex)"
         >
           <div class="grid-cell checkbox-cell" (click)="$event.stopPropagation()">
-            <app-checkbox [checked]="isSelected(rowIndex)" (changed)="onToggleRow(rowIndex)" />
+            <label class="custom-check" [attr.for]="'row-checkbox-' + rowIndex">
+              <input
+                type="checkbox"
+                [id]="'row-checkbox-' + rowIndex"
+                [checked]="isSelected(rowIndex)"
+                (change)="onToggleRow(rowIndex)"
+                class="sr-only"
+              />
+              <span class="check-mark"></span>
+            </label>
           </div>
           @for (col of columns; track col.name) {
             <div class="grid-cell data-cell">
-              {{ formatValue(row[col.name]) }}
+              {{ row[col.name] | formatValue }}
             </div>
           }
           <div class="grid-cell actions-cell" (click)="$event.stopPropagation()">

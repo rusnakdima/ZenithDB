@@ -12,9 +12,6 @@ import {
   SimpleChanges,
   ChangeDetectionStrategy,
   input,
-  ViewChild,
-  ElementRef,
-  AfterViewInit,
 } from "@angular/core";
 import { CdkDragDrop, moveItemInArray } from "@angular/cdk/drag-drop";
 import { FormsModule } from "@angular/forms";
@@ -50,10 +47,7 @@ import {
   ],
   templateUrl: "./data-grid.component.html",
 })
-export class DataGridComponent implements OnInit, OnChanges, OnDestroy, AfterViewInit {
-  @ViewChild("headerScroll") headerScrollRef!: ElementRef<HTMLDivElement>;
-  @ViewChild("bodyScroll") bodyScrollRef!: ElementRef<HTMLDivElement>;
-
+export class DataGridComponent implements OnInit, OnChanges, OnDestroy {
   private isResizingInProgress = false;
   private resizeMoveHandler: ((e: MouseEvent) => void) | null = null;
   private resizeUpHandler: (() => void) | null = null;
@@ -108,7 +102,7 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy, AfterVie
       this.lastFilter = this.filter;
       this.lastPageNum = this.page;
       this.lastPageSizeNum = this.pageSize;
-      this.loadData();
+      this.loadData(true);
     } else if (columnsChanged && this.columns.length > 0 && this.collectionName) {
       this.initColumnWidths();
       this.loadData();
@@ -188,43 +182,6 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy, AfterVie
         this.initColumnWidths();
       }
       await this.loadData();
-    }
-  }
-
-  ngAfterViewInit() {
-    this.syncScrollPositions();
-  }
-
-  onBodyScroll(event: Event) {
-    const target = event.target as HTMLDivElement;
-    if (this.headerScrollRef?.nativeElement) {
-      this.headerScrollRef.nativeElement.scrollLeft = target.scrollLeft;
-    }
-  }
-
-  onHeaderScroll(event: Event) {
-    const target = event.target as HTMLDivElement;
-    if (this.bodyScrollRef?.nativeElement) {
-      this.bodyScrollRef.nativeElement.scrollLeft = target.scrollLeft;
-    }
-  }
-
-  onWheel(event: WheelEvent) {
-    if (event.shiftKey) {
-      event.preventDefault();
-      const delta = event.shiftKey ? event.deltaY : event.deltaX;
-      if (this.bodyScrollRef?.nativeElement) {
-        this.bodyScrollRef.nativeElement.scrollLeft += delta;
-      }
-      if (this.headerScrollRef?.nativeElement) {
-        this.headerScrollRef.nativeElement.scrollLeft += delta;
-      }
-    }
-  }
-
-  private syncScrollPositions() {
-    if (this.bodyScrollRef?.nativeElement && this.headerScrollRef?.nativeElement) {
-      this.headerScrollRef.nativeElement.scrollLeft = this.bodyScrollRef.nativeElement.scrollLeft;
     }
   }
 
@@ -349,14 +306,6 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy, AfterVie
     this.sortDirection.set(event.direction);
     this.loadData();
   }
-
-  startEdit(rowIndex: number, col: string, value: unknown) {}
-
-  async saveEdit() {}
-
-  cancelEdit() {}
-
-  async deleteRow(row: RowData) {}
 
   onRowClick(row: RowData, event: MouseEvent) {
     const target = event.target as HTMLElement;
@@ -498,8 +447,6 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy, AfterVie
     this.visibleColumns.set(visible);
   }
 
-  async duplicateRow(row: RowData) {}
-
   viewJson(row: RowData) {
     this.documentClick.emit(row);
   }
@@ -523,24 +470,6 @@ export class DataGridComponent implements OnInit, OnChanges, OnDestroy, AfterVie
 
   isCellModified(rowIndex: number, col: string): boolean {
     return false;
-  }
-
-  formatValue(value: unknown): string {
-    if (value === null || value === undefined) return "null";
-    if (typeof value === "object") return JSON.stringify(value);
-    return String(value);
-  }
-
-  trackByRow(index: number, row: RowData): string {
-    return String(row["_id"] || row["id"] || index);
-  }
-
-  formatJsonLines(obj: unknown): string[] {
-    return formatJsonLines(JSON.stringify(obj, null, 2));
-  }
-
-  highlightJsonLine(line: string): string {
-    return highlightJsonLine(line);
   }
 
   getSelectedData(): RowData[] {
