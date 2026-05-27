@@ -5,17 +5,22 @@ import { ClipboardService } from "@shared/services/clipboard.service";
 import { ToastService } from "@services/toast.service";
 import { ExportService } from "@shared/services/export.service";
 import { formatJsonLines, highlightJsonLine } from "@shared/utils/json.utils";
+import { RecordFormComponent } from "@features/data/record-form/record-form.component";
+import { ColumnInfo, RowData } from "@shared/models/connection.config";
 
 @Component({
   selector: "app-inspector-drawer",
   standalone: true,
-  imports: [FormsModule, MatIconModule],
+  imports: [FormsModule, MatIconModule, RecordFormComponent],
   templateUrl: "./inspector-drawer.component.html",
 })
 export class InspectorDrawerComponent {
-  document = input.required<any>();
+  document = input<any>(null);
+  columns = input<ColumnInfo[]>([]);
   close = output<void>();
   delete = output<void>();
+  edit = output<void>();
+  save = output<RowData>();
 
   private toast = inject(ToastService);
   private clipboard = inject(ClipboardService);
@@ -24,10 +29,17 @@ export class InspectorDrawerComponent {
   jsonError = signal("");
   expandedPaths = signal<Set<string>>(new Set());
   showDeleteConfirm = signal(false);
+  isEditMode = signal(false);
 
   documentId = computed(() => {
     const doc = this.document();
+    if (!doc) return "New Document";
     return doc?.["_id"] || doc?.["id"] || "Unknown";
+  });
+
+  isCreateMode = computed(() => {
+    const doc = this.document();
+    return !doc || (!doc["_id"] && !doc["id"]);
   });
 
   metadata = computed(() => {
@@ -75,6 +87,24 @@ export class InspectorDrawerComponent {
 
   cancelDelete() {
     this.showDeleteConfirm.set(false);
+  }
+
+  onEdit() {
+    this.isEditMode.set(true);
+    this.edit.emit();
+  }
+
+  onCancelEdit() {
+    this.isEditMode.set(false);
+  }
+
+  onFormSave(data: RowData) {
+    this.isEditMode.set(false);
+    this.save.emit(data);
+  }
+
+  onFormCancel() {
+    this.isEditMode.set(false);
   }
 
   formatJsonLinesFn = (json: string): string[] => formatJsonLines(json);

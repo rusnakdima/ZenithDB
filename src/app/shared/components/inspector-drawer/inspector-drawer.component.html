@@ -8,15 +8,22 @@
       class="flex items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-5 py-4"
     >
       <div class="flex items-center gap-3">
-        <mat-icon fontIcon="visibility" class="h-6! w-5! text-xl! text-[var(--accent)]" />
-        <h3 class="text-sm font-black text-[var(--text-main)]">Document Detail</h3>
+        <mat-icon
+          [fontIcon]="isCreateMode() ? 'add' : 'visibility'"
+          class="h-6! w-5! text-xl! text-[var(--accent)]"
+        />
+        <h3 class="text-sm font-black text-[var(--text-main)]">
+          {{ isCreateMode() ? "New Document" : "Document Detail" }}
+        </h3>
       </div>
       <div class="flex items-center gap-3">
-        <span
-          class="mono rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-card)] px-2 py-1 text-xs text-[var(--text-muted)]"
-        >
-          {{ documentId() }}
-        </span>
+        @if (!isCreateMode()) {
+          <span
+            class="mono rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-card)] px-2 py-1 text-xs text-[var(--text-muted)]"
+          >
+            {{ documentId() }}
+          </span>
+        }
         <button
           class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-[var(--bg-card)] hover:text-[var(--text-main)]"
           (click)="onClose()"
@@ -28,115 +35,152 @@
 
     <div class="drawer-content flex-1 space-y-6 overflow-y-auto p-5">
       <!-- Actions Section -->
-      <div class="section">
-        <div class="mb-3 flex items-center justify-between">
-          <label class="text-[10px] font-black tracking-widest text-[var(--text-dim)] uppercase"
-            >Actions</label
-          >
-          <div class="flex items-center gap-1">
+      @if (!isCreateMode()) {
+        <div class="section">
+          <div class="mb-3 flex items-center justify-between">
+            <label class="text-[10px] font-black tracking-widest text-[var(--text-dim)] uppercase"
+              >Actions</label
+            >
+            <div class="flex items-center gap-1">
+              @if (!isEditMode()) {
+                <button
+                  class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-[var(--bg-card)] hover:text-[var(--accent)]"
+                  title="Edit"
+                  (click)="onEdit()"
+                >
+                  <mat-icon fontIcon="edit" class="h-6! w-5! text-xl!" />
+                </button>
+              }
+              <button
+                class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-[var(--bg-card)] hover:text-[var(--accent)]"
+                title="Copy JSON"
+                (click)="copyJson()"
+              >
+                <mat-icon fontIcon="content_copy" class="h-6! w-5! text-xl!" />
+              </button>
+              <button
+                class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-[var(--bg-card)] hover:text-[var(--accent)]"
+                title="Export JSON"
+                (click)="exportDocument('json')"
+              >
+                <mat-icon fontIcon="download" class="h-6! w-5! text-xl!" />
+              </button>
+            </div>
+          </div>
+          @if (!isEditMode()) {
+            <div class="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] p-4">
+              <div class="flex gap-2">
+                <button
+                  class="flex-1 rounded-lg bg-[var(--accent)] px-4 py-2.5 text-xs font-bold text-black transition-all hover:shadow-[0_0_20px_rgba(255,107,0,0.3)]"
+                  (click)="exportDocument('json')"
+                >
+                  JSON
+                </button>
+                <button
+                  class="flex-1 rounded-lg border border-[var(--border-visible)] bg-[var(--bg-elevated)] px-4 py-2.5 text-xs font-bold text-[var(--text-dim)] transition-all hover:text-[var(--text-main)]"
+                  (click)="exportDocument('csv')"
+                >
+                  CSV
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Internal Metadata Section -->
+        <div class="section">
+          <div class="mb-3 flex items-center justify-between">
+            <label class="text-[10px] font-black tracking-widest text-[var(--text-dim)] uppercase"
+              >Internal Metadata</label
+            >
             <button
-              class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-[var(--bg-card)] hover:text-[var(--accent)]"
-              title="Copy JSON"
+              class="rounded-lg p-1.5 text-[var(--text-dim)] transition-all hover:bg-[var(--bg-card)] hover:text-[var(--accent)]"
+              title="Copy metadata"
               (click)="copyJson()"
             >
               <mat-icon fontIcon="content_copy" class="h-6! w-5! text-xl!" />
             </button>
-            <button
-              class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-[var(--bg-card)] hover:text-[var(--accent)]"
-              title="Export JSON"
-              (click)="exportDocument('json')"
-            >
-              <mat-icon fontIcon="download" class="h-6! w-5! text-xl!" />
-            </button>
+          </div>
+          <div
+            class="overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)]"
+          >
+            <table class="w-full text-sm">
+              <tbody>
+                @for (meta of metadata(); track meta.key) {
+                  <tr class="border-b border-[var(--border-subtle)] last:border-b-0">
+                    <td class="mono px-4 py-3 text-xs text-[var(--text-dim)]">{{ meta.key }}</td>
+                    <td class="mono px-4 py-3 text-right text-xs text-[var(--text-main)]">
+                      {{ meta.value }}
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
           </div>
         </div>
-        <div class="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] p-4">
-          <div class="flex gap-2">
-            <button
-              class="flex-1 rounded-lg bg-[var(--accent)] px-4 py-2.5 text-xs font-bold text-black transition-all hover:shadow-[0_0_20px_rgba(255,107,0,0.3)]"
-              (click)="exportDocument('json')"
-            >
-              JSON
-            </button>
-            <button
-              class="flex-1 rounded-lg border border-[var(--border-visible)] bg-[var(--bg-elevated)] px-4 py-2.5 text-xs font-bold text-[var(--text-dim)] transition-all hover:text-[var(--text-main)]"
-              (click)="exportDocument('csv')"
-            >
-              CSV
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Internal Metadata Section -->
-      <div class="section">
-        <div class="mb-3 flex items-center justify-between">
-          <label class="text-[10px] font-black tracking-widest text-[var(--text-dim)] uppercase"
-            >Internal Metadata</label
-          >
-          <button
-            class="rounded-lg p-1.5 text-[var(--text-dim)] transition-all hover:bg-[var(--bg-card)] hover:text-[var(--accent)]"
-            title="Copy metadata"
-            (click)="copyJson()"
-          >
-            <mat-icon fontIcon="content_copy" class="h-6! w-5! text-xl!" />
-          </button>
-        </div>
-        <div
-          class="overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)]"
-        >
-          <table class="w-full text-sm">
-            <tbody>
-              @for (meta of metadata(); track meta.key) {
-                <tr class="border-b border-[var(--border-subtle)] last:border-b-0">
-                  <td class="mono px-4 py-3 text-xs text-[var(--text-dim)]">{{ meta.key }}</td>
-                  <td class="mono px-4 py-3 text-right text-xs text-[var(--text-main)]">
-                    {{ meta.value }}
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      </div>
+      }
 
       <!-- JSON Payload Section -->
       <div class="section">
         <div class="mb-3 flex items-center justify-between">
-          <label class="text-[10px] font-black tracking-widest text-[var(--text-dim)] uppercase"
-            >JSON Payload</label
-          >
-          <div class="flex items-center gap-1">
-            <button
-              class="rounded-lg p-1.5 text-[var(--text-dim)] transition-all hover:bg-[var(--bg-card)] hover:text-[var(--accent)]"
-              title="Copy JSON"
-              (click)="copyJson()"
-            >
-              <mat-icon fontIcon="content_copy" class="h-6! w-5! text-xl!" />
-            </button>
-          </div>
+          <label class="text-[10px] font-black tracking-widest text-[var(--text-dim)] uppercase">{{
+            isEditMode() || isCreateMode() ? "Document" : "JSON Payload"
+          }}</label>
+          @if (!isEditMode() && !isCreateMode()) {
+            <div class="flex items-center gap-1">
+              <button
+                class="rounded-lg p-1.5 text-[var(--text-dim)] transition-all hover:bg-[var(--bg-card)] hover:text-[var(--accent)]"
+                title="Copy JSON"
+                (click)="copyJson()"
+              >
+                <mat-icon fontIcon="content_copy" class="h-6! w-5! text-xl!" />
+              </button>
+            </div>
+          }
         </div>
 
-        <div
-          class="overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)]"
-        >
-          <div class="json-display p-4">
-            <div class="min-w-max">
-              @for (line of formatJsonLinesFn(jsonPayload()); track $index; let i = $index) {
-                <div class="json-line flex" [class.bg-[var(--bg-elevated)]]="i % 2 === 0">
-                  <span
-                    class="json-line-num w-10 flex-shrink-0 pr-4 text-right text-xs text-[var(--text-muted)] select-none"
-                    >{{ i + 1 }}</span
-                  >
-                  <span
-                    class="json-line-content flex-1 text-[var(--text-main)]"
-                    [innerHTML]="highlightJsonLineFn(line)"
-                  ></span>
-                </div>
-              }
+        @if (isEditMode()) {
+          <div class="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] p-4">
+            <app-record-form
+              [mode]="'edit'"
+              [columns]="columns()"
+              [data]="document()"
+              (saved)="onFormSave($event)"
+              (cancelled)="onFormCancel()"
+            ></app-record-form>
+          </div>
+        } @else if (isCreateMode()) {
+          <div class="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] p-4">
+            <app-record-form
+              [mode]="'add'"
+              [columns]="columns()"
+              [data]="null"
+              (saved)="onFormSave($event)"
+              (cancelled)="onFormCancel()"
+            ></app-record-form>
+          </div>
+        } @else {
+          <div
+            class="overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)]"
+          >
+            <div class="json-display p-4">
+              <div class="min-w-max">
+                @for (line of formatJsonLinesFn(jsonPayload()); track $index; let i = $index) {
+                  <div class="json-line flex" [class.bg-[var(--bg-elevated)]]="i % 2 === 0">
+                    <span
+                      class="json-line-num w-10 flex-shrink-0 pr-4 text-right text-xs text-[var(--text-muted)] select-none"
+                      >{{ i + 1 }}</span
+                    >
+                    <span
+                      class="json-line-content flex-1 text-[var(--text-main)]"
+                      [innerHTML]="highlightJsonLineFn(line)"
+                    ></span>
+                  </div>
+                }
+              </div>
             </div>
           </div>
-        </div>
+        }
       </div>
 
       @if (showDeleteConfirm()) {
@@ -169,7 +213,7 @@
     <div
       class="drawer-footer border-t border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-5 py-4"
     >
-      @if (!showDeleteConfirm()) {
+      @if (!showDeleteConfirm() && !isEditMode() && !isCreateMode()) {
         <button
           class="flex w-full items-center justify-center gap-2 rounded-xl border border-red-900/30 bg-red-600/20 px-4 py-3 text-sm font-bold text-red-400 transition-all hover:bg-red-600/30"
           (click)="onDelete()"

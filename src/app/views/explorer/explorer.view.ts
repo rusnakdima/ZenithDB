@@ -89,6 +89,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   collections = signal<CollectionMeta[]>([]);
   inspectorDocument = signal<RowData | null>(null);
   showInspector = signal(false);
+  isCreatingDocument = signal(false);
 
   filterText = signal("");
   page = signal(0);
@@ -554,6 +555,12 @@ export class ExplorerComponent implements OnInit, OnDestroy {
     }
   }
 
+  onCreateDocument() {
+    this.isCreatingDocument.set(true);
+    this.inspectorDocument.set({} as RowData);
+    this.showInspector.set(true);
+  }
+
   async onExport(format: ExportFormat) {
     try {
       let filterObj: FilterExpression | undefined;
@@ -686,11 +693,36 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   closeInspector() {
     this.showInspector.set(false);
     this.inspectorDocument.set(null);
+    this.isCreatingDocument.set(false);
   }
 
-  async saveDocument(doc: RowData) {}
+  async saveDocument(doc: RowData) {
+    if (!doc || !this.activeCollection()) return;
+    try {
+      await this.store.saveRow(this.activeCollection(), doc);
+      this.toast.success("Document saved");
+      this.closeInspector();
+      this.onRefresh();
+    } catch (e) {
+      this.toast.error("Failed to save document: " + (e as Error).message);
+    }
+  }
 
-  async deleteDocument(doc: RowData) {}
+  async deleteDocument(doc: RowData) {
+    const id = doc["_id"] || doc["id"];
+    if (!id) {
+      this.toast.error("Cannot delete: document has no ID");
+      return;
+    }
+    try {
+      await this.store.deleteRow(this.activeCollection(), String(id));
+      this.toast.success("Document deleted");
+      this.closeInspector();
+      this.onRefresh();
+    } catch (e) {
+      this.toast.error("Failed to delete document: " + (e as Error).message);
+    }
+  }
 
   onPageChange(newPage: number) {
     this.page.set(newPage);

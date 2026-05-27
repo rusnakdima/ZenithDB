@@ -1,1 +1,7 @@
-<app-filter-bar></app-filter-bar>
+<app-filter-bar
+  [availableColumns]="availableColumns()"
+  (filterChange)="filterChange.emit($event)"
+  (apply)="apply.emit()"
+  (clear)="clear.emit()"
+  (refresh)="refresh.emit()"
+></app-filter-bar>

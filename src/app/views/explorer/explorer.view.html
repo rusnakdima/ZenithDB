@@ -13,6 +13,7 @@
       (onImport)="onImport()"
       (toggleExportMenu)="toggleExportMenu()"
       (onExport)="onExport($event)"
+      (createDocument)="onCreateDocument()"
     ></app-explorer-toolbar>
 
     <app-collection-tabs
@@ -23,7 +24,13 @@
     ></app-collection-tabs>
 
     @if (activeCollection()) {
-      <app-explorer-filter-panel></app-explorer-filter-panel>
+      <app-explorer-filter-panel
+        [availableColumns]="availableColumnsMeta()"
+        (filterChange)="onFilterChange($event)"
+        (apply)="onFilterApply()"
+        (clear)="onFilterClear()"
+        (refresh)="onRefresh()"
+      ></app-explorer-filter-panel>
 
       <div
         class="flex items-center justify-between gap-3 border-b border-[var(--border-subtle)] bg-[var(--bg-sidebar)] px-4 py-2"
@@ -90,11 +97,13 @@
       }
     }
 
-    @if (showInspector() && inspectorDocument()) {
+    @if (showInspector() && (inspectorDocument() || isCreatingDocument())) {
       <app-inspector-drawer
-        [document]="inspectorDocument()!"
+        [document]="inspectorDocument()"
+        [columns]="availableColumnsMeta()"
         (close)="closeInspector()"
         (delete)="deleteDocument(inspectorDocument()!)"
+        (save)="saveDocument($event)"
       ></app-inspector-drawer>
     }
 

@@ -26,6 +26,13 @@
       <mat-icon fontIcon="upload" class="h-5! w-4! text-base!" />
       <span class="hidden lg:inline">Import</span>
     </button>
+    <button
+      class="flex items-center gap-2 rounded-lg bg-[var(--accent)] px-3 py-2 text-sm font-bold text-black transition-all hover:shadow-[0_0_20px_rgba(255,107,0,0.3)]"
+      (click)="createDocument.emit()"
+    >
+      <mat-icon fontIcon="add" class="h-5! w-4! text-base!" />
+      <span class="hidden lg:inline">New Doc</span>
+    </button>
     <div class="relative">
       <button
         class="flex items-center gap-2 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-2 text-sm font-medium text-[var(--text-dim)] transition-all hover:border-[var(--accent)]/50 hover:text-[var(--accent)]"

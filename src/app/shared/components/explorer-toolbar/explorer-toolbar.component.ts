@@ -17,4 +17,5 @@ export class ExplorerToolbarComponent {
   onImport = output<void>();
   toggleExportMenu = output<void>();
   onExport = output<"csv" | "json" | "sql">();
+  createDocument = output<void>();
 }

@@ -1,7 +1,6 @@
-import { Component, inject, ChangeDetectionStrategy } from "@angular/core";
+import { Component, input, output, ChangeDetectionStrategy } from "@angular/core";
 import { FilterBarComponent } from "@shared/components/filter-bar/filter-bar.component";
-import { DataStoreService } from "@services/core/data-store.service";
-import { ConnectionStateService } from "@shared/services/connection-state.service";
+import { ColumnInfo } from "@shared/models/connection.config";
 
 @Component({
   selector: "app-explorer-filter-panel",
@@ -11,6 +10,9 @@ import { ConnectionStateService } from "@shared/services/connection-state.servic
   templateUrl: "./explorer-filter-panel.component.html",
 })
 export class ExplorerFilterPanelComponent {
-  private store = inject(DataStoreService);
-  private connectionState = inject(ConnectionStateService);
+  availableColumns = input<ColumnInfo[]>([]);
+  filterChange = output<string>();
+  apply = output<void>();
+  clear = output<void>();
+  refresh = output<void>();
 }
