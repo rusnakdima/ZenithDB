@@ -1,12 +1,10 @@
 <div class="flex h-full w-full flex-col">
   <div
-    class="flex items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--bg-sidebar)]/50 px-4 py-2"
+    class="flex flex-shrink-0 items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--bg-sidebar)]/50 px-4 py-2"
   >
     <div class="flex items-center gap-2">
       <span class="text-sm text-[var(--text-dim)]">Full Collection JSON</span>
-      <span class="text-xs text-[var(--text-muted)]"
-        >({{ fullJsonData().length }} documents)</span
-      >
+      <span class="text-xs text-[var(--text-muted)]">({{ fullJsonData().length }} documents)</span>
     </div>
     <button
       class="flex items-center gap-2 rounded bg-[var(--accent)] px-3 py-1.5 text-sm font-bold text-black transition-colors hover:bg-[var(--accent-hover)]"

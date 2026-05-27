@@ -1,4 +1,4 @@
-<div class="explorer-page flex flex-1 flex-row bg-[var(--bg-deep)] h-[calc(100vh-150px)]">
+<div class="explorer-page flex h-[calc(100vh-150px)] flex-1 flex-row bg-[var(--bg-deep)]">
   <app-explorer-sidebar
     [collapsed]="treeCollapsed()"
     (collectionSelect)="onTreeCollectionSelect($event)"
@@ -26,7 +26,9 @@
     @if (activeCollection()) {
       <app-explorer-filter-panel></app-explorer-filter-panel>
 
-      <div class="flex items-center gap-3 border-b border-[var(--border-subtle)] bg-[var(--bg-sidebar)] px-4 py-2">
+      <div
+        class="flex items-center gap-3 border-b border-[var(--border-subtle)] bg-[var(--bg-sidebar)] px-4 py-2"
+      >
         <app-segment-selector
           [options]="viewModeOptions"
           [active]="viewTab()"
@@ -34,12 +36,12 @@
         ></app-segment-selector>
       </div>
 
-      <div class="relative flex flex-1 flex-col overflow-hidden" style="min-width: 0; height: 100%;">
+      <div class="relative flex flex-1 flex-col overflow-hidden" style="min-width: 0; height: 100%">
         @switch (viewTab()) {
           @case ("table") {
-            <div class="flex flex-col flex-1 overflow-hidden" style="min-width: 0; height: 100%;">
+            <div class="flex flex-1 flex-col overflow-hidden" style="min-width: 0; height: 100%">
               <app-data-table-grid
-                style="height: 100%;"
+                style="height: 100%"
                 [collectionName]="activeCollection()"
                 [filter]="filterText()"
                 [page]="page()"
@@ -62,8 +64,9 @@
             ></app-pagination>
           }
           @case ("json") {
-            <div class="flex flex-col flex-1 overflow-hidden" style="min-width: 0; height: 100%;">
+            <div class="flex flex-1 flex-col overflow-hidden" style="min-width: 0; height: 100%">
               <app-json-view
+                class="h-full"
                 [fullJsonData]="fullJsonData()"
                 [jsonLoading]="jsonLoading()"
                 [jsonHasMore]="jsonHasMore()"
