@@ -29,6 +29,22 @@
   <url type="bugtracker">https://github.com/rusnakdima/ZenithDB/issues</url>
 
   <releases>
+    <release version="0.2.0" date="2026-05-27">
+      <description>
+        <p>Release version 0.2.0</p>
+        <ul>
+          <li>Row order persistence</li>
+          <li>Export dialog component in explorer</li>
+          <li>Synchronized scroll for header and body tables</li>
+          <li>Explorer layout updates</li>
+          <li>Schema tree component improvements</li>
+          <li>View components renamed with .view suffix convention</li>
+          <li>Table layout CSS improvements</li>
+          <li>Mobile build artifacts and workflows removed</li>
+          <li>Extensive code formatting across frontend and backend</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.1.2" date="2026-05-19">
       <description>
         <p>Release version 0.1.2</p>
