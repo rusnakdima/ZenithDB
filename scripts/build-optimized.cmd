@@ -2,7 +2,6 @@
 setlocal enabledelayedexpansion
 
 REM Optimized build script for ZenithDB (Windows CMD version)
-REM This script helps avoid unnecessary recompilation of Tauri components
 
 echo 🚀 Starting optimized build process...
 
@@ -47,7 +46,7 @@ if not exist "%frontend_dist%" (
 )
 
 if not exist "%last_build_file%" (
-  call :print_status "No previous build record found, building frontend..."
+  call :print_status "No previous build record found, building..."
   exit /b 0
 )
 
@@ -124,13 +123,9 @@ if "%target%"=="desktop" (
   ) else (
     bun run tauri:build
   )
-) else if "%target%"=="android" (
-  bun run tauri:build:android
-) else if "%target%"=="ios" (
-  call :print_status "Frontend built for iOS target"
 ) else (
   call :print_error "Unknown target: %target%"
-  echo Available targets: desktop, android, ios
+  echo Available targets: desktop
   exit /b 1
 )
 
@@ -143,7 +138,6 @@ REM Clean build artifacts
 call :print_status "Cleaning build artifacts..."
 if exist dist rmdir /s /q dist
 if exist src-tauri\target rmdir /s /q src-tauri\target
-if exist src-tauri\gen\android\app\build rmdir /s /q src-tauri\gen\android\app\build
 if exist .last-frontend-build del .last-frontend-build
 if exist .last-rust-build del .last-rust-build
 call :print_success "Clean completed"
@@ -160,8 +154,6 @@ echo   help                  - Show this help
 echo.
 echo Targets:
 echo   desktop               - Desktop application (default)
-echo   android               - Android application
-echo   ios                   - iOS application (frontend only)
 echo.
 echo Types:
 echo   release               - Release build (default)
@@ -169,8 +161,6 @@ echo   debug                 - Debug build
 echo.
 echo Examples:
 echo   %0 build                    # Build desktop release
-echo   %0 build android release    # Build Android APK
-echo   %0 build android debug      # Build Android APK debug
 echo   %0 clean                    # Clean all artifacts
 goto :eof
 

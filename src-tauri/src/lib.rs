@@ -26,7 +26,6 @@ use commands::entities::connection::routes as connection_routes;
 use commands::entities::database::routes as database_routes;
 use commands::entities::query::routes as query_routes;
 
-#[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
   logger::init_logger();
 

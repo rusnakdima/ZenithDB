@@ -5,7 +5,7 @@
   "identifier": "com.tcs.zenithdb",
   "build": {
     "beforeDevCommand": "bun run start",
-    "devUrl": "http://localhost:1425",
+    "devUrl": "http://localhost:1420",
     "beforeBuildCommand": "bun run build",
     "frontendDist": "../dist/zenithdb/browser"
   },

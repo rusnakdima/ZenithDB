@@ -42,7 +42,7 @@ check_frontend_changes() {
 	fi
 
 	if [ ! -f "$last_build_file" ]; then
-		print_status "No previous build record found, building frontend..."
+		print_status "No previous build record found, building..."
 		return 0
 	fi
 
@@ -115,15 +115,9 @@ build_optimized() {
 			bun run tauri:build
 		fi
 		;;
-	"android")
-		bun run tauri:build:android
-		;;
-	"ios")
-		print_status "Frontend built for iOS target"
-		;;
 	*)
 		print_error "Unknown target: $target"
-		echo "Available targets: desktop, android, ios"
+		echo "Available targets: desktop"
 		exit 1
 		;;
 	esac
@@ -136,7 +130,6 @@ clean() {
 	print_status "Cleaning build artifacts..."
 	rm -rf dist/
 	rm -rf src-tauri/target/
-	rm -rf src-tauri/gen/android/app/build/
 	rm -f .last-frontend-build
 	rm -f .last-rust-build
 	print_success "Clean completed"
@@ -152,8 +145,6 @@ usage() {
 	echo ""
 	echo "Targets:"
 	echo "  desktop               - Desktop application (default)"
-	echo "  android               - Android application"
-	echo "  ios                   - iOS application (frontend only)"
 	echo ""
 	echo "Types:"
 	echo "  release               - Release build (default)"
@@ -161,7 +152,6 @@ usage() {
 	echo ""
 	echo "Examples:"
 	echo "  $0 build                    # Build desktop release"
-	echo "  $0 build android-apk debug  # Build Android APK debug"
 	echo "  $0 clean                    # Clean all artifacts"
 }
 
