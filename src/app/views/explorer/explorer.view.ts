@@ -13,7 +13,6 @@ import { Subscription } from "rxjs";
 import { filter } from "rxjs/operators";
 import { MatIconModule } from "@angular/material/icon";
 import { ExplorerSidebarComponent } from "@shared/components/explorer-sidebar/explorer-sidebar.component";
-import { DataTableGridComponent } from "@features/data/data-table-grid/data-table-grid.component";
 import { DataStoreService } from "@services/core/data-store.service";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { ToastService } from "@services/toast.service";
@@ -30,13 +29,14 @@ import {
 } from "@shared/models/connection.config";
 import { formatJsonLines, highlightJsonLine, safeJsonParse } from "@shared/utils/json.utils";
 import { formatCompactNumber } from "@shared/utils/number.utils";
+import { FormatBytesPipe } from "@shared/pipes/format-bytes.pipe";
 import { InspectorDrawerComponent } from "@shared/components/inspector-drawer/inspector-drawer.component";
 import { CollectionTabsComponent } from "@shared/components/collection-tabs/collection-tabs.component";
 import { CompareTablesDialogComponent } from "@shared/components/compare-tables-dialog/compare-tables-dialog.component";
 import { withErrorHandling } from "@shared/utils/error-handler.utils";
 import { ExplorerToolbarComponent } from "@shared/components/explorer-toolbar/explorer-toolbar.component";
 import { JsonViewComponent } from "@shared/components/json-view/json-view.component";
-import { PaginationComponent } from "@shared/components/pagination/pagination.component";
+import { TableViewComponent } from "@shared/components/table-view/table-view.component";
 import { ExportFormat } from "@app/features/data/export-dialog/export-dialog.component";
 import { SegmentSelectorComponent } from "@shared/components/segment-selector/segment-selector.component";
 import { SegmentOption } from "@shared/components/segment-selector/segment-selector.component";
@@ -55,16 +55,16 @@ interface Tab {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     MatIconModule,
-    DataTableGridComponent,
     ExplorerSidebarComponent,
     InspectorDrawerComponent,
     CollectionTabsComponent,
     CompareTablesDialogComponent,
     ExplorerToolbarComponent,
     JsonViewComponent,
-    PaginationComponent,
+    TableViewComponent,
     SegmentSelectorComponent,
     ExplorerFilterPanelComponent,
+    FormatBytesPipe,
   ],
   templateUrl: "./explorer.view.html",
 })
@@ -553,7 +553,6 @@ export class ExplorerComponent implements OnInit, OnDestroy {
       this.loadFullJsonData();
     }
   }
-
 
   async onExport(format: ExportFormat) {
     try {

@@ -16,10 +16,12 @@
 </ng-template>
 
 @if (error) {
-  <div class="m-2 flex items-center gap-2 rounded-xl border border-red-900/50 bg-red-900/20 px-4 py-3 text-red-400">
+  <div
+    class="m-2 flex items-center gap-2 rounded-xl border border-red-900/50 bg-red-900/20 px-4 py-3 text-red-400"
+  >
     <mat-icon fontIcon="error" class="h-6! w-5! text-xl!" />
     <span>{{ error }}</span>
-    <button class="ml-auto text-red-400 hone hover:text-red-300" (click)="error = ''">
+    <button class="hone ml-auto text-red-400 hover:text-red-300" (click)="error = ''">
       <mat-icon fontIcon="close" class="h-6! w-5! text-xl!" />
     </button>
   </div>
@@ -27,7 +29,9 @@
 
 @if (loading()) {
   <div class="flex h-64 items-center justify-center">
-    <div class="h-8 w-8 animate-spin rounded-full border-2 border-[var(--accent)] border-t-transparent"></div>
+    <div
+      class="h-8 w-8 animate-spin rounded-full border-2 border-[var(--accent)] border-t-transparent"
+    ></div>
   </div>
 } @else if (data().length === 0) {
   <div class="flex h-64 flex-col items-center justify-center text-[var(--text-dim)]">
@@ -36,11 +40,21 @@
     <p class="mt-1 text-sm text-[var(--text-muted)]">Try adjusting your filter</p>
   </div>
 } @else {
-  <div class="relative flex flex-1 flex-col overflow-hidden" style="min-width: 100%; max-width: 100vh; height: 100%;">
-    <div class="flex flex-col" style="min-width: 0; height: 100%; overflow-x: scroll;">
-      <div class="overflow-y-auto" style="width: 100%;">
+  <div
+    class="relative flex h-full w-full flex-1 flex-col overflow-hidden"
+    style="min-width: 0; max-height: 100%"
+  >
+    <div class="flex flex-1 flex-col overflow-x-auto" style="min-width: 0; height: 100%">
+      <div
+        class="flex-1 overflow-y-auto"
+        style="min-width: 100%; width: max-content; max-height: 100%"
+      >
         <div
           class="data-table-grid"
+          cdkDropList
+          cdkDropListOrientation="horizontal"
+          [cdkDropListData]="visibleColumnsList()"
+          (cdkDropListDropped)="onColumnDrop($event)"
           [style.grid-template-columns]="gridTemplateColumns()"
           [style.grid-template-rows]="gridTemplateRows()"
         >
@@ -194,26 +208,31 @@
 
 @if (showBulkDeleteConfirm()) {
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-    <div class="w-full max-w-md rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)] p-6 shadow-2xl">
+    <div
+      class="w-full max-w-md rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)] p-6 shadow-2xl"
+    >
       <div class="mb-4 flex items-center gap-3">
         <div class="flex h-10 w-10 items-center justify-center rounded-full bg-red-600/20">
           <mat-icon fontIcon="delete" class="h-6! w-6! text-xl! text-red-400" />
         </div>
         <div>
-          <h3 class="text-lg font-bold text-[var(--text-main)]">Delete {{ selectedRows().size }} Records</h3>
+          <h3 class="text-lg font-bold text-[var(--text-main)]">
+            Delete {{ selectedRows().size }} Records
+          </h3>
           <p class="text-sm text-[var(--text-dim)]">This action cannot be undone</p>
         </div>
       </div>
       <p class="mb-6 text-sm text-[var(--text-dim)]">
-        Are you sure you want to permanently delete {{ selectedRows().size === 1 ? 'this record' : 'these records' }}?
-        This action cannot be undone.
+        Are you sure you want to permanently delete
+        {{ selectedRows().size === 1 ? "this record" : "these records" }}? This action cannot be
+        undone.
       </p>
       <div class="flex gap-3">
         <button
           class="flex-1 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-bold text-white transition-all hover:bg-red-500"
           (click)="confirmBulkDelete()"
         >
-          Delete {{ selectedRows().size === 1 ? 'Record' : selectedRows().size + ' Records' }}
+          Delete {{ selectedRows().size === 1 ? "Record" : selectedRows().size + " Records" }}
         </button>
         <button
           class="flex-1 rounded-xl border border-[var(--border-visible)] bg-[var(--bg-elevated)] px-4 py-2.5 text-sm font-bold text-[var(--text-dim)] transition-all hover:text-[var(--text-main)]"

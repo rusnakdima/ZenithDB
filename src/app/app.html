@@ -1,6 +1,10 @@
-<div class="theme fixed inset-0 w-full flex flex-col">
+<div class="theme fixed inset-0 flex w-full flex-col">
   <app-header class="flex-shrink-0"></app-header>
-  <main class="page-content flex-1 px-4 sm:px-6" [class.page-explorer]="isExplorerRoute()" style="height: calc(100vh - 56px); min-height: 0; overflow-y: auto;">
+  <main
+    class="page-content flex-1 px-4 sm:px-6"
+    [class.page-explorer]="isExplorerRoute()"
+    style="height: calc(100vh - 56px - 16px); min-height: 0; overflow-y: auto"
+  >
     <router-outlet></router-outlet>
   </main>
   <app-floating-bottom-nav class="flex-shrink-0"></app-floating-bottom-nav>

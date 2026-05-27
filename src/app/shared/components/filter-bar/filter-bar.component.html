@@ -6,7 +6,7 @@
     class="filter-input-wrapper dropdown-container relative flex min-w-0 flex-1 items-center gap-2"
   >
     <span
-      class="hidden text-xs font-semibold tracking-wider text-[var(--text-dim)] uppercase sm:inline"
+      class="xs:inline hidden text-xs font-semibold tracking-wider text-[var(--text-dim)] uppercase sm:inline"
       >Filter</span
     >
     <input
@@ -107,17 +107,34 @@
 
   <div class="filter-actions flex items-center gap-1 md:gap-2">
     <button
-      class="rounded-md bg-[var(--accent)] px-2 py-1 text-xs font-medium text-black transition-colors hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-50 md:px-4 md:py-2 md:text-sm"
+      class="flex items-center gap-1 rounded-md bg-[var(--accent)] px-1.5 py-1 text-xs font-medium text-black transition-colors hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-50 sm:hidden lg:flex lg:px-4 lg:py-2 lg:text-sm"
+      [disabled]="!isValidFilter()"
+      (click)="onApply()"
+      title="Apply filter"
+    >
+      <mat-icon fontIcon="check" class="h-4! w-4! text-sm! lg:hidden"></mat-icon>
+      <span class="hidden sm:inline lg:hidden">Apply</span>
+    </button>
+    <button
+      class="hidden rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-medium text-black transition-colors hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-50 sm:flex lg:hidden"
       [disabled]="!isValidFilter()"
       (click)="onApply()"
     >
-      Apply
+      <span>Apply</span>
     </button>
     <button
-      class="rounded-md border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-2 py-1 text-xs font-medium text-[var(--text-main)] transition-colors hover:bg-[var(--bg-card)] md:px-4 md:py-2 md:text-sm"
+      class="flex items-center gap-1 rounded-md border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-1.5 py-1 text-xs font-medium text-[var(--text-main)] transition-colors hover:bg-[var(--bg-card)] sm:hidden lg:flex lg:px-4 lg:py-2 lg:text-sm"
+      (click)="onClear()"
+      title="Clear filter"
+    >
+      <mat-icon fontIcon="close" class="h-4! w-4! text-sm! lg:hidden"></mat-icon>
+      <span class="hidden sm:inline lg:hidden">Clear</span>
+    </button>
+    <button
+      class="hidden rounded-md border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-4 py-2 text-sm font-medium text-[var(--text-main)] transition-colors hover:bg-[var(--bg-card)] sm:flex lg:hidden"
       (click)="onClear()"
     >
-      Clear
+      <span>Clear</span>
     </button>
   </div>
 

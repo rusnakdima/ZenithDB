@@ -152,7 +152,10 @@ export class DataTableGridComponent implements OnInit, OnChanges, OnDestroy, Aft
 
   gridTemplateColumns = computed(() => {
     const widths = this.columnWidths();
-    const cols = this.visibleColumnsList().map((col) => `${widths[col] || 150}px`);
+    const cols = this.visibleColumnsList().map((col) => {
+      const w = widths[col];
+      return w ? `${w}px` : `minmax(100px, 1fr)`;
+    });
     return `40px ${cols.join(" ")} 40px`;
   });
 
@@ -349,14 +352,23 @@ export class DataTableGridComponent implements OnInit, OnChanges, OnDestroy, Aft
     return this.sortDirection();
   }
 
-  onColumnDrop(event: CdkDragDrop<ColumnInfo[]>) {
+  onColumnDrop(event: CdkDragDrop<string[]>) {
     if (event.previousIndex === event.currentIndex) return;
-    const currentOrder = [...this.columnOrder()];
+    const currentOrder = [...this.visibleColumnsList()];
     moveItemInArray(currentOrder, event.previousIndex, event.currentIndex);
-    this.columnOrder.set(currentOrder);
-    this.saveColumnOrder(currentOrder);
+    const newOrder = [...this.columnOrder()];
+    const movedCol = currentOrder[event.currentIndex];
+    const oldIdx = newOrder.indexOf(movedCol);
+    newOrder.splice(oldIdx, 1);
+    newOrder.splice(
+      event.currentIndex > event.previousIndex ? event.currentIndex : event.currentIndex,
+      0,
+      movedCol
+    );
+    this.columnOrder.set(newOrder);
+    this.saveColumnOrder(newOrder);
     this.hasLoadedColumnOrder = true;
-    this.columnsOrderChange.emit(currentOrder);
+    this.columnsOrderChange.emit(newOrder);
   }
 
   private saveColumnOrder(order: string[]) {

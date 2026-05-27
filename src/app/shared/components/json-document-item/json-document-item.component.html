@@ -22,15 +22,17 @@
       </button>
     </div>
   </header>
-  <div class="json-body p-4">
-    @for (line of highlightedLines(); track line.num) {
-      <div class="json-line mono flex text-sm leading-relaxed hover:bg-[var(--bg-elevated)]">
-        <span
-          class="json-line-num w-10 flex-shrink-0 pr-4 text-right text-xs text-[var(--text-muted)] select-none"
-          >{{ line.num }}</span
-        >
-        <span class="json-line-content" [innerHTML]="line.html"></span>
-      </div>
-    }
+  <div class="json-body overflow-x-auto p-4">
+    <div class="min-w-max">
+      @for (line of highlightedLines(); track line.num) {
+        <div class="json-line mono flex text-sm leading-relaxed hover:bg-[var(--bg-elevated)]">
+          <span
+            class="json-line-num w-10 flex-shrink-0 pr-4 text-right text-xs text-[var(--text-muted)] select-none"
+            >{{ line.num }}</span
+          >
+          <span class="json-line-content" [innerHTML]="line.html"></span>
+        </div>
+      }
+    </div>
   </div>
 </article>

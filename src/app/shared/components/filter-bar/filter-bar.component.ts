@@ -317,7 +317,7 @@ export class FilterBarComponent implements OnInit, OnChanges, OnDestroy, AfterVi
     const beforeBrace = value.substring(0, lastBraceIndex);
     const fieldType = this.getFieldType(fieldName);
     console.log(`[Filter Field Select] Selected: "${fieldName}" (${fieldType})`);
-    this.localFilter = beforeBrace + "{" + fieldName + ": ";
+    this.localFilter = beforeBrace + '{"' + fieldName + '": ';
     this.filterChange.emit(this.localFilter);
     this.showFieldDropdown.set(false);
     this.fieldDropdownIndex.set(-1);

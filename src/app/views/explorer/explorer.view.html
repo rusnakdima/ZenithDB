@@ -1,12 +1,11 @@
-<div class="explorer-page flex h-[calc(100vh-150px)] flex-1 flex-row bg-[var(--bg-deep)]">
+<div class="explorer-page flex min-h-0 flex-1 flex-row bg-[var(--bg-deep)] pb-4">
   <app-explorer-sidebar
     [collapsed]="treeCollapsed()"
     (collectionSelect)="onTreeCollectionSelect($event)"
   ></app-explorer-sidebar>
 
-  <div class="flex flex-1 flex-col">
+  <div class="flex min-w-0 flex-1 flex-col">
     <app-explorer-toolbar
-      [stats]="stats()"
       [treeCollapsed]="treeCollapsed()"
       [showExportMenu]="showExportMenu()"
       (toggleTreeCollapse)="toggleTreeCollapse()"
@@ -27,60 +26,68 @@
       <app-explorer-filter-panel></app-explorer-filter-panel>
 
       <div
-        class="flex items-center gap-3 border-b border-[var(--border-subtle)] bg-[var(--bg-sidebar)] px-4 py-2"
+        class="flex items-center justify-between gap-3 border-b border-[var(--border-subtle)] bg-[var(--bg-sidebar)] px-4 py-2"
       >
         <app-segment-selector
           [options]="viewModeOptions"
           [active]="viewTab()"
           (select)="onViewModeChange($event)"
         ></app-segment-selector>
-      </div>
-
-      <div class="relative flex flex-1 flex-col overflow-hidden" style="min-width: 0; height: 100%">
-        @switch (viewTab()) {
-          @case ("table") {
-            <div class="flex flex-1 flex-col overflow-hidden" style="min-width: 0; height: 100%">
-              <app-data-table-grid
-                style="height: 100%"
-                [collectionName]="activeCollection()"
-                [filter]="filterText()"
-                [page]="page()"
-                [pageSize]="pageSize()"
-                [inputVisibleColumns]="selectedColumns()"
-                [columns]="availableColumnsMeta()"
-                [reloadTrigger]="reloadTrigger()"
-                (documentClick)="openInspector($event)"
-                (pageChange)="onPageChange($event)"
-                (columnsOrderChange)="onColumnsOrderChange($event)"
-              ></app-data-table-grid>
-            </div>
-            <app-pagination
-              class="flex-shrink-0"
-              [totalItems]="stats()?.document_count ?? 0"
-              [currentPage]="page()"
-              [pageSize]="pageSize()"
-              (pageChange)="onPageChange($event)"
-              (pageSizeChange)="onPageSizeChange($event)"
-            ></app-pagination>
-          }
-          @case ("json") {
-            <div class="flex flex-1 flex-col overflow-hidden" style="min-width: 0; height: 100%">
-              <app-json-view
-                class="h-full"
-                [fullJsonData]="fullJsonData()"
-                [jsonLoading]="jsonLoading()"
-                [jsonHasMore]="jsonHasMore()"
-                [jsonLoadingMore]="jsonLoadingMore()"
-                [jsonDocumentsMap]="jsonDocumentsMap()"
-                (copyRowJson)="copyRowJson($event.doc, $event.docIndex)"
-                (openInspector)="openInspector($event)"
-                (loadMore)="loadMoreJsonData()"
-                (copyJsonToClipboard)="copyJsonToClipboard()"
-              ></app-json-view>
-            </div>
-          }
+        @if (stats()) {
+          <div
+            class="flex items-center gap-3 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-4 py-2"
+          >
+            <span class="flex items-center gap-1.5 text-sm text-[var(--text-dim)]">
+              <mat-icon fontIcon="format_align_left" class="h-5! w-4! text-base!" />
+              {{ stats()!.size_bytes | formatBytes }}
+            </span>
+            <span class="h-4 w-px bg-[var(--border-subtle)]"></span>
+            <span class="flex items-center gap-1.5 text-sm text-[var(--text-dim)]">
+              <mat-icon fontIcon="grid_view" class="h-5! w-4! text-base!" />
+              {{ formatDocumentCount(stats()!.document_count) }} Docs
+            </span>
+          </div>
         }
       </div>
+
+      @switch (viewTab()) {
+        @case ("table") {
+          <app-table-view
+            class="min-w-0 flex-1"
+            [collectionName]="activeCollection()"
+            [filter]="filterText()"
+            [page]="page()"
+            [pageSize]="pageSize()"
+            [inputVisibleColumns]="selectedColumns()"
+            [columns]="availableColumnsMeta()"
+            [reloadTrigger]="reloadTrigger()"
+            [totalItems]="stats()?.document_count ?? 0"
+            (documentClick)="openInspector($event)"
+            (pageChange)="onPageChange($event)"
+            (pageSizeChange)="onPageSizeChange($event)"
+            (columnsOrderChange)="onColumnsOrderChange($event)"
+          ></app-table-view>
+        }
+        @case ("json") {
+          <div
+            class="flex min-w-0 flex-1 flex-col overflow-hidden"
+            style="min-width: 0; height: 100%"
+          >
+            <app-json-view
+              class="h-full"
+              [fullJsonData]="fullJsonData()"
+              [jsonLoading]="jsonLoading()"
+              [jsonHasMore]="jsonHasMore()"
+              [jsonLoadingMore]="jsonLoadingMore()"
+              [jsonDocumentsMap]="jsonDocumentsMap()"
+              (copyRowJson)="copyRowJson($event.doc, $event.docIndex)"
+              (openInspector)="openInspector($event)"
+              (loadMore)="loadMoreJsonData()"
+              (copyJsonToClipboard)="copyJsonToClipboard()"
+            ></app-json-view>
+          </div>
+        }
+      }
     }
 
     @if (showInspector() && inspectorDocument()) {

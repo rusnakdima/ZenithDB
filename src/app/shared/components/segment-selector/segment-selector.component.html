@@ -46,10 +46,14 @@
     </button>
     <mat-menu
       #selectorMenu="matMenu"
+      style="--mat-menu-container-color: var(--bg-card) !important"
       class="overflow-hidden rounded-xl border border-[var(--border-visible)] shadow-2xl"
     >
       <ng-container
-        *ngTemplateOutlet="menuItemTemplate; context: { options: options, active: active, select: select }"
+        *ngTemplateOutlet="
+          menuItemTemplate;
+          context: { options: options, active: active, select: select }
+        "
       />
     </mat-menu>
   </div>

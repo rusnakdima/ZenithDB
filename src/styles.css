@@ -110,6 +110,14 @@ html.light {
   @apply bg-[var(--accent-muted)];
 }
 
+.mat-mdc-menu-panel {
+  @apply bg-[var(--bg-card)]!;
+}
+
+.mat-mdc-menu-panel .mat-mdc-menu-item {
+  @apply text-[var(--text-main)]!;
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -211,7 +219,7 @@ html.light {
   }
 
   .json-line-content {
-    @apply flex-1 overflow-x-auto whitespace-pre;
+    @apply flex-1 whitespace-pre;
   }
 
   .json-key {
@@ -251,7 +259,7 @@ html.light {
   }
 
   .page-content {
-    @apply flex flex-col flex-1 px-4 pb-20 sm:px-6;
+    @apply flex flex-1 flex-col px-4 pb-20 sm:px-6;
   }
 
   .page-explorer {
@@ -952,7 +960,7 @@ app-pagination {
 /* app-data-table-grid host inside header scroll - allow content width */
 .table-header-scroll app-data-table-grid.table-container {
   display: block !important;
-  width: max-content !important;
+  width: 100% !important;
   height: auto !important;
   overflow: visible !important;
   flex: none !important;
@@ -961,7 +969,7 @@ app-pagination {
 /* app-data-table-grid host inside body scroll - don't constrain */
 .table-body-scroll app-data-table-grid.table-container {
   display: block !important;
-  width: max-content !important;
+  width: 100% !important;
   height: auto !important;
   overflow: visible !important;
   flex: none !important;
@@ -970,8 +978,8 @@ app-pagination {
 /* app-data-table-grid standalone in scroll container - allow content width */
 app-data-table-grid.table-container {
   display: block !important;
-  width: max-content !important;
-  max-width: max-content !important;
+  width: 100% !important;
+  max-width: 100% !important;
   height: auto !important;
   overflow-x: auto !important;
   flex: none !important;
@@ -999,7 +1007,7 @@ app-data-table-grid.table-container {
 .data-table-grid {
   display: grid;
   width: max-content;
-  min-width: max-content;
+  min-width: 100%;
   position: relative;
 }
 
@@ -1010,8 +1018,8 @@ app-data-table-grid.table-container {
   flex: 1 1 auto;
   flex-direction: column;
   overflow: hidden;
-  min-width: 100%;
-  max-width: 100vh;
+  min-width: 0;
+  max-width: 100%;
   height: 100%;
 }
 
@@ -1040,6 +1048,9 @@ app-data-table-grid.table-container {
   flex-shrink: 0;
   background: var(--bg-elevated);
   border-bottom: 2px solid var(--border-visible);
+  position: sticky;
+  left: 0;
+  z-index: 30;
 }
 
 .data-table-grid > .header-cell.actions-cell {
@@ -1051,6 +1062,9 @@ app-data-table-grid.table-container {
   flex-shrink: 0;
   background: var(--bg-elevated);
   border-bottom: 2px solid var(--border-visible);
+  position: sticky;
+  right: 0;
+  z-index: 30;
 }
 
 /* Data Cells - direct grid items */
@@ -1078,6 +1092,9 @@ app-data-table-grid.table-container {
   flex-shrink: 0;
   background: var(--bg-elevated);
   border-bottom: 1px solid var(--border-subtle);
+  position: sticky;
+  left: 0;
+  z-index: 25;
 }
 
 .data-table-grid > .data-cell.actions-cell {
@@ -1089,6 +1106,9 @@ app-data-table-grid.table-container {
   flex-shrink: 0;
   background: var(--bg-elevated);
   border-bottom: 1px solid var(--border-subtle);
+  position: sticky;
+  right: 0;
+  z-index: 25;
 }
 
 /* Row States - zebra, hover, selected */
@@ -1860,12 +1880,13 @@ app-data-table-grid.table-container {
 
 /* Column Drag Placeholder */
 .column-drag-placeholder {
-  width: 100px;
-  height: 40px;
-  background: var(--bg-elevated);
-  border: 2px dashed var(--accent);
-  border-radius: 4px;
-  opacity: 0.5;
+  height: 44px;
+  min-width: 80px;
+  background: linear-gradient(135deg, var(--accent-muted) 0%, rgba(255, 107, 0, 0.05) 100%);
+  border: 2px solid var(--accent);
+  border-radius: 6px;
+  box-shadow: 0 0 12px rgba(255, 107, 0, 0.2);
+  transition: all 0.2s ease;
 }
 
 /* Row Drag Placeholder */
@@ -1875,6 +1896,28 @@ app-data-table-grid.table-container {
   border-radius: 4px;
   min-height: 44px;
   transition: transform 200ms ease;
+}
+
+/* CDK Drag Drop styles for column reordering */
+.cdk-drag-preview {
+  opacity: 0.9;
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.4),
+    0 0 0 2px var(--accent);
+  background: var(--bg-elevated);
+  border-radius: 6px;
+}
+
+.cdk-drag-animating {
+  transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.data-table-grid.cdk-drop-list-dragging .header-cell.data-cell-header:not(.cdk-drag-placeholder) {
+  transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cdk-drag-placeholder {
+  opacity: 0.3;
 }
 
 /* Row Drag CDK Animations */
@@ -2055,12 +2098,13 @@ app-data-table-grid.table-container {
 }
 
 .column-drag-placeholder {
-  width: 100px;
-  height: 40px;
-  background: var(--bg-elevated);
-  border: 2px dashed var(--accent);
-  border-radius: 4px;
-  opacity: 0.5;
+  height: 44px;
+  min-width: 80px;
+  background: linear-gradient(135deg, var(--accent-muted) 0%, rgba(255, 107, 0, 0.05) 100%);
+  border: 2px solid var(--accent);
+  border-radius: 6px;
+  box-shadow: 0 0 12px rgba(255, 107, 0, 0.2);
+  transition: all 0.2s ease;
 }
 
 /* ============================================
@@ -2187,12 +2231,13 @@ app-data-table-grid.table-container {
 
 /* Column Drag Placeholder */
 .column-drag-placeholder {
-  width: 100px;
-  height: 40px;
-  background: var(--bg-elevated);
-  border: 2px dashed var(--accent);
-  border-radius: 4px;
-  opacity: 0.5;
+  height: 44px;
+  min-width: 80px;
+  background: linear-gradient(135deg, var(--accent-muted) 0%, rgba(255, 107, 0, 0.05) 100%);
+  border: 2px solid var(--accent);
+  border-radius: 6px;
+  box-shadow: 0 0 12px rgba(255, 107, 0, 0.2);
+  transition: all 0.2s ease;
 }
 
 /* Column Dropdown */
@@ -2311,12 +2356,13 @@ app-data-table-grid.table-container {
 
 /* Column Drag Placeholder */
 .column-drag-placeholder {
-  width: 100px;
-  height: 40px;
-  background: var(--bg-elevated);
-  border: 2px dashed var(--accent);
-  border-radius: 4px;
-  opacity: 0.5;
+  height: 44px;
+  min-width: 80px;
+  background: linear-gradient(135deg, var(--accent-muted) 0%, rgba(255, 107, 0, 0.05) 100%);
+  border: 2px solid var(--accent);
+  border-radius: 6px;
+  box-shadow: 0 0 12px rgba(255, 107, 0, 0.2);
+  transition: all 0.2s ease;
 }
 
 /* DEPRECATED styles - kept for compatibility but superseded by .data-grid styles above */
@@ -2619,11 +2665,13 @@ thead tr th.actions-col {
 }
 
 .column-drag-placeholder {
-  width: 100%;
-  min-height: 40px;
-  background: var(--accent-muted);
-  border: 2px dashed var(--accent);
-  border-radius: 8px;
+  height: 44px;
+  min-width: 80px;
+  background: linear-gradient(135deg, var(--accent-muted) 0%, rgba(255, 107, 0, 0.05) 100%);
+  border: 2px solid var(--accent);
+  border-radius: 6px;
+  box-shadow: 0 0 12px rgba(255, 107, 0, 0.2);
+  transition: all 0.2s ease;
 }
 
 .preview-header-cell {
@@ -2680,11 +2728,13 @@ thead tr th.actions-col {
 }
 
 .column-drag-placeholder {
-  width: 100%;
-  min-height: 40px;
-  background: var(--accent-muted);
-  border: 2px dashed var(--accent);
-  border-radius: 8px;
+  height: 44px;
+  min-width: 80px;
+  background: linear-gradient(135deg, var(--accent-muted) 0%, rgba(255, 107, 0, 0.05) 100%);
+  border: 2px solid var(--accent);
+  border-radius: 6px;
+  box-shadow: 0 0 12px rgba(255, 107, 0, 0.2);
+  transition: all 0.2s ease;
 }
 
 .preview-header-cell {
@@ -2754,4 +2804,3 @@ thead tr th.actions-col {
 .data-table .data-row.selected td:first-child {
   padding-left: calc(12px - 2px);
 }
-
