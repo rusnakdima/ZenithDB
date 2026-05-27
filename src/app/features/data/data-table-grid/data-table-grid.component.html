@@ -40,31 +40,113 @@
     <p class="mt-1 text-sm text-[var(--text-muted)]">Try adjusting your filter</p>
   </div>
 } @else {
-  <div
-    class="relative flex h-full w-full flex-1 flex-col overflow-hidden"
-    style="min-width: 0; max-height: 100%"
-  >
-    <div class="flex flex-1 flex-col overflow-x-auto" style="min-width: 0; height: 100%">
+  <div class="table-scroll-container" style="min-width: 0; height: 100%">
+    <div style="min-width: 100%; width: max-content; max-height: 100%" class="overflow-y-auto">
       <div
-        class="flex-1 overflow-y-auto"
-        style="min-width: 100%; width: max-content; max-height: 100%"
+        class="data-table-grid"
+        cdkDropList
+        cdkDropListOrientation="horizontal"
+        [cdkDropListData]="visibleColumnsList()"
+        (cdkDropListDropped)="onColumnDrop($event)"
+        [style.grid-template-columns]="gridTemplateColumns()"
+        [style.grid-template-rows]="gridTemplateRows()"
       >
-        <div
-          class="data-table-grid"
-          cdkDropList
-          cdkDropListOrientation="horizontal"
-          [cdkDropListData]="visibleColumnsList()"
-          (cdkDropListDropped)="onColumnDrop($event)"
-          [style.grid-template-columns]="gridTemplateColumns()"
-          [style.grid-template-rows]="gridTemplateRows()"
-        >
-          <div class="header-cell checkbox-cell">
-            <label class="custom-check" for="select-all-checkbox">
+        <div class="header-cell checkbox-cell">
+          <label class="custom-check" for="select-all-checkbox">
+            <input
+              type="checkbox"
+              id="select-all-checkbox"
+              [checked]="allSelected()"
+              (change)="onToggleSelectAll()"
+              class="sr-only"
+            />
+            <span class="check-mark"></span>
+          </label>
+        </div>
+        @for (col of visibleColumnsFiltered(); track col.name) {
+          <div
+            class="header-cell data-cell-header"
+            cdkDrag
+            [cdkDragData]="col.name"
+            (cdkDragStarted)="onDragStarted(col.name, columnWidths()[col.name])"
+            (cdkDragReleased)="onDragReleased()"
+          >
+            <div
+              class="flex cursor-pointer items-center gap-1 transition-colors hover:text-white"
+              (click)="onSortByColumn(col.name)"
+            >
+              <span>{{ col.name }}</span>
+              <svg
+                class="sort-icon h-3 w-3"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                @if (getSortIcon(col.name) === "asc") {
+                  <path d="M12 19V5M5 12l7-7 7 7" />
+                } @else if (getSortIcon(col.name) === "desc") {
+                  <path d="M12 5v14M5 12l7 7 7-7" />
+                } @else {
+                  <path d="M8 9l4-4 4 4M8 15l4 4 4-4" />
+                }
+              </svg>
+            </div>
+            <span class="type-badge" [class]="getTypeColor(col.data_type)">{{
+              getTypeIcon(col.data_type)
+            }}</span>
+            <div
+              class="resize-handle"
+              (mousedown)="onColumnResizeStart(col.name, $event); $event.stopPropagation()"
+            ></div>
+          </div>
+        }
+        <div class="header-cell actions-cell">
+          <button class="menu-btn" (click)="openAddRecordModal()" title="Add Record">
+            <mat-icon fontIcon="add" class="icon"></mat-icon>
+          </button>
+          <button class="menu-btn" (click)="onToggleColumnMenu()" title="Show/Hide columns">
+            <mat-icon fontIcon="view_column" class="icon"></mat-icon>
+          </button>
+          @if (showColumnMenu()) {
+            <div class="column-dropdown" (click)="$event.stopPropagation()">
+              <div class="column-dropdown-title">Visible Columns</div>
+              <div class="column-dropdown-actions">
+                <button (click)="showAllCols()">All</button>
+                <button (click)="hideAllCols()">None</button>
+              </div>
+              <div class="column-dropdown-list">
+                @for (col of columns; track col.name) {
+                  <label class="column-dropdown-item">
+                    <input
+                      type="checkbox"
+                      [checked]="visibleColumns().has(col.name)"
+                      [disabled]="col.is_primary_key"
+                      (change)="toggleColVisibility(col.name)"
+                    />
+                    <span class="col-name">{{ col.name }}</span>
+                    <span class="col-type">{{ col.data_type }}</span>
+                  </label>
+                }
+              </div>
+            </div>
+          }
+        </div>
+
+        @for (row of data(); track trackRow($index, row); let rowIndex = $index) {
+          <div
+            class="data-cell checkbox-cell"
+            [class.zebra]="rowIndex % 2 === 1"
+            [class.selected]="isSelected(rowIndex)"
+            [class.hovered]="hoveredRowIndex() === rowIndex"
+            (click)="$event.stopPropagation()"
+          >
+            <label class="custom-check" [attr.for]="'row-checkbox-' + rowIndex">
               <input
                 type="checkbox"
-                id="select-all-checkbox"
-                [checked]="allSelected()"
-                (change)="onToggleSelectAll()"
+                [id]="'row-checkbox-' + rowIndex"
+                [checked]="isSelected(rowIndex)"
+                (change)="onToggleRow(rowIndex)"
                 class="sr-only"
               />
               <span class="check-mark"></span>
@@ -72,120 +154,30 @@
           </div>
           @for (col of visibleColumnsFiltered(); track col.name) {
             <div
-              class="header-cell data-cell-header"
-              cdkDrag
-              [cdkDragData]="col.name"
-              (cdkDragStarted)="onDragStarted(col.name, columnWidths()[col.name])"
-              (cdkDragReleased)="onDragReleased()"
+              class="data-cell"
+              [class.zebra]="rowIndex % 2 === 1"
+              [class.selected]="isSelected(rowIndex)"
+              [class.hovered]="hoveredRowIndex() === rowIndex"
+              (click)="onRowClick(row, $event, rowIndex)"
             >
-              <div
-                class="flex cursor-pointer items-center gap-1 transition-colors hover:text-white"
-                (click)="onSortByColumn(col.name)"
-              >
-                <span>{{ col.name }}</span>
-                <svg
-                  class="sort-icon h-3 w-3"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  @if (getSortIcon(col.name) === "asc") {
-                    <path d="M12 19V5M5 12l7-7 7 7" />
-                  } @else if (getSortIcon(col.name) === "desc") {
-                    <path d="M12 5v14M5 12l7 7 7-7" />
-                  } @else {
-                    <path d="M8 9l4-4 4 4M8 15l4 4 4-4" />
-                  }
-                </svg>
-              </div>
-              <span class="type-badge" [class]="getTypeColor(col.data_type)">{{
-                getTypeIcon(col.data_type)
-              }}</span>
-              <div
-                class="resize-handle"
-                (mousedown)="onColumnResizeStart(col.name, $event); $event.stopPropagation()"
-              ></div>
+              {{ row[col.name] | formatValue }}
             </div>
           }
-          <div class="header-cell actions-cell">
-            <button class="menu-btn" (click)="openAddRecordModal()" title="Add Record">
-              <mat-icon fontIcon="add" class="icon"></mat-icon>
+          <div
+            class="data-cell actions-cell"
+            [class.zebra]="rowIndex % 2 === 1"
+            [class.selected]="isSelected(rowIndex)"
+            [class.hovered]="hoveredRowIndex() === rowIndex"
+            (click)="$event.stopPropagation()"
+          >
+            <button class="action-btn" title="Edit Record" (click)="openEditRecordModal(row)">
+              <mat-icon fontIcon="edit" class="icon"></mat-icon>
             </button>
-            <button class="menu-btn" (click)="onToggleColumnMenu()" title="Show/Hide columns">
-              <mat-icon fontIcon="view_column" class="icon"></mat-icon>
+            <button class="action-btn" title="View JSON" (click)="onViewJson(row)">
+              <mat-icon fontIcon="data_object" class="icon"></mat-icon>
             </button>
-            @if (showColumnMenu()) {
-              <div class="column-dropdown" (click)="$event.stopPropagation()">
-                <div class="column-dropdown-title">Visible Columns</div>
-                <div class="column-dropdown-actions">
-                  <button (click)="showAllCols()">All</button>
-                  <button (click)="hideAllCols()">None</button>
-                </div>
-                <div class="column-dropdown-list">
-                  @for (col of columns; track col.name) {
-                    <label class="column-dropdown-item">
-                      <input
-                        type="checkbox"
-                        [checked]="visibleColumns().has(col.name)"
-                        [disabled]="col.is_primary_key"
-                        (change)="toggleColVisibility(col.name)"
-                      />
-                      <span class="col-name">{{ col.name }}</span>
-                      <span class="col-type">{{ col.data_type }}</span>
-                    </label>
-                  }
-                </div>
-              </div>
-            }
           </div>
-
-          @for (row of data(); track trackRow($index, row); let rowIndex = $index) {
-            <div
-              class="data-cell checkbox-cell"
-              [class.zebra]="rowIndex % 2 === 1"
-              [class.selected]="isSelected(rowIndex)"
-              [class.hovered]="hoveredRowIndex() === rowIndex"
-              (click)="$event.stopPropagation()"
-            >
-              <label class="custom-check" [attr.for]="'row-checkbox-' + rowIndex">
-                <input
-                  type="checkbox"
-                  [id]="'row-checkbox-' + rowIndex"
-                  [checked]="isSelected(rowIndex)"
-                  (change)="onToggleRow(rowIndex)"
-                  class="sr-only"
-                />
-                <span class="check-mark"></span>
-              </label>
-            </div>
-            @for (col of visibleColumnsFiltered(); track col.name) {
-              <div
-                class="data-cell"
-                [class.zebra]="rowIndex % 2 === 1"
-                [class.selected]="isSelected(rowIndex)"
-                [class.hovered]="hoveredRowIndex() === rowIndex"
-                (click)="onRowClick(row, $event, rowIndex)"
-              >
-                {{ row[col.name] | formatValue }}
-              </div>
-            }
-            <div
-              class="data-cell actions-cell"
-              [class.zebra]="rowIndex % 2 === 1"
-              [class.selected]="isSelected(rowIndex)"
-              [class.hovered]="hoveredRowIndex() === rowIndex"
-              (click)="$event.stopPropagation()"
-            >
-              <button class="action-btn" title="Edit Record" (click)="openEditRecordModal(row)">
-                <mat-icon fontIcon="edit" class="icon"></mat-icon>
-              </button>
-              <button class="action-btn" title="View JSON" (click)="onViewJson(row)">
-                <mat-icon fontIcon="data_object" class="icon"></mat-icon>
-              </button>
-            </div>
-          }
-        </div>
+        }
       </div>
     </div>
   </div>
