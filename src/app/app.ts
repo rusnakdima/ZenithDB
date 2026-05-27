@@ -1,6 +1,17 @@
-import { Component, inject, HostBinding, OnInit, OnDestroy, ViewChild } from "@angular/core";
+import {
+  Component,
+  inject,
+  HostBinding,
+  OnInit,
+  OnDestroy,
+  ViewChild,
+  signal,
+} from "@angular/core";
 import { RouterOutlet } from "@angular/router";
+import { Router, NavigationEnd } from "@angular/router";
 import { CommonModule } from "@angular/common";
+import { Subscription } from "rxjs";
+import { filter } from "rxjs/operators";
 import { LoadingOverlayComponent } from "@shared/components/loading/loading-overlay.component";
 import { ToastContainerComponent } from "@components/toast/toast-container.component";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
@@ -39,6 +50,10 @@ export class AppComponent implements OnInit, OnDestroy {
   private boundOpenConnectionModal: (() => void) | null = null;
   private boundVisibilityChange: (() => void) | null = null;
   private visibilityDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+  private routeSub: Subscription | null = null;
+
+  isExplorerRoute = signal(false);
+  private router = inject(Router);
 
   connectionState = inject(ConnectionStateService);
   shortcutsService = inject(KeyboardShortcutsService);
@@ -74,6 +89,11 @@ export class AppComponent implements OnInit, OnDestroy {
     document.addEventListener("zenith:close-top-modal", this.boundCloseTopModal);
     document.addEventListener("zenith:open-connection-modal", this.boundOpenConnectionModal);
     document.addEventListener("visibilitychange", this.boundVisibilityChange);
+    this.routeSub = this.router.events
+      .pipe(filter((e) => e instanceof NavigationEnd))
+      .subscribe((e: any) => {
+        this.isExplorerRoute.set(this.router.url.includes("/explorer"));
+      });
   }
 
   ngOnDestroy(): void {
@@ -91,6 +111,9 @@ export class AppComponent implements OnInit, OnDestroy {
     }
     if (this.visibilityDebounceTimer) {
       clearTimeout(this.visibilityDebounceTimer);
+    }
+    if (this.routeSub) {
+      this.routeSub.unsubscribe();
     }
   }
 }

@@ -1,0 +1,32 @@
+<div
+  class="absolute top-full right-0 z-50 mt-1 w-40 rounded-lg border border-[var(--border-visible)] bg-[var(--bg-card)] shadow-xl"
+  (click)="$event.stopPropagation()"
+>
+  <button
+    class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-[var(--text-main)] hover:bg-[var(--bg-elevated)]"
+    (click)="onExport('csv')"
+  >
+    <mat-icon
+      fontIcon="table_chart"
+      class="h-5! w-4! text-base! text-[var(--accent)]"
+    ></mat-icon>
+    CSV
+  </button>
+  <button
+    class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-[var(--text-main)] hover:bg-[var(--bg-elevated)]"
+    (click)="onExport('json')"
+  >
+    <mat-icon
+      fontIcon="data_object"
+      class="h-5! w-4! text-base! text-blue-400"
+    ></mat-icon>
+    JSON
+  </button>
+  <button
+    class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-[var(--text-main)] hover:bg-[var(--bg-elevated)]"
+    (click)="onExport('sql')"
+  >
+    <mat-icon fontIcon="code" class="h-5! w-4! text-base! text-amber-400"></mat-icon>
+    SQL
+  </button>
+</div>

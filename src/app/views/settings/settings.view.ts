@@ -8,7 +8,7 @@ import { SettingsService } from "../../shared/services/settings.service";
   selector: "app-settings",
   standalone: true,
   imports: [CommonModule, MatIconModule, FormsModule],
-  templateUrl: "./settings.component.html",
+  templateUrl: "./settings.view.html",
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SettingsComponent {

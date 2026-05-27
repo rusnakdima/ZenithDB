@@ -1,0 +1,44 @@
+@if (selectedCount() > 0) {
+  <div class="fixed bottom-6 right-6 z-40 flex items-center gap-4 rounded-2xl border border-[var(--border-visible)] bg-[var(--bg-card)] px-6 py-3 shadow-2xl">
+    <div class="flex items-center gap-3">
+      <div class="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--accent)] text-sm font-bold text-black">
+        {{ selectedCount() }}
+      </div>
+      <span class="text-sm font-medium text-[var(--text-main)]">
+        {{ selectedCount() === 1 ? 'item' : 'items' }} selected
+      </span>
+    </div>
+
+    <div class="h-6 w-px bg-[var(--border-subtle)]"></div>
+
+    <div class="flex items-center gap-2">
+      <button
+        class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-[var(--text-dim)] transition-all hover:bg-[var(--bg-elevated)] hover:text-[var(--accent)]"
+        title="Export selected"
+        (click)="export.emit()"
+      >
+        <mat-icon fontIcon="download" class="h-5! w-4! text-base!" />
+        <span class="hidden sm:inline">Export</span>
+      </button>
+
+      <button
+        class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-red-400 transition-all hover:bg-red-600/20"
+        title="Delete selected"
+        (click)="delete.emit()"
+      >
+        <mat-icon fontIcon="delete" class="h-5! w-4! text-base!" />
+        <span class="hidden sm:inline">Delete</span>
+      </button>
+    </div>
+
+    <div class="h-6 w-px bg-[var(--border-subtle)]"></div>
+
+    <button
+      class="flex items-center gap-2 rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-[var(--bg-elevated)] hover:text-[var(--text-main)]"
+      title="Clear selection"
+      (click)="clearSelection.emit()"
+    >
+      <mat-icon fontIcon="close" class="h-5! w-4! text-base!" />
+    </button>
+  </div>
+}

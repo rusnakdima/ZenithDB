@@ -13,7 +13,7 @@ import { ConnectionFormService } from "@shared/services/connection-form.service"
   selector: "app-connections",
   standalone: true,
   imports: [ConnectionCardComponent, MatIconModule],
-  templateUrl: "./connections.component.html",
+  templateUrl: "./connections.view.html",
 })
 export class ConnectionsComponent implements OnInit {
   loading = signal(true);

@@ -6,6 +6,6 @@ import { CommonModule } from "@angular/common";
   selector: "app-dashboard",
   standalone: true,
   imports: [MatIconModule, CommonModule],
-  templateUrl: "./dashboard.component.html",
+  templateUrl: "./dashboard.view.html",
 })
 export class DashboardComponent {}

@@ -12,9 +12,8 @@ import { Router, ActivatedRoute, NavigationEnd } from "@angular/router";
 import { Subscription } from "rxjs";
 import { filter } from "rxjs/operators";
 import { MatIconModule } from "@angular/material/icon";
-import { DataGridComponent } from "@features/data/data-grid/data-grid.component";
-import { SchemaTreeComponent } from "@features/schema/schema-tree/schema-tree.component";
-import { FilterBarComponent } from "@shared/components/filter-bar/filter-bar.component";
+import { ExplorerSidebarComponent } from "@shared/components/explorer-sidebar/explorer-sidebar.component";
+import { DataTableGridComponent } from "@features/data/data-table-grid/data-table-grid.component";
 import { DataStoreService } from "@services/core/data-store.service";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { ToastService } from "@services/toast.service";
@@ -29,21 +28,21 @@ import {
   RowData,
   FilterExpression,
 } from "@shared/models/connection.config";
-import { FormatBytesPipe } from "@shared/pipes/format-bytes.pipe";
 import { formatJsonLines, highlightJsonLine, safeJsonParse } from "@shared/utils/json.utils";
 import { formatCompactNumber } from "@shared/utils/number.utils";
-import { InspectorDrawerComponent } from "./inspector-drawer/inspector-drawer.component";
-import { CollectionTabsComponent } from "./collection-tabs/collection-tabs.component";
-import { ViewSwitcherComponent } from "./view-switcher/view-switcher.component";
-import { PaginationComponent } from "@shared/components/pagination/pagination.component";
-import {
-  ExportDialogComponent,
-  ExportFormat,
-} from "@app/features/data/export-dialog/export-dialog.component";
-import { CompareTablesDialogComponent } from "./compare-tables-dialog/compare-tables-dialog.component";
+import { InspectorDrawerComponent } from "@shared/components/inspector-drawer/inspector-drawer.component";
+import { CollectionTabsComponent } from "@shared/components/collection-tabs/collection-tabs.component";
+import { CompareTablesDialogComponent } from "@shared/components/compare-tables-dialog/compare-tables-dialog.component";
 import { withErrorHandling } from "@shared/utils/error-handler.utils";
+import { ExplorerToolbarComponent } from "@shared/components/explorer-toolbar/explorer-toolbar.component";
+import { JsonViewComponent } from "@shared/components/json-view/json-view.component";
+import { PaginationComponent } from "@shared/components/pagination/pagination.component";
+import { ExportFormat } from "@app/features/data/export-dialog/export-dialog.component";
+import { SegmentSelectorComponent } from "@shared/components/segment-selector/segment-selector.component";
+import { SegmentOption } from "@shared/components/segment-selector/segment-selector.component";
+import { ExplorerFilterPanelComponent } from "@shared/components/explorer-filter-panel/explorer-filter-panel.component";
 
-type ViewTab = "table" | "tree" | "json";
+type ViewTab = "table" | "json";
 
 interface Tab {
   name: string;
@@ -56,18 +55,18 @@ interface Tab {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     MatIconModule,
-    DataGridComponent,
-    SchemaTreeComponent,
-    FilterBarComponent,
+    DataTableGridComponent,
+    ExplorerSidebarComponent,
     InspectorDrawerComponent,
     CollectionTabsComponent,
-    ViewSwitcherComponent,
     CompareTablesDialogComponent,
+    ExplorerToolbarComponent,
+    JsonViewComponent,
     PaginationComponent,
-    ExportDialogComponent,
-    FormatBytesPipe,
+    SegmentSelectorComponent,
+    ExplorerFilterPanelComponent,
   ],
-  templateUrl: "./explorer.component.html",
+  templateUrl: "./explorer.view.html",
 })
 export class ExplorerComponent implements OnInit, OnDestroy {
   private store = inject(DataStoreService);
@@ -99,6 +98,10 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   loading = signal(false);
 
   viewTab = signal<ViewTab>("table");
+  viewModeOptions: SegmentOption[] = [
+    { id: "table", label: "Table View" },
+    { id: "json", label: "JSON View" },
+  ];
   availableColumns = signal<string[]>([]);
   availableColumnsMeta = signal<ColumnInfo[]>([]);
   selectedColumns = signal<string[]>([]);
@@ -467,8 +470,12 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   closeTab(collection: string) {
     const tabs = this.activeTabs().filter((t) => t.collection !== collection);
     this.activeTabs.set(tabs);
-    if (this.activeCollection() === collection && tabs.length > 0) {
-      this.selectTab(tabs[0].collection);
+    if (this.activeCollection() === collection) {
+      if (tabs.length > 0) {
+        this.selectTab(tabs[0].collection);
+      } else {
+        this.activeCollection.set("");
+      }
     }
   }
 
@@ -484,12 +491,14 @@ export class ExplorerComponent implements OnInit, OnDestroy {
     }
   }
 
-  selectViewTab(tab: ViewTab) {
-    this.viewTab.set(tab);
-    if (tab === "json") {
-      this.jsonOffset.set(0);
-      this.jsonHasMore.set(true);
-      this.loadFullJsonData();
+  onViewModeChange(id: string) {
+    if (id === "table" || id === "json") {
+      this.viewTab.set(id);
+      if (id === "json") {
+        this.jsonOffset.set(0);
+        this.jsonHasMore.set(true);
+        this.loadFullJsonData();
+      }
     }
   }
 
@@ -545,13 +554,6 @@ export class ExplorerComponent implements OnInit, OnDestroy {
     }
   }
 
-  onToggleView() {
-    if (this.viewTab() === "json") {
-      this.selectViewTab("table");
-    } else {
-      this.selectViewTab("json");
-    }
-  }
 
   async onExport(format: ExportFormat) {
     try {
@@ -582,6 +584,10 @@ export class ExplorerComponent implements OnInit, OnDestroy {
     if (this.viewTab() === "table") {
       this.reloadCounter.update((c) => c + 1);
     }
+  }
+
+  onColumnsOrderChange(columns: string[]) {
+    this.selectedColumns.set(columns);
   }
 
   async onImport() {
@@ -669,7 +675,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
 
   onTreeCollectionSelect(collection: string) {
     this.addTab(collection);
-    this.selectViewTab("table");
+    this.viewTab.set("table");
     this.loadColumns();
   }
 

@@ -1,0 +1,8 @@
+<div
+  class="flex h-full w-72 flex-shrink-0 flex-col border-r border-[var(--border-subtle)] bg-[var(--bg-sidebar)]"
+  [class.hidden]="collapsed()"
+>
+  <div class="flex-1 overflow-hidden">
+    <app-schema-tree (collectionSelect)="collectionSelect.emit($event)"></app-schema-tree>
+  </div>
+</div>

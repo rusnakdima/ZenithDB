@@ -1,0 +1,14 @@
+<div>
+  <div class="flex h-full flex-col" style="min-height: 0;">
+    <div class="flex-1 overflow-auto" style="min-height: 0;">
+      <app-data-table-grid style="height: 100%; display: block; width: 100%; min-width: 0;"
+        [collectionName]="collectionName()" [filter]="filter()" [page]="page()" [pageSize]="pageSize()"
+        [inputVisibleColumns]="inputVisibleColumns()" [columns]="columns()" [reloadTrigger]="reloadTrigger()"
+        (documentClick)="documentClick.emit($event)" (pageChange)="pageChange.emit($event)"
+        (columnsOrderChange)="columnsOrderChange.emit($event)"></app-data-table-grid>
+    </div>
+  </div>
+
+  <app-pagination class="flex-shrink-0" [totalItems]="totalItems()" [currentPage]="page()" [pageSize]="pageSize()"
+    (pageChange)="pageChange.emit($event)" (pageSizeChange)="pageSizeChange.emit($event)"></app-pagination>
+</div>

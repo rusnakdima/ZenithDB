@@ -1,0 +1,66 @@
+<div class="flex h-full w-full flex-col">
+  <div
+    class="flex items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--bg-sidebar)]/50 px-4 py-2"
+  >
+    <div class="flex items-center gap-2">
+      <span class="text-sm text-[var(--text-dim)]">Full Collection JSON</span>
+      <span class="text-xs text-[var(--text-muted)]"
+        >({{ fullJsonData().length }} documents)</span
+      >
+    </div>
+    <button
+      class="flex items-center gap-2 rounded bg-[var(--accent)] px-3 py-1.5 text-sm font-bold text-black transition-colors hover:bg-[var(--accent-hover)]"
+      (click)="onCopyFullJson()"
+    >
+      <mat-icon fontIcon="content_copy" class="h-5! w-4! text-base!" />
+      Copy to Clipboard
+    </button>
+  </div>
+  <div class="flex-1 overflow-y-auto bg-[var(--bg-deep)]">
+    @if (jsonLoading()) {
+      <div class="flex h-full items-center justify-center">
+        <div
+          class="h-8 w-8 animate-spin rounded-full border-2 border-[var(--accent)] border-t-transparent"
+        ></div>
+      </div>
+    } @else if (fullJsonData().length === 0) {
+      <div class="flex h-full flex-col items-center justify-center text-[var(--text-dim)]">
+        <mat-icon fontIcon="download" class="mb-2 h-12! w-12! text-xl!" />
+        <p class="text-lg font-bold">No documents found</p>
+        <p class="text-sm text-[var(--text-muted)]">This collection is empty</p>
+      </div>
+    } @else {
+      <div class="p-4">
+        @for (doc of fullJsonData(); track trackByIndex($index); let docIndex = $index) {
+          @if (getDocLines(docIndex); as docData) {
+            <app-json-document-item
+              [doc]="doc"
+              [docIndex]="docIndex"
+              [highlightedLines]="docData.highlightedLines"
+              [json]="docData.json"
+              (copy)="onCopyRowJson($event.doc, $event.docIndex)"
+              (inspect)="onOpenInspector($event)"
+            ></app-json-document-item>
+          }
+        }
+        @if (jsonLoadingMore()) {
+          <div class="flex items-center justify-center gap-2 py-4 text-[var(--text-dim)]">
+            <div
+              class="h-4 w-4 animate-spin rounded-full border-2 border-[var(--accent)]/20 border-t-[var(--accent)]"
+            ></div>
+            <span class="text-sm">Loading more...</span>
+          </div>
+        } @else if (jsonHasMore()) {
+          <div class="flex justify-center py-4">
+            <button
+              (click)="onLoadMore()"
+              class="rounded bg-[var(--accent)] px-4 py-2 text-sm font-bold text-black transition-colors hover:bg-[var(--accent-hover)]"
+            >
+              Load More
+            </button>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>

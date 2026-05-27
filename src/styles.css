@@ -247,11 +247,15 @@ html.light {
   }
 
   .theme {
-    @apply sticky min-h-screen bg-[var(--bg-deep)] text-[var(--text-main)];
+    @apply bg-[var(--bg-deep)] text-[var(--text-main)];
   }
 
   .page-content {
-    @apply px-4 pb-20 sm:px-6;
+    @apply flex flex-col flex-1 px-4 pb-20 sm:px-6;
+  }
+
+  .page-explorer {
+    @apply overflow-hidden;
   }
 
   .connections-max-width {
@@ -738,6 +742,15 @@ input[type="checkbox"] {
 /* ============================================
    Table Grid - Scrollable with sticky header & columns
    ============================================ */
+.table-scroll-sync {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
 .table-container {
   display: flex;
   flex-direction: column;
@@ -846,11 +859,12 @@ app-pagination {
 /* Header scroll area - horizontal only, no vertical scroll */
 .table-header-scroll {
   flex-shrink: 0;
-  overflow-x: scroll;
+  overflow-x: auto;
   overflow-y: hidden;
   height: 46px;
   min-width: 0;
   width: 100%;
+  box-sizing: border-box;
 }
 .table-header-scroll::-webkit-scrollbar {
   height: 8px;
@@ -870,7 +884,7 @@ app-pagination {
 .table-body-scroll {
   flex: 1;
   min-height: 0;
-  overflow-x: scroll;
+  overflow-x: auto;
   overflow-y: auto;
   background: var(--bg-card);
   position: relative;
@@ -981,24 +995,510 @@ app-data-table-grid.table-container {
   overflow-y: auto;
 }
 
-/* Header row - sticky for scroll */
-.grid-header-row {
+/* Data Table Grid - ONE single flat grid for all header + data cells */
+.data-table-grid {
   display: grid;
+  width: max-content;
+  min-width: max-content;
+  position: relative;
+}
+
+/* Table grid wrapper - outer container for scroll layout */
+.table-grid-wrapper {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 100%;
+  max-width: 100vh;
+  height: 100%;
+}
+
+/* Header Cells - direct grid items, sticky on vertical scroll */
+.data-table-grid > .header-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  height: 44px;
+  background: var(--bg-elevated);
+  overflow: hidden;
+  box-sizing: border-box;
+  border-bottom: 2px solid var(--border-visible);
   position: sticky;
   top: 0;
   z-index: 20;
-  min-width: max-content;
+}
+
+.data-table-grid > .header-cell.checkbox-cell {
+  padding: 0;
+  justify-content: center;
+  width: 40px;
+  min-width: 40px;
+  max-width: 40px;
+  flex-shrink: 0;
   background: var(--bg-elevated);
   border-bottom: 2px solid var(--border-visible);
+}
+
+.data-table-grid > .header-cell.actions-cell {
+  padding: 0;
+  justify-content: center;
+  width: 40px;
+  min-width: 40px;
+  max-width: 40px;
+  flex-shrink: 0;
+  background: var(--bg-elevated);
+  border-bottom: 2px solid var(--border-visible);
+}
+
+/* Data Cells - direct grid items */
+.data-table-grid > .data-cell {
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  font-size: 13px;
+  font-family: var(--font-mono);
+  color: var(--text-main);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  height: 44px;
+  box-sizing: border-box;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.data-table-grid > .data-cell.checkbox-cell {
+  padding: 0;
+  justify-content: center;
+  width: 40px;
+  min-width: 40px;
+  max-width: 40px;
+  flex-shrink: 0;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.data-table-grid > .data-cell.actions-cell {
+  padding: 0;
+  justify-content: center;
+  width: 40px;
+  min-width: 40px;
+  max-width: 40px;
+  flex-shrink: 0;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+/* Row States - zebra, hover, selected */
+.data-table-grid > .data-cell.zebra {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+.data-table-grid > .data-cell.checkbox-cell.zebra,
+.data-table-grid > .data-cell.actions-cell.zebra {
+  background-color: var(--bg-elevated);
+}
+
+.data-table-grid > .data-cell.hovered {
+  background-color: rgba(255, 107, 0, 0.05);
+}
+.data-table-grid > .data-cell.checkbox-cell.hovered,
+.data-table-grid > .data-cell.actions-cell.hovered {
+  background-color: var(--bg-elevated);
+}
+
+.data-table-grid > .data-cell.selected {
+  background-color: rgba(255, 107, 0, 0.1);
+}
+.data-table-grid > .data-cell.checkbox-cell.selected,
+.data-table-grid > .data-cell.actions-cell.selected {
+  background-color: rgba(255, 107, 0, 0.15);
+}
+
+/* Resize Handle */
+.resize-handle {
+  position: absolute;
+  top: 4px;
+  right: 0;
+  bottom: 4px;
+  width: 6px;
+  cursor: col-resize;
+  background: transparent;
+  border-radius: 2px;
+  transition:
+    background 0.2s ease,
+    width 0.2s ease,
+    right 0.2s ease;
+}
+
+.resize-handle::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 2px;
+  height: 16px;
+  background: var(--text-muted);
+  opacity: 0.3;
+  border-radius: 1px;
+  transition:
+    background 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.resize-handle:hover {
+  background: var(--accent);
+  width: 8px;
+}
+
+.resize-handle:hover::before {
+  background: var(--bg-sidebar);
+  opacity: 0.8;
+}
+
+.resize-handle:active {
+  background: var(--accent);
+  width: 10px;
+}
+
+.resize-handle:active::before {
+  background: var(--bg-sidebar);
+  opacity: 1;
+}
+
+/* Header Cells - direct grid items */
+.data-table-grid > .header-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  height: 44px;
+  background: var(--bg-elevated);
+  overflow: hidden;
+  box-sizing: border-box;
+  border-bottom: 2px solid var(--border-visible);
+}
+
+.data-table-grid > .header-cell.checkbox-cell {
+  padding: 0;
+  justify-content: center;
+  width: 40px;
+  min-width: 40px;
+  max-width: 40px;
+  flex-shrink: 0;
+  position: sticky;
+  left: 0;
+  z-index: 15;
+  background: var(--bg-elevated);
+  border-bottom: 2px solid var(--border-visible);
+}
+
+.data-table-grid > .header-cell.actions-cell {
+  padding: 0;
+  justify-content: center;
+  width: 40px;
+  min-width: 40px;
+  max-width: 40px;
+  flex-shrink: 0;
+  position: sticky;
+  right: 0;
+  z-index: 15;
+  background: var(--bg-elevated);
+  border-bottom: 2px solid var(--border-visible);
+}
+
+/* Data Cells - direct grid items */
+.data-table-grid > .data-cell {
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  font-size: 13px;
+  font-family: var(--font-mono);
+  color: var(--text-main);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  height: 44px;
+  box-sizing: border-box;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.data-table-grid > .data-cell.checkbox-cell {
+  padding: 0;
+  justify-content: center;
+  width: 40px;
+  min-width: 40px;
+  max-width: 40px;
+  flex-shrink: 0;
+  background: var(--bg-elevated);
+  position: sticky;
+  left: 0;
+  z-index: 10;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.data-table-grid > .data-cell.actions-cell {
+  padding: 0;
+  justify-content: center;
+  width: 40px;
+  min-width: 40px;
+  max-width: 40px;
+  flex-shrink: 0;
+  background: var(--bg-elevated);
+  position: sticky;
+  right: 0;
+  z-index: 10;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+/* Row States - zebra, hover, selected */
+.data-table-grid > .data-cell.zebra {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+.data-table-grid > .data-cell.checkbox-cell.zebra,
+.data-table-grid > .data-cell.actions-cell.zebra {
+  background-color: var(--bg-elevated);
+}
+
+.data-table-grid > .data-cell.hovered {
+  background-color: rgba(255, 107, 0, 0.05);
+}
+.data-table-grid > .data-cell.checkbox-cell.hovered,
+.data-table-grid > .data-cell.actions-cell.hovered {
+  background-color: var(--bg-elevated);
+}
+
+.data-table-grid > .data-cell.selected {
+  background-color: rgba(255, 107, 0, 0.1);
+}
+.data-table-grid > .data-cell.checkbox-cell.selected,
+.data-table-grid > .data-cell.actions-cell.selected {
+  background-color: rgba(255, 107, 0, 0.15);
+}
+
+/* Resize Handle */
+.resize-handle {
+  position: absolute;
+  top: 4px;
+  right: 0;
+  bottom: 4px;
+  width: 6px;
+  cursor: col-resize;
+  background: transparent;
+  border-radius: 2px;
+  transition:
+    background 0.2s ease,
+    width 0.2s ease,
+    right 0.2s ease;
+}
+
+.resize-handle::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 2px;
+  height: 16px;
+  background: var(--text-muted);
+  opacity: 0.3;
+  border-radius: 1px;
+  transition:
+    background 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.resize-handle:hover {
+  background: var(--accent);
+  width: 8px;
+}
+
+.resize-handle:hover::before {
+  background: var(--bg-sidebar);
+  opacity: 0.8;
+}
+
+.resize-handle:active {
+  background: var(--accent);
+  width: 10px;
+}
+
+.resize-handle:active::before {
+  background: var(--bg-sidebar);
+  opacity: 1;
+}
+
+/* Header Row - sticky on scroll, acts as single grid item */
+.data-table-grid > .grid-header-row {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  height: 44px;
+  display: grid;
+  align-items: center;
+  background: var(--bg-elevated);
+  border-bottom: 2px solid var(--border-visible);
+  flex-shrink: 0;
+}
+
+/* Data Row - single grid item */
+.data-table-grid > .data-row {
+  display: grid;
+  grid-template-columns: inherit;
+  border-bottom: 1px solid var(--border-subtle);
+  transition: background-color 0.15s ease;
   height: 44px;
   align-items: center;
   flex-shrink: 0;
 }
 
+.data-table-grid > .data-row.zebra {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.data-table-grid > .data-row.hovered {
+  background-color: rgba(255, 107, 0, 0.05);
+}
+
+.data-table-grid > .data-row.selected {
+  background-color: rgba(255, 107, 0, 0.1);
+}
+
+.data-table-grid > .data-row:last-child {
+  border-bottom: none;
+}
+
+/* Header Cells - grid items within header row */
+.data-table-grid > .grid-header-row > .header-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  height: 100%;
+  background: var(--bg-elevated);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.data-table-grid > .grid-header-row > .header-cell.checkbox-cell {
+  padding: 0;
+  justify-content: center;
+  width: 40px;
+  min-width: 40px;
+  max-width: 40px;
+  flex-shrink: 0;
+  position: sticky;
+  left: 0;
+  z-index: 15;
+  background: var(--bg-elevated);
+}
+
+.data-table-grid > .grid-header-row > .header-cell.actions-cell {
+  padding: 0;
+  justify-content: center;
+  width: 40px;
+  min-width: 40px;
+  max-width: 40px;
+  flex-shrink: 0;
+  position: sticky;
+  right: 0;
+  z-index: 15;
+  background: var(--bg-elevated);
+}
+
+/* Data Cells - grid items within data rows */
+.data-table-grid > .data-row > .data-cell {
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  font-size: 13px;
+  font-family: var(--font-mono);
+  color: var(--text-main);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  height: 100%;
+  box-sizing: border-box;
+  min-height: 44px;
+}
+
+.data-table-grid > .data-row > .data-cell.checkbox-cell {
+  padding: 0;
+  justify-content: center;
+  width: 40px;
+  min-width: 40px;
+  max-width: 40px;
+  flex-shrink: 0;
+  background: inherit;
+}
+
+.data-table-grid > .data-row > .data-cell.actions-cell {
+  padding: 0;
+  justify-content: center;
+  width: 40px;
+  min-width: 40px;
+  max-width: 40px;
+  flex-shrink: 0;
+  background: inherit;
+}
+
+/* Resize Handle */
+.resize-handle {
+  position: absolute;
+  top: 4px;
+  right: 0;
+  bottom: 4px;
+  width: 6px;
+  cursor: col-resize;
+  background: transparent;
+  border-radius: 2px;
+  transition:
+    background 0.2s ease,
+    width 0.2s ease,
+    right 0.2s ease;
+}
+
+.resize-handle::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 2px;
+  height: 16px;
+  background: var(--text-muted);
+  opacity: 0.3;
+  border-radius: 1px;
+  transition:
+    background 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.resize-handle:hover {
+  background: var(--accent);
+  width: 8px;
+}
+
+.resize-handle:hover::before {
+  background: var(--bg-sidebar);
+  opacity: 0.8;
+}
+
+.resize-handle:active {
+  background: var(--accent);
+  width: 10px;
+}
+
+.resize-handle:active::before {
+  background: var(--bg-sidebar);
+  opacity: 1;
+}
+
 /* Each Data Row as Grid */
 .grid-row {
   display: grid;
-  min-width: max-content;
   border-bottom: 1px solid var(--border-subtle);
   transition: background-color 0.15s ease;
   height: 44px;
@@ -2254,3 +2754,4 @@ thead tr th.actions-col {
 .data-table .data-row.selected td:first-child {
   padding-left: calc(12px - 2px);
 }
+

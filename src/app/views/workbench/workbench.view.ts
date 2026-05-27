@@ -25,7 +25,7 @@ import { formatSQL } from "@shared/utils/sql-formatter.utils";
   selector: "app-workbench",
   standalone: true,
   imports: [FormsModule, MatIconModule, SqlEditorComponent, OutputConsoleComponent],
-  templateUrl: "./workbench.component.html",
+  templateUrl: "./workbench.view.html",
 })
 export class WorkbenchComponent implements OnDestroy {
   protected store = inject(DataStoreService);
