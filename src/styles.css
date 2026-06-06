@@ -76,10 +76,6 @@ html.light {
   @apply rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)];
 }
 
-.glass-card-light {
-  @apply rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)];
-}
-
 .rail-item {
   @apply rounded-xl transition-all duration-200;
 }
@@ -734,11 +730,6 @@ body {
   cursor: move;
 }
 
-.mono {
-  font-family:
-    "JetBrains Mono", ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Consolas, monospace;
-}
-
 input[type="checkbox"] {
   accent-color: var(--accent);
 }
@@ -751,24 +742,18 @@ input[type="checkbox"] {
    Table Grid - Scrollable with sticky header & columns
    ============================================ */
 .table-scroll-sync {
-  display: flex;
-  flex-direction: column;
+  @apply flex flex-col;
   height: 100%;
   width: 100%;
   min-width: 0;
-  overflow: hidden;
 }
 
 .table-container {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+  @apply flex flex-1 flex-col overflow-hidden rounded-lg;
   height: 100%;
   min-height: 0;
-  flex: 1;
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
-  border-radius: 8px;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
@@ -786,30 +771,23 @@ app-pagination {
 
 /* Flattened checkbox - 3 levels instead of 6 */
 .custom-check {
-  display: inline-flex;
-  align-items: center;
-  cursor: pointer;
-  position: relative;
+  @apply relative inline-flex cursor-pointer items-center;
 }
 
 .custom-check .sr-only {
-  position: absolute;
+  @apply absolute whitespace-nowrap;
   width: 1px;
   height: 1px;
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
 }
 
 .custom-check .check-mark {
-  display: inline-block;
+  @apply relative inline-block rounded transition-all duration-150;
   width: 18px;
   height: 18px;
   border: 2px solid var(--border-visible);
-  border-radius: 4px;
   background: transparent;
-  transition: all 0.15s ease;
-  position: relative;
 }
 
 .custom-check:hover .check-mark {
@@ -841,23 +819,13 @@ app-pagination {
 /* Flattened type badge */
 .type-badge {
   font-family: monospace;
-  font-weight: 600;
-  font-size: 0.75rem;
-  padding: 0.125rem 0.375rem;
-  border-radius: 0.25rem;
-  background-color: rgba(255, 255, 255, 0.1);
-  display: inline-flex;
-  align-items: center;
-  flex-shrink: 0;
+  @apply inline-flex shrink-0 items-center rounded bg-white/10 px-1.5 py-0.5 text-xs font-semibold;
 }
 
 /* Synchronized scroll wrapper - holds header and body separate */
 .table-sync-wrapper {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
+  @apply flex flex-1 flex-col overflow-hidden;
   min-height: 0;
-  overflow: hidden;
   height: 100%;
   width: 100%;
   min-width: 0;
@@ -866,9 +834,7 @@ app-pagination {
 
 /* Header scroll area - horizontal only, no vertical scroll */
 .table-header-scroll {
-  flex-shrink: 0;
-  overflow-x: auto;
-  overflow-y: hidden;
+  @apply shrink-0 overflow-x-auto overflow-y-hidden;
   height: 46px;
   min-width: 0;
   width: 100%;
@@ -890,12 +856,9 @@ app-pagination {
 
 /* Body scroll area - both horizontal and vertical */
 .table-body-scroll {
-  flex: 1;
+  @apply relative flex-1 overflow-x-auto overflow-y-auto;
   min-height: 0;
-  overflow-x: auto;
-  overflow-y: auto;
   background: var(--bg-card);
-  position: relative;
 }
 .table-body-scroll::-webkit-scrollbar {
   height: 8px;
@@ -914,22 +877,16 @@ app-pagination {
 
 /* Single scroll container for both axes */
 .table-scroll-container {
-  flex: 1;
+  @apply flex flex-1 flex-col overflow-x-auto overflow-y-auto;
   min-height: 0;
-  overflow-x: auto;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
   height: 100%;
   box-sizing: border-box;
 }
 
 /* Inner wrapper for grid */
 .table-inner-wrapper {
-  display: flex;
-  flex-direction: column;
+  @apply flex flex-1 flex-col;
   min-height: 0;
-  flex: 1;
   width: max-content;
   min-width: max-content;
   overflow: visible;
@@ -937,24 +894,19 @@ app-pagination {
 
 /* Wrapper for grid to work properly in scroll containers */
 .table-grid-wrapper {
-  display: flex;
-  flex-direction: column;
+  @apply flex flex-1 flex-col;
   min-width: max-content;
   width: max-content;
-  flex: 1;
   min-height: 0;
   overflow: visible;
 }
 .table-grid-wrapper.body-mode {
-  display: flex;
-  flex-direction: column;
-  flex: none !important;
+  @apply flex !flex-none flex-col;
   min-width: max-content;
   width: max-content;
 }
 .table-grid-wrapper.header-mode {
-  display: flex;
-  flex-direction: column;
+  @apply flex flex-col;
 }
 
 /* app-data-table-grid host inside header scroll - allow content width */
@@ -987,20 +939,9 @@ app-data-table-grid.table-container {
 
 /* Inner wrapper for flex column layout */
 .table-wrapper {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
+  @apply flex flex-1 flex-col overflow-hidden;
   min-height: 0;
   min-width: 0;
-  overflow: hidden;
-}
-
-/* Single scroll container for both axes */
-.table-scroll-container {
-  flex: 1;
-  min-height: 0;
-  overflow-x: auto;
-  overflow-y: auto;
 }
 
 /* Data Table Grid - ONE single flat grid for all header + data cells */
@@ -1011,102 +952,77 @@ app-data-table-grid.table-container {
   position: relative;
 }
 
-/* Table grid wrapper - outer container for scroll layout */
-.table-grid-wrapper {
-  position: relative;
-  display: flex;
-  flex: 1 1 auto;
-  flex-direction: column;
-  overflow: hidden;
-  min-width: 0;
-  max-width: 100%;
-  height: 100%;
-}
-
 /* Header Cells - direct grid items, sticky on vertical scroll */
 .data-table-grid > .header-cell {
-  display: flex;
-  align-items: center;
+  @apply sticky flex items-center overflow-hidden;
   gap: 8px;
   padding: 0 12px;
   height: 44px;
   background: var(--bg-elevated);
-  overflow: hidden;
   box-sizing: border-box;
   border-bottom: 2px solid var(--border-visible);
-  position: sticky;
   top: 0;
   z-index: 20;
 }
 
 .data-table-grid > .header-cell.checkbox-cell {
+  @apply sticky flex shrink-0 justify-center;
   padding: 0;
-  justify-content: center;
   width: 40px;
   min-width: 40px;
   max-width: 40px;
-  flex-shrink: 0;
   background: var(--bg-elevated);
   border-bottom: 2px solid var(--border-visible);
-  position: sticky;
   left: 0;
   z-index: 30;
 }
 
 .data-table-grid > .header-cell.actions-cell {
+  @apply sticky flex shrink-0 justify-center;
   padding: 0;
-  justify-content: center;
   width: 40px;
   min-width: 40px;
   max-width: 40px;
-  flex-shrink: 0;
   background: var(--bg-elevated);
   border-bottom: 2px solid var(--border-visible);
-  position: sticky;
   right: 0;
   z-index: 30;
 }
 
 /* Data Cells - direct grid items */
 .data-table-grid > .data-cell {
-  display: flex;
-  align-items: center;
+  @apply flex items-center overflow-hidden;
   padding: 0 12px;
   font-size: 13px;
   font-family: var(--font-mono);
   color: var(--text-main);
-  overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  @apply whitespace-nowrap;
   height: 44px;
   box-sizing: border-box;
   border-bottom: 1px solid var(--border-subtle);
 }
 
 .data-table-grid > .data-cell.checkbox-cell {
+  @apply sticky flex shrink-0 justify-center;
   padding: 0;
-  justify-content: center;
   width: 40px;
   min-width: 40px;
   max-width: 40px;
-  flex-shrink: 0;
   background: var(--bg-elevated);
   border-bottom: 1px solid var(--border-subtle);
-  position: sticky;
   left: 0;
   z-index: 25;
 }
 
 .data-table-grid > .data-cell.actions-cell {
+  @apply sticky flex shrink-0 justify-center;
   padding: 0;
-  justify-content: center;
   width: 40px;
   min-width: 40px;
   max-width: 40px;
-  flex-shrink: 0;
   background: var(--bg-elevated);
   border-bottom: 1px solid var(--border-subtle);
-  position: sticky;
   right: 0;
   z-index: 25;
 }
@@ -1138,176 +1054,12 @@ app-data-table-grid.table-container {
 
 /* Resize Handle */
 .resize-handle {
-  position: absolute;
+  @apply absolute cursor-col-resize rounded;
   top: 4px;
   right: 0;
   bottom: 4px;
   width: 6px;
-  cursor: col-resize;
   background: transparent;
-  border-radius: 2px;
-  transition:
-    background 0.2s ease,
-    width 0.2s ease,
-    right 0.2s ease;
-}
-
-.resize-handle::before {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 2px;
-  height: 16px;
-  background: var(--text-muted);
-  opacity: 0.3;
-  border-radius: 1px;
-  transition:
-    background 0.2s ease,
-    opacity 0.2s ease;
-}
-
-.resize-handle:hover {
-  background: var(--accent);
-  width: 8px;
-}
-
-.resize-handle:hover::before {
-  background: var(--bg-sidebar);
-  opacity: 0.8;
-}
-
-.resize-handle:active {
-  background: var(--accent);
-  width: 10px;
-}
-
-.resize-handle:active::before {
-  background: var(--bg-sidebar);
-  opacity: 1;
-}
-
-/* Header Cells - direct grid items */
-.data-table-grid > .header-cell {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0 12px;
-  height: 44px;
-  background: var(--bg-elevated);
-  overflow: hidden;
-  box-sizing: border-box;
-  border-bottom: 2px solid var(--border-visible);
-}
-
-.data-table-grid > .header-cell.checkbox-cell {
-  padding: 0;
-  justify-content: center;
-  width: 40px;
-  min-width: 40px;
-  max-width: 40px;
-  flex-shrink: 0;
-  position: sticky;
-  left: 0;
-  z-index: 15;
-  background: var(--bg-elevated);
-  border-bottom: 2px solid var(--border-visible);
-}
-
-.data-table-grid > .header-cell.actions-cell {
-  padding: 0;
-  justify-content: center;
-  width: 40px;
-  min-width: 40px;
-  max-width: 40px;
-  flex-shrink: 0;
-  position: sticky;
-  right: 0;
-  z-index: 15;
-  background: var(--bg-elevated);
-  border-bottom: 2px solid var(--border-visible);
-}
-
-/* Data Cells - direct grid items */
-.data-table-grid > .data-cell {
-  display: flex;
-  align-items: center;
-  padding: 0 12px;
-  font-size: 13px;
-  font-family: var(--font-mono);
-  color: var(--text-main);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  height: 44px;
-  box-sizing: border-box;
-  border-bottom: 1px solid var(--border-subtle);
-}
-
-.data-table-grid > .data-cell.checkbox-cell {
-  padding: 0;
-  justify-content: center;
-  width: 40px;
-  min-width: 40px;
-  max-width: 40px;
-  flex-shrink: 0;
-  background: var(--bg-elevated);
-  position: sticky;
-  left: 0;
-  z-index: 10;
-  border-bottom: 1px solid var(--border-subtle);
-}
-
-.data-table-grid > .data-cell.actions-cell {
-  padding: 0;
-  justify-content: center;
-  width: 40px;
-  min-width: 40px;
-  max-width: 40px;
-  flex-shrink: 0;
-  background: var(--bg-elevated);
-  position: sticky;
-  right: 0;
-  z-index: 10;
-  border-bottom: 1px solid var(--border-subtle);
-}
-
-/* Row States - zebra, hover, selected */
-.data-table-grid > .data-cell.zebra {
-  background-color: rgba(255, 255, 255, 0.02);
-}
-.data-table-grid > .data-cell.checkbox-cell.zebra,
-.data-table-grid > .data-cell.actions-cell.zebra {
-  background-color: var(--bg-elevated);
-}
-
-.data-table-grid > .data-cell.hovered {
-  background-color: rgba(255, 107, 0, 0.05);
-}
-.data-table-grid > .data-cell.checkbox-cell.hovered,
-.data-table-grid > .data-cell.actions-cell.hovered {
-  background-color: var(--bg-elevated);
-}
-
-.data-table-grid > .data-cell.selected {
-  background-color: rgba(255, 107, 0, 0.1);
-}
-.data-table-grid > .data-cell.checkbox-cell.selected,
-.data-table-grid > .data-cell.actions-cell.selected {
-  background-color: rgba(255, 107, 0, 0.15);
-}
-
-/* Resize Handle */
-.resize-handle {
-  position: absolute;
-  top: 4px;
-  right: 0;
-  bottom: 4px;
-  width: 6px;
-  cursor: col-resize;
-  background: transparent;
-  border-radius: 2px;
   transition:
     background 0.2s ease,
     width 0.2s ease,
@@ -1352,7 +1104,7 @@ app-data-table-grid.table-container {
 
 /* Header Row - sticky on scroll, acts as single grid item */
 .data-table-grid > .grid-header-row {
-  position: sticky;
+  @apply sticky overflow-hidden;
   top: 0;
   z-index: 20;
   height: 44px;
@@ -1360,7 +1112,7 @@ app-data-table-grid.table-container {
   align-items: center;
   background: var(--bg-elevated);
   border-bottom: 2px solid var(--border-visible);
-  flex-shrink: 0;
+  @apply shrink-0;
 }
 
 /* Data Row - single grid item */
@@ -1368,10 +1120,10 @@ app-data-table-grid.table-container {
   display: grid;
   grid-template-columns: inherit;
   border-bottom: 1px solid var(--border-subtle);
-  transition: background-color 0.15s ease;
+  @apply transition-colors duration-150;
   height: 44px;
   align-items: center;
-  flex-shrink: 0;
+  @apply shrink-0;
 }
 
 .data-table-grid > .data-row.zebra {
@@ -1392,37 +1144,31 @@ app-data-table-grid.table-container {
 
 /* Header Cells - grid items within header row */
 .data-table-grid > .grid-header-row > .header-cell {
-  display: flex;
-  align-items: center;
+  @apply flex items-center overflow-hidden;
   gap: 8px;
   padding: 0 12px;
   height: 100%;
   background: var(--bg-elevated);
-  overflow: hidden;
   box-sizing: border-box;
 }
 
 .data-table-grid > .grid-header-row > .header-cell.checkbox-cell {
+  @apply sticky flex shrink-0 justify-center;
   padding: 0;
-  justify-content: center;
   width: 40px;
   min-width: 40px;
   max-width: 40px;
-  flex-shrink: 0;
-  position: sticky;
   left: 0;
   z-index: 15;
   background: var(--bg-elevated);
 }
 
 .data-table-grid > .grid-header-row > .header-cell.actions-cell {
+  @apply sticky flex shrink-0 justify-center;
   padding: 0;
-  justify-content: center;
   width: 40px;
   min-width: 40px;
   max-width: 40px;
-  flex-shrink: 0;
-  position: sticky;
   right: 0;
   z-index: 15;
   background: var(--bg-elevated);
@@ -1430,112 +1176,53 @@ app-data-table-grid.table-container {
 
 /* Data Cells - grid items within data rows */
 .data-table-grid > .data-row > .data-cell {
-  display: flex;
-  align-items: center;
+  @apply flex items-center overflow-hidden;
   padding: 0 12px;
   font-size: 13px;
   font-family: var(--font-mono);
   color: var(--text-main);
-  overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  @apply whitespace-nowrap;
   height: 100%;
   box-sizing: border-box;
   min-height: 44px;
 }
 
 .data-table-grid > .data-row > .data-cell.checkbox-cell {
+  @apply flex shrink-0 justify-center;
   padding: 0;
-  justify-content: center;
   width: 40px;
   min-width: 40px;
   max-width: 40px;
-  flex-shrink: 0;
   background: inherit;
 }
 
 .data-table-grid > .data-row > .data-cell.actions-cell {
+  @apply flex shrink-0 justify-center;
   padding: 0;
-  justify-content: center;
   width: 40px;
   min-width: 40px;
   max-width: 40px;
-  flex-shrink: 0;
   background: inherit;
-}
-
-/* Resize Handle */
-.resize-handle {
-  position: absolute;
-  top: 4px;
-  right: 0;
-  bottom: 4px;
-  width: 6px;
-  cursor: col-resize;
-  background: transparent;
-  border-radius: 2px;
-  transition:
-    background 0.2s ease,
-    width 0.2s ease,
-    right 0.2s ease;
-}
-
-.resize-handle::before {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 2px;
-  height: 16px;
-  background: var(--text-muted);
-  opacity: 0.3;
-  border-radius: 1px;
-  transition:
-    background 0.2s ease,
-    opacity 0.2s ease;
-}
-
-.resize-handle:hover {
-  background: var(--accent);
-  width: 8px;
-}
-
-.resize-handle:hover::before {
-  background: var(--bg-sidebar);
-  opacity: 0.8;
-}
-
-.resize-handle:active {
-  background: var(--accent);
-  width: 10px;
-}
-
-.resize-handle:active::before {
-  background: var(--bg-sidebar);
-  opacity: 1;
 }
 
 /* Each Data Row as Grid */
 .grid-row {
   display: grid;
   border-bottom: 1px solid var(--border-subtle);
-  transition: background-color 0.15s ease;
+  @apply transition-colors duration-150;
   height: 44px;
   align-items: center;
-  flex-shrink: 0;
+  @apply shrink-0;
 }
 
 /* Grid body container - holds rows */
 .grid-body {
-  display: flex;
-  flex-direction: column;
+  @apply flex flex-col overflow-x-auto overflow-y-auto;
   width: max-content;
   min-width: max-content;
   flex: 1;
   min-height: 0;
-  overflow-y: auto;
-  overflow-x: auto;
 }
 
 .grid-row:last-child {
@@ -1556,17 +1243,15 @@ app-data-table-grid.table-container {
 
 /* Cell */
 .grid-cell {
-  display: flex;
-  align-items: center;
+  @apply flex items-center overflow-hidden;
   padding: 10px 12px;
   font-size: 13px;
   font-family: var(--font-mono);
   color: var(--text-main);
-  overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  @apply whitespace-nowrap;
   background: inherit;
-  flex-shrink: 0;
+  @apply shrink-0;
   min-height: 44px;
   box-sizing: border-box;
 }
@@ -1574,12 +1259,10 @@ app-data-table-grid.table-container {
 /* Cell Types */
 .checkbox-cell,
 .actions-cell {
-  position: relative;
+  @apply relative shrink-0 justify-center;
   width: 40px;
   min-width: 40px;
   max-width: 40px;
-  justify-content: center;
-  flex-shrink: 0;
   background: var(--bg-elevated);
   z-index: 10;
 }
@@ -1605,37 +1288,34 @@ app-data-table-grid.table-container {
 
 /* Sticky columns */
 .sticky-left {
-  position: sticky;
+  @apply sticky;
   left: 0;
   z-index: 10;
 }
 
 .sticky-right {
-  position: sticky;
+  @apply sticky;
   right: 0;
   z-index: 10;
 }
 
 /* Header cell backgrounds */
 .header-cell {
-  position: relative;
-  display: flex;
-  align-items: center;
+  @apply relative flex items-center overflow-hidden;
   gap: 8px;
-  overflow: hidden;
   flex: 1;
   background: var(--bg-elevated);
   z-index: 5;
 }
 
 .grid-header-row .checkbox-cell {
-  position: sticky;
+  @apply sticky;
   left: 0;
   z-index: 15;
 }
 
 .grid-header-row .actions-cell {
-  position: sticky;
+  @apply sticky;
   right: 0;
   z-index: 15;
 }
@@ -1665,62 +1345,14 @@ app-data-table-grid.table-container {
   background: rgba(255, 107, 0, 0.15);
 }
 
-/* Resize Handle */
-.resize-handle {
-  position: absolute;
-  top: 4px;
-  right: 0;
-  bottom: 4px;
-  width: 6px;
-  cursor: col-resize;
-  background: transparent;
-  border-radius: 2px;
-  transition:
-    background 0.2s ease,
-    width 0.2s ease,
-    right 0.2s ease;
-}
-
-.resize-handle::before {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 2px;
-  height: 16px;
-  background: var(--text-muted);
-  opacity: 0.3;
-  border-radius: 1px;
-  transition:
-    background 0.2s ease,
-    opacity 0.2s ease;
-}
-
-.resize-handle:hover {
-  background: var(--accent);
-  width: 8px;
-  right: -2px;
-}
-
-.resize-handle:hover::before {
-  background: var(--accent);
-  opacity: 1;
-}
-
 /* Menu Button */
 .menu-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  @apply flex cursor-pointer items-center justify-center rounded transition-all duration-150;
   width: 28px;
   height: 28px;
   border: none;
-  border-radius: 4px;
   background: transparent;
   color: var(--text-dim);
-  cursor: pointer;
-  transition: all 0.15s ease;
 }
 
 .menu-btn:hover {
@@ -1736,17 +1368,12 @@ app-data-table-grid.table-container {
 
 /* Action Button */
 .action-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  @apply flex cursor-pointer items-center justify-center rounded-md transition-all duration-150;
   width: 32px;
   height: 32px;
   border: none;
-  border-radius: 6px;
   background: transparent;
   color: var(--text-dim);
-  cursor: pointer;
-  transition: all 0.15s ease;
 }
 
 .action-btn:hover {
@@ -1762,46 +1389,29 @@ app-data-table-grid.table-container {
 
 /* Column Dropdown */
 .column-dropdown {
-  position: absolute;
+  @apply absolute z-50 overflow-hidden rounded-lg shadow-lg;
   top: 100%;
   right: 0;
-  z-index: 1000;
   min-width: 200px;
   margin-top: 4px;
   padding: 8px;
   background: var(--bg-card);
   border: 1px solid var(--border-visible);
-  border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
 .column-dropdown-title {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-dim);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  margin-bottom: 8px;
-  padding: 0 8px;
+  @apply mb-2 px-2 text-xs font-semibold tracking-wide text-[var(--text-dim)] uppercase;
 }
 
 .column-dropdown-actions {
-  display: flex;
-  gap: 12px;
-  padding: 0 8px 8px;
-  border-bottom: 1px solid var(--border-subtle);
-  margin-bottom: 8px;
+  @apply mb-2 flex gap-3 border-b border-[var(--border-subtle)] px-2 pb-2;
 }
 
 .column-dropdown-actions button {
-  font-size: 11px;
+  @apply cursor-pointer rounded px-2 py-1 text-xs transition-all duration-150;
   color: var(--text-dim);
   background: none;
   border: none;
-  cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 4px;
-  transition: all 0.15s ease;
 }
 
 .column-dropdown-actions button:hover {
@@ -1810,18 +1420,12 @@ app-data-table-grid.table-container {
 }
 
 .column-dropdown-list {
+  @apply overflow-y-auto;
   max-height: 200px;
-  overflow-y: auto;
 }
 
 .column-dropdown-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.15s ease;
+  @apply flex cursor-pointer items-center gap-2 rounded px-2 py-2 transition-colors duration-150;
 }
 
 .column-dropdown-item:hover {
@@ -1829,26 +1433,18 @@ app-data-table-grid.table-container {
 }
 
 .column-dropdown-item .col-name {
-  flex: 1;
-  font-size: 13px;
-  font-family: var(--font-mono);
-  color: var(--text-main);
+  @apply flex-1 font-mono text-sm text-[var(--text-main)];
 }
 
 .column-dropdown-item .col-type {
-  font-size: 11px;
-  color: var(--text-muted);
-  font-family: var(--font-mono);
+  @apply font-mono text-xs text-[var(--text-muted)];
 }
 
 /* Column Drag Preview */
 .column-drag-preview {
-  display: flex;
-  flex-direction: column;
+  @apply flex flex-col rounded shadow-xl;
   background: var(--bg-card);
   border: 1px solid var(--accent);
-  border-radius: 4px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
   opacity: 0.9;
 }
 
@@ -1880,22 +1476,20 @@ app-data-table-grid.table-container {
 
 /* Column Drag Placeholder */
 .column-drag-placeholder {
+  @apply rounded-md transition-all duration-200;
   height: 44px;
   min-width: 80px;
   background: linear-gradient(135deg, var(--accent-muted) 0%, rgba(255, 107, 0, 0.05) 100%);
   border: 2px solid var(--accent);
-  border-radius: 6px;
   box-shadow: 0 0 12px rgba(255, 107, 0, 0.2);
-  transition: all 0.2s ease;
 }
 
 /* Row Drag Placeholder */
 .row-drag-placeholder {
   background: var(--accent-muted);
   border: 2px dashed var(--accent);
-  border-radius: 4px;
+  @apply rounded transition-transform duration-200;
   min-height: 44px;
-  transition: transform 200ms ease;
 }
 
 /* CDK Drag Drop styles for column reordering */
@@ -1904,16 +1498,16 @@ app-data-table-grid.table-container {
   box-shadow:
     0 8px 24px rgba(0, 0, 0, 0.4),
     0 0 0 2px var(--accent);
+  @apply rounded-md;
   background: var(--bg-elevated);
-  border-radius: 6px;
 }
 
 .cdk-drag-animating {
-  transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  @apply transition-transform duration-200;
 }
 
 .data-table-grid.cdk-drop-list-dragging .header-cell.data-cell-header:not(.cdk-drag-placeholder) {
-  transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  @apply transition-transform duration-200;
 }
 
 .cdk-drag-placeholder {
@@ -1921,46 +1515,23 @@ app-data-table-grid.table-container {
 }
 
 /* Row Drag CDK Animations */
-.cdk-drag-preview {
-  opacity: 0.85;
-  box-shadow:
-    0 8px 24px rgba(0, 0, 0, 0.4),
-    0 0 0 1px var(--accent);
-  background: var(--bg-elevated);
-  border-radius: 4px;
-}
-
-.cdk-drag-animating {
-  transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
-}
-
 .grid-body.cdk-drop-list-dragging .grid-row:not(.cdk-drag-placeholder) {
-  transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  @apply transition-transform duration-200;
 }
 
 /* Row Drag Preview */
 .row-drag-preview {
-  display: flex;
-  flex-direction: column;
+  @apply flex flex-col rounded shadow-2xl;
   background: var(--bg-card);
   border: 1px solid var(--accent);
-  border-radius: 4px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
   opacity: 0.9;
   min-width: 200px;
   max-width: 400px;
 }
 
 .row-drag-preview-header {
-  padding: 8px 12px;
+  @apply flex items-center gap-2 border-b border-[var(--border-visible)] px-3 py-2 text-xs font-semibold text-[var(--text-main)];
   background: var(--bg-sidebar);
-  border-bottom: 1px solid var(--border-visible);
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-main);
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
 .row-drag-preview-icon {
@@ -1975,832 +1546,4 @@ app-data-table-grid.table-container {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-/* ============================================
-   DEPRECATED styles - kept for compatibility
-   ============================================ */
-
-.column-dropdown {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  z-index: 1000;
-  min-width: 200px;
-  margin-top: 4px;
-  padding: 8px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-visible);
-  border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-}
-
-.column-dropdown-title {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-dim);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  margin-bottom: 8px;
-  padding: 0 8px;
-}
-
-.column-dropdown-actions {
-  display: flex;
-  gap: 12px;
-  padding: 0 8px 8px;
-  border-bottom: 1px solid var(--border-subtle);
-  margin-bottom: 8px;
-}
-
-.column-dropdown-actions button {
-  font-size: 11px;
-  color: var(--text-dim);
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 4px;
-  transition: all 0.15s ease;
-}
-
-.column-dropdown-actions button:hover {
-  color: var(--accent);
-  background: var(--bg-elevated);
-}
-
-.column-dropdown-list {
-  max-height: 200px;
-  overflow-y: auto;
-}
-
-.column-dropdown-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.15s ease;
-}
-
-.column-dropdown-item:hover {
-  background: var(--bg-elevated);
-}
-
-.column-dropdown-item .col-name {
-  flex: 1;
-  font-size: 13px;
-  font-family: var(--font-mono);
-  color: var(--text-main);
-}
-
-.column-dropdown-item .col-type {
-  font-size: 11px;
-  color: var(--text-muted);
-  font-family: var(--font-mono);
-}
-
-.column-drag-preview {
-  display: flex;
-  flex-direction: column;
-  background: var(--bg-card);
-  border: 1px solid var(--accent);
-  border-radius: 4px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-  opacity: 0.9;
-}
-
-.preview-header-cell {
-  padding: 8px 12px;
-  background: var(--bg-sidebar);
-  border-bottom: 1px solid var(--border-visible);
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-main);
-}
-
-.preview-data-cell {
-  padding: 6px 12px;
-  font-size: 12px;
-  color: var(--text-dim);
-  border-bottom: 1px solid var(--border-subtle);
-}
-
-.preview-data-cell:last-child {
-  border-bottom: none;
-}
-
-.preview-cell-content {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.column-drag-placeholder {
-  height: 44px;
-  min-width: 80px;
-  background: linear-gradient(135deg, var(--accent-muted) 0%, rgba(255, 107, 0, 0.05) 100%);
-  border: 2px solid var(--accent);
-  border-radius: 6px;
-  box-shadow: 0 0 12px rgba(255, 107, 0, 0.2);
-  transition: all 0.2s ease;
-}
-
-/* ============================================
-   DEPRECATED styles - kept for compatibility
-   ============================================ */
-
-/* Column Dropdown */
-.column-dropdown {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  z-index: 1000;
-  min-width: 200px;
-  margin-top: 4px;
-  padding: 8px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-visible);
-  border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-}
-
-.column-dropdown-title {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-dim);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  margin-bottom: 8px;
-  padding: 0 8px;
-}
-
-.column-dropdown-actions {
-  display: flex;
-  gap: 12px;
-  padding: 0 8px 8px;
-  border-bottom: 1px solid var(--border-subtle);
-  margin-bottom: 8px;
-}
-
-.column-dropdown-actions button {
-  font-size: 11px;
-  color: var(--text-dim);
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 4px;
-  transition: all 0.15s ease;
-}
-
-.column-dropdown-actions button:hover {
-  color: var(--accent);
-  background: var(--bg-elevated);
-}
-
-.column-dropdown-list {
-  max-height: 200px;
-  overflow-y: auto;
-}
-
-.column-dropdown-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.15s ease;
-}
-
-.column-dropdown-item:hover {
-  background: var(--bg-elevated);
-}
-
-.column-dropdown-item .col-name {
-  flex: 1;
-  font-size: 13px;
-  font-family: var(--font-mono);
-  color: var(--text-main);
-}
-
-.column-dropdown-item .col-type {
-  font-size: 11px;
-  color: var(--text-muted);
-  font-family: var(--font-mono);
-}
-
-/* Column Drag Preview */
-.column-drag-preview {
-  display: flex;
-  flex-direction: column;
-  background: var(--bg-card);
-  border: 1px solid var(--accent);
-  border-radius: 4px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-  opacity: 0.9;
-}
-
-.preview-header-cell {
-  padding: 8px 12px;
-  background: var(--bg-sidebar);
-  border-bottom: 1px solid var(--border-visible);
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-main);
-}
-
-.preview-data-cell {
-  padding: 6px 12px;
-  font-size: 12px;
-  color: var(--text-dim);
-  border-bottom: 1px solid var(--border-subtle);
-}
-
-.preview-data-cell:last-child {
-  border-bottom: none;
-}
-
-.preview-cell-content {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* Column Drag Placeholder */
-.column-drag-placeholder {
-  height: 44px;
-  min-width: 80px;
-  background: linear-gradient(135deg, var(--accent-muted) 0%, rgba(255, 107, 0, 0.05) 100%);
-  border: 2px solid var(--accent);
-  border-radius: 6px;
-  box-shadow: 0 0 12px rgba(255, 107, 0, 0.2);
-  transition: all 0.2s ease;
-}
-
-/* Column Dropdown */
-.column-dropdown {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  z-index: 1000;
-  min-width: 200px;
-  margin-top: 4px;
-  padding: 8px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-visible);
-  border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-}
-
-.column-dropdown-title {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-dim);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  margin-bottom: 8px;
-  padding: 0 8px;
-}
-
-.column-dropdown-actions {
-  display: flex;
-  gap: 12px;
-  padding: 0 8px 8px;
-  border-bottom: 1px solid var(--border-subtle);
-  margin-bottom: 8px;
-}
-
-.column-dropdown-actions button {
-  background: none;
-  border: none;
-  color: var(--accent);
-  font-size: 12px;
-  cursor: pointer;
-  padding: 0;
-}
-
-.column-dropdown-actions button:hover {
-  text-decoration: underline;
-}
-
-.column-dropdown-list {
-  max-height: 200px;
-  overflow-y: auto;
-}
-
-.column-dropdown-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 8px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.column-dropdown-item:hover {
-  background: var(--bg-elevated);
-}
-
-.column-dropdown-item .col-name {
-  flex: 1;
-  font-size: 13px;
-  color: var(--text-main);
-}
-
-.column-dropdown-item .col-type {
-  font-size: 11px;
-  color: var(--text-muted);
-  font-family: var(--font-mono);
-}
-
-/* Column Drag Preview */
-.column-drag-preview {
-  display: flex;
-  flex-direction: column;
-  background: var(--bg-card);
-  border: 1px solid var(--accent);
-  border-radius: 4px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-  opacity: 0.9;
-}
-
-.preview-header-cell {
-  padding: 8px 12px;
-  background: var(--bg-sidebar);
-  border-bottom: 1px solid var(--border-visible);
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-main);
-}
-
-.preview-data-cell {
-  padding: 6px 12px;
-  font-size: 12px;
-  color: var(--text-dim);
-  border-bottom: 1px solid var(--border-subtle);
-}
-
-.preview-data-cell:last-child {
-  border-bottom: none;
-}
-
-.preview-cell-content {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* Column Drag Placeholder */
-.column-drag-placeholder {
-  height: 44px;
-  min-width: 80px;
-  background: linear-gradient(135deg, var(--accent-muted) 0%, rgba(255, 107, 0, 0.05) 100%);
-  border: 2px solid var(--accent);
-  border-radius: 6px;
-  box-shadow: 0 0 12px rgba(255, 107, 0, 0.2);
-  transition: all 0.2s ease;
-}
-
-/* DEPRECATED styles - kept for compatibility but superseded by .data-grid styles above */
-
-/* Header Cells - DEPRECATED, use .grid-cell instead */
-.data-table th {
-  flex-shrink: 0;
-  padding: 10px 12px;
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--text-dim);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  text-align: left;
-  white-space: nowrap;
-  overflow: hidden;
-  position: relative;
-  background: var(--bg-sidebar);
-}
-
-/* DEPRECATED - use .checkbox-cell instead */
-.checkbox-col {
-  width: 40px;
-  min-width: 40px;
-  text-align: center;
-  padding: 8px;
-  position: sticky;
-  left: 0;
-  z-index: 10;
-  background: var(--bg-elevated);
-  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
-}
-
-/* DEPRECATED - use .actions-cell instead */
-.actions-col {
-  width: 56px;
-  min-width: 56px;
-  text-align: center;
-  padding: 8px;
-  position: sticky;
-  right: 0;
-  z-index: 15;
-  background: var(--bg-elevated);
-  box-shadow: -2px 0 4px rgba(0, 0, 0, 0.1);
-}
-
-/* DEPRECATED */
-thead th.actions-col {
-  z-index: 25;
-}
-
-/* DEPRECATED - use .data-cell instead */
-.data-col {
-  min-width: 0;
-  width: 150px;
-}
-
-/* DEPRECATED - table body styles */
-.data-table td {
-  flex-shrink: 0;
-  padding: 10px 12px;
-  font-size: 13px;
-  font-family: var(--font-mono);
-  color: var(--text-main);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  background: inherit;
-}
-
-/* DEPRECATED */
-tbody td.checkbox-col,
-tbody td.sticky-left {
-  position: sticky;
-  left: 0;
-  z-index: 11;
-  background: var(--bg-card);
-}
-
-/* DEPRECATED */
-tbody td.actions-col,
-tbody td.sticky-right {
-  position: sticky;
-  right: 0;
-  z-index: 16;
-  background: var(--bg-elevated);
-}
-
-/* DEPRECATED */
-tbody tr.zebra {
-  background-color: rgba(255, 255, 255, 0.02);
-}
-
-/* DEPRECATED */
-tbody tr.zebra td.checkbox-col,
-tbody tr.zebra td.actions-col {
-  background: var(--bg-elevated);
-}
-
-/* DEPRECATED */
-tbody tr.hovered {
-  background-color: rgba(255, 107, 0, 0.05);
-}
-
-/* DEPRECATED */
-tbody tr.hovered td.checkbox-col,
-tbody tr.hovered td.actions-col {
-  background: var(--bg-elevated);
-}
-
-/* DEPRECATED */
-tbody tr.selected {
-  background-color: rgba(255, 107, 0, 0.1);
-  border-left: 2px solid var(--accent);
-}
-
-/* DEPRECATED */
-tbody tr.selected td.checkbox-col,
-tbody tr.selected td.actions-col {
-  background: rgba(255, 107, 0, 0.15);
-}
-
-/* DEPRECATED */
-tbody tr.selected td:first-child {
-  padding-left: 10px;
-}
-
-/* DEPRECATED */
-thead tr th.actions-col {
-  background: var(--bg-elevated);
-  box-shadow: -2px 0 4px rgba(0, 0, 0, 0.1);
-}
-
-.menu-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border: none;
-  border-radius: 4px;
-  background: transparent;
-  color: var(--text-dim);
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.menu-btn:hover {
-  background: var(--bg-elevated);
-  color: var(--accent);
-}
-
-.menu-btn .icon {
-  width: 18px;
-  height: 18px;
-  font-size: 18px;
-}
-
-.th-content {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  overflow: hidden;
-}
-
-.resize-handle {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 4px;
-  cursor: col-resize;
-  background: transparent;
-  transition: background 0.15s ease;
-}
-
-.resize-handle:hover {
-  background: var(--accent);
-}
-
-/* Data Cells */
-.data-table td {
-  flex-shrink: 0;
-  padding: 10px 12px;
-  font-size: 13px;
-  font-family: var(--font-mono);
-  color: var(--text-main);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  background: inherit;
-}
-
-.data-col {
-  min-width: 0;
-  width: 150px;
-}
-
-/* Body checkbox col sticky */
-tbody td.checkbox-col,
-tbody td.sticky-left {
-  position: sticky;
-  left: 0;
-  z-index: 11;
-  background: var(--bg-card);
-}
-
-/* Body actions col sticky */
-tbody td.actions-col,
-tbody td.sticky-right {
-  position: sticky;
-  right: 0;
-  z-index: 16;
-  background: var(--bg-elevated);
-}
-
-/* Row States */
-tbody tr.zebra {
-  background-color: rgba(255, 255, 255, 0.02);
-}
-
-tbody tr.zebra td.checkbox-col,
-tbody tr.zebra td.actions-col {
-  background: var(--bg-elevated);
-}
-
-tbody tr.hovered {
-  background-color: rgba(255, 107, 0, 0.05);
-}
-
-tbody tr.hovered td.checkbox-col,
-tbody tr.hovered td.actions-col {
-  background: var(--bg-elevated);
-}
-
-tbody tr.selected {
-  background-color: rgba(255, 107, 0, 0.1);
-  border-left: 2px solid var(--accent);
-}
-
-tbody tr.selected td.checkbox-col,
-tbody tr.selected td.actions-col {
-  background: rgba(255, 107, 0, 0.15);
-}
-
-tbody tr.selected td:first-child {
-  padding-left: 10px;
-}
-
-/* Theader Actions - Fixed Background */
-thead tr th.actions-col {
-  background: var(--bg-elevated);
-  box-shadow: -2px 0 4px rgba(0, 0, 0, 0.1);
-}
-
-.action-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border: none;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--text-dim);
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.action-btn:hover {
-  background: var(--bg-card);
-  color: #3b82f6;
-}
-
-.action-btn .icon {
-  width: 18px;
-  height: 18px;
-  font-size: 18px;
-}
-
-/* Cell Content */
-.cell-content {
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* Column Drag Preview */
-.column-drag-preview {
-  display: flex;
-  flex-direction: column;
-  background: var(--bg-card);
-  border: 1px solid var(--border-visible);
-  border-radius: 8px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-  overflow: hidden;
-  min-width: 100px;
-  max-width: 300px;
-}
-
-.column-drag-placeholder {
-  height: 44px;
-  min-width: 80px;
-  background: linear-gradient(135deg, var(--accent-muted) 0%, rgba(255, 107, 0, 0.05) 100%);
-  border: 2px solid var(--accent);
-  border-radius: 6px;
-  box-shadow: 0 0 12px rgba(255, 107, 0, 0.2);
-  transition: all 0.2s ease;
-}
-
-.preview-header-cell {
-  display: flex;
-  align-items: center;
-  padding: 12px 16px;
-  background: var(--bg-elevated);
-  border-bottom: 1px solid var(--border-visible);
-  font-size: 11px;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-dim);
-}
-
-.preview-col-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.preview-data-cell {
-  display: flex;
-  align-items: center;
-  padding: 10px 16px;
-  border-bottom: 1px solid var(--border-subtle);
-  font-size: 13px;
-  font-family: var(--font-mono);
-  color: var(--text-main);
-  min-height: 36px;
-}
-
-.preview-data-cell:last-child {
-  border-bottom: none;
-}
-
-.preview-cell-content {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* Column Drag Preview */
-.column-drag-preview {
-  display: flex;
-  flex-direction: column;
-  background: var(--bg-card);
-  border: 1px solid var(--border-visible);
-  border-radius: 8px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-  overflow: hidden;
-  min-width: 100px;
-  max-width: 300px;
-}
-
-.column-drag-placeholder {
-  height: 44px;
-  min-width: 80px;
-  background: linear-gradient(135deg, var(--accent-muted) 0%, rgba(255, 107, 0, 0.05) 100%);
-  border: 2px solid var(--accent);
-  border-radius: 6px;
-  box-shadow: 0 0 12px rgba(255, 107, 0, 0.2);
-  transition: all 0.2s ease;
-}
-
-.preview-header-cell {
-  display: flex;
-  align-items: center;
-  padding: 12px 16px;
-  background: var(--bg-elevated);
-  border-bottom: 1px solid var(--border-visible);
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-dim);
-}
-
-.preview-col-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.preview-data-cell {
-  display: flex;
-  align-items: center;
-  padding: 10px 16px;
-  border-bottom: 1px solid var(--border-subtle);
-  font-size: 13px;
-  font-family: var(--font-mono);
-  color: var(--text-main);
-  min-height: 36px;
-}
-
-.preview-data-cell:last-child {
-  border-bottom: none;
-}
-
-.preview-cell-content {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* Data Table Styles */
-.data-table {
-  font-family: var(--font-mono);
-}
-
-.data-table .data-row {
-  transition:
-    background-color 0.15s ease,
-    border-color 0.15s ease;
-}
-
-.data-table .data-row:hover {
-  background-color: rgba(255, 107, 0, 0.05);
-}
-
-.data-table .data-row.zebra {
-  background-color: rgba(255, 255, 255, 0.02);
-}
-
-.data-table .data-row.selected {
-  background-color: rgba(255, 107, 0, 0.1);
-  border-left: 2px solid var(--accent);
-}
-
-.data-table .data-row.selected td:first-child {
-  padding-left: calc(12px - 2px);
 }

@@ -2,7 +2,6 @@ export * from "./cache.service";
 export * from "./clipboard.service";
 export * from "./confirm.service";
 export * from "./connection-state.service";
-export * from "./connection-state.service";
 export * from "./database.service";
 export * from "./dialog.service";
 export * from "./error-handler.service";

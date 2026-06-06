@@ -38,14 +38,7 @@ interface DbNode {
   selector: "app-connection-detail",
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
-    RouterLink,
-    ConnectionStatusBadgeComponent,
-    TitleCasePipe,
-    MatIconModule,
-    FormsModule,
-    AddDatabasePathComponent,
-  ],
+  imports: [ConnectionStatusBadgeComponent, MatIconModule, FormsModule, AddDatabasePathComponent],
   templateUrl: "./connection-detail.component.html",
 })
 export class ConnectionDetailComponent implements OnInit, OnDestroy {
@@ -83,8 +76,6 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
   private currentLoadId: string | null = null;
 
   async ngOnInit() {
-    console.log("[ConnectionDetail] ngOnInit started, id:", this.connectionId());
-
     this.routeSub = this.route.paramMap
       .pipe(
         debounceTime(300),
@@ -106,7 +97,6 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
 
     const loadId = id;
     if (this.currentLoadId === loadId && this.isLoadingDetails()) {
-      console.log("[ConnectionDetail] already loading:", loadId);
       return;
     }
     this.currentLoadId = loadId;
@@ -140,7 +130,6 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
   }
 
   async loadConnectionDetails() {
-    console.log("[ConnectionDetail] loadConnectionDetails called");
     const connId = this.connectionId();
     if (!connId) return;
 

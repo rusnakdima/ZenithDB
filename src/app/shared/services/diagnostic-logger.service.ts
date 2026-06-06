@@ -51,8 +51,6 @@ export class DiagnosticLoggerService {
 
   constructor() {
     this.initGlobalToggle();
-    // DISABLED: No automatic log flushing
-    // this.startFlushTimer();
   }
 
   private initGlobalToggle(): void {

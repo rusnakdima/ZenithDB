@@ -32,7 +32,7 @@ import { ConnectionFormService } from "@shared/services/connection-form.service"
   imports: [FormsModule, MatIconModule, ModalComponent, ConnectionConfigFormComponent],
   templateUrl: "./connection-form.component.html",
 })
-export class ConnectionFormComponent implements OnInit, OnDestroy {
+export class ConnectionFormComponent implements OnInit {
   closed = output<void>();
 
   private store = inject(DataStoreService);
@@ -73,16 +73,19 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
 
       if (isOpen) {
         if (editId) {
-          this.editingId = editId;
-          this.isEditing.set(true);
-          this.loadConnectionForEdit(editId);
+          if (isDup) {
+            this.editingId = null;
+            this.isEditing.set(false);
+            this.loadConnection(editId, true);
+          } else {
+            this.editingId = editId;
+            this.isEditing.set(true);
+            this.loadConnection(editId, false);
+          }
         } else {
           this.editingId = null;
           this.isEditing.set(false);
           this.resetForm();
-        }
-        if (isDup && editId) {
-          this.loadConnectionForDuplicate(editId);
         }
       }
     });
@@ -99,8 +102,6 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
       this.connectionFormService.openForDuplicate(duplicateId);
     }
   }
-
-  ngOnDestroy() {}
 
   private resetForm() {
     this.provider = "json";
@@ -134,52 +135,15 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
     this.connectionFormService.close();
   }
 
-  private async loadConnectionForEdit(id: string) {
-    try {
-      const conn = await this.store.getFullConnection(id);
-      this.editingId = id;
-      const innerConfig = conn.config.config;
-
-      if (!innerConfig || !innerConfig.type) {
-        this.errorHandler.handleError(new Error("Invalid connection config"), "Loading connection");
-        return;
-      }
-
-      const validTypes = ["Json", "Mongo", "Redis", "Postgres", "Sqlite", "MySql"];
-      if (!validTypes.includes(innerConfig.type)) {
-        this.errorHandler.handleError(
-          new Error(`Unknown provider type: ${innerConfig.type}`),
-          "Loading connection"
-        );
-        return;
-      }
-
-      this.provider = this.providerUtils.toProviderType(innerConfig.type);
-      const parsed = parseProviderConfig(innerConfig);
-      this.formData.set({
-        name: conn.config.name || "",
-        path: parsed.path || "",
-        host: parsed.host || "",
-        port: parsed.port || "",
-        username: parsed.username || "",
-        password: parsed.password || "",
-        database: parsed.database || "",
-        useSsl: false,
-      });
-    } catch (e) {
-      this.errorHandler.handleError(e, "Loading connection for edit");
-    }
-  }
-
-  private async loadConnectionForDuplicate(id: string) {
+  private async loadConnection(id: string, forDuplicate: boolean) {
     try {
       const conn = await this.store.getFullConnection(id);
       const innerConfig = conn.config.config;
 
       if (!innerConfig || !innerConfig.type) {
         this.errorHandler.handleError(
-          new Error("Invalid connection config"),
-          "Duplicating connection"
+          new Error(`Invalid connection config`),
+          forDuplicate ? "Duplicating connection" : "Loading connection"
         );
         return;
       }
@@ -188,15 +152,16 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
       if (!validTypes.includes(innerConfig.type)) {
         this.errorHandler.handleError(
           new Error(`Unknown provider type: ${innerConfig.type}`),
-          "Duplicating connection"
+          forDuplicate ? "Duplicating connection" : "Loading connection"
         );
         return;
       }
 
       this.provider = this.providerUtils.toProviderType(innerConfig.type);
       const parsed = parseProviderConfig(innerConfig);
+      const baseName = conn.config.name || "";
       this.formData.set({
-        name: (conn.config.name || "") + " (Copy)",
+        name: forDuplicate ? baseName + " (Copy)" : baseName,
         path: parsed.path || "",
         host: parsed.host || "",
         port: parsed.port || "",
@@ -205,8 +170,15 @@ export class ConnectionFormComponent implements OnInit, OnDestroy {
         database: parsed.database || "",
         useSsl: false,
       });
+
+      if (!forDuplicate) {
+        this.editingId = id;
+      }
     } catch (e) {
-      this.errorHandler.handleError(e, "Loading connection for duplicate");
+      this.errorHandler.handleError(
+        e,
+        forDuplicate ? "Loading connection for duplicate" : "Loading connection for edit"
+      );
     }
   }
 

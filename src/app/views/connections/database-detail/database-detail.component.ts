@@ -28,7 +28,7 @@ import { filter, distinctUntilChanged } from "rxjs/operators";
   selector: "app-database-detail",
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatIconModule, TitleCasePipe, FormsModule, AddDatabasePathComponent],
+  imports: [MatIconModule, FormsModule, AddDatabasePathComponent],
   templateUrl: "./database-detail.component.html",
 })
 export class DatabaseDetailComponent implements OnInit, OnDestroy {

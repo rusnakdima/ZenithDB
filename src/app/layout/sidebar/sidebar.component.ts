@@ -115,7 +115,6 @@ export class SidebarComponent implements OnInit {
       }
       this.lastProcessedUrl = currentUrl;
 
-      console.log("[Sidebar] routeEffect triggered, connId:", connId, "dbName:", dbName);
       if (dbName && connId && connId !== "new") {
         this.expandDatabaseForRoute(connId, dbName);
       } else if (!dbName && connId && connId !== "new") {
@@ -125,9 +124,6 @@ export class SidebarComponent implements OnInit {
   });
 
   ngOnInit() {
-    // DISABLED: No automatic background fetching
-    // this.fetchConnectionsInBackground();
-
     this.routerSub = this.router.events
       .pipe(filter((e) => e instanceof NavigationEnd))
       .subscribe((e: any) => {
@@ -201,7 +197,6 @@ export class SidebarComponent implements OnInit {
 
   async loadConnectionForRoute(connId: string) {
     if (this.isLoadingConnectionRoute() || this.isExpandingRoute()) {
-      console.log("[Sidebar] loadConnectionForRoute early return - already loading");
       return;
     }
     if (
@@ -209,13 +204,11 @@ export class SidebarComponent implements OnInit {
       this.databases().length > 0 &&
       !this.loadingDatabases()
     ) {
-      console.log("[Sidebar] loadConnectionForRoute early return - already loaded");
       return;
     }
 
     const conn = this.dataStore.getConnections().find((c) => c.id === connId);
     if (!conn) {
-      console.log("[Sidebar] loadConnectionForRoute - conn not found");
       return;
     }
 
@@ -247,7 +240,6 @@ export class SidebarComponent implements OnInit {
 
     if (this.isSingleDatabaseProvider() && this.databases().length === 1) {
       const db = this.databases()[0];
-      console.log("[Sidebar] Single DB provider, auto-navigating to:", db.name);
       this.router.navigate(["/connections", connId, db.name]);
     }
   }
@@ -285,7 +277,6 @@ export class SidebarComponent implements OnInit {
 
   fetchConnectionsInBackground() {
     // DISABLED: No automatic connection fetching
-    console.log("[Sidebar] fetchConnectionsInBackground called (DISABLED)");
     // this.connectionsApi.listConnectionsWithRefresh().then(() => {}).catch(() => {});
   }
 
@@ -612,5 +603,7 @@ export class SidebarComponent implements OnInit {
     }
   }
 
-  private deleteCollection(_collection: string) {}
+  private deleteCollection(_collection: string): void {
+    // TODO: Implement delete collection logic
+  }
 }

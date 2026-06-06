@@ -45,8 +45,12 @@ export type FilterOperator =
   | "contains"
   | "startsWith"
   | "endsWith"
+  | "like"
+  | "isNull"
+  | "isNotNull"
   | "in"
   | "notIn"
+  | "between"
   | "and"
   | "or"
   | "not";

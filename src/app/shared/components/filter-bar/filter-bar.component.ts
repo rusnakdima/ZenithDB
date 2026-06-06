@@ -24,10 +24,10 @@ import { safeJsonParse } from "@shared/utils/json.utils";
 @Component({
   selector: "app-filter-bar",
   standalone: true,
-  imports: [FormsModule, MatIconModule, CheckboxComponent],
+  imports: [FormsModule, MatIconModule],
   templateUrl: "./filter-bar.component.html",
 })
-export class FilterBarComponent implements OnInit, OnChanges, OnDestroy, AfterViewInit {
+export class FilterBarComponent implements OnInit, OnChanges, OnDestroy {
   private localStorage = new PersistentStorageService();
   @Input() filter = "";
   @Input() viewMode: "grid" | "json" = "grid";
@@ -88,8 +88,6 @@ export class FilterBarComponent implements OnInit, OnChanges, OnDestroy, AfterVi
     this.localFilter = this.filter;
   }
 
-  ngAfterViewInit() {}
-
   ngOnChanges(changes: SimpleChanges) {
     if (changes["availableColumns"] && this.availableColumns.length > 0) {
       const all = new Set<string>();
@@ -121,7 +119,6 @@ export class FilterBarComponent implements OnInit, OnChanges, OnDestroy, AfterVi
     this.localFilter = value;
     this.validateFilter(value);
     this.updateFieldDropdown(value);
-    console.log(`[Filter Input] Value: "${value}"`);
 
     if (this.autocompleteTimeout) {
       clearTimeout(this.autocompleteTimeout);
@@ -155,10 +152,6 @@ export class FilterBarComponent implements OnInit, OnChanges, OnDestroy, AfterVi
         .slice(0, 10)
         .map((col) => `${col.name} (${col.data_type})`);
 
-      console.log(
-        `[Filter Autocomplete] Input: "${lastPart}" | Matched ${suggestions.length} fields:`,
-        suggestions
-      );
       this.autocompleteFiltered.set(suggestions);
       this.showAutocomplete.set(suggestions.length > 0);
     } else {
@@ -216,11 +209,6 @@ export class FilterBarComponent implements OnInit, OnChanges, OnDestroy, AfterVi
       .slice(0, 15)
       .map((col) => col.name);
 
-    console.log(
-      `[Filter Field Dropdown] Input: "${afterBrace}" | Matched ${suggestions.length} fields:`,
-      suggestions
-    );
-
     if (suggestions.length === 0) {
       this.showFieldDropdown.set(false);
       return;
@@ -260,14 +248,8 @@ export class FilterBarComponent implements OnInit, OnChanges, OnDestroy, AfterVi
       event.stopPropagation();
       const idx = this.fieldDropdownIndex();
       if (idx >= 0 && idx < suggestions.length) {
-        console.log(
-          `[Filter Field Dropdown] Keyboard select: "${suggestions[idx]}" via ${event.key}`
-        );
         this.selectField(suggestions[idx]);
       } else if (suggestions.length === 1) {
-        console.log(
-          `[Filter Field Dropdown] Keyboard select (single): "${suggestions[0]}" via ${event.key}`
-        );
         this.selectField(suggestions[0]);
       }
     } else if (event.key === "Escape") {
@@ -316,7 +298,6 @@ export class FilterBarComponent implements OnInit, OnChanges, OnDestroy, AfterVi
     const lastBraceIndex = value.lastIndexOf("{");
     const beforeBrace = value.substring(0, lastBraceIndex);
     const fieldType = this.getFieldType(fieldName);
-    console.log(`[Filter Field Select] Selected: "${fieldName}" (${fieldType})`);
     this.localFilter = beforeBrace + '{"' + fieldName + '": ';
     this.filterChange.emit(this.localFilter);
     this.showFieldDropdown.set(false);
@@ -324,7 +305,6 @@ export class FilterBarComponent implements OnInit, OnChanges, OnDestroy, AfterVi
   }
 
   selectAutocomplete(field: string): void {
-    console.log(`[Filter Autocomplete] Selected: "${field}"`);
     const value = this.localFilter;
     const lastSpaceIndex = value.lastIndexOf(" ");
     const beforeSpace = lastSpaceIndex >= 0 ? value.substring(0, lastSpaceIndex + 1) : "";

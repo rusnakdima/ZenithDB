@@ -21,7 +21,6 @@ import { CheckboxComponent } from "@shared/components/checkbox/checkbox.componen
     FormsModule,
     MatIconModule,
     CdkDrag,
-    CdkDropList,
     CdkDragPreview,
     CdkDragPlaceholder,
     SortableHeaderComponent,
