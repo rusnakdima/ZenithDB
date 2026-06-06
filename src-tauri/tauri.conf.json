@@ -5,7 +5,7 @@
   "identifier": "com.tcs.zenithdb",
   "build": {
     "beforeDevCommand": "bun run start",
-    "devUrl": "http://localhost:1420",
+    "devUrl": "http://localhost:1425",
     "beforeBuildCommand": "bun run build",
     "frontendDist": "../dist/zenithdb/browser"
   },
@@ -31,14 +31,22 @@
   "bundle": {
     "active": true,
     "targets": "all",
-    "icon": ["icons/icon.ico", "icons/icon.png", "icons/128x128.png"],
+    "icon": [
+      "icons/icon.ico",
+      "icons/icon.png",
+      "icons/128x128.png"
+    ],
     "linux": {
       "appimage": {
         "bundleMediaFramework": true,
         "files": {}
       },
-      "deb": { "files": {} },
-      "rpm": { "files": {} }
+      "deb": {
+        "files": {}
+      },
+      "rpm": {
+        "files": {}
+      }
     }
   }
 }
