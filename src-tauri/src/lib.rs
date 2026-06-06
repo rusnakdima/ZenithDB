@@ -1,6 +1,7 @@
 mod commands;
 mod infrastructure;
 mod logger;
+mod types;
 
 use commands::admin::{
   create_collection, drop_collection, execute_raw, get_server_version, rename_collection,

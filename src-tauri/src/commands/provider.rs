@@ -114,54 +114,9 @@ impl<T: Clone> TypedProviderCache<T> {
   }
 }
 
-pub struct MongoProviderCache(TypedProviderCache<nosql_orm::providers::MongoProvider>);
-pub struct PostgresProviderCache(TypedProviderCache<nosql_orm::providers::sql::PostgresProvider>);
-pub struct MysqlProviderCache(TypedProviderCache<nosql_orm::providers::sql::MySqlProvider>);
-
-impl MongoProviderCache {
-  fn new() -> Self {
-    Self(TypedProviderCache::new("MongoDB"))
-  }
-  async fn get(&self, conn_id: &str) -> Option<nosql_orm::providers::MongoProvider> {
-    self.0.get(conn_id).await
-  }
-  async fn insert(&self, conn_id: String, provider: nosql_orm::providers::MongoProvider) {
-    self.0.insert(conn_id, provider).await;
-  }
-  async fn remove(&self, conn_id: &str) {
-    self.0.remove(conn_id).await;
-  }
-}
-
-impl PostgresProviderCache {
-  fn new() -> Self {
-    Self(TypedProviderCache::new("PostgreSQL"))
-  }
-  async fn get(&self, conn_id: &str) -> Option<nosql_orm::providers::sql::PostgresProvider> {
-    self.0.get(conn_id).await
-  }
-  async fn insert(&self, conn_id: String, provider: nosql_orm::providers::sql::PostgresProvider) {
-    self.0.insert(conn_id, provider).await;
-  }
-  async fn remove(&self, conn_id: &str) {
-    self.0.remove(conn_id).await;
-  }
-}
-
-impl MysqlProviderCache {
-  fn new() -> Self {
-    Self(TypedProviderCache::new("MySQL"))
-  }
-  async fn get(&self, conn_id: &str) -> Option<nosql_orm::providers::sql::MySqlProvider> {
-    self.0.get(conn_id).await
-  }
-  async fn insert(&self, conn_id: String, provider: nosql_orm::providers::sql::MySqlProvider) {
-    self.0.insert(conn_id, provider).await;
-  }
-  async fn remove(&self, conn_id: &str) {
-    self.0.remove(conn_id).await;
-  }
-}
+pub type MongoProviderCache = TypedProviderCache<nosql_orm::providers::MongoProvider>;
+pub type PostgresProviderCache = TypedProviderCache<nosql_orm::providers::sql::PostgresProvider>;
+pub type MysqlProviderCache = TypedProviderCache<nosql_orm::providers::sql::MySqlProvider>;
 
 static MONGO_PROVIDER_CACHE: std::sync::OnceLock<Arc<MongoProviderCache>> =
   std::sync::OnceLock::new();
@@ -172,19 +127,19 @@ static MYSQL_PROVIDER_CACHE: std::sync::OnceLock<Arc<MysqlProviderCache>> =
 
 fn get_mongo_provider_cache() -> Arc<MongoProviderCache> {
   MONGO_PROVIDER_CACHE
-    .get_or_init(|| Arc::new(MongoProviderCache::new()))
+    .get_or_init(|| Arc::new(TypedProviderCache::new("MongoDB")))
     .clone()
 }
 
 fn get_postgres_provider_cache() -> Arc<PostgresProviderCache> {
   POSTGRES_PROVIDER_CACHE
-    .get_or_init(|| Arc::new(PostgresProviderCache::new()))
+    .get_or_init(|| Arc::new(TypedProviderCache::new("PostgreSQL")))
     .clone()
 }
 
 fn get_mysql_provider_cache() -> Arc<MysqlProviderCache> {
   MYSQL_PROVIDER_CACHE
-    .get_or_init(|| Arc::new(MysqlProviderCache::new()))
+    .get_or_init(|| Arc::new(TypedProviderCache::new("MySQL")))
     .clone()
 }
 

@@ -4,29 +4,16 @@ use crate::commands::get_connection_entry;
 use crate::commands::validate_conn_id;
 use crate::commands::validate_name;
 use crate::dispatch_provider;
+use crate::types::{QueryParams, QueryResult};
 use nosql_orm::prelude::*;
-use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct QueryParams {
-  pub filter: Option<Value>,
-  pub order_by: Option<String>,
-  pub direction: Option<String>,
-  pub skip: Option<u64>,
-  pub limit: Option<u64>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct QueryResult {
-  pub data: Vec<Value>,
-  pub total: u64,
-  pub has_more: bool,
-}
-
-fn parse_filter(filter_val: Option<Value>) -> Result<Option<Filter>, String> {
+fn parse_filter(filter_val: Option<String>) -> Result<Option<Filter>, String> {
   match filter_val {
-    Some(val) => Filter::from_json(&val).map_err_string().map(Some),
+    Some(val) => {
+      let json: Value = serde_json::from_str(&val).map_err_string()?;
+      Filter::from_json(&json).map_err_string().map(Some)
+    }
     None => Ok(None),
   }
 }
@@ -36,7 +23,7 @@ pub async fn query_data(
   conn_id: &str,
   collection: &str,
   query: QueryParams,
-) -> Result<QueryResult, String> {
+) -> Result<QueryResult<Value>, String> {
   let auth = get_auth_context();
   if !auth.can_access_connection(conn_id) {
     return Err("Access denied to connection".to_string());
@@ -47,27 +34,27 @@ pub async fn query_data(
   let filter = parse_filter(query.filter)?;
   let skip = query.skip;
   let limit = query.limit;
-  let sort_by = query.order_by.as_deref();
-  let sort_asc = query.direction.as_deref() != Some("desc");
+  let sort_by = query.sort.as_deref();
+  let sort_asc = true;
 
   let (data, total) = dispatch_provider!(entry, provider => {
       let total = provider.count(collection, filter.as_ref()).await.map_err_string()?;
       let data = provider
-          .find_many(collection, filter.as_ref(), skip, limit, sort_by, sort_asc)
+          .find_many(collection, filter.as_ref(), skip.map(|s| s as u64), limit.map(|l| l as u64), sort_by, sort_asc)
           .await
           .map_err_string()?;
       Ok::<_, String>((data, total))
   })?;
 
   let has_more = if let (Some(_skip), Some(limit)) = (skip, limit) {
-    data.len() as u64 >= limit
+    data.len() as i64 >= limit
   } else {
     false
   };
 
   Ok(QueryResult {
     data,
-    total,
+    total: total as i64,
     has_more,
   })
 }
