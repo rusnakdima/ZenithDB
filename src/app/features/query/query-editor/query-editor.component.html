@@ -10,11 +10,46 @@
       }
     </div>
     <div class="flex items-center gap-2">
+      <!-- New/Classic Editor Toggle -->
+      <button
+        (click)="toggleEditor()"
+        class="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs transition-colors"
+        [class.bg-emerald-600]="useNewEditor()"
+        [class.text-white]="useNewEditor()"
+        [class.bg-neutral-800]="!useNewEditor()"
+        [class.text-neutral-400]="!useNewEditor()"
+        [class.hover:text-neutral-200]="!useNewEditor()"
+      >
+        @if (useNewEditor()) {
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+            />
+          </svg>
+          Universal Editor
+        } @else {
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 6h16M4 12h16M4 18h16"
+            />
+          </svg>
+          Classic Editor
+        }
+      </button>
+
       <button
         (click)="showHistory.set(!showHistory())"
-        class="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs text-neutral-400 transition-colors hover:bg-neutral-800 hover:text-neutral-200"
+        class="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs transition-colors"
         [class.bg-neutral-800]="showHistory()"
         [class.text-neutral-200]="showHistory()"
+        [class.text-neutral-400]="!showHistory()"
+        [class.hover:bg-neutral-700]="!showHistory()"
       >
         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -22,185 +57,340 @@
             stroke-linejoin="round"
             stroke-width="2"
             d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-          ></path>
+          />
         </svg>
         History
       </button>
     </div>
   </div>
 
-  <!-- Tab Bar -->
-  <div class="flex items-center gap-1 border-b border-neutral-800">
-    <div class="flex items-center gap-1 overflow-x-auto">
-      @for (tab of tabs(); track trackByTabId($index, tab)) {
-        <button
-          (click)="selectTab(tab.id)"
-          class="group relative flex items-center gap-2 border-b-2 px-3 py-2 text-sm transition-colors"
-          [class.border-emerald-500]="activeTabId() === tab.id"
-          [class.text-emerald-400]="activeTabId() === tab.id"
-          [class.border-transparent]="activeTabId() !== tab.id"
-          [class.text-neutral-500]="activeTabId() !== tab.id"
-          [class.hover:text-neutral-300]="activeTabId() !== tab.id"
-        >
-          @if (tab.modified) {
-            <span class="absolute -top-1 -left-1 h-2 w-2 rounded-full bg-amber-500"></span>
-          }
-          <span>{{ tab.name }}</span>
-          @if (tabs().length > 1) {
-            <span
-              (click)="closeTab(tab.id, $event)"
-              class="ml-1 opacity-0 transition-opacity group-hover:opacity-100"
-            >
-              <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M6 18L18 6M6 6l12 12"
-                ></path>
-              </svg>
-            </span>
-          }
-        </button>
-      }
-      <button
-        (click)="addTab()"
-        class="rounded p-1 text-neutral-500 transition-colors hover:bg-neutral-800 hover:text-neutral-300"
-      >
-        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M12 4v16m8-8H4"
-          ></path>
-        </svg>
-      </button>
+  @if (useNewEditor()) {
+    <!-- New Universal Query Editor -->
+    <div class="flex-1 overflow-hidden">
+      <app-universal-query-editor
+        [collectionName]="collectionName()"
+        [activeTab]="activeTab()"
+        (queryExecuted)="executeCurrentTab()"
+      />
     </div>
-  </div>
-
-  <div class="flex min-h-0 flex-1 gap-3">
-    <!-- Main Editor Area -->
-    <div
-      class="flex flex-1 flex-col overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900"
-    >
-      <!-- Toolbar -->
-      <div
-        class="flex items-center justify-between border-b border-neutral-800 bg-neutral-800/50 px-4 py-2"
-      >
-        <div class="flex items-center gap-2">
+  } @else {
+    <!-- Classic Editor (Original) -->
+    <!-- Tab Bar -->
+    <div class="flex items-center gap-1 border-b border-neutral-800">
+      <div class="flex items-center gap-1 overflow-x-auto">
+        @for (tab of tabs(); track trackByTabId($index, tab)) {
           <button
-            (click)="executeCurrentTab()"
-            [disabled]="activeTab().loading || !activeTab().query.trim()"
-            class="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
+            (click)="selectTab(tab.id)"
+            class="group relative flex items-center gap-2 border-b-2 px-3 py-2 text-sm transition-colors"
+            [class.border-emerald-500]="activeTabId() === tab.id"
+            [class.text-emerald-400]="activeTabId() === tab.id"
+            [class.border-transparent]="activeTabId() !== tab.id"
+            [class.text-neutral-500]="activeTabId() !== tab.id"
+            [class.hover:text-neutral-300]="activeTabId() !== tab.id"
           >
-            @if (activeTab().loading) {
-              <div
-                class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
-              ></div>
-            } @else {
+            @if (tab.modified) {
+              <span class="absolute -top-1 -left-1 h-2 w-2 rounded-full bg-amber-500"></span>
+            }
+            <span>{{ tab.name }}</span>
+            @if (tabs().length > 1) {
+              <span
+                (click)="closeTab(tab.id, $event)"
+                class="ml-1 opacity-0 transition-opacity group-hover:opacity-100"
+              >
+                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </span>
+            }
+          </button>
+        }
+        <button
+          (click)="addTab()"
+          class="rounded p-1 text-neutral-500 transition-colors hover:bg-neutral-800 hover:text-neutral-300"
+        >
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 4v16m8-8H4"
+            />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="flex min-h-0 flex-1 gap-3">
+      <!-- Main Editor Area -->
+      <div
+        class="flex flex-1 flex-col overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900"
+      >
+        <!-- Toolbar -->
+        <div
+          class="flex items-center justify-between border-b border-neutral-800 bg-neutral-800/50 px-4 py-2"
+        >
+          <div class="flex items-center gap-2">
+            <button
+              (click)="executeCurrentTab()"
+              [disabled]="activeTab().loading || !activeTab().query.trim()"
+              class="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              @if (activeTab().loading) {
+                <div
+                  class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
+                ></div>
+              } @else {
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+                  />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              }
+              Run
+              <span class="text-xs text-emerald-200">Ctrl+Enter</span>
+            </button>
+            <button
+              (click)="formatSQL()"
+              class="rounded-lg px-3 py-1.5 text-sm font-medium text-neutral-400 transition-colors hover:bg-neutral-800 hover:text-neutral-200"
+            >
               <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2"
-                  d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-                ></path>
+                  d="M4 6h16M4 12h16m-7 6h7"
+                />
+              </svg>
+            </button>
+            <button
+              (click)="clearEditor()"
+              class="rounded-lg px-3 py-1.5 text-sm font-medium text-neutral-400 transition-colors hover:bg-neutral-800 hover:text-neutral-200"
+            >
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2"
-                  d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                ></path>
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                />
               </svg>
+            </button>
+          </div>
+          <div class="flex items-center gap-2 text-xs text-neutral-500">
+            @if (activeTab().executionTime) {
+              <span class="font-mono">{{ activeTab().executionTime.toFixed(1) }}ms</span>
             }
-            Run
-            <span class="text-xs text-emerald-200">Ctrl+Enter</span>
-          </button>
-          <button
-            (click)="formatSQL()"
-            class="rounded-lg px-3 py-1.5 text-sm font-medium text-neutral-400 transition-colors hover:bg-neutral-800 hover:text-neutral-200"
-          >
-            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M4 6h16M4 12h16m-7 6h7"
-              ></path>
-            </svg>
-          </button>
-          <button
-            (click)="clearEditor()"
-            class="rounded-lg px-3 py-1.5 text-sm font-medium text-neutral-400 transition-colors hover:bg-neutral-800 hover:text-neutral-200"
-          >
-            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-              ></path>
-            </svg>
-          </button>
+          </div>
         </div>
-        <div class="flex items-center gap-2 text-xs text-neutral-500">
-          @if (activeTab().executionTime) {
-            <span class="font-mono">{{ activeTab().executionTime.toFixed(1) }}ms</span>
-          }
+
+        <!-- SQL Editor with Line Numbers -->
+        <div class="flex flex-1 overflow-hidden">
+          <!-- Line Numbers Gutter -->
+          <div
+            class="flex shrink-0 flex-col bg-neutral-800/30 pt-3 pr-4 text-right text-neutral-600 select-none"
+          >
+            @for (line of activeTab().query.split("\n") || []; track $index) {
+              <span class="px-2 font-mono text-xs">{{ $index + 1 }}</span>
+            }
+            @if ((activeTab().query.split("\n") || []).length === 0) {
+              <span class="px-2 font-mono text-xs">1</span>
+            }
+          </div>
+
+          <!-- Text Area -->
+          <textarea
+            [value]="activeTab().query || ''"
+            (input)="updateQuery($any($event.target).value)"
+            (keydown.control.enter)="executeCurrentTab()"
+            placeholder="Enter SQL query... (e.g., SELECT * FROM users LIMIT 10)"
+            class="w-full resize-none bg-transparent px-4 py-3 font-mono text-sm leading-relaxed text-neutral-200 outline-none placeholder:text-neutral-600"
+            spellcheck="false"
+          ></textarea>
         </div>
       </div>
 
-      <!-- SQL Editor with Line Numbers -->
-      <div class="flex flex-1 overflow-hidden">
-        <!-- Line Numbers Gutter -->
+      <!-- History Sidebar -->
+      @if (showHistory()) {
         <div
-          class="flex shrink-0 flex-col bg-neutral-800/30 pt-3 pr-4 text-right text-neutral-600 select-none"
+          class="w-72 shrink-0 overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900"
         >
-          @for (line of activeTab().query.split("\n") || []; track $index) {
-            <span class="px-2 font-mono text-xs">{{ $index + 1 }}</span>
-          }
-          @if ((activeTab().query.split("\n") || []).length === 0) {
-            <span class="px-2 font-mono text-xs">1</span>
+          <div
+            class="flex items-center justify-between border-b border-neutral-800 bg-neutral-800/50 px-4 py-2"
+          >
+            <span class="text-xs font-medium tracking-wider text-neutral-400 uppercase"
+              >Query History</span
+            >
+            @if (history().length > 0) {
+              <button
+                (click)="clearAllHistory()"
+                class="text-xs text-neutral-500 transition-colors hover:text-red-400"
+              >
+                Clear All
+              </button>
+            }
+          </div>
+          @if (history().length === 0) {
+            <div class="flex flex-col items-center justify-center py-8 text-center">
+              <svg
+                class="h-8 w-8 text-neutral-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="1.5"
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <p class="mt-2 text-xs text-neutral-500">No query history yet</p>
+            </div>
+          } @else {
+            <div class="max-h-96 overflow-y-auto">
+              @for (item of history(); track trackByHistoryId($index, item)) {
+                <div class="group relative border-b border-neutral-800/50">
+                  <div
+                    (click)="loadFromHistory(item)"
+                    class="cursor-pointer px-4 py-2 transition-colors hover:bg-neutral-800"
+                  >
+                    <div class="mb-1 font-mono text-xs text-neutral-400">{{ item.query }}</div>
+                    <div class="flex items-center gap-2">
+                      <span
+                        class="text-xs"
+                        [class.text-emerald-400]="item.success"
+                        [class.text-red-400]="!item.success"
+                      >
+                        @if (item.success) {
+                          <svg class="inline h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path
+                              fill-rule="evenodd"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                              clip-rule="evenodd"
+                            />
+                          </svg>
+                        } @else {
+                          <svg class="inline h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path
+                              fill-rule="evenodd"
+                              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                              clip-rule="evenodd"
+                            />
+                          </svg>
+                        }
+                      </span>
+                      <span class="text-xs text-neutral-600">
+                        {{ item.timestamp | date: "HH:mm:ss" }}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    (click)="deleteHistoryItem(item.id)"
+                    class="absolute top-2 right-2 opacity-0 transition-opacity group-hover:opacity-100"
+                  >
+                    <svg
+                      class="h-4 w-4 text-neutral-500 hover:text-red-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              }
+            </div>
           }
         </div>
-
-        <!-- Text Area -->
-        <textarea
-          [value]="activeTab().query || ''"
-          (input)="updateQuery($any($event.target).value)"
-          (keydown.control.enter)="executeCurrentTab()"
-          placeholder="Enter SQL query... (e.g., SELECT * FROM users LIMIT 10)"
-          class="w-full resize-none bg-transparent px-4 py-3 font-mono text-sm leading-relaxed text-neutral-200 outline-none placeholder:text-neutral-600"
-          spellcheck="false"
-        ></textarea>
-      </div>
+      }
     </div>
 
-    <!-- History Sidebar -->
-    @if (showHistory()) {
+    <!-- Error Display -->
+    @if (activeTab().error) {
       <div
-        class="w-72 shrink-0 overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900"
+        class="flex items-start gap-3 rounded-lg border border-red-800/50 bg-red-900/20 px-4 py-3"
       >
+        <svg
+          class="mt-0.5 h-5 w-5 shrink-0 text-red-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+        <div class="flex-1">
+          <p class="font-mono text-sm text-red-400">{{ activeTab().error }}</p>
+        </div>
+      </div>
+    }
+
+    <!-- Results Section -->
+    @if (activeTab().results) {
+      <div class="flex-1 overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900">
         <div
           class="flex items-center justify-between border-b border-neutral-800 bg-neutral-800/50 px-4 py-2"
         >
-          <span class="text-xs font-medium tracking-wider text-neutral-400 uppercase"
-            >Query History</span
+          <div class="flex items-center gap-4">
+            <span class="text-xs font-medium tracking-wider text-neutral-400 uppercase">
+              Results
+            </span>
+            @if (activeTab().results?.rows?.length) {
+              <span class="rounded bg-emerald-500/10 px-2 py-0.5 text-xs text-emerald-400">
+                {{ activeTab().results?.rows?.length }} rows
+              </span>
+            }
+            @if (hasAffectedRows()) {
+              <span class="rounded bg-amber-500/10 px-2 py-0.5 text-xs text-amber-400">
+                {{ activeTab().results?.affected_rows }} affected
+              </span>
+            }
+          </div>
+          <button
+            (click)="exportResults()"
+            class="flex items-center gap-1.5 rounded px-2 py-1 text-xs text-neutral-400 transition-colors hover:bg-neutral-800 hover:text-neutral-200"
           >
-          @if (history().length > 0) {
-            <button
-              (click)="clearAllHistory()"
-              class="text-xs text-neutral-500 transition-colors hover:text-red-400"
-            >
-              Clear All
-            </button>
-          }
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+              />
+            </svg>
+            Export CSV
+          </button>
         </div>
-        @if (history().length === 0) {
-          <div class="flex flex-col items-center justify-center py-8 text-center">
+
+        @if (
+          activeTab().results?.rows?.length === 0 && activeTab().results?.columns?.length === 0
+        ) {
+          <div class="flex flex-col items-center justify-center py-12 text-center">
             <svg
-              class="h-8 w-8 text-neutral-600"
+              class="h-12 w-12 text-emerald-500/30"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -209,178 +399,39 @@
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 stroke-width="1.5"
-                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-              ></path>
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
             </svg>
-            <p class="mt-2 text-xs text-neutral-500">No query history yet</p>
-          </div>
-        } @else {
-          <div class="max-h-96 overflow-y-auto">
-            @for (item of history(); track trackByHistoryId($index, item)) {
-              <div class="group relative border-b border-neutral-800/50">
-                <div
-                  (click)="loadFromHistory(item)"
-                  class="cursor-pointer px-4 py-2 transition-colors hover:bg-neutral-800"
-                >
-                  <div class="mb-1 font-mono text-xs text-neutral-400">{{ item.query }}</div>
-                  <div class="flex items-center gap-2">
-                    <span
-                      class="text-xs"
-                      [class.text-emerald-400]="item.success"
-                      [class.text-red-400]="!item.success"
-                    >
-                      @if (item.success) {
-                        <svg class="inline h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
-                          <path
-                            fill-rule="evenodd"
-                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                            clip-rule="evenodd"
-                          ></path>
-                        </svg>
-                      } @else {
-                        <svg class="inline h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
-                          <path
-                            fill-rule="evenodd"
-                            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                            clip-rule="evenodd"
-                          ></path>
-                        </svg>
-                      }
-                    </span>
-                    <span class="text-xs text-neutral-600">
-                      {{ item.timestamp | date: "HH:mm:ss" }}
-                    </span>
-                  </div>
-                </div>
-                <button
-                  (click)="deleteHistoryItem(item.id)"
-                  class="absolute top-2 right-2 opacity-0 transition-opacity group-hover:opacity-100"
-                >
-                  <svg
-                    class="h-4 w-4 text-neutral-500 hover:text-red-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M6 18L18 6M6 6l12 12"
-                    ></path>
-                  </svg>
-                </button>
-              </div>
+            <p class="mt-3 text-neutral-400">Query executed successfully</p>
+            @if (hasAffectedRows()) {
+              <p class="mt-1 text-sm text-emerald-400">
+                {{ activeTab().results?.affected_rows }} rows affected
+              </p>
             }
+          </div>
+        } @else if (activeTab().results?.rows?.length) {
+          <div class="max-h-80 overflow-auto">
+            <table class="w-full text-left text-sm">
+              <thead class="sticky top-0 bg-neutral-800 tracking-wider text-neutral-400 uppercase">
+                <tr>
+                  @for (col of activeTab().results?.columns || []; track col) {
+                    <th class="px-4 py-3 font-medium">{{ col }}</th>
+                  }
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-neutral-800">
+                @for (row of activeTab().results?.rows || []; track $index) {
+                  <tr class="transition-colors hover:bg-neutral-800/50">
+                    @for (cell of row; track $index) {
+                      <td class="px-4 py-3 font-mono text-xs text-neutral-300">{{ cell }}</td>
+                    }
+                  </tr>
+                }
+              </tbody>
+            </table>
           </div>
         }
       </div>
     }
-  </div>
-
-  <!-- Error Display -->
-  @if (activeTab().error) {
-    <div class="flex items-start gap-3 rounded-lg border border-red-800/50 bg-red-900/20 px-4 py-3">
-      <svg
-        class="mt-0.5 h-5 w-5 shrink-0 text-red-400"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-        ></path>
-      </svg>
-      <div class="flex-1">
-        <p class="font-mono text-sm text-red-400">{{ activeTab().error }}</p>
-      </div>
-    </div>
-  }
-
-  <!-- Results Section -->
-  @if (activeTab().results) {
-    <div class="flex-1 overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900">
-      <div
-        class="flex items-center justify-between border-b border-neutral-800 bg-neutral-800/50 px-4 py-2"
-      >
-        <div class="flex items-center gap-4">
-          <span class="text-xs font-medium tracking-wider text-neutral-400 uppercase">
-            Results
-          </span>
-          @if (activeTab().results?.rows?.length) {
-            <span class="rounded bg-emerald-500/10 px-2 py-0.5 text-xs text-emerald-400">
-              {{ activeTab().results?.rows?.length }} rows
-            </span>
-          }
-          @if (hasAffectedRows()) {
-            <span class="rounded bg-amber-500/10 px-2 py-0.5 text-xs text-amber-400">
-              {{ activeTab().results?.affected_rows }} affected
-            </span>
-          }
-        </div>
-        <button
-          (click)="exportResults()"
-          class="flex items-center gap-1.5 rounded px-2 py-1 text-xs text-neutral-400 transition-colors hover:bg-neutral-800 hover:text-neutral-200"
-        >
-          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-            ></path>
-          </svg>
-          Export CSV
-        </button>
-      </div>
-
-      @if (activeTab().results?.rows?.length === 0 && activeTab().results?.columns?.length === 0) {
-        <div class="flex flex-col items-center justify-center py-12 text-center">
-          <svg
-            class="h-12 w-12 text-emerald-500/30"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="1.5"
-              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-            ></path>
-          </svg>
-          <p class="mt-3 text-neutral-400">Query executed successfully</p>
-          @if (hasAffectedRows()) {
-            <p class="mt-1 text-sm text-emerald-400">
-              {{ activeTab().results?.affected_rows }} rows affected
-            </p>
-          }
-        </div>
-      } @else if (activeTab().results?.rows?.length) {
-        <div class="max-h-80 overflow-auto">
-          <table class="w-full text-left text-sm">
-            <thead class="sticky top-0 bg-neutral-800 tracking-wider text-neutral-400 uppercase">
-              <tr>
-                @for (col of activeTab().results?.columns || []; track col) {
-                  <th class="px-4 py-3 font-medium">{{ col }}</th>
-                }
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-neutral-800">
-              @for (row of activeTab().results?.rows || []; track $index) {
-                <tr class="transition-colors hover:bg-neutral-800/50">
-                  @for (cell of row; track $index) {
-                    <td class="px-4 py-3 font-mono text-xs text-neutral-300">{{ cell }}</td>
-                  }
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      }
-    </div>
   }
 </div>

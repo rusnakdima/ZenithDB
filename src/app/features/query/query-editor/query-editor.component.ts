@@ -1,4 +1,12 @@
-import { Component, inject, signal, HostListener, OnInit, OnDestroy } from "@angular/core";
+import {
+  Component,
+  inject,
+  signal,
+  HostListener,
+  OnInit,
+  OnDestroy,
+  computed,
+} from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { DatePipe } from "@angular/common";
 import { DataStoreService } from "@services/core/data-store.service";
@@ -13,6 +21,8 @@ import { QueryTab } from "@shared/models/query.model";
 import { TabService } from "@shared/services/tab.service";
 import { QueryExecutionService } from "@shared/services/query-execution.service";
 
+import { UniversalQueryEditorComponent } from "../universal-query-editor";
+
 interface HistoryItem {
   id: string;
   query: string;
@@ -23,7 +33,7 @@ interface HistoryItem {
 @Component({
   selector: "app-query-editor",
   standalone: true,
-  imports: [FormsModule, DatePipe],
+  imports: [FormsModule, DatePipe, UniversalQueryEditorComponent],
   templateUrl: "./query-editor.component.html",
 })
 export class QueryEditorComponent implements OnInit, OnDestroy {
@@ -39,10 +49,15 @@ export class QueryEditorComponent implements OnInit, OnDestroy {
   readonly activeTabId = this.tabService.activeTabId;
   showHistory = signal(false);
   history = signal<HistoryItem[]>([]);
+  useNewEditor = signal(true);
 
   private eventCleanup: (() => void)[] = [];
 
   activeTab = this.tabService.activeTab;
+
+  collectionName = computed(() => {
+    return "";
+  });
 
   ngOnInit() {
     this.loadHistory();
@@ -244,5 +259,9 @@ export class QueryEditorComponent implements OnInit, OnDestroy {
   hasAffectedRows(): boolean {
     const results = this.activeTab()?.results;
     return !!(results && results.affected_rows > 0);
+  }
+
+  toggleEditor(): void {
+    this.useNewEditor.update((v) => !v);
   }
 }
