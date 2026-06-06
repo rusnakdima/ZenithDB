@@ -2,80 +2,19 @@ use crate::commands::connection::ConnectionConfigEnum;
 use crate::commands::error_utils::ToStringError;
 use crate::commands::get_auth_context;
 use crate::commands::get_connection_entry;
+use crate::commands::types::{
+  parse_database_rows, CollectionMeta, CollectionSchema, CollectionStats, ColumnInfo, DatabaseMeta,
+};
 use crate::commands::validate_conn_id;
 use crate::commands::validate_name;
 use crate::dispatch_provider;
 use crate::dispatch_provider_cached;
 use crate::infrastructure::nosql_orm_adapter::NosqlOrmAdapter;
 use nosql_orm::prelude::*;
-use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
 fn validate_safe_path(base: &str, user_input: &str) -> Result<PathBuf, String> {
   crate::infrastructure::nosql_orm_adapter::validate_safe_path(base, user_input)
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CollectionMeta {
-  pub name: String,
-  pub count: u64,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ColumnInfo {
-  pub name: String,
-  pub data_type: String,
-  pub nullable: bool,
-  pub is_primary_key: bool,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct IndexInfo {
-  pub name: String,
-  pub columns: Vec<String>,
-  pub is_unique: bool,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CollectionSchema {
-  pub name: String,
-  pub columns: Vec<ColumnInfo>,
-  pub indexes: Vec<IndexInfo>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CollectionStats {
-  pub name: String,
-  pub document_count: u64,
-  pub size_bytes: u64,
-  pub index_count: u64,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct DatabaseMeta {
-  pub name: String,
-  pub size_bytes: Option<u64>,
-  pub table_count: Option<u64>,
-}
-
-impl DatabaseMeta {
-  fn from_name(name: &str) -> Self {
-    Self {
-      name: name.to_string(),
-      size_bytes: None,
-      table_count: None,
-    }
-  }
-}
-
-fn parse_database_rows(rows: &[Vec<serde_json::Value>]) -> Vec<DatabaseMeta> {
-  let mut dbs = Vec::new();
-  for row in rows {
-    if let Some(name) = row.first().and_then(|v| v.as_str()) {
-      dbs.push(DatabaseMeta::from_name(name));
-    }
-  }
-  dbs
 }
 
 #[tauri::command]
@@ -423,9 +362,9 @@ pub async fn describe_collection(
     })
     .collect();
 
-  let index_infos: Vec<IndexInfo> = indexes
+  let index_infos: Vec<crate::commands::types::IndexInfo> = indexes
     .into_iter()
-    .map(|idx| IndexInfo {
+    .map(|idx| crate::commands::types::IndexInfo {
       name: idx.name,
       columns: idx.fields,
       is_unique: idx.unique,

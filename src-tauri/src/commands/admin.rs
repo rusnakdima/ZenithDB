@@ -1,18 +1,10 @@
 use crate::commands::connection::ConnectionConfigEnum;
 use crate::commands::error_utils::ToStringError;
 use crate::commands::get_connection_entry;
+use crate::commands::types::RawResult;
 use crate::commands::{validate_conn_id, validate_name};
 use crate::dispatch_provider;
 use nosql_orm::prelude::*;
-use serde::{Deserialize, Serialize};
-use serde_json::Value;
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct RawResult {
-  pub columns: Vec<String>,
-  pub rows: Vec<Vec<Value>>,
-  pub affected_rows: u64,
-}
 
 #[tauri::command]
 pub async fn create_collection(connId: &str, name: &str) -> Result<(), String> {

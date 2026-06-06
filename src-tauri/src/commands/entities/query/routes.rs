@@ -1,6 +1,7 @@
 use crate::commands::connection::ConnectionConfigEnum;
 use crate::commands::error_utils::ToStringError;
 use crate::commands::get_connection_entry;
+use crate::commands::types::RawResult;
 use crate::commands::validate_conn_id;
 use crate::commands::validate_name;
 use crate::dispatch_provider;
@@ -22,13 +23,6 @@ pub struct QueryResult {
   pub data: Vec<Value>,
   pub total: u64,
   pub has_more: bool,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct RawResult {
-  pub columns: Vec<String>,
-  pub rows: Vec<Vec<Value>>,
-  pub affected_rows: u64,
 }
 
 fn parse_filter(filter_val: Option<Value>) -> Result<Option<Filter>, String> {

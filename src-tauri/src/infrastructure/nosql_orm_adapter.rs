@@ -1,6 +1,6 @@
 use crate::commands::connection::ConnectionConfigEnum;
 use crate::commands::error_utils::ToStringError;
-use crate::commands::schema::DatabaseMeta as LocalDatabaseMeta;
+use crate::commands::types::DatabaseMeta as LocalDatabaseMeta;
 use nosql_orm::prelude::*;
 use nosql_orm::providers::sql::MySqlProvider;
 use nosql_orm::providers::sql::PostgresProvider;

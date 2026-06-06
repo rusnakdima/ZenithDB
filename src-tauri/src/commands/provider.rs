@@ -69,23 +69,26 @@ struct ProviderInstance<T> {
   created_at: Instant,
 }
 
-pub struct MongoProviderCache {
-  cache: RwLock<HashMap<String, ProviderInstance<nosql_orm::providers::MongoProvider>>>,
+pub struct TypedProviderCache<T> {
+  cache: RwLock<HashMap<String, ProviderInstance<T>>>,
+  provider_name: &'static str,
 }
 
-impl MongoProviderCache {
-  fn new() -> Self {
+impl<T: Clone> TypedProviderCache<T> {
+  fn new(provider_name: &'static str) -> Self {
     Self {
       cache: RwLock::new(HashMap::new()),
+      provider_name,
     }
   }
 
-  async fn get(&self, conn_id: &str) -> Option<nosql_orm::providers::MongoProvider> {
+  async fn get(&self, conn_id: &str) -> Option<T> {
     let cache = self.cache.read().await;
     if let Some(instance) = cache.get(conn_id) {
       if Instant::now().duration_since(instance.created_at) < Duration::from_secs(300) {
         tracing::debug!(
-          "Reusing cached MongoDB provider for connection: {}",
+          "Reusing cached {} provider for connection: {}",
+          self.provider_name,
           conn_id
         );
         return Some(instance.provider.clone());
@@ -94,7 +97,7 @@ impl MongoProviderCache {
     None
   }
 
-  async fn insert(&self, conn_id: String, provider: nosql_orm::providers::MongoProvider) {
+  async fn insert(&self, conn_id: String, provider: T) {
     let mut cache = self.cache.write().await;
     cache.insert(
       conn_id,
@@ -111,84 +114,52 @@ impl MongoProviderCache {
   }
 }
 
-pub struct PostgresProviderCache {
-  cache: RwLock<HashMap<String, ProviderInstance<nosql_orm::providers::sql::PostgresProvider>>>,
+pub struct MongoProviderCache(TypedProviderCache<nosql_orm::providers::MongoProvider>);
+pub struct PostgresProviderCache(TypedProviderCache<nosql_orm::providers::sql::PostgresProvider>);
+pub struct MysqlProviderCache(TypedProviderCache<nosql_orm::providers::sql::MySqlProvider>);
+
+impl MongoProviderCache {
+  fn new() -> Self {
+    Self(TypedProviderCache::new("MongoDB"))
+  }
+  async fn get(&self, conn_id: &str) -> Option<nosql_orm::providers::MongoProvider> {
+    self.0.get(conn_id).await
+  }
+  async fn insert(&self, conn_id: String, provider: nosql_orm::providers::MongoProvider) {
+    self.0.insert(conn_id, provider).await;
+  }
+  async fn remove(&self, conn_id: &str) {
+    self.0.remove(conn_id).await;
+  }
 }
 
 impl PostgresProviderCache {
   fn new() -> Self {
-    Self {
-      cache: RwLock::new(HashMap::new()),
-    }
+    Self(TypedProviderCache::new("PostgreSQL"))
   }
-
   async fn get(&self, conn_id: &str) -> Option<nosql_orm::providers::sql::PostgresProvider> {
-    let cache = self.cache.read().await;
-    if let Some(instance) = cache.get(conn_id) {
-      if Instant::now().duration_since(instance.created_at) < Duration::from_secs(300) {
-        tracing::debug!(
-          "Reusing cached PostgreSQL provider for connection: {}",
-          conn_id
-        );
-        return Some(instance.provider.clone());
-      }
-    }
-    None
+    self.0.get(conn_id).await
   }
-
   async fn insert(&self, conn_id: String, provider: nosql_orm::providers::sql::PostgresProvider) {
-    let mut cache = self.cache.write().await;
-    cache.insert(
-      conn_id,
-      ProviderInstance {
-        provider,
-        created_at: Instant::now(),
-      },
-    );
+    self.0.insert(conn_id, provider).await;
   }
-
   async fn remove(&self, conn_id: &str) {
-    let mut cache = self.cache.write().await;
-    cache.remove(conn_id);
+    self.0.remove(conn_id).await;
   }
-}
-
-pub struct MysqlProviderCache {
-  cache: RwLock<HashMap<String, ProviderInstance<nosql_orm::providers::sql::MySqlProvider>>>,
 }
 
 impl MysqlProviderCache {
   fn new() -> Self {
-    Self {
-      cache: RwLock::new(HashMap::new()),
-    }
+    Self(TypedProviderCache::new("MySQL"))
   }
-
   async fn get(&self, conn_id: &str) -> Option<nosql_orm::providers::sql::MySqlProvider> {
-    let cache = self.cache.read().await;
-    if let Some(instance) = cache.get(conn_id) {
-      if Instant::now().duration_since(instance.created_at) < Duration::from_secs(300) {
-        tracing::debug!("Reusing cached MySQL provider for connection: {}", conn_id);
-        return Some(instance.provider.clone());
-      }
-    }
-    None
+    self.0.get(conn_id).await
   }
-
   async fn insert(&self, conn_id: String, provider: nosql_orm::providers::sql::MySqlProvider) {
-    let mut cache = self.cache.write().await;
-    cache.insert(
-      conn_id,
-      ProviderInstance {
-        provider,
-        created_at: Instant::now(),
-      },
-    );
+    self.0.insert(conn_id, provider).await;
   }
-
   async fn remove(&self, conn_id: &str) {
-    let mut cache = self.cache.write().await;
-    cache.remove(conn_id);
+    self.0.remove(conn_id).await;
   }
 }
 

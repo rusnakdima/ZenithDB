@@ -1,5 +1,6 @@
 use crate::commands::error_utils::ToStringError;
 use crate::commands::get_connection_entry;
+use crate::commands::types::{CollectionMeta, CollectionSchema, CollectionStats, ColumnInfo};
 use crate::commands::validate_conn_id;
 use crate::commands::validate_name;
 use crate::dispatch_provider;
@@ -17,42 +18,6 @@ pub struct CollectionListResult {
   pub collections: Vec<CollectionMeta>,
   pub has_more: bool,
   pub total_count: usize,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CollectionMeta {
-  pub name: String,
-  pub count: u64,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ColumnInfo {
-  pub name: String,
-  pub data_type: String,
-  pub nullable: bool,
-  pub is_primary_key: bool,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct IndexInfo {
-  pub name: String,
-  pub columns: Vec<String>,
-  pub is_unique: bool,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CollectionSchema {
-  pub name: String,
-  pub columns: Vec<ColumnInfo>,
-  pub indexes: Vec<IndexInfo>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CollectionStats {
-  pub name: String,
-  pub document_count: u64,
-  pub size_bytes: u64,
-  pub index_count: u64,
 }
 
 #[tauri::command]
@@ -126,9 +91,9 @@ pub async fn collection_describe(connId: String, name: String) -> Result<Collect
     })
     .collect();
 
-  let index_infos: Vec<IndexInfo> = indexes
+  let index_infos: Vec<crate::commands::types::IndexInfo> = indexes
     .into_iter()
-    .map(|idx| IndexInfo {
+    .map(|idx| crate::commands::types::IndexInfo {
       name: idx.name,
       columns: idx.fields,
       is_unique: idx.unique,

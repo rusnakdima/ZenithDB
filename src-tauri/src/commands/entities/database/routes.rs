@@ -1,6 +1,7 @@
 use crate::commands::connection::ConnectionConfigEnum;
 use crate::commands::error_utils::ToStringError;
 use crate::commands::get_connection_entry;
+use crate::commands::types::DatabaseMeta;
 use crate::commands::validate_conn_id;
 use crate::commands::validate_name;
 use crate::infrastructure::nosql_orm_adapter::validate_safe_path;
@@ -16,33 +17,6 @@ pub struct DatabaseListResult {
   pub databases: Vec<DatabaseMeta>,
   pub has_more: bool,
   pub total_count: usize,
-}
-
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct DatabaseMeta {
-  pub name: String,
-  pub size_bytes: Option<u64>,
-  pub table_count: Option<u64>,
-}
-
-impl DatabaseMeta {
-  fn from_name(name: &str) -> Self {
-    Self {
-      name: name.to_string(),
-      size_bytes: None,
-      table_count: None,
-    }
-  }
-}
-
-fn parse_database_rows(rows: &[Vec<serde_json::Value>]) -> Vec<DatabaseMeta> {
-  let mut dbs = Vec::new();
-  for row in rows {
-    if let Some(name) = row.first().and_then(|v| v.as_str()) {
-      dbs.push(DatabaseMeta::from_name(name));
-    }
-  }
-  dbs
 }
 
 #[tauri::command]

@@ -13,6 +13,7 @@ pub mod error_utils;
 pub mod provider;
 pub mod schema;
 pub mod system;
+pub mod types;
 
 #[derive(Debug, Clone)]
 pub struct ConnectionEntry {
