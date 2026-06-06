@@ -1,10 +1,6 @@
 import { Component, input, output } from "@angular/core";
 import { MatIconModule } from "@angular/material/icon";
-
-interface Tab {
-  name: string;
-  collection: string;
-}
+import { Tab } from "@shared/models/tab.model";
 
 @Component({
   selector: "app-collection-tabs",

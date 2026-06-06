@@ -2,6 +2,7 @@ import { Component, input, output } from "@angular/core";
 import { MatIconModule } from "@angular/material/icon";
 import { RowData } from "@shared/models/connection.config";
 import { JsonDocumentItemComponent } from "../json-document-item/json-document-item.component";
+import { trackByIndex } from "@shared/utils/collection.utils";
 
 @Component({
   selector: "app-json-view",
@@ -23,7 +24,7 @@ export class JsonViewComponent {
   loadMore = output<void>();
   copyJsonToClipboard = output<void>();
 
-  trackByIndex = (index: number): number => index;
+  trackByIndex = trackByIndex;
 
   getDocLines(index: number) {
     return this.jsonDocumentsMap().get(index);

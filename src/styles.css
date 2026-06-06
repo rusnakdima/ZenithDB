@@ -521,13 +521,6 @@ html.light {
     @apply border-slate-800 border-b-slate-950 bg-slate-950 text-emerald-400;
   }
 
-  .pagination-footer {
-    @apply flex h-10 flex-shrink-0 items-center justify-between border-t border-slate-200 bg-slate-50 px-4;
-  }
-  .dark .pagination-footer {
-    @apply border-t-slate-800 bg-slate-900;
-  }
-
   .inspector-drawer {
     @apply fixed top-11 right-0 bottom-0 z-40 flex w-[380px] translate-x-full flex-col border-l border-slate-200 bg-white shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)] transition-transform duration-300;
   }
@@ -741,32 +734,11 @@ input[type="checkbox"] {
 /* ============================================
    Table Grid - Scrollable with sticky header & columns
    ============================================ */
-.table-scroll-sync {
-  @apply flex flex-col;
-  height: 100%;
-  width: 100%;
-  min-width: 0;
-}
-
-.table-container {
-  @apply flex flex-1 flex-col overflow-hidden rounded-lg;
-  height: 100%;
-  min-height: 0;
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
-}
 
 /* Pagination fixed height */
 app-pagination {
   height: 56px;
   flex-shrink: 0;
-}
-
-.pagination-height {
-  height: 56px;
 }
 
 /* Flattened checkbox - 3 levels instead of 6 */
@@ -822,128 +794,7 @@ app-pagination {
   @apply inline-flex shrink-0 items-center rounded bg-white/10 px-1.5 py-0.5 text-xs font-semibold;
 }
 
-/* Synchronized scroll wrapper - holds header and body separate */
-.table-sync-wrapper {
-  @apply flex flex-1 flex-col overflow-hidden;
-  min-height: 0;
-  height: 100%;
-  width: 100%;
-  min-width: 0;
-  max-width: 100%;
-}
-
-/* Header scroll area - horizontal only, no vertical scroll */
-.table-header-scroll {
-  @apply shrink-0 overflow-x-auto overflow-y-hidden;
-  height: 46px;
-  min-width: 0;
-  width: 100%;
-  box-sizing: border-box;
-}
-.table-header-scroll::-webkit-scrollbar {
-  height: 8px;
-}
-.table-header-scroll::-webkit-scrollbar-track {
-  background: var(--bg-sidebar);
-}
-.table-header-scroll::-webkit-scrollbar-thumb {
-  background: var(--text-muted);
-  border-radius: 4px;
-}
-.table-header-scroll::-webkit-scrollbar-thumb:hover {
-  background: var(--text-dim);
-}
-
-/* Body scroll area - both horizontal and vertical */
-.table-body-scroll {
-  @apply relative flex-1 overflow-x-auto overflow-y-auto;
-  min-height: 0;
-  background: var(--bg-card);
-}
-.table-body-scroll::-webkit-scrollbar {
-  height: 8px;
-  width: 8px;
-}
-.table-body-scroll::-webkit-scrollbar-track {
-  background: var(--bg-sidebar);
-}
-.table-body-scroll::-webkit-scrollbar-thumb {
-  background: var(--text-muted);
-  border-radius: 4px;
-}
-.table-body-scroll::-webkit-scrollbar-thumb:hover {
-  background: var(--text-dim);
-}
-
-/* Single scroll container for both axes */
-.table-scroll-container {
-  @apply flex flex-1 flex-col overflow-x-auto overflow-y-auto;
-  min-height: 0;
-  height: 100%;
-  box-sizing: border-box;
-}
-
 /* Inner wrapper for grid */
-.table-inner-wrapper {
-  @apply flex flex-1 flex-col;
-  min-height: 0;
-  width: max-content;
-  min-width: max-content;
-  overflow: visible;
-}
-
-/* Wrapper for grid to work properly in scroll containers */
-.table-grid-wrapper {
-  @apply flex flex-1 flex-col;
-  min-width: max-content;
-  width: max-content;
-  min-height: 0;
-  overflow: visible;
-}
-.table-grid-wrapper.body-mode {
-  @apply flex !flex-none flex-col;
-  min-width: max-content;
-  width: max-content;
-}
-.table-grid-wrapper.header-mode {
-  @apply flex flex-col;
-}
-
-/* app-data-table-grid host inside header scroll - allow content width */
-.table-header-scroll app-data-table-grid.table-container {
-  display: block !important;
-  width: 100% !important;
-  height: auto !important;
-  overflow: visible !important;
-  flex: none !important;
-}
-
-/* app-data-table-grid host inside body scroll - don't constrain */
-.table-body-scroll app-data-table-grid.table-container {
-  display: block !important;
-  width: 100% !important;
-  height: auto !important;
-  overflow: visible !important;
-  flex: none !important;
-}
-
-/* app-data-table-grid standalone in scroll container - allow content width */
-app-data-table-grid.table-container {
-  display: block !important;
-  width: 100% !important;
-  max-width: 100% !important;
-  height: auto !important;
-  overflow-x: auto !important;
-  flex: none !important;
-}
-
-/* Inner wrapper for flex column layout */
-.table-wrapper {
-  @apply flex flex-1 flex-col overflow-hidden;
-  min-height: 0;
-  min-width: 0;
-}
-
 /* Data Table Grid - ONE single flat grid for all header + data cells */
 .data-table-grid {
   display: grid;
@@ -1206,56 +1057,6 @@ app-data-table-grid.table-container {
   background: inherit;
 }
 
-/* Each Data Row as Grid */
-.grid-row {
-  display: grid;
-  border-bottom: 1px solid var(--border-subtle);
-  @apply transition-colors duration-150;
-  height: 44px;
-  align-items: center;
-  @apply shrink-0;
-}
-
-/* Grid body container - holds rows */
-.grid-body {
-  @apply flex flex-col overflow-x-auto overflow-y-auto;
-  width: max-content;
-  min-width: max-content;
-  flex: 1;
-  min-height: 0;
-}
-
-.grid-row:last-child {
-  border-bottom: none;
-}
-
-.grid-row.zebra {
-  background-color: rgba(255, 255, 255, 0.02);
-}
-
-.grid-row.hovered {
-  background-color: rgba(255, 107, 0, 0.05);
-}
-
-.grid-row.selected {
-  background-color: rgba(255, 107, 0, 0.1);
-}
-
-/* Cell */
-.grid-cell {
-  @apply flex items-center overflow-hidden;
-  padding: 10px 12px;
-  font-size: 13px;
-  font-family: var(--font-mono);
-  color: var(--text-main);
-  text-overflow: ellipsis;
-  @apply whitespace-nowrap;
-  background: inherit;
-  @apply shrink-0;
-  min-height: 44px;
-  box-sizing: border-box;
-}
-
 /* Cell Types */
 .checkbox-cell,
 .actions-cell {
@@ -1277,37 +1078,6 @@ app-data-table-grid.table-container {
   right: 0;
 }
 
-.data-cell {
-  min-width: 80px;
-  flex: 1;
-  width: auto;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* Sticky columns */
-.sticky-left {
-  @apply sticky;
-  left: 0;
-  z-index: 10;
-}
-
-.sticky-right {
-  @apply sticky;
-  right: 0;
-  z-index: 10;
-}
-
-/* Header cell backgrounds */
-.header-cell {
-  @apply relative flex items-center overflow-hidden;
-  gap: 8px;
-  flex: 1;
-  background: var(--bg-elevated);
-  z-index: 5;
-}
-
 .grid-header-row .checkbox-cell {
   @apply sticky;
   left: 0;
@@ -1320,39 +1090,9 @@ app-data-table-grid.table-container {
   z-index: 15;
 }
 
-/* Data cell text overflow */
-.data-cell {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* Body row sticky cell backgrounds */
-.grid-row.zebra > .sticky-left,
-.grid-row.zebra > .sticky-right {
-  background: var(--bg-elevated);
-}
-
-.grid-row.hovered > .sticky-left,
-.grid-row.hovered > .sticky-right {
-  background: var(--bg-elevated);
-}
-
-.grid-row.selected > .sticky-left,
-.grid-row.selected > .sticky-right {
-  background: rgba(255, 107, 0, 0.15);
-}
-
 /* Menu Button */
 .menu-btn {
-  @apply flex cursor-pointer items-center justify-center rounded transition-all duration-150;
-  width: 28px;
-  height: 28px;
-  border: none;
-  background: transparent;
-  color: var(--text-dim);
+  @apply flex h-7 w-7 cursor-pointer items-center justify-center rounded border-none bg-transparent text-[var(--text-dim)] transition-all duration-150;
 }
 
 .menu-btn:hover {
@@ -1368,12 +1108,7 @@ app-data-table-grid.table-container {
 
 /* Action Button */
 .action-btn {
-  @apply flex cursor-pointer items-center justify-center rounded-md transition-all duration-150;
-  width: 32px;
-  height: 32px;
-  border: none;
-  background: transparent;
-  color: var(--text-dim);
+  @apply flex h-8 w-8 cursor-pointer items-center justify-center rounded-md border-none bg-transparent text-[var(--text-dim)] transition-all duration-150;
 }
 
 .action-btn:hover {
@@ -1389,14 +1124,10 @@ app-data-table-grid.table-container {
 
 /* Column Dropdown */
 .column-dropdown {
-  @apply absolute z-50 overflow-hidden rounded-lg shadow-lg;
+  @apply absolute z-50 min-w-48 overflow-hidden rounded-lg border border-[var(--border-visible)] bg-[var(--bg-card)] p-2 shadow-lg;
   top: 100%;
   right: 0;
-  min-width: 200px;
   margin-top: 4px;
-  padding: 8px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-visible);
 }
 
 .column-dropdown-title {
@@ -1482,68 +1213,4 @@ app-data-table-grid.table-container {
   background: linear-gradient(135deg, var(--accent-muted) 0%, rgba(255, 107, 0, 0.05) 100%);
   border: 2px solid var(--accent);
   box-shadow: 0 0 12px rgba(255, 107, 0, 0.2);
-}
-
-/* Row Drag Placeholder */
-.row-drag-placeholder {
-  background: var(--accent-muted);
-  border: 2px dashed var(--accent);
-  @apply rounded transition-transform duration-200;
-  min-height: 44px;
-}
-
-/* CDK Drag Drop styles for column reordering */
-.cdk-drag-preview {
-  opacity: 0.9;
-  box-shadow:
-    0 8px 24px rgba(0, 0, 0, 0.4),
-    0 0 0 2px var(--accent);
-  @apply rounded-md;
-  background: var(--bg-elevated);
-}
-
-.cdk-drag-animating {
-  @apply transition-transform duration-200;
-}
-
-.data-table-grid.cdk-drop-list-dragging .header-cell.data-cell-header:not(.cdk-drag-placeholder) {
-  @apply transition-transform duration-200;
-}
-
-.cdk-drag-placeholder {
-  opacity: 0.3;
-}
-
-/* Row Drag CDK Animations */
-.grid-body.cdk-drop-list-dragging .grid-row:not(.cdk-drag-placeholder) {
-  @apply transition-transform duration-200;
-}
-
-/* Row Drag Preview */
-.row-drag-preview {
-  @apply flex flex-col rounded shadow-2xl;
-  background: var(--bg-card);
-  border: 1px solid var(--accent);
-  opacity: 0.9;
-  min-width: 200px;
-  max-width: 400px;
-}
-
-.row-drag-preview-header {
-  @apply flex items-center gap-2 border-b border-[var(--border-visible)] px-3 py-2 text-xs font-semibold text-[var(--text-main)];
-  background: var(--bg-sidebar);
-}
-
-.row-drag-preview-icon {
-  color: var(--accent);
-}
-
-.row-drag-preview-content {
-  padding: 6px 12px;
-  font-size: 12px;
-  color: var(--text-dim);
-  font-family: var(--font-mono);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }

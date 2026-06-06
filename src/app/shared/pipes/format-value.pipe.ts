@@ -1,11 +1,12 @@
 import { Pipe, PipeTransform } from "@angular/core";
+import { isNullOrUndefined } from "@shared/utils/collection.utils";
 
 const cache = new WeakMap<object, string>();
 
 @Pipe({ name: "formatValue", pure: true })
 export class FormatValuePipe implements PipeTransform {
   transform(value: unknown): string {
-    if (value === null || value === undefined) return "null";
+    if (isNullOrUndefined(value)) return "null";
     if (typeof value === "object") {
       const cached = cache.get(value as object);
       if (cached) return cached;

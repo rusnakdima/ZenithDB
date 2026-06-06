@@ -27,7 +27,7 @@ export interface Breadcrumb {
   imports: [MatIconModule],
   templateUrl: "./header.component.html",
 })
-export class HeaderComponent implements OnDestroy {
+export class AppHeaderComponent implements OnDestroy {
   connectionState = inject(ConnectionStateService);
   themeService = inject(ThemeService);
   router = inject(Router);

@@ -1,5 +1,6 @@
 import { Component, Input, Output, EventEmitter, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
+import { isNullOrUndefined } from "@shared/utils/collection.utils";
 
 @Component({
   selector: "app-cell-editor",
@@ -37,7 +38,7 @@ export class CellEditorComponent {
   @Output() cancelEdit = new EventEmitter<void>();
 
   get displayValue(): string {
-    if (this.value === null || this.value === undefined) return "null";
+    if (isNullOrUndefined(this.value)) return "null";
     if (typeof this.value === "object") return JSON.stringify(this.value);
     return String(this.value);
   }

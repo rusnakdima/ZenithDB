@@ -2,6 +2,8 @@ import { Injectable, inject } from "@angular/core";
 import { FilterExpression, FilterOperator } from "@shared/models/connection.config";
 import { ProviderDetectorService } from "./provider-detector.service";
 import { SyntaxMode } from "../models";
+import { MONGO_OPERATOR_MAP } from "@shared/utils/operator.utils";
+import { escapeSqlValue } from "@shared/utils/string.utils";
 
 export interface TranslationResult {
   query: string;
@@ -129,11 +131,7 @@ export class QueryTranslationService {
   }
 
   private escapeSqlValue(value: unknown): string {
-    if (value === null) return "NULL";
-    if (typeof value === "number") return String(value);
-    if (typeof value === "boolean") return value ? "TRUE" : "FALSE";
-    if (typeof value === "string") return `'${value.replace(/'/g, "''")}'`;
-    return `'${String(value).replace(/'/g, "''")}'`;
+    return escapeSqlValue(value);
   }
 
   private translateToMongoDB(filter: FilterExpression): TranslationResult {
@@ -506,19 +504,7 @@ export class QueryTranslationService {
   }
 
   private mapMongoOperator(op: string): FilterOperator | null {
-    const mapping: Record<string, FilterOperator> = {
-      $eq: "eq",
-      $ne: "neq",
-      $gt: "gt",
-      $gte: "gte",
-      $lt: "lt",
-      $lte: "lte",
-      $in: "in",
-      $nin: "notIn",
-      $exists: "isNull",
-      $regex: "like",
-    };
-    return mapping[op] ?? null;
+    return (MONGO_OPERATOR_MAP[op] as FilterOperator) ?? null;
   }
 
   private parseJsonFilter(json: string): FilterExpression | null {

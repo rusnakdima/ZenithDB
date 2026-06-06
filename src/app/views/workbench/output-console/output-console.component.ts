@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter, signal, computed, OnDestroy } from "@angular/core";
 import { JsonPipe, DatePipe } from "@angular/common";
 import { RawResult } from "@shared/models/connection.config";
+import { trackByIndex } from "@shared/utils/collection.utils";
 
 type LogLevel = "all" | "info" | "warn" | "error";
 type TabType = "results" | "messages" | "plan";
@@ -106,9 +107,7 @@ export class OutputConsoleComponent implements OnDestroy {
     return ["all", "info", "warn", "error"];
   }
 
-  trackByIndex(index: number) {
-    return index;
-  }
+  trackByIndex = trackByIndex;
 
   ngOnDestroy() {
     this.isResizing = false;

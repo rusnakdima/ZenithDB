@@ -27,7 +27,7 @@ import {
 } from "@angular/cdk/drag-drop";
 import { ColumnInfo, RowData, FilterExpression } from "@shared/models/connection.config";
 import { FormatValuePipe } from "@shared/pipes/format-value.pipe";
-import { trackByRow } from "@shared/utils/collection.utils";
+import { trackByRow, isNullOrUndefined } from "@shared/utils/collection.utils";
 import { safeJsonParse } from "@shared/utils/json.utils";
 import { DataStoreService } from "@services/core/data-store.service";
 import { ClipboardService } from "@shared/services/clipboard.service";
@@ -501,7 +501,7 @@ export class DataTableGridComponent implements OnInit, OnChanges, OnDestroy, Aft
 
   getCellValue(row: RowData, columnName: string): string {
     const value = row[columnName];
-    if (value === null || value === undefined) return "null";
+    if (isNullOrUndefined(value)) return "null";
     if (typeof value === "object") return JSON.stringify(value);
     return String(value);
   }

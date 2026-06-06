@@ -2,6 +2,7 @@ import { Injectable, inject } from "@angular/core";
 import { FilterExpression, FilterOperator } from "@shared/models/connection.config";
 import { FilterBuilderService } from "./filter-builder.service";
 import { ProviderDetectorService } from "./provider-detector.service";
+import { MONGO_OPERATOR_MAP } from "@shared/utils/operator.utils";
 
 export interface ValidationError {
   line: number;
@@ -355,16 +356,6 @@ export class QueryValidatorService {
   }
 
   private mapOperator(op: string): FilterOperator {
-    const mapping: Record<string, FilterOperator> = {
-      $eq: "eq",
-      $ne: "neq",
-      $gt: "gt",
-      $gte: "gte",
-      $lt: "lt",
-      $lte: "lte",
-      $in: "in",
-      $nin: "notIn",
-    };
-    return mapping[op] ?? "eq";
+    return (MONGO_OPERATOR_MAP[op] as FilterOperator) ?? "eq";
   }
 }

@@ -2,6 +2,7 @@ import { Component, input, output, signal, computed, effect } from "@angular/cor
 import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
 import { ColumnInfo, RowData } from "@shared/models/connection.config";
+import { isNullOrUndefined } from "@shared/utils/collection.utils";
 
 @Component({
   selector: "app-record-form",

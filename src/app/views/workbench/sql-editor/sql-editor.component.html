@@ -2,8 +2,7 @@
   <div class="flex flex-1 overflow-hidden">
     <!-- Line Numbers Gutter -->
     <div
-      class="flex w-12 shrink-0 flex-col bg-neutral-800/30 pt-3 pr-4 text-right text-neutral-600 select-none"
-      style="min-height: 100%"
+      class="flex min-h-full w-12 shrink-0 flex-col bg-neutral-800/30 pt-3 pr-4 text-right text-neutral-600 select-none"
     >
       @for (line of lines; track $index) {
         <span class="px-2 font-mono text-xs leading-6">{{ $index + 1 }}</span>

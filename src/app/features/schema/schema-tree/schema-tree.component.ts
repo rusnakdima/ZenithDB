@@ -19,22 +19,7 @@ import { MatIconModule } from "@angular/material/icon";
 import { SkeletonLoaderComponent } from "@shared/components/loading/skeleton-loader.component";
 import { CollectionMeta, ColumnInfo } from "@shared/models/connection.config";
 import { withErrorHandling } from "@shared/utils/error-handler.utils";
-
-interface TreeNode {
-  name: string;
-  type: "database" | "collection" | "field";
-  count?: number;
-  expanded?: boolean;
-  fields?: FieldNode[];
-  selected?: boolean;
-}
-
-interface FieldNode {
-  name: string;
-  dataType: string;
-  nullable: boolean;
-  isPrimaryKey: boolean;
-}
+import { TreeNode, FieldNode } from "@shared/models/tree-node.model";
 
 interface ContextMenu {
   show: boolean;

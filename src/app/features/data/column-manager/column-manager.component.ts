@@ -10,6 +10,7 @@ import {
   moveItemInArray,
 } from "@angular/cdk/drag-drop";
 import { ColumnInfo, RowData } from "@shared/models/connection.config";
+import { isNullOrUndefined } from "@shared/utils/collection.utils";
 import { SortableHeaderComponent } from "@shared/components/sortable-header/sortable-header.component";
 import { DataTypeBadgeComponent } from "@shared/components/data-type-badge/data-type-badge.component";
 import { CheckboxComponent } from "@shared/components/checkbox/checkbox.component";
@@ -102,7 +103,7 @@ export class ColumnManagerComponent {
 
   getCellValue(row: RowData, columnName: string): string {
     const value = row[columnName];
-    if (value === null || value === undefined) return "null";
+    if (isNullOrUndefined(value)) return "null";
     if (typeof value === "object") return JSON.stringify(value);
     return String(value);
   }

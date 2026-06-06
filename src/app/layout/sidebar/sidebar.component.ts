@@ -21,14 +21,7 @@ import { ThemeService } from "@shared/services/theme.service";
 import { ErrorHandlerService } from "@shared/services/error-handler.service";
 import { MetricsApiService } from "@shared/services/metrics-api.service";
 import { ConnectionFormService } from "@shared/services/connection-form.service";
-
-interface TreeNode {
-  name: string;
-  type: "database" | "collection";
-  expanded: boolean;
-  children?: TreeNode[];
-  collection?: CollectionMeta;
-}
+import { TreeNode } from "@shared/models/tree-node.model";
 
 @Component({
   selector: "app-sidebar",
@@ -275,10 +268,7 @@ export class SidebarComponent implements OnInit {
       .catch(() => {});
   }
 
-  fetchConnectionsInBackground() {
-    // DISABLED: No automatic connection fetching
-    // this.connectionsApi.listConnectionsWithRefresh().then(() => {}).catch(() => {});
-  }
+  fetchConnectionsInBackground() {}
 
   refreshConnectionStatusesInBackground() {
     const connections = this.dataStore.connections();
@@ -512,7 +502,7 @@ export class SidebarComponent implements OnInit {
   getRamDisplay(): string {
     const status = this.systemStatus();
     if (!status) return "0/0";
-    return `${this.formatBytes(status.ram_used)} / ${this.formatBytes(status.ram_total)}`;
+    return `${this.providerUtils.formatBytes(status.ram_used)} / ${this.providerUtils.formatBytes(status.ram_total)}`;
   }
 
   getDiskPercent(): string {
@@ -524,7 +514,7 @@ export class SidebarComponent implements OnInit {
   getNetworkDisplay(): string {
     const status = this.systemStatus();
     if (!status) return "0";
-    return `${this.formatBytes(status.network_transmitted)}/s`;
+    return `${this.providerUtils.formatBytes(status.network_transmitted)}/s`;
   }
 
   formatUptime(): string {
@@ -539,10 +529,6 @@ export class SidebarComponent implements OnInit {
     if (hours > 0) parts.push(`${hours}h`);
     if (minutes > 0) parts.push(`${minutes}m`);
     return parts.join(" ") || "0m";
-  }
-
-  formatBytes(bytes: number): string {
-    return this.providerUtils.formatBytes(bytes);
   }
 
   toggleStats() {

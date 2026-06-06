@@ -4,6 +4,7 @@ import { writeTextFile } from "@tauri-apps/plugin-fs";
 import { ToastService } from "@services/toast.service";
 import { LoadingService } from "@shared/services/loading.service";
 import { RowData } from "@shared/models/connection.config";
+import { escapeCsvValue, escapeSqlValue } from "@shared/utils/string.utils";
 
 type FileFilter = {
   name: string;
@@ -36,7 +37,7 @@ export class ExportService {
     if (!this.validateExportData(data)) return;
 
     const headers = Object.keys(data[0]);
-    const rows = data.map((row) => headers.map((h) => this.escapeCsvValue(row[h])).join(","));
+    const rows = data.map((row) => headers.map((h) => escapeCsvValue(row[h])).join(","));
     const content = includeHeaders ? [headers.join(","), ...rows].join("\n") : rows.join("\n");
 
     await this.saveFile(content, filename, [{ name: "CSV Files", extensions: ["csv"] }]);
@@ -64,7 +65,7 @@ export class ExportService {
 
     const headers = Object.keys(data[0]);
     const statements = data.map((row) => {
-      const values = headers.map((h) => this.escapeSqlValue(row[h]));
+      const values = headers.map((h) => escapeSqlValue(row[h]));
       return `INSERT INTO ${tableName} (${headers.join(", ")}) VALUES (${values.join(", ")});`;
     });
 
@@ -143,21 +144,5 @@ export class ExportService {
       }
       throw new Error(`Failed to save file: ${error.message}`);
     }
-  }
-
-  private escapeCsvValue(value: unknown): string {
-    if (value === null || value === undefined) return "";
-    const str = String(value);
-    if (str.includes(",") || str.includes('"') || str.includes("\n")) {
-      return `"${str.replace(/"/g, '""')}"`;
-    }
-    return str;
-  }
-
-  private escapeSqlValue(value: unknown): string {
-    if (value === null || value === undefined) return "NULL";
-    if (typeof value === "number") return String(value);
-    if (typeof value === "boolean") return value ? "1" : "0";
-    return `'${String(value).replace(/'/g, "''")}'`;
   }
 }
