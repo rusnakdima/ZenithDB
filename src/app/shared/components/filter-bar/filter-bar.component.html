@@ -107,7 +107,7 @@
 
   <div class="filter-actions flex items-center gap-1 md:gap-2">
     <button
-      class="flex items-center gap-1 rounded-md bg-[var(--accent)] px-1.5 py-1 text-xs font-medium text-black transition-colors hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-50 sm:hidden lg:flex lg:px-4 lg:py-2 lg:text-sm"
+      class="flex items-center gap-1 rounded-md px-1.5 py-1 text-xs font-medium text-black transition-colors disabled:cursor-not-allowed disabled:opacity-50 sm:hidden lg:flex lg:px-4 lg:py-2 lg:text-sm"
       [disabled]="!isValidFilter()"
       (click)="onApply()"
       title="Apply filter"
@@ -116,7 +116,7 @@
       <span class="hidden sm:inline lg:hidden">Apply</span>
     </button>
     <button
-      class="hidden rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-medium text-black transition-colors hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-50 sm:flex lg:hidden"
+      class="hidden rounded-md px-4 py-2 text-sm font-medium text-black transition-colors disabled:cursor-not-allowed disabled:opacity-50 sm:flex lg:hidden"
       [disabled]="!isValidFilter()"
       (click)="onApply()"
     >

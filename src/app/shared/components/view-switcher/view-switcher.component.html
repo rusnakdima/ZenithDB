@@ -11,7 +11,7 @@
       >
         {{ tab.label }}
         @if (activeView() === tab.id) {
-          <div class="absolute right-0 bottom-0 left-0 h-0.5 rounded-t bg-[var(--accent)]"></div>
+          <div class="absolute right-0 bottom-0 left-0 h-0.5 rounded-t"></div>
         }
       </button>
     }
@@ -21,7 +21,7 @@
     @for (mode of splitModes; track mode.id) {
       <button
         class="rounded p-1.5 transition-colors"
-        [class.bg-[var(--accent)]]="splitMode() === mode.id"
+        [class.]="splitMode() === mode.id"
         [class.text-black]="splitMode() === mode.id && splitMode() !== 'none'"
         [class.bg-[var(--bg-elevated)]]="splitMode() !== mode.id"
         [class.text-[var(--text-dim)]]="splitMode() !== mode.id"

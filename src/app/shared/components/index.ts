@@ -1,4 +1,5 @@
 export * from "./checkbox/checkbox.component";
+export * from "./command-palette/command-palette.component";
 export * from "./filter-bar/filter-bar.component";
 export * from "./loading/loading-overlay.component";
 export * from "./loading/skeleton-loader.component";

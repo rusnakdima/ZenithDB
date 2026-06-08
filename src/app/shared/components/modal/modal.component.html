@@ -10,15 +10,13 @@
       role="dialog"
       aria-modal="true"
       [attr.aria-labelledby]="'modal-title-' + title()"
-      class="relative w-full rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)] shadow-2xl transition-all duration-200"
+      class="relative w-full rounded-2xl border border-[var(--accent)] bg-transparent shadow-2xl backdrop-blur-md transition-all duration-200"
       [class.scale-95]="isAnimating()"
       [class.scale-100]="!isAnimating()"
       [class]="sizeClasses"
     >
       @if (showHeader()) {
-        <div
-          class="flex items-center justify-between border-b border-[var(--border-visible)] px-6 py-4"
-        >
+        <div class="flex items-center justify-between border-b border-[var(--accent)] px-6 py-4">
           <h2 [id]="'modal-title-' + title()" class="text-lg font-semibold text-[var(--text-main)]">
             {{ title() }}
           </h2>
@@ -26,7 +24,7 @@
             <button
               type="button"
               (click)="onClose()"
-              class="rounded-lg p-1.5 text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--text-main)]"
+              class="rounded-lg p-1.5 text-[var(--text-dim)] transition-colors hover:bg-[var(--accent)]/10 hover:text-[var(--text-main)]"
               aria-label="Close modal"
             >
               <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -46,9 +44,7 @@
       </div>
 
       @if (showFooter()) {
-        <div
-          class="flex items-center justify-end gap-3 border-t border-[var(--border-visible)] px-6 py-4"
-        >
+        <div class="flex items-center justify-end gap-3 border-t border-[var(--accent)] px-6 py-4">
           <ng-content select="[modal-footer]"></ng-content>
         </div>
       }

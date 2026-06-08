@@ -8,7 +8,6 @@ export type CheckboxVariant = "accent" | "gray";
   standalone: true,
   imports: [FormsModule],
   templateUrl: "./checkbox.component.html",
-  styleUrl: "./checkbox.component.css",
   encapsulation: ViewEncapsulation.None,
 })
 export class CheckboxComponent {

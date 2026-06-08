@@ -7,7 +7,7 @@
       <span class="text-xs text-[var(--text-muted)]">({{ fullJsonData().length }} documents)</span>
     </div>
     <button
-      class="flex items-center gap-2 rounded bg-[var(--accent)] px-3 py-1.5 text-sm font-bold text-black transition-colors hover:bg-[var(--accent-hover)]"
+      class="flex items-center gap-2 rounded px-3 py-1.5 text-sm font-bold text-black transition-colors"
       (click)="onCopyFullJson()"
     >
       <mat-icon fontIcon="content_copy" class="h-5! w-4! text-base!" />
@@ -44,7 +44,7 @@
         @if (jsonLoadingMore()) {
           <div class="flex items-center justify-center gap-2 py-4 text-[var(--text-dim)]">
             <div
-              class="h-4 w-4 animate-spin rounded-full border-2 border-[var(--accent)]/20 border-t-[var(--accent)]"
+              class="h-4 w-4 animate-spin rounded-full border-2 border-[var(--border-subtle)] border-t-[var(--border-subtle)]"
             ></div>
             <span class="text-sm">Loading more...</span>
           </div>
@@ -52,7 +52,7 @@
           <div class="flex justify-center py-4">
             <button
               (click)="onLoadMore()"
-              class="rounded bg-[var(--accent)] px-4 py-2 text-sm font-bold text-black transition-colors hover:bg-[var(--accent-hover)]"
+              class="rounded px-4 py-2 text-sm font-bold text-black transition-colors"
             >
               Load More
             </button>
