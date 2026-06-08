@@ -408,4 +408,58 @@ export class ApiProvider {
       this.errorHandler
     );
   }
+
+  async createIndex(
+    connId: string,
+    collection: string,
+    indexDef: {
+      name: string;
+      type: string;
+      fields: { name: string; direction: string }[];
+      options?: Record<string, unknown>;
+    }
+  ): Promise<void> {
+    await invokeWithAbortHandlingOrDefault(
+      () =>
+        this.tauriBridge.invoke<void>("create_index", {
+          connId: connId,
+          collection,
+          indexDef,
+          options: { signal: this.createAbortSignal() },
+        }),
+      "createIndex",
+      this.errorHandler,
+      undefined
+    );
+  }
+
+  async dropIndex(connId: string, collection: string, indexName: string): Promise<void> {
+    await invokeWithAbortHandlingOrDefault(
+      () =>
+        this.tauriBridge.invoke<void>("drop_index", {
+          connId: connId,
+          collection,
+          indexName,
+          options: { signal: this.createAbortSignal() },
+        }),
+      "dropIndex",
+      this.errorHandler,
+      undefined
+    );
+  }
+
+  async rebuildIndex(connId: string, collection: string, indexName: string): Promise<void> {
+    await invokeWithAbortHandlingOrDefault(
+      () =>
+        this.tauriBridge.invoke<void>("rebuild_index", {
+          connId: connId,
+          collection,
+          indexName,
+          options: { signal: this.createAbortSignal() },
+        }),
+      "rebuildIndex",
+      this.errorHandler,
+      undefined
+    );
+  }
 }
