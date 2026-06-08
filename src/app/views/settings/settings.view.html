@@ -3,7 +3,7 @@
     <h1 class="text-2xl font-bold">Settings</h1>
     <button
       (click)="resetToDefaults()"
-      class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-4 py-2 text-sm font-bold text-[var(--text-dim)] transition hover:border-red-500/50 hover:text-red-500"
+      class="rounded-lg border border-[var(--accent)] bg-transparent px-4 py-2 text-sm font-bold text-[var(--text-dim)] transition hover:border-red-500 hover:text-red-500"
     >
       Reset to Defaults
     </button>
@@ -22,15 +22,56 @@
           <span class="font-medium">Theme</span>
           <p class="text-xs text-[var(--text-dim)]">Choose your preferred color scheme</p>
         </div>
-        <select
-          [value]="settings().general.theme"
-          (change)="updateGeneral({ theme: $any($event.target).value })"
-          class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-2 text-sm"
-        >
-          <option value="dark">Dark</option>
-          <option value="light">Light</option>
-          <option value="system">System</option>
-        </select>
+        <div class="flex items-center gap-2">
+          @for (option of themeOptions; track option.value) {
+            <button
+              class="flex items-center gap-2 rounded-lg border px-3 py-2 transition-all"
+              [class]="
+                settings().general.theme === option.value
+                  ? 'border-[var(--accent)] bg-transparent'
+                  : 'border-[var(--border-subtle)] bg-transparent'
+              "
+              (click)="updateGeneral({ theme: option.value })"
+            >
+              <mat-icon
+                class="!text-lg"
+                [class]="
+                  settings().general.theme === option.value
+                    ? 'text-[var(--accent)]'
+                    : 'text-[var(--text-dim)]'
+                "
+                [fontIcon]="option.icon"
+              ></mat-icon>
+              <span
+                class="text-sm font-medium"
+                [class]="
+                  settings().general.theme === option.value
+                    ? 'text-[var(--accent)]'
+                    : 'text-[var(--text-main)]'
+                "
+                >{{ option.label }}</span
+              >
+            </button>
+          }
+        </div>
+      </div>
+      <div class="setting-item py-3">
+        <div class="mb-3">
+          <span class="font-medium">Accent Color</span>
+          <p class="text-xs text-[var(--text-dim)]">Choose your preferred accent color</p>
+        </div>
+        <div class="flex flex-wrap gap-3">
+          @for (preset of themePresets; track preset.id) {
+            <button
+              (click)="selectPreset(preset)"
+              [style.background-color]="preset.accentColor"
+              [class.ring-2]="settings().general.accentColor === preset.accentColor"
+              [class.ring-offset-2]="settings().general.accentColor === preset.accentColor"
+              class="h-8 w-8 rounded-full ring-[var(--accent)] ring-offset-[var(--bg-card)] transition-all hover:scale-110"
+              [title]="preset.name"
+            ></button>
+          }
+        </div>
       </div>
       <div class="setting-item flex items-center justify-between py-3">
         <div>
@@ -40,7 +81,7 @@
         <select
           [value]="settings().general.language"
           (change)="updateGeneral({ language: $any($event.target).value })"
-          class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-2 text-sm"
+          class="rounded-lg border border-[var(--accent)] bg-[var(--bg-elevated)] px-3 py-2 text-sm"
         >
           <option value="en">English</option>
         </select>
@@ -65,11 +106,11 @@
           (change)="updateEditor({ fontSize: +$any($event.target).value })"
           min="10"
           max="24"
-          class="w-20 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-2 text-sm"
+          class="w-20 rounded-lg border border-[var(--accent)] bg-[var(--bg-elevated)] px-3 py-2 text-sm"
         />
       </div>
       <div
-        class="setting-item flex items-center justify-between border-b border-[var(--border-subtle)] py-3"
+        class="setting-item flex items-center justify-between border-b border-[var(--accent)] py-3"
       >
         <div>
           <span class="font-medium">Tab Size</span>
@@ -78,7 +119,7 @@
         <select
           [value]="settings().editor.tabSize"
           (change)="updateEditor({ tabSize: +$any($event.target).value })"
-          class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-2 text-sm"
+          class="rounded-lg border border-[var(--accent)] bg-[var(--bg-elevated)] px-3 py-2 text-sm"
         >
           <option value="2">2 spaces</option>
           <option value="4">4 spaces</option>
@@ -86,7 +127,7 @@
         </select>
       </div>
       <div
-        class="setting-item flex items-center justify-between border-b border-[var(--border-subtle)] py-3"
+        class="setting-item flex items-center justify-between border-b border-[var(--accent)] py-3"
       >
         <div>
           <span class="font-medium">Line Numbers</span>
@@ -100,7 +141,7 @@
             class="peer sr-only"
           />
           <div
-            class="peer h-6 w-11 rounded-full bg-[var(--bg-elevated)] peer-checked:bg-[var(--accent)] after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-[var(--border-subtle)] after:bg-[var(--bg-card)] after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white"
+            class="peer peer-checked: h-6 w-11 rounded-full bg-[var(--bg-elevated)] after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-[var(--border-subtle)] after:bg-[var(--bg-card)] after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white"
           ></div>
         </label>
       </div>
@@ -117,7 +158,7 @@
             class="peer sr-only"
           />
           <div
-            class="peer h-6 w-11 rounded-full bg-[var(--bg-elevated)] peer-checked:bg-[var(--accent)] after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-[var(--border-subtle)] after:bg-[var(--bg-card)] after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white"
+            class="peer peer-checked: h-6 w-11 rounded-full bg-[var(--bg-elevated)] after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-[var(--border-subtle)] after:bg-[var(--bg-card)] after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white"
           ></div>
         </label>
       </div>
@@ -129,7 +170,7 @@
         Data
       </h2>
       <div
-        class="setting-item flex items-center justify-between border-b border-[var(--border-subtle)] py-3"
+        class="setting-item flex items-center justify-between border-b border-[var(--accent)] py-3"
       >
         <div>
           <span class="font-medium">Default Page Size</span>
@@ -138,7 +179,7 @@
         <select
           [value]="settings().data.defaultPageSize"
           (change)="updateData({ defaultPageSize: +$any($event.target).value })"
-          class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-2 text-sm"
+          class="rounded-lg border border-[var(--accent)] bg-[var(--bg-elevated)] px-3 py-2 text-sm"
         >
           <option value="10">10</option>
           <option value="25">25</option>
@@ -147,7 +188,7 @@
         </select>
       </div>
       <div
-        class="setting-item flex items-center justify-between border-b border-[var(--border-subtle)] py-3"
+        class="setting-item flex items-center justify-between border-b border-[var(--accent)] py-3"
       >
         <div>
           <span class="font-medium">Max Rows</span>
@@ -159,7 +200,7 @@
           (change)="updateData({ maxRows: +$any($event.target).value })"
           min="100"
           max="10000"
-          class="w-24 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-2 text-sm"
+          class="w-24 rounded-lg border border-[var(--accent)] bg-[var(--bg-elevated)] px-3 py-2 text-sm"
         />
       </div>
       <div class="setting-item flex items-center justify-between py-3">
@@ -175,7 +216,7 @@
             class="peer sr-only"
           />
           <div
-            class="peer h-6 w-11 rounded-full bg-[var(--bg-elevated)] peer-checked:bg-[var(--accent)] after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-[var(--border-subtle)] after:bg-[var(--bg-card)] after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white"
+            class="peer peer-checked: h-6 w-11 rounded-full bg-[var(--bg-elevated)] after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-[var(--border-subtle)] after:bg-[var(--bg-card)] after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white"
           ></div>
         </label>
       </div>
@@ -187,7 +228,7 @@
         Connections
       </h2>
       <div
-        class="setting-item flex items-center justify-between border-b border-[var(--border-subtle)] py-3"
+        class="setting-item flex items-center justify-between border-b border-[var(--accent)] py-3"
       >
         <div>
           <span class="font-medium">Connection Timeout</span>
@@ -199,11 +240,11 @@
           (change)="updateConnections({ connectionTimeout: +$any($event.target).value })"
           min="5"
           max="60"
-          class="w-24 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-2 text-sm"
+          class="w-24 rounded-lg border border-[var(--accent)] bg-[var(--bg-elevated)] px-3 py-2 text-sm"
         />
       </div>
       <div
-        class="setting-item flex items-center justify-between border-b border-[var(--border-subtle)] py-3"
+        class="setting-item flex items-center justify-between border-b border-[var(--accent)] py-3"
       >
         <div>
           <span class="font-medium">Max Concurrent Connections</span>
@@ -215,7 +256,7 @@
           (change)="updateConnections({ maxConcurrent: +$any($event.target).value })"
           min="1"
           max="20"
-          class="w-20 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-2 text-sm"
+          class="w-20 rounded-lg border border-[var(--accent)] bg-[var(--bg-elevated)] px-3 py-2 text-sm"
         />
       </div>
       <div class="setting-item flex items-center justify-between py-3">
@@ -231,7 +272,7 @@
             class="peer sr-only"
           />
           <div
-            class="peer h-6 w-11 rounded-full bg-[var(--bg-elevated)] peer-checked:bg-[var(--accent)] after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-[var(--border-subtle)] after:bg-[var(--bg-card)] after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white"
+            class="peer peer-checked: h-6 w-11 rounded-full bg-[var(--bg-elevated)] after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-[var(--border-subtle)] after:bg-[var(--bg-card)] after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white"
           ></div>
         </label>
       </div>
@@ -243,7 +284,7 @@
         Application
       </h2>
       <div
-        class="setting-item flex items-center justify-between border-b border-[var(--border-subtle)] py-3"
+        class="setting-item flex items-center justify-between border-b border-[var(--accent)] py-3"
       >
         <div>
           <span class="font-medium">Start Minimized</span>
@@ -257,7 +298,7 @@
             class="peer sr-only"
           />
           <div
-            class="peer h-6 w-11 rounded-full bg-[var(--bg-elevated)] peer-checked:bg-[var(--accent)] after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-[var(--border-subtle)] after:bg-[var(--bg-card)] after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white"
+            class="peer peer-checked: h-6 w-11 rounded-full bg-[var(--bg-elevated)] after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-[var(--border-subtle)] after:bg-[var(--bg-card)] after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white"
           ></div>
         </label>
       </div>
@@ -274,7 +315,7 @@
             class="peer sr-only"
           />
           <div
-            class="peer h-6 w-11 rounded-full bg-[var(--bg-elevated)] peer-checked:bg-[var(--accent)] after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-[var(--border-subtle)] after:bg-[var(--bg-card)] after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white"
+            class="peer peer-checked: h-6 w-11 rounded-full bg-[var(--bg-elevated)] after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-[var(--border-subtle)] after:bg-[var(--bg-card)] after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white"
           ></div>
         </label>
       </div>

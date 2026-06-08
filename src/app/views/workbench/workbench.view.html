@@ -1,4 +1,4 @@
-<div class="workbench-page flex h-screen flex-col bg-[var(--bg-deep)]">
+<div class="workbench-page flex h-screen flex-col">
   <!-- toolbar -->
   <div
     class="toolbar flex items-center gap-2 border-b border-[var(--border-subtle)] bg-[var(--bg-sidebar)] px-4 py-3"
@@ -7,7 +7,7 @@
       <button
         (click)="runCurrentTab()"
         [disabled]="activeTab().loading || !activeTab().query.trim()"
-        class="inline-flex items-center gap-2 rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-bold text-black transition-colors hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-50"
+        class="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold text-black transition-colors disabled:cursor-not-allowed disabled:opacity-50"
       >
         @if (activeTab().loading) {
           <div
@@ -21,19 +21,19 @@
       </button>
       <button
         (click)="runAllTabs()"
-        class="rounded-lg px-3 py-2 text-sm font-medium text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--text-main)]"
+        class="rounded-lg px-3 py-2 text-sm font-medium text-[var(--text-dim)] transition-colors hover:bg-transparent hover:text-[var(--text-main)]"
       >
         <mat-icon fontIcon="sync" class="h-6! w-5! text-xl!" />
       </button>
       <button
         (click)="formatAllSQL()"
-        class="rounded-lg px-3 py-2 text-sm font-medium text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--text-main)]"
+        class="rounded-lg px-3 py-2 text-sm font-medium text-[var(--text-dim)] transition-colors hover:bg-transparent hover:text-[var(--text-main)]"
       >
         <mat-icon fontIcon="format_align_left" class="h-6! w-5! text-xl!" />
       </button>
       <button
         (click)="clearEditor()"
-        class="rounded-lg px-3 py-2 text-sm font-medium text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--text-main)]"
+        class="rounded-lg px-3 py-2 text-sm font-medium text-[var(--text-dim)] transition-colors hover:bg-transparent hover:text-[var(--text-main)]"
       >
         <mat-icon fontIcon="delete" class="h-6! w-5! text-xl!" />
       </button>
@@ -71,7 +71,7 @@
       }
       <button
         (click)="addTab()"
-        class="rounded p-1.5 text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--text-main)]"
+        class="rounded p-1.5 text-[var(--text-dim)] transition-colors hover:bg-transparent hover:text-[var(--text-main)]"
       >
         <mat-icon fontIcon="add" class="h-6! w-5! text-xl!" />
       </button>
@@ -91,7 +91,7 @@
 
       <!-- resize handle -->
       <div
-        class="h-1.5 w-full cursor-row-resize bg-[var(--border-subtle)] transition-colors hover:bg-[var(--accent)]/50"
+        class="h-1.5 w-full cursor-row-resize bg-[var(--border-subtle)] transition-colors hover:bg-transparent"
         (mousedown)="startResize($event)"
       ></div>
 
