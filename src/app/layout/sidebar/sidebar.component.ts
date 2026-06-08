@@ -22,6 +22,9 @@ import { ErrorHandlerService } from "@shared/services/error-handler.service";
 import { MetricsApiService } from "@shared/services/metrics-api.service";
 import { ConnectionFormService } from "@shared/services/connection-form.service";
 import { TreeNode } from "@shared/models/tree-node.model";
+import { ConfirmService } from "@shared/services/confirm.service";
+import { ToastService } from "@services/toast.service";
+import { DatabaseService } from "@shared/services/database.service";
 
 @Component({
   selector: "app-sidebar",
@@ -39,6 +42,9 @@ export class SidebarComponent implements OnInit {
   themeService = inject(ThemeService);
   private errorHandler = inject(ErrorHandlerService);
   private connectionFormService = inject(ConnectionFormService);
+  private confirmService = inject(ConfirmService);
+  private toast = inject(ToastService);
+  private db = inject(DatabaseService);
   collectionSelected = output<string>();
 
   isStatsCollapsed = signal(true);
@@ -570,6 +576,11 @@ export class SidebarComponent implements OnInit {
     const node = this.contextMenu().node;
     if (node?.type === "collection" && node.collection) {
       this.loadCollectionData(node.collection.name);
+    } else if (node?.type === "database") {
+      const connId = this.activeConnectionId();
+      if (connId) {
+        this.loadDatabasesInBackground(connId);
+      }
     }
     this.hideContextMenu();
   }
@@ -582,6 +593,27 @@ export class SidebarComponent implements OnInit {
     this.hideContextMenu();
   }
 
+  onNewCollectionClick() {
+    const node = this.contextMenu().node;
+    if (node?.type === "database") {
+      this.router.navigate(["/connections", this.activeConnectionId(), node.name], {
+        queryParams: { newCollection: true },
+      });
+    }
+    this.hideContextMenu();
+  }
+
+  onRenameCollection() {
+    const node = this.contextMenu().node;
+    if (node?.type === "collection") {
+      const newName = prompt(`Rename collection "${node.name}" to:`);
+      if (newName && newName !== node.name) {
+        this.renameCollection(node.name, newName);
+      }
+    }
+    this.hideContextMenu();
+  }
+
   private loadCollectionData(collection: string) {
     const connId = this.activeConnectionId();
     if (connId) {
@@ -589,7 +621,33 @@ export class SidebarComponent implements OnInit {
     }
   }
 
-  private deleteCollection(_collection: string): void {
-    // TODO: Implement delete collection logic
+  private async deleteCollection(collection: string): Promise<void> {
+    const confirmed = await this.confirmService.confirmDelete(collection);
+    if (!confirmed) return;
+
+    try {
+      await this.db.dropCollection(collection);
+      this.toast.success(`Collection "${collection}" deleted`);
+      const connId = this.activeConnectionId();
+      const dbName = this.activeDatabaseName();
+      if (connId && dbName) {
+        this.dataStore.invalidateCollections(connId);
+      }
+    } catch (e) {
+      this.toast.error(`Failed to delete collection: ${(e as Error).message}`);
+    }
+  }
+
+  private async renameCollection(oldName: string, newName: string): Promise<void> {
+    const connId = this.activeConnectionId();
+    if (!connId) return;
+
+    try {
+      await this.db.renameCollection(connId, oldName, newName);
+      this.toast.success(`Collection renamed to "${newName}"`);
+      this.dataStore.invalidateCollections(connId);
+    } catch (e) {
+      this.toast.error(`Failed to rename collection: ${(e as Error).message}`);
+    }
   }
 }
