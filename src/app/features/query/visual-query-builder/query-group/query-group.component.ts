@@ -31,7 +31,7 @@ import { SchemaCompletionService } from "../../services";
           <button
             type="button"
             class="rounded px-3 py-1 text-xs transition-colors"
-            [class.bg-emerald-600]="group.operator === 'and'"
+            [class.bg-[var(--accent)]]="group.operator === 'and'"
             [class.text-white]="group.operator === 'and'"
             [class.text-slate-400]="group.operator !== 'and'"
             [class.hover:text-white]="group.operator !== 'and'"
@@ -88,7 +88,7 @@ import { SchemaCompletionService } from "../../services";
       <!-- Add Condition Button -->
       <button
         type="button"
-        class="mt-3 flex items-center gap-2 text-sm text-slate-400 transition-colors hover:text-emerald-400"
+        class="mt-3 flex items-center gap-2 text-sm text-slate-400 transition-colors hover:text-[var(--accent)]"
         (click)="addCondition()"
       >
         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

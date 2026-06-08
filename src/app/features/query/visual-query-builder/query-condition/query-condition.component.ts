@@ -30,7 +30,7 @@ import { SchemaCompletionService } from "../../services";
     >
       <!-- Field Selector -->
       <select
-        class="min-w-[120px] rounded border border-slate-600 bg-slate-700 px-2 py-1.5 text-sm text-slate-200 focus:border-emerald-500 focus:outline-none"
+        class="min-w-[120px] rounded border border-slate-600 bg-slate-700 px-2 py-1.5 text-sm text-slate-200 focus:border-[var(--accent)] focus:outline-none"
         [ngModel]="condition.field"
         (ngModelChange)="onFieldChange($event)"
       >
@@ -42,7 +42,7 @@ import { SchemaCompletionService } from "../../services";
 
       <!-- Operator Selector -->
       <select
-        class="min-w-[140px] rounded border border-slate-600 bg-slate-700 px-2 py-1.5 text-sm text-slate-200 focus:border-emerald-500 focus:outline-none"
+        class="min-w-[140px] rounded border border-slate-600 bg-slate-700 px-2 py-1.5 text-sm text-slate-200 focus:border-[var(--accent)] focus:outline-none"
         [ngModel]="condition.operator"
         (ngModelChange)="onOperatorChange($event)"
       >
@@ -55,7 +55,7 @@ import { SchemaCompletionService } from "../../services";
       @if (!isNullOperator()) {
         <input
           type="text"
-          class="flex-1 rounded border border-slate-600 bg-slate-700 px-3 py-1.5 font-mono text-sm text-slate-200 focus:border-emerald-500 focus:outline-none"
+          class="flex-1 rounded border border-slate-600 bg-slate-700 px-3 py-1.5 font-mono text-sm text-slate-200 focus:border-[var(--accent)] focus:outline-none"
           placeholder="Value..."
           [ngModel]="condition.value"
           (ngModelChange)="onValueChange($event)"

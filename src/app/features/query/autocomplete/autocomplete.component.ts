@@ -30,7 +30,7 @@ import { AutocompleteService, CompletionItem } from "../services";
           @for (item of items(); track item.label; let i = $index) {
             <div
               class="flex cursor-pointer items-center gap-3 px-3 py-2 transition-colors"
-              [class.bg-emerald-600]="i === selectedIndex()"
+              [class.bg-[var(--accent)]]="i === selectedIndex()"
               [class.text-white]="i === selectedIndex()"
               [class.text-slate-300]="i !== selectedIndex()"
               [class.hover:bg-slate-700]="i !== selectedIndex()"

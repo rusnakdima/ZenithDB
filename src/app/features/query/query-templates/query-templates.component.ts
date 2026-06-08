@@ -57,7 +57,7 @@ import { TemplateCardComponent } from "./template-card/template-card.component";
           </svg>
           <input
             type="text"
-            class="w-full rounded-lg border border-slate-600 bg-slate-800 py-2 pr-4 pl-10 text-sm text-slate-200 focus:border-emerald-500 focus:outline-none"
+            class="w-full rounded-lg border border-slate-600 bg-slate-800 py-2 pr-4 pl-10 text-sm text-slate-200 focus:border-[var(--accent)] focus:outline-none"
             placeholder="Search templates..."
             [ngModel]="searchQuery()"
             (ngModelChange)="searchQuery.set($event)"
@@ -70,7 +70,7 @@ import { TemplateCardComponent } from "./template-card/template-card.component";
         <button
           type="button"
           class="rounded-full px-3 py-1.5 text-xs whitespace-nowrap transition-colors"
-          [class.bg-emerald-600]="activeCategory() === null"
+          [class.bg-[var(--accent)]]="activeCategory() === null"
           [class.text-white]="activeCategory() === null"
           [class.bg-slate-700]="activeCategory() !== null"
           [class.text-slate-400]="activeCategory() !== null"
@@ -82,7 +82,7 @@ import { TemplateCardComponent } from "./template-card/template-card.component";
           <button
             type="button"
             class="rounded-full px-3 py-1.5 text-xs whitespace-nowrap transition-colors"
-            [class.bg-emerald-600]="activeCategory() === category.key"
+            [class.bg-[var(--accent)]]="activeCategory() === category.key"
             [class.text-white]="activeCategory() === category.key"
             [class.bg-slate-700]="activeCategory() !== category.key"
             [class.text-slate-400]="activeCategory() !== category.key"
@@ -130,7 +130,7 @@ import { TemplateCardComponent } from "./template-card/template-card.component";
           <span class="text-xs text-slate-500"> {{ templates().length }} templates </span>
           <button
             type="button"
-            class="flex items-center gap-1 text-xs text-emerald-400 hover:text-emerald-300"
+            class="flex items-center gap-1 text-xs text-[var(--accent)] hover:text-[var(--accent-hover)]"
             (click)="onCreateCustom()"
           >
             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

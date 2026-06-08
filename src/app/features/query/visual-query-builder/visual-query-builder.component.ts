@@ -28,7 +28,7 @@ import { FilterExpression } from "@shared/models/connection.config";
         <div class="flex items-center gap-3">
           <h3 class="text-sm font-medium text-slate-200">Visual Query Builder</h3>
           @if (collectionName) {
-            <span class="rounded bg-emerald-500/10 px-2 py-1 text-xs text-emerald-400">
+            <span class="rounded bg-[var(--accent-muted)] px-2 py-1 text-xs text-[var(--accent)]">
               {{ collectionName }}
             </span>
           }
@@ -80,7 +80,7 @@ import { FilterExpression } from "@shared/models/connection.config";
               @for (sort of sorts(); track sort.field; let i = $index) {
                 <div class="flex items-center gap-2">
                   <select
-                    class="rounded border border-slate-600 bg-slate-700 px-2 py-1.5 text-sm text-slate-200 focus:border-emerald-500 focus:outline-none"
+                    class="rounded border border-slate-600 bg-slate-700 px-2 py-1.5 text-sm text-slate-200 focus:border-[var(--accent)] focus:outline-none"
                     [ngModel]="sort.field"
                     (ngModelChange)="updateSortField(i, $event)"
                   >
@@ -122,7 +122,7 @@ import { FilterExpression } from "@shared/models/connection.config";
 
           <button
             type="button"
-            class="mt-2 flex items-center gap-2 text-sm text-slate-400 transition-colors hover:text-emerald-400"
+            class="mt-2 flex items-center gap-2 text-sm text-slate-400 transition-colors hover:text-[var(--accent)]"
             (click)="addSort()"
           >
             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -161,7 +161,7 @@ import { FilterExpression } from "@shared/models/connection.config";
               <label class="text-xs text-slate-400">Skip</label>
               <input
                 type="number"
-                class="w-20 rounded border border-slate-600 bg-slate-700 px-2 py-1.5 text-sm text-slate-200 focus:border-emerald-500 focus:outline-none"
+                class="w-20 rounded border border-slate-600 bg-slate-700 px-2 py-1.5 text-sm text-slate-200 focus:border-[var(--accent)] focus:outline-none"
                 [ngModel]="skip()"
                 (ngModelChange)="skip.set($event)"
                 min="0"
@@ -172,7 +172,7 @@ import { FilterExpression } from "@shared/models/connection.config";
               <label class="text-xs text-slate-400">Limit</label>
               <input
                 type="number"
-                class="w-20 rounded border border-slate-600 bg-slate-700 px-2 py-1.5 text-sm text-slate-200 focus:border-emerald-500 focus:outline-none"
+                class="w-20 rounded border border-slate-600 bg-slate-700 px-2 py-1.5 text-sm text-slate-200 focus:border-[var(--accent)] focus:outline-none"
                 [ngModel]="limit()"
                 (ngModelChange)="limit.set($event)"
                 min="1"
@@ -188,7 +188,7 @@ import { FilterExpression } from "@shared/models/connection.config";
       >
         <div class="text-xs text-slate-500">
           @if (hasConditions()) {
-            <span class="text-emerald-400">{{ conditionCount() }} condition(s)</span>
+            <span class="text-[var(--accent)]">{{ conditionCount() }} condition(s)</span>
           } @else {
             <span>No conditions</span>
           }
@@ -204,7 +204,7 @@ import { FilterExpression } from "@shared/models/connection.config";
           </button>
           <button
             type="button"
-            class="rounded bg-emerald-600 px-4 py-2 text-sm text-white transition-colors hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
+            class="rounded bg-[var(--accent)] px-4 py-2 text-sm text-black transition-colors hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-50"
             [disabled]="!hasConditions()"
             (click)="onApply()"
           >

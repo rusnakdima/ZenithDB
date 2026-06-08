@@ -8,7 +8,7 @@ import { QueryTemplate, TEMPLATE_CATEGORIES } from "../../models";
   imports: [CommonModule],
   template: `
     <div
-      class="group relative cursor-pointer rounded-lg border border-slate-700 bg-slate-800 p-4 transition-all hover:border-emerald-500/50"
+      class="group relative cursor-pointer rounded-lg border border-slate-700 bg-slate-800 p-4 transition-all hover:border-[var(--accent)]/50"
       (click)="select.emit(template)"
     >
       <!-- Favorite Button -->
@@ -147,7 +147,7 @@ import { QueryTemplate, TEMPLATE_CATEGORIES } from "../../models";
         @if (template.isBuiltIn) {
           <span class="text-xs text-slate-500">Built-in</span>
         } @else {
-          <span class="text-xs text-emerald-500">Custom</span>
+          <span class="text-xs text-[var(--accent)]">Custom</span>
         }
       </div>
     </div>

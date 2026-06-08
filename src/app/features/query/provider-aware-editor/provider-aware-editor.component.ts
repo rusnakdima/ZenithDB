@@ -35,7 +35,7 @@ import { SyntaxMode } from "../models";
           <button
             type="button"
             class="rounded px-3 py-1.5 text-xs transition-colors"
-            [class.bg-emerald-600]="syntaxMode() === 'sql'"
+            [class.bg-[var(--accent)]]="syntaxMode() === 'sql'"
             [class.text-white]="syntaxMode() === 'sql'"
             [class.bg-slate-700]="syntaxMode() !== 'sql'"
             [class.text-slate-400]="syntaxMode() !== 'sql'"
@@ -46,7 +46,7 @@ import { SyntaxMode } from "../models";
           <button
             type="button"
             class="rounded px-3 py-1.5 text-xs transition-colors"
-            [class.bg-emerald-600]="syntaxMode() === 'mongodb'"
+            [class.bg-[var(--accent)]]="syntaxMode() === 'mongodb'"
             [class.text-white]="syntaxMode() === 'mongodb'"
             [class.bg-slate-700]="syntaxMode() !== 'mongodb'"
             [class.text-slate-400]="syntaxMode() !== 'mongodb'"
@@ -57,7 +57,7 @@ import { SyntaxMode } from "../models";
           <button
             type="button"
             class="rounded px-3 py-1.5 text-xs transition-colors"
-            [class.bg-emerald-600]="syntaxMode() === 'json'"
+            [class.bg-[var(--accent)]]="syntaxMode() === 'json'"
             [class.text-white]="syntaxMode() === 'json'"
             [class.bg-slate-700]="syntaxMode() !== 'json'"
             [class.text-slate-400]="syntaxMode() !== 'json'"
@@ -70,7 +70,7 @@ import { SyntaxMode } from "../models";
         <div class="flex items-center gap-2">
           <button
             type="button"
-            class="rounded px-2 py-1 text-xs text-emerald-400 transition-colors hover:bg-slate-700 hover:text-emerald-300"
+            class="rounded px-2 py-1 text-xs text-[var(--accent)] transition-colors hover:bg-slate-700 hover:text-[var(--accent-hover)]"
             (click)="formatQuery()"
           >
             Format
@@ -140,7 +140,7 @@ import { SyntaxMode } from "../models";
               <span>{{ validationResult()!.warnings.length }} warning(s)</span>
             </div>
           } @else {
-            <div class="flex items-center gap-2 text-xs text-emerald-400">
+            <div class="flex items-center gap-2 text-xs text-[var(--accent)]">
               <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   stroke-linecap="round"

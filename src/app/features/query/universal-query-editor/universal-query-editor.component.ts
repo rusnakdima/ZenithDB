@@ -67,7 +67,7 @@ type PanelType = "templates" | "history" | "none";
             <button
               type="button"
               class="rounded px-3 py-1.5 text-xs transition-colors"
-              [class.bg-emerald-600]="editorMode() === 'text'"
+              [class.bg-[var(--accent)]]="editorMode() === 'text'"
               [class.text-white]="editorMode() === 'text'"
               [class.text-slate-400]="editorMode() !== 'text'"
               (click)="editorMode.set('text')"
@@ -77,7 +77,7 @@ type PanelType = "templates" | "history" | "none";
             <button
               type="button"
               class="rounded px-3 py-1.5 text-xs transition-colors"
-              [class.bg-emerald-600]="editorMode() === 'visual'"
+              [class.bg-[var(--accent)]]="editorMode() === 'visual'"
               [class.text-white]="editorMode() === 'visual'"
               [class.text-slate-400]="editorMode() !== 'visual'"
               (click)="editorMode.set('visual')"
@@ -125,7 +125,7 @@ type PanelType = "templates" | "history" | "none";
           <!-- Execute Button -->
           <button
             type="button"
-            class="flex items-center gap-2 rounded bg-emerald-600 px-4 py-1.5 text-xs text-white transition-colors hover:bg-emerald-500"
+            class="flex items-center gap-2 rounded bg-[var(--accent)] px-4 py-1.5 text-xs text-black transition-colors hover:bg-[var(--accent-hover)]"
             (click)="executeQuery()"
             [disabled]="isLoading()"
           >
@@ -197,7 +197,7 @@ type PanelType = "templates" | "history" | "none";
                 <div class="flex-1 overflow-y-auto p-4">
                   @for (item of history(); track item.id) {
                     <div
-                      class="mb-3 cursor-pointer rounded-lg border border-slate-700 bg-slate-800 p-3 transition-colors hover:border-emerald-500/50"
+                      class="mb-3 cursor-pointer rounded-lg border border-slate-700 bg-slate-800 p-3 transition-colors hover:border-[var(--accent)]/50"
                       (click)="loadFromHistory(item)"
                     >
                       <div class="mb-1 text-xs text-slate-400">
@@ -256,7 +256,7 @@ type PanelType = "templates" | "history" | "none";
       >
         <div class="flex items-center gap-4">
           <span class="text-slate-400">
-            Collection: <span class="text-emerald-400">{{ collectionName || "None" }}</span>
+            Collection: <span class="text-[var(--accent)]">{{ collectionName || "None" }}</span>
           </span>
           @if (executionTime()) {
             <span class="text-slate-400">
