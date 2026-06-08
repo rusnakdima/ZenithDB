@@ -33,7 +33,12 @@ export const PROVIDER_REGISTRY: Record<
     isNetwork: false,
     normalize: () => "sqlite",
   },
-  mysql: { icon: "storage", color: "text-orange-500", isNetwork: true, normalize: () => "mysql" },
+  mysql: {
+    icon: "storage",
+    color: "text-[var(--accent)]",
+    isNetwork: true,
+    normalize: () => "mysql",
+  },
 };
 
 const PROVIDER_KEYS: Record<string, ProviderType> = {
