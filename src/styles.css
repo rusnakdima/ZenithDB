@@ -3,115 +3,179 @@
 @variant dark (&:where(.dark, .dark *));
 @variant light (&:where(.light, .light *));
 
-.mat-icon {
-  @apply inline-flex items-center justify-center align-middle leading-none text-inherit;
-  flex-shrink: 0;
-}
-
-:root {
-  --accent: #ff6b00;
-  --accent-hover: #ff8533;
-  --accent-muted: rgba(255, 107, 0, 0.1);
-  --bg-deep: #050505;
-  --bg-sidebar: #0d0d0d;
-  --bg-card: #121212;
-  --bg-elevated: #1a1a1a;
-  --bg-input: #0a0a0a;
-  --text-main: #ffffff;
-  --text-dim: #717171;
-  --text-muted: #525252;
-  --border-subtle: rgba(255, 255, 255, 0.05);
-  --border-visible: rgba(255, 255, 255, 0.1);
-
-  --status-online: #22c55e;
-  --status-warning: #f59e0b;
-  --status-error: #ef4444;
-
-  color-scheme: dark;
-}
-
-html.dark {
-  color-scheme: dark;
-}
-
-html.light {
-  --accent: #ff6b00;
-  --accent-hover: #ff8533;
-  --accent-muted: rgba(255, 107, 0, 0.1);
-  --bg-deep: #f5f5f5;
-  --bg-sidebar: #ffffff;
-  --bg-card: #ffffff;
-  --bg-elevated: #f0f0f0;
-  --bg-input: #f0f0f0;
-  --text-main: #0a0a0a;
-  --text-dim: #737373;
-  --text-muted: #a3a3a3;
-  --border-subtle: rgba(0, 0, 0, 0.05);
-  --border-visible: rgba(0, 0, 0, 0.1);
-
-  color-scheme: light;
-}
-
 @theme {
-  --color-emerald-950: #022c22;
-  --color-emerald-900: #064e3b;
-  --color-emerald-800: #065f46;
-  --color-emerald-700: #047857;
-  --color-emerald-600: #059669;
-  --color-emerald-500: #10b981;
-  --color-emerald-400: #34d399;
-  --color-emerald-300: #6ee7b7;
+  /* Accent Colors */
+  --color-accent: #ff6b00;
+  --color-accent-hover: #ff8533;
+  --color-accent-muted: rgba(255, 107, 0, 0.15);
 
+  /* Aliases for var(--accent) usage */
+  --accent: #ff6b00;
+  --accent-hover: #ff8533;
+  --accent-muted: rgba(255, 107, 0, 0.15);
+
+  /* Accent Shade Placeholders (overridden by JS) */
+  --accent-50: rgba(255, 107, 0, 0.05);
+  --accent-100: rgba(255, 107, 0, 0.1);
+  --accent-200: rgba(255, 107, 0, 0.2);
+  --accent-300: rgba(255, 107, 0, 0.3);
+  --accent-400: rgba(255, 107, 0, 0.4);
+  --accent-500: #ff6b00;
+  --accent-600: rgba(255, 107, 0, 0.85);
+  --accent-700: rgba(255, 107, 0, 0.7);
+  --accent-800: rgba(255, 107, 0, 0.55);
+  --accent-900: rgba(255, 107, 0, 0.45);
+  --accent-rgb: 255, 107, 0;
+
+  /* Slate Palette */
+  --color-slate-950: #020617;
+  --color-slate-900: #0f172a;
+  --color-slate-800: #1e293b;
+  --color-slate-700: #334155;
+  --color-slate-600: #475569;
+  --color-slate-500: #64748b;
+  --color-slate-400: #94a3b8;
+  --color-slate-300: #cbd5e1;
+  --color-slate-200: #e2e8f0;
+  --color-slate-100: #f1f5f9;
+  --color-slate-50: #f8fafc;
+
+  /* Status Colors */
+  --color-success: #10b981;
+  --color-success-light: #34d399;
+  --color-warning: #f59e0b;
+  --color-warning-light: #fbbf24;
+  --color-error: #ef4444;
+  --color-error-light: #f87171;
+  --color-info: #3b82f6;
+  --color-info-light: #60a5fa;
+
+  /* JSON Viewer Colors */
+  --color-json-key: #fbbf24;
+  --color-json-string: #34d399;
+  --color-json-number: #60a5fa;
+  --color-json-boolean: #f87171;
+  --color-json-null: #64748b;
+  --color-json-bracket: #cbd5e1;
+
+  /* Fonts */
   --font-sans:
     "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     sans-serif;
   --font-mono:
     "JetBrains Mono", ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Consolas, monospace;
 
+  /* Custom Animations */
   --animate-fade: fadeIn 0.2s ease-out;
-  --animate-slide: slideUp 0.3s ease-out;
+  --animate-slide-up: slideUp 0.3s ease-out;
+  --animate-slide-in-top: slideInTop 0.3s ease-out;
+  --animate-slide-in-bottom: slideInBottom 0.3s ease-out;
+  --animate-shrink: shrink linear forwards;
+  --animate-pulse-green: pulseGreen 2s ease-in-out infinite;
+  --animate-pulse: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+
+  /* Shadows */
+  --shadow-card: 0 4px 20px rgba(var(--accent-rgb), 0.15);
+  --shadow-card-hover: 0 8px 30px rgba(var(--accent-rgb), 0.25);
+  --shadow-btn: 0 4px 12px rgba(var(--accent-rgb), 0.3);
+  --shadow-btn-hover: 0 6px 20px rgba(var(--accent-rgb), 0.4);
+  --shadow-toast: 0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+  --shadow-nav: 0 8px 32px rgba(0, 0, 0, 0.4);
+  --shadow-nav-light: 0 4px 16px rgba(0, 0, 0, 0.1);
+  --shadow-input-focus: 0 0 0 2px rgba(var(--accent-rgb), 0.2);
+  --shadow-glow-green: 0 0 6px rgba(34, 197, 94, 0.6);
+  --shadow-glow-green-pulse: 0 0 12px rgba(34, 197, 94, 0.9);
 }
 
-.glass-card {
-  @apply rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)];
-}
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
 
-.rail-item {
-  @apply rounded-xl transition-all duration-200;
-}
-.rail-item:hover {
-  @apply bg-white/5;
-}
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+  }
 
-.rail-item.active {
-  @apply bg-[var(--accent-muted)] text-[var(--accent)];
-}
+  body {
+    font-family: var(--font-sans);
+    background-color: var(--bg-deep);
+    color: var(--text-main);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 
-.tree-item {
-  @apply cursor-pointer rounded-md transition-all duration-200;
-}
-.tree-item:hover {
-  @apply bg-white/3;
-}
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
 
-.tree-item.active {
-  @apply bg-[var(--accent-muted)] text-[var(--accent)];
-}
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
 
-.light .tree-item:hover {
-  @apply bg-black/3;
-}
+  ::-webkit-scrollbar-thumb {
+    background: var(--text-muted);
+    border-radius: 10px;
+  }
 
-.light .tree-item.active {
-  @apply bg-[var(--accent-muted)];
-}
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--text-dim);
+  }
 
-.mat-mdc-menu-panel {
-  @apply bg-[var(--bg-card)]!;
-}
+  *:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
 
-.mat-mdc-menu-panel .mat-mdc-menu-item {
-  @apply text-[var(--text-main)]!;
+  input[type="checkbox"] {
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--border-visible);
+    border-radius: 4px;
+    background: transparent;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+
+  input[type="checkbox"]:checked {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
+  input[type="checkbox"]:checked::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 5px;
+    width: 5px;
+    height: 9px;
+    border: solid black;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+
+  .dark input[type="checkbox"] {
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .dark input[type="checkbox"]:checked::after {
+    border-color: black;
+  }
+
+  .light input[type="checkbox"] {
+    border-color: rgba(0, 0, 0, 0.2);
+  }
+
+  .light input[type="checkbox"]:checked::after {
+    border-color: white;
+  }
 }
 
 @keyframes fadeIn {
@@ -133,16 +197,6 @@ html.light {
   to {
     transform: translateY(0);
     opacity: 1;
-  }
-}
-
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
   }
 }
 
@@ -177,17 +231,230 @@ html.light {
   }
 }
 
+@keyframes pulseGreen {
+  0%,
+  100% {
+    box-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 12px rgba(34, 197, 94, 0.9);
+  }
+}
+
+/* Dark Theme (Default) */
+:root {
+  --bg-deep: #020617;
+  --bg-sidebar: rgba(15, 23, 42, 0.85);
+  --bg-card: transparent;
+  --bg-elevated: rgba(51, 65, 85, 0.6);
+  --bg-input: transparent;
+  --text-main: #ffffff;
+  --text-dim: #94a3b8;
+  --text-muted: #64748b;
+  --border-color: rgba(255, 255, 255, 0.15);
+  --border-light: rgba(255, 255, 255, 0.1);
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-visible: rgba(255, 255, 255, 0.12);
+  color-scheme: dark;
+}
+
+/* Light Theme */
+html.light {
+  --bg-deep: #f8fafc;
+  --bg-sidebar: rgba(255, 255, 255, 0.9);
+  --bg-card: transparent;
+  --bg-elevated: rgba(241, 245, 249, 0.7);
+  --bg-input: transparent;
+  --text-main: #0f172a;
+  --text-dim: #64748b;
+  --text-muted: #94a3b8;
+  --border-color: rgba(0, 0, 0, 0.12);
+  --border-light: rgba(0, 0, 0, 0.08);
+  --border-subtle: rgba(0, 0, 0, 0.06);
+  --border-visible: rgba(0, 0, 0, 0.12);
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
 @layer components {
+  /* ============================================
+     Layout & Global
+     ============================================ */
+  .theme {
+    @apply bg-[var(--bg-deep)] text-[var(--text-main)];
+  }
+
+  .mono {
+    font-family: var(--font-mono);
+  }
+
+  [data-tauri-drag-region] {
+    cursor: move;
+  }
+
+  .page-content {
+    @apply flex flex-1 flex-col px-4 pb-20 sm:px-6;
+  }
+
+  .page-explorer {
+    @apply overflow-hidden;
+  }
+
+  /* ============================================
+     Mat Icon
+     ============================================ */
+  .mat-icon {
+    @apply inline-flex shrink-0 items-center justify-center align-middle leading-none;
+    color: var(--text-main);
+  }
+
+  .light .mat-icon {
+    color: #1e293b;
+  }
+
+  .dark .mat-icon {
+    color: #ffffff;
+  }
+
+  /* ============================================
+     Glass Card
+     ============================================ */
+  .glass-card {
+    @apply rounded-2xl border border-[var(--border-color)] bg-transparent backdrop-blur-md;
+  }
+
+  /* ============================================
+     Transparent Material Components
+     ============================================ */
+  .mat-mdc-select-panel {
+    background: transparent !important;
+    backdrop-filter: blur(8px);
+  }
+
+  .dark .mat-mdc-select-panel,
+  html.dark .mat-mdc-select-panel {
+    background-color: var(--bg-elevated) !important;
+  }
+
+  .mat-mdc-menu-panel {
+    background: transparent !important;
+    backdrop-filter: blur(8px);
+  }
+
+  .dark .mat-mdc-menu-panel,
+  html.dark .mat-mdc-menu-panel {
+    background-color: var(--bg-elevated) !important;
+  }
+
+  .mat-mdc-menu-item {
+    background: transparent !important;
+  }
+
+  .mat-mdc-menu-item:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+  }
+
+  html.light .mat-mdc-menu-item:hover {
+    background: rgba(0, 0, 0, 0.05) !important;
+  }
+
+  .mat-mdc-autocomplete-panel {
+    background: transparent !important;
+    backdrop-filter: blur(8px);
+  }
+
+  .dark .mat-mdc-autocomplete-panel,
+  html.dark .mat-mdc-autocomplete-panel {
+    background-color: var(--bg-elevated) !important;
+  }
+
+  .mat-mdc-dialog-container {
+    --mdc-dialog-container-color: transparent;
+  }
+
+  .mat-mdc-tooltip {
+    background: var(--bg-elevated) !important;
+  }
+
+  /* ============================================
+     Accent Border Utilities
+     ============================================ */
+  .border-accent {
+    border-color: var(--accent) !important;
+  }
+
+  .border-accent-light {
+    border-color: var(--accent-200) !important;
+  }
+
+  .info-panel-accent {
+    border-left: 3px solid var(--accent) !important;
+  }
+
+  .badge-accent {
+    background-color: var(--accent-100) !important;
+    color: var(--accent-600) !important;
+  }
+
+  /* ============================================
+     Navigation Rail Items
+     ============================================ */
+  .rail-item {
+    @apply rounded-xl transition-all duration-200;
+  }
+  .rail-item:hover {
+    @apply bg-transparent;
+  }
+  .rail-item.active {
+    @apply border border-[var(--accent)]/30 bg-transparent text-[var(--accent)];
+  }
+
+  /* ============================================
+     Tree Items
+     ============================================ */
+  .tree-item {
+    @apply cursor-pointer rounded-md transition-all duration-200;
+  }
+  .tree-item:hover {
+    @apply bg-transparent;
+  }
+  .tree-item.active {
+    @apply border border-[var(--accent)]/30 bg-transparent text-[var(--accent)];
+  }
+  .light .tree-item:hover {
+    @apply bg-transparent;
+  }
+  .light .tree-item.active {
+    @apply border border-[var(--accent)]/30 bg-transparent;
+  }
+
+  /* ============================================
+     Angular Material Overrides
+     ============================================ */
+  .mat-mdc-menu-panel {
+    @apply bg-[var(--bg-card)]!;
+  }
+
+  .mat-mdc-menu-panel .mat-mdc-menu-item {
+    @apply text-[var(--text-main)]!;
+  }
+
+  /* ============================================
+     JSON Display
+     ============================================ */
   .json-display {
     @apply overflow-x-auto font-mono text-[0.8125rem] leading-6;
   }
 
   .json-line {
-    @apply flex min-h-[1.5em];
+    @apply flex min-h-6;
   }
 
   .json-line:hover {
-    @apply bg-slate-800/30;
+    @apply bg-transparent;
   }
 
   .json-line:nth-child(odd) {
@@ -195,7 +462,7 @@ html.light {
   }
 
   .json-line:nth-child(odd):hover {
-    @apply bg-slate-800/45;
+    @apply bg-transparent;
   }
 
   .dark .json-line:nth-child(odd) {
@@ -203,11 +470,11 @@ html.light {
   }
 
   .dark .json-line:nth-child(odd):hover {
-    @apply bg-slate-950/70;
+    @apply bg-transparent;
   }
 
   .json-line-num {
-    @apply w-10 flex-shrink-0 pr-3 text-right text-xs text-slate-400 select-none;
+    @apply w-10 shrink-0 pr-3 text-right text-xs text-slate-400 select-none;
   }
 
   .dark .json-line-num {
@@ -223,7 +490,7 @@ html.light {
   }
 
   .json-string {
-    @apply text-green-400;
+    @apply text-emerald-400;
   }
 
   .json-number {
@@ -250,18 +517,9 @@ html.light {
     @apply pl-0;
   }
 
-  .theme {
-    @apply bg-[var(--bg-deep)] text-[var(--text-main)];
-  }
-
-  .page-content {
-    @apply flex flex-1 flex-col px-4 pb-20 sm:px-6;
-  }
-
-  .page-explorer {
-    @apply overflow-hidden;
-  }
-
+  /* ============================================
+     Connections Page
+     ============================================ */
   .connections-max-width {
     @apply mx-auto w-full max-w-5xl;
   }
@@ -283,17 +541,17 @@ html.light {
   }
 
   .connections-btn {
-    @apply flex cursor-pointer items-center justify-center gap-2 rounded-xl border-none bg-[var(--accent)] px-6 py-3 font-bold text-black shadow-[0_4px_12px_rgba(255,107,0,0.3)] transition-colors duration-200;
+    @apply flex cursor-pointer items-center justify-center gap-2 rounded-xl border-none bg-[var(--accent)] px-6 py-3 font-bold text-black shadow-[var(--shadow-btn)] transition-colors duration-200;
   }
   .connections-btn:hover {
-    @apply bg-[var(--accent-hover)] shadow-[0_6px_20px_rgba(255,107,0,0.4)];
+    @apply bg-[var(--accent-hover)] shadow-[var(--shadow-btn-hover)];
   }
 
   .connections-btn-secondary {
-    @apply flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-6 py-3 font-bold text-[var(--text-main)] transition-colors duration-200;
+    @apply flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-[var(--border-color)] bg-transparent px-6 py-3 font-bold text-[var(--text-main)] backdrop-blur-sm transition-all duration-200;
   }
   .connections-btn-secondary:hover {
-    @apply bg-[var(--bg-card)];
+    @apply border-[var(--accent)] bg-[var(--accent)]/10;
   }
 
   .connections-grid {
@@ -310,12 +568,15 @@ html.light {
     }
   }
 
+  /* ============================================
+     Empty State
+     ============================================ */
   .empty-state {
     @apply flex flex-col items-center justify-center p-8 text-center;
   }
 
   .empty-icon {
-    @apply mb-4 flex h-16 w-16 items-center justify-center rounded-xl bg-[var(--bg-elevated)] text-2xl text-[var(--text-dim)];
+    @apply mb-4 flex h-16 w-16 items-center justify-center rounded-xl border border-[var(--border-color)] text-2xl text-[var(--text-dim)] backdrop-blur-md;
   }
 
   .empty-title {
@@ -326,11 +587,14 @@ html.light {
     @apply mb-4 text-[var(--text-dim)];
   }
 
+  /* ============================================
+     Cards
+     ============================================ */
   .card {
-    @apply relative cursor-pointer overflow-hidden rounded-3xl border border-[var(--border-subtle)] bg-[var(--bg-card)] p-5 transition-colors duration-200;
+    @apply relative cursor-pointer overflow-hidden rounded-3xl border border-[var(--border-color)] bg-transparent p-5 transition-all duration-200;
   }
   .card:hover {
-    @apply border-[var(--accent)] shadow-[0_4px_20px_rgba(255,107,0,0.15)];
+    @apply border-[var(--accent)] shadow-[var(--shadow-card)];
   }
 
   .card-decoration {
@@ -345,7 +609,7 @@ html.light {
   }
 
   .card-icon-box {
-    @apply flex h-12 w-12 items-center justify-center rounded-2xl border border-[var(--border-subtle)] bg-[var(--accent-muted)] text-xl text-[var(--accent)];
+    @apply flex h-12 w-12 items-center justify-center rounded-2xl border border-[var(--accent)]/30 text-xl text-[var(--accent)];
   }
 
   .card-status-area {
@@ -357,25 +621,15 @@ html.light {
   }
 
   .card-status-dot {
-    @apply h-2 w-2 flex-shrink-0 rounded-full;
+    @apply h-2 w-2 shrink-0 rounded-full;
   }
 
   .card-status-dot-connected {
-    @apply animate-pulse bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.6)];
+    @apply animate-pulse bg-green-500 shadow-[var(--shadow-glow-green)];
   }
 
   .card-status-dot-offline {
     @apply bg-[var(--text-muted)];
-  }
-
-  @keyframes pulse-green {
-    0%,
-    100% {
-      box-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
-    }
-    50% {
-      box-shadow: 0 0 12px rgba(34, 197, 94, 0.9);
-    }
   }
 
   .card-status-badge {
@@ -387,26 +641,6 @@ html.light {
   }
 
   .card-status-offline {
-    @apply border border-[var(--border-subtle)] bg-[var(--bg-elevated)] text-[var(--text-dim)];
-  }
-
-  .badge-sm {
-    @apply rounded px-2 py-0.5 text-[0.625rem] font-bold;
-  }
-
-  .badge-md {
-    @apply rounded px-2 py-1 text-xs font-bold;
-  }
-
-  .badge-lg {
-    @apply rounded px-3 py-1 text-sm font-bold;
-  }
-
-  .badge-connected {
-    @apply border border-green-500/20 bg-green-500/20 text-green-500;
-  }
-
-  .badge-offline {
     @apply border border-[var(--border-subtle)] bg-[var(--bg-elevated)] text-[var(--text-dim)];
   }
 
@@ -433,11 +667,38 @@ html.light {
     @apply rounded border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-2 py-1 text-[0.625rem] text-[var(--text-dim)];
   }
 
-  .form-card {
-    @apply rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)];
+  /* ============================================
+     Badges
+     ============================================ */
+  .badge-sm {
+    @apply rounded px-2 py-0.5 text-[0.625rem] font-bold;
   }
-  .dark .form-card {
-    @apply border-slate-800 bg-slate-900 shadow-[0_10px_15px_-3px_rgba(0,0,0,0.5)];
+
+  .badge-md {
+    @apply rounded px-2 py-1 text-xs font-bold;
+  }
+
+  .badge-lg {
+    @apply rounded px-3 py-1 text-sm font-bold;
+  }
+
+  .badge-connected {
+    @apply border border-green-500/20 bg-green-500/20 text-green-500;
+  }
+
+  .badge-offline {
+    @apply border border-[var(--border-subtle)] bg-[var(--bg-elevated)] text-[var(--text-dim)];
+  }
+
+  /* ============================================
+     Forms
+     ============================================ */
+  .form-card {
+    @apply rounded-3xl border border-[var(--border-color)] bg-transparent p-6 backdrop-blur-md;
+  }
+  .dark .form-card,
+  html.dark .form-card {
+    @apply shadow-none;
   }
 
   .form-label {
@@ -445,20 +706,22 @@ html.light {
   }
 
   .form-input {
-    @apply w-full rounded-xl border border-[var(--border-visible)] bg-[var(--bg-input)] px-4 py-3 text-sm text-[var(--text-main)] transition-colors duration-200;
+    @apply w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-input)] px-4 py-3 text-sm text-[var(--text-main)] transition-all duration-200;
   }
   .form-input::placeholder {
     @apply text-[var(--text-muted)];
   }
   .form-input:focus {
-    @apply border-[var(--accent)] shadow-[0_0_0_2px_var(--accent-muted)] outline-none;
+    @apply border-[var(--accent)] outline-none;
+    box-shadow: 0 0 0 3px var(--accent-100);
   }
 
   .form-select {
-    @apply w-full appearance-none rounded-lg border border-slate-300 bg-white bg-[length:1.5em_1.5em] bg-[right_0.5rem_center] bg-no-repeat px-3 py-2 text-sm text-slate-900;
+    @apply w-full appearance-none rounded-xl border border-[var(--border-color)] bg-[var(--bg-input)] bg-[length:1.5em_1.5em] bg-[right_0.5rem_center] bg-no-repeat px-4 py-3 text-sm text-[var(--text-main)] transition-all duration-200;
   }
-  .dark .form-select {
-    @apply border-slate-700 bg-slate-900 text-white;
+  .form-select:focus {
+    @apply border-[var(--accent)] outline-none;
+    box-shadow: 0 0 0 3px var(--accent-100);
   }
 
   .form-btn {
@@ -473,54 +736,62 @@ html.light {
   }
 
   .form-btn-secondary {
-    @apply border-[var(--border-visible)] bg-[var(--bg-elevated)] text-[var(--text-main)];
+    @apply border-[var(--accent)] bg-transparent text-[var(--text-main)];
   }
   .form-btn-secondary:hover {
-    @apply border-[var(--accent)] bg-[var(--bg-card)];
+    @apply bg-[var(--accent)]/10;
   }
 
   .form-btn-browse {
-    @apply border border-[var(--border-visible)] bg-[var(--bg-elevated)] px-3 py-3 text-[var(--text-dim)];
+    @apply border border-[var(--accent)] bg-transparent px-3 py-3 text-[var(--text-dim)];
   }
   .form-btn-browse:hover {
-    @apply border-[var(--accent)] bg-[var(--bg-card)] text-[var(--text-main)];
+    @apply bg-[var(--accent)]/10 text-[var(--text-main)];
   }
 
   .form-btn:disabled {
     @apply cursor-not-allowed opacity-50;
   }
 
+  /* ============================================
+     Filter Bar & Data Tabs
+     ============================================ */
   .filter-bar {
-    @apply flex flex-wrap items-center gap-3 border-b border-slate-200 bg-slate-50/30 p-3;
+    @apply flex flex-wrap items-center gap-3 border-b border-[var(--accent)] bg-transparent p-3;
   }
-  .dark .filter-bar {
-    @apply border-b-slate-800 bg-slate-950/30;
+  .dark .filter-bar,
+  html.dark .filter-bar {
+    @apply bg-transparent;
   }
 
   .data-tabs-bar {
-    @apply flex flex-shrink-0 items-center gap-1 border-b border-slate-200 bg-slate-100 p-2 pt-0;
+    @apply flex shrink-0 items-center gap-1 border-b border-[var(--accent)] bg-transparent p-2 pt-0;
   }
-  .dark .data-tabs-bar {
-    @apply border-b-slate-800 bg-slate-900;
+  .dark .data-tabs-bar,
+  html.dark .data-tabs-bar {
+    @apply bg-transparent;
   }
 
   .data-tab {
     @apply flex cursor-pointer items-center gap-2 rounded-t-lg border border-b-0 border-transparent bg-transparent px-3 py-2 text-xs text-slate-500 transition-colors duration-150;
   }
   .data-tab:hover {
-    @apply bg-slate-200 text-slate-900;
+    @apply bg-transparent text-[var(--accent)];
   }
   .dark .data-tab:hover {
-    @apply bg-slate-800 text-white;
+    @apply bg-transparent;
   }
 
   .data-tab-active {
-    @apply border-slate-200 border-b-white bg-white text-emerald-600;
+    @apply border-[var(--accent)] border-b-white bg-white text-[var(--accent)];
   }
   .dark .data-tab-active {
-    @apply border-slate-800 border-b-slate-950 bg-slate-950 text-emerald-400;
+    @apply border-[var(--accent)] border-b-[var(--bg-card)] bg-[var(--bg-card)] text-[var(--accent)];
   }
 
+  /* ============================================
+     Inspector Drawer
+     ============================================ */
   .inspector-drawer {
     @apply fixed top-11 right-0 bottom-0 z-40 flex w-[380px] translate-x-full flex-col border-l border-slate-200 bg-white shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)] transition-transform duration-300;
   }
@@ -531,6 +802,9 @@ html.light {
     @apply border-l-slate-800 bg-slate-900;
   }
 
+  /* ============================================
+     Toast Notifications
+     ============================================ */
   .toast-wrapper {
     @apply pointer-events-none fixed z-[9999] flex max-h-screen flex-col gap-3 overflow-hidden p-4;
   }
@@ -576,15 +850,20 @@ html.light {
   }
 
   .toast-container {
-    @apply relative flex max-w-[420px] min-w-80 items-start gap-3 overflow-hidden rounded-lg bg-slate-900 px-4 pr-10 shadow-[0_10px_15px_-3px_rgb(0_0_0_/_0.3),0_4px_6px_-4px_rgb(0_0_0_/_0.3)];
+    @apply relative flex max-w-[420px] min-w-80 items-start gap-3 overflow-hidden rounded-lg border border-[var(--border-color)] bg-[var(--bg-elevated)]/90 px-4 pr-10 shadow-[var(--shadow-toast)] backdrop-blur-md;
   }
 
-  .dark .toast-container {
-    @apply bg-slate-900;
+  .dark .toast-container,
+  html.dark .toast-container {
+    @apply bg-slate-900/90;
+  }
+
+  html.light .toast-container {
+    @apply bg-white/90;
   }
 
   .toast-icon {
-    @apply mt-0.5 flex-shrink-0;
+    @apply mt-0.5 shrink-0;
   }
 
   .toast-content {
@@ -670,547 +949,649 @@ html.light {
   .toast-info .toast-progress-bar {
     @apply bg-blue-500;
   }
-}
-
-* {
-  box-sizing: border-box;
-}
-
-html,
-body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  width: 100%;
-}
-
-body {
-  font-family: var(--font-sans);
-  background-color: var(--bg-deep);
-  color: var(--text-main);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-.mono {
-  font-family: var(--font-mono);
-}
-
-::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--text-muted);
-  border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--text-dim);
-}
-
-*:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-[data-tauri-drag-region] {
-  cursor: move;
-}
-
-input[type="checkbox"] {
-  accent-color: var(--accent);
-}
-
-.dark input[type="checkbox"] {
-  accent-color: var(--accent);
-}
-
-/* ============================================
-   Table Grid - Scrollable with sticky header & columns
-   ============================================ */
-
-/* Pagination fixed height */
-app-pagination {
-  height: 56px;
-  flex-shrink: 0;
-}
-
-/* Flattened checkbox - 3 levels instead of 6 */
-.custom-check {
-  @apply relative inline-flex cursor-pointer items-center;
-}
-
-.custom-check .sr-only {
-  @apply absolute whitespace-nowrap;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-}
-
-.custom-check .check-mark {
-  @apply relative inline-block rounded transition-all duration-150;
-  width: 18px;
-  height: 18px;
-  border: 2px solid var(--border-visible);
-  background: transparent;
-}
-
-.custom-check:hover .check-mark {
-  border-color: var(--accent);
-}
-
-.custom-check input:checked + .check-mark {
-  background: var(--accent);
-  border-color: var(--accent);
-}
-
-.custom-check input:checked + .check-mark::after {
-  content: "";
-  position: absolute;
-  left: 5px;
-  top: 1px;
-  width: 5px;
-  height: 9px;
-  border: solid white;
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
-}
-
-.custom-check input:focus-visible + .check-mark {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-/* Flattened type badge */
-.type-badge {
-  font-family: monospace;
-  @apply inline-flex shrink-0 items-center rounded bg-white/10 px-1.5 py-0.5 text-xs font-semibold;
-}
-
-/* Inner wrapper for grid */
-/* Data Table Grid - ONE single flat grid for all header + data cells */
-.data-table-grid {
-  display: grid;
-  width: max-content;
-  min-width: 100%;
-  position: relative;
-}
-
-/* Header Cells - direct grid items, sticky on vertical scroll */
-.data-table-grid > .header-cell {
-  @apply sticky flex items-center overflow-hidden;
-  gap: 8px;
-  padding: 0 12px;
-  height: 44px;
-  background: var(--bg-elevated);
-  box-sizing: border-box;
-  border-bottom: 2px solid var(--border-visible);
-  top: 0;
-  z-index: 20;
-}
-
-.data-table-grid > .header-cell.checkbox-cell {
-  @apply sticky flex shrink-0 justify-center;
-  padding: 0;
-  width: 40px;
-  min-width: 40px;
-  max-width: 40px;
-  background: var(--bg-elevated);
-  border-bottom: 2px solid var(--border-visible);
-  left: 0;
-  z-index: 30;
-}
-
-.data-table-grid > .header-cell.actions-cell {
-  @apply sticky flex shrink-0 justify-center;
-  padding: 0;
-  width: 40px;
-  min-width: 40px;
-  max-width: 40px;
-  background: var(--bg-elevated);
-  border-bottom: 2px solid var(--border-visible);
-  right: 0;
-  z-index: 30;
-}
-
-/* Data Cells - direct grid items */
-.data-table-grid > .data-cell {
-  @apply flex items-center overflow-hidden;
-  padding: 0 12px;
-  font-size: 13px;
-  font-family: var(--font-mono);
-  color: var(--text-main);
-  text-overflow: ellipsis;
-  @apply whitespace-nowrap;
-  height: 44px;
-  box-sizing: border-box;
-  border-bottom: 1px solid var(--border-subtle);
-}
-
-.data-table-grid > .data-cell.checkbox-cell {
-  @apply sticky flex shrink-0 justify-center;
-  padding: 0;
-  width: 40px;
-  min-width: 40px;
-  max-width: 40px;
-  background: var(--bg-elevated);
-  border-bottom: 1px solid var(--border-subtle);
-  left: 0;
-  z-index: 25;
-}
-
-.data-table-grid > .data-cell.actions-cell {
-  @apply sticky flex shrink-0 justify-center;
-  padding: 0;
-  width: 40px;
-  min-width: 40px;
-  max-width: 40px;
-  background: var(--bg-elevated);
-  border-bottom: 1px solid var(--border-subtle);
-  right: 0;
-  z-index: 25;
-}
-
-/* Row States - zebra, hover, selected */
-.data-table-grid > .data-cell.zebra {
-  background-color: rgba(255, 255, 255, 0.02);
-}
-.data-table-grid > .data-cell.checkbox-cell.zebra,
-.data-table-grid > .data-cell.actions-cell.zebra {
-  background-color: var(--bg-elevated);
-}
-
-.data-table-grid > .data-cell.hovered {
-  background-color: rgba(255, 107, 0, 0.05);
-}
-.data-table-grid > .data-cell.checkbox-cell.hovered,
-.data-table-grid > .data-cell.actions-cell.hovered {
-  background-color: var(--bg-elevated);
-}
-
-.data-table-grid > .data-cell.selected {
-  background-color: rgba(255, 107, 0, 0.1);
-}
-.data-table-grid > .data-cell.checkbox-cell.selected,
-.data-table-grid > .data-cell.actions-cell.selected {
-  background-color: rgba(255, 107, 0, 0.15);
-}
-
-/* Resize Handle */
-.resize-handle {
-  @apply absolute cursor-col-resize rounded;
-  top: 4px;
-  right: 0;
-  bottom: 4px;
-  width: 6px;
-  background: transparent;
-  transition:
-    background 0.2s ease,
-    width 0.2s ease,
-    right 0.2s ease;
-}
-
-.resize-handle::before {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 2px;
-  height: 16px;
-  background: var(--text-muted);
-  opacity: 0.3;
-  border-radius: 1px;
-  transition:
-    background 0.2s ease,
-    opacity 0.2s ease;
-}
-
-.resize-handle:hover {
-  background: var(--accent);
-  width: 8px;
-}
-
-.resize-handle:hover::before {
-  background: var(--bg-sidebar);
-  opacity: 0.8;
-}
-
-.resize-handle:active {
-  background: var(--accent);
-  width: 10px;
-}
-
-.resize-handle:active::before {
-  background: var(--bg-sidebar);
-  opacity: 1;
-}
-
-/* Header Row - sticky on scroll, acts as single grid item */
-.data-table-grid > .grid-header-row {
-  @apply sticky overflow-hidden;
-  top: 0;
-  z-index: 20;
-  height: 44px;
-  display: grid;
-  align-items: center;
-  background: var(--bg-elevated);
-  border-bottom: 2px solid var(--border-visible);
-  @apply shrink-0;
-}
-
-/* Data Row - single grid item */
-.data-table-grid > .data-row {
-  display: grid;
-  grid-template-columns: inherit;
-  border-bottom: 1px solid var(--border-subtle);
-  @apply transition-colors duration-150;
-  height: 44px;
-  align-items: center;
-  @apply shrink-0;
-}
-
-.data-table-grid > .data-row.zebra {
-  background-color: rgba(255, 255, 255, 0.02);
-}
-
-.data-table-grid > .data-row.hovered {
-  background-color: rgba(255, 107, 0, 0.05);
-}
-
-.data-table-grid > .data-row.selected {
-  background-color: rgba(255, 107, 0, 0.1);
-}
-
-.data-table-grid > .data-row:last-child {
-  border-bottom: none;
-}
-
-/* Header Cells - grid items within header row */
-.data-table-grid > .grid-header-row > .header-cell {
-  @apply flex items-center overflow-hidden;
-  gap: 8px;
-  padding: 0 12px;
-  height: 100%;
-  background: var(--bg-elevated);
-  box-sizing: border-box;
-}
-
-.data-table-grid > .grid-header-row > .header-cell.checkbox-cell {
-  @apply sticky flex shrink-0 justify-center;
-  padding: 0;
-  width: 40px;
-  min-width: 40px;
-  max-width: 40px;
-  left: 0;
-  z-index: 15;
-  background: var(--bg-elevated);
-}
-
-.data-table-grid > .grid-header-row > .header-cell.actions-cell {
-  @apply sticky flex shrink-0 justify-center;
-  padding: 0;
-  width: 40px;
-  min-width: 40px;
-  max-width: 40px;
-  right: 0;
-  z-index: 15;
-  background: var(--bg-elevated);
-}
-
-/* Data Cells - grid items within data rows */
-.data-table-grid > .data-row > .data-cell {
-  @apply flex items-center overflow-hidden;
-  padding: 0 12px;
-  font-size: 13px;
-  font-family: var(--font-mono);
-  color: var(--text-main);
-  text-overflow: ellipsis;
-  @apply whitespace-nowrap;
-  height: 100%;
-  box-sizing: border-box;
-  min-height: 44px;
-}
-
-.data-table-grid > .data-row > .data-cell.checkbox-cell {
-  @apply flex shrink-0 justify-center;
-  padding: 0;
-  width: 40px;
-  min-width: 40px;
-  max-width: 40px;
-  background: inherit;
-}
-
-.data-table-grid > .data-row > .data-cell.actions-cell {
-  @apply flex shrink-0 justify-center;
-  padding: 0;
-  width: 40px;
-  min-width: 40px;
-  max-width: 40px;
-  background: inherit;
-}
-
-/* Cell Types */
-.checkbox-cell,
-.actions-cell {
-  @apply relative shrink-0 justify-center;
-  width: 40px;
-  min-width: 40px;
-  max-width: 40px;
-  background: var(--bg-elevated);
-  z-index: 10;
-}
-
-.checkbox-cell {
-  position: sticky;
-  left: 0;
-}
-
-.actions-cell {
-  position: sticky;
-  right: 0;
-}
-
-.grid-header-row .checkbox-cell {
-  @apply sticky;
-  left: 0;
-  z-index: 15;
-}
-
-.grid-header-row .actions-cell {
-  @apply sticky;
-  right: 0;
-  z-index: 15;
-}
-
-/* Menu Button */
-.menu-btn {
-  @apply flex h-7 w-7 cursor-pointer items-center justify-center rounded border-none bg-transparent text-[var(--text-dim)] transition-all duration-150;
-}
-
-.menu-btn:hover {
-  background: var(--bg-elevated);
-  color: var(--accent);
-}
-
-.menu-btn .icon {
-  width: 18px;
-  height: 18px;
-  font-size: 18px;
-}
-
-/* Action Button */
-.action-btn {
-  @apply flex h-8 w-8 cursor-pointer items-center justify-center rounded-md border-none bg-transparent text-[var(--text-dim)] transition-all duration-150;
-}
-
-.action-btn:hover {
-  background: rgba(255, 107, 0, 0.15);
-  color: var(--accent);
-}
-
-.action-btn .icon {
-  width: 16px;
-  height: 16px;
-  font-size: 16px;
-}
-
-/* Column Dropdown */
-.column-dropdown {
-  @apply absolute z-50 min-w-48 overflow-hidden rounded-lg border border-[var(--border-visible)] bg-[var(--bg-card)] p-2 shadow-lg;
-  top: 100%;
-  right: 0;
-  margin-top: 4px;
-}
-
-.column-dropdown-title {
-  @apply mb-2 px-2 text-xs font-semibold tracking-wide text-[var(--text-dim)] uppercase;
-}
-
-.column-dropdown-actions {
-  @apply mb-2 flex gap-3 border-b border-[var(--border-subtle)] px-2 pb-2;
-}
-
-.column-dropdown-actions button {
-  @apply cursor-pointer rounded px-2 py-1 text-xs transition-all duration-150;
-  color: var(--text-dim);
-  background: none;
-  border: none;
-}
-
-.column-dropdown-actions button:hover {
-  color: var(--accent);
-  background: var(--bg-elevated);
-}
-
-.column-dropdown-list {
-  @apply overflow-y-auto;
-  max-height: 200px;
-}
-
-.column-dropdown-item {
-  @apply flex cursor-pointer items-center gap-2 rounded px-2 py-2 transition-colors duration-150;
-}
-
-.column-dropdown-item:hover {
-  background: var(--bg-elevated);
-}
-
-.column-dropdown-item .col-name {
-  @apply flex-1 font-mono text-sm text-[var(--text-main)];
-}
-
-.column-dropdown-item .col-type {
-  @apply font-mono text-xs text-[var(--text-muted)];
-}
-
-/* Column Drag Preview */
-.column-drag-preview {
-  @apply flex flex-col rounded shadow-xl;
-  background: var(--bg-card);
-  border: 1px solid var(--accent);
-  opacity: 0.9;
-}
-
-.preview-header-cell {
-  padding: 8px 12px;
-  background: var(--bg-sidebar);
-  border-bottom: 1px solid var(--border-visible);
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-main);
-}
-
-.preview-data-cell {
-  padding: 6px 12px;
-  font-size: 12px;
-  color: var(--text-dim);
-  border-bottom: 1px solid var(--border-subtle);
-}
-
-.preview-data-cell:last-child {
-  border-bottom: none;
-}
-
-.preview-cell-content {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* Column Drag Placeholder */
-.column-drag-placeholder {
-  @apply rounded-md transition-all duration-200;
-  height: 44px;
-  min-width: 80px;
-  background: linear-gradient(135deg, var(--accent-muted) 0%, rgba(255, 107, 0, 0.05) 100%);
-  border: 2px solid var(--accent);
-  box-shadow: 0 0 12px rgba(255, 107, 0, 0.2);
+
+  /* ============================================
+     Pagination
+     ============================================ */
+  app-pagination {
+    @apply h-14 shrink-0;
+  }
+
+  /* ============================================
+     Custom Checkbox
+     ============================================ */
+  .custom-check {
+    @apply relative inline-flex cursor-pointer items-center;
+  }
+
+  .custom-check .sr-only {
+    @apply absolute whitespace-nowrap;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
+
+  .custom-check .check-mark {
+    @apply relative inline-block rounded border-2 border-[var(--border-visible)] bg-transparent transition-all duration-150;
+    width: 18px;
+    height: 18px;
+  }
+
+  .custom-check:hover .check-mark {
+    border-color: var(--accent);
+  }
+
+  .custom-check input:checked + .check-mark {
+    @apply border-[var(--accent)] bg-[var(--accent)];
+  }
+
+  .custom-check input:checked + .check-mark::after {
+    content: "";
+    @apply absolute top-px left-[5px] h-[9px] w-[5px] border-2 border-t-0 border-l-0 border-white;
+    transform: rotate(45deg);
+  }
+
+  .custom-check input:focus-visible + .check-mark {
+    @apply outline-2 outline-offset-2;
+    outline-color: var(--accent);
+  }
+
+  .custom-check.disabled {
+    @apply cursor-not-allowed opacity-50;
+  }
+
+  /* ============================================
+     Type Badge
+     ============================================ */
+  .type-badge {
+    font-family: monospace;
+    @apply inline-flex shrink-0 items-center rounded bg-white/10 px-1.5 py-0.5 text-xs font-semibold;
+  }
+
+  /* ============================================
+     Data Table Grid
+     ============================================ */
+  .data-table-grid {
+    @apply relative grid w-max min-w-full;
+  }
+
+  /* Header Cells */
+  .data-table-grid > .header-cell {
+    @apply sticky flex items-center overflow-hidden;
+    @apply h-11 gap-2 border-b-2 border-[var(--accent)] bg-[var(--bg-elevated)]/80 px-3 backdrop-blur-sm;
+    top: 0;
+    z-index: 20;
+  }
+
+  .data-table-grid > .header-cell.checkbox-cell {
+    @apply sticky flex w-10 max-w-10 min-w-10 shrink-0 justify-center p-0;
+    @apply border-b-2 border-[var(--accent)] bg-[var(--bg-elevated)]/80 backdrop-blur-sm;
+    left: 0;
+    z-index: 30;
+  }
+
+  .data-table-grid > .header-cell.actions-cell {
+    @apply sticky flex w-10 max-w-10 min-w-10 shrink-0 justify-center p-0;
+    @apply border-b-2 border-[var(--accent)] bg-[var(--bg-elevated)]/80 backdrop-blur-sm;
+    right: 0;
+    z-index: 30;
+  }
+
+  /* Data Cells */
+  .data-table-grid > .data-cell {
+    @apply flex items-center overflow-hidden;
+    @apply h-11 truncate px-3 font-mono text-[13px] text-[var(--text-main)];
+    border-bottom: 1px solid var(--accent);
+  }
+
+  .data-table-grid > .data-cell.checkbox-cell {
+    @apply sticky flex w-10 max-w-10 min-w-10 shrink-0 justify-center p-0;
+    @apply border-b border-[var(--accent)] bg-[var(--bg-elevated)]/50 backdrop-blur-sm;
+    left: 0;
+    z-index: 25;
+  }
+
+  .data-table-grid > .data-cell.actions-cell {
+    @apply sticky flex w-10 max-w-10 min-w-10 shrink-0 justify-center p-0;
+    @apply border-b border-[var(--accent)] bg-[var(--bg-elevated)]/50 backdrop-blur-sm;
+    right: 0;
+    z-index: 25;
+  }
+
+  /* Row States */
+  .data-table-grid > .data-cell.zebra {
+    background-color: rgba(255, 255, 255, 0.02);
+  }
+  .data-table-grid > .data-cell.checkbox-cell.zebra,
+  .data-table-grid > .data-cell.actions-cell.zebra {
+    @apply bg-[var(--bg-elevated)];
+  }
+
+  .data-table-grid > .data-cell.hovered {
+    background-color: var(--accent-50);
+  }
+  .data-table-grid > .data-cell.checkbox-cell.hovered,
+  .data-table-grid > .data-cell.actions-cell.hovered {
+    @apply bg-[var(--bg-elevated)];
+  }
+
+  .data-table-grid > .data-cell.selected {
+    background-color: var(--accent-100);
+  }
+  .data-table-grid > .data-cell.checkbox-cell.selected,
+  .data-table-grid > .data-cell.actions-cell.selected {
+    background-color: var(--accent-200);
+  }
+
+  /* Resize Handle */
+  .resize-handle {
+    @apply absolute cursor-col-resize rounded bg-transparent transition-all duration-200;
+    top: 4px;
+    right: 0;
+    bottom: 4px;
+    width: 6px;
+  }
+
+  .resize-handle::before {
+    content: "";
+    @apply absolute rounded bg-[var(--text-muted)];
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 2px;
+    height: 16px;
+    opacity: 0.3;
+    transition:
+      background 0.2s ease,
+      opacity 0.2s ease;
+  }
+
+  .resize-handle:hover {
+    @apply bg-[var(--accent)];
+    width: 8px;
+  }
+
+  .resize-handle:hover::before {
+    @apply bg-[var(--bg-sidebar)];
+    opacity: 0.8;
+  }
+
+  .resize-handle:active {
+    @apply bg-[var(--accent)];
+    width: 10px;
+  }
+
+  .resize-handle:active::before {
+    @apply bg-[var(--bg-sidebar)];
+    opacity: 1;
+  }
+
+  /* Header Row */
+  .data-table-grid > .grid-header-row {
+    @apply sticky overflow-hidden;
+    @apply grid h-11 shrink-0 items-center border-b-2 border-[var(--accent)] bg-[var(--bg-elevated)]/80 backdrop-blur-sm;
+    top: 0;
+    z-index: 20;
+  }
+
+  /* Data Row */
+  .data-table-grid > .data-row {
+    @apply grid h-11 shrink-0 items-center border-b border-[var(--accent)] transition-colors duration-150;
+    grid-template-columns: inherit;
+  }
+
+  .data-table-grid > .data-row.zebra {
+    background-color: rgba(255, 255, 255, 0.02);
+  }
+
+  .data-table-grid > .data-row.hovered {
+    background-color: var(--accent-50);
+  }
+
+  .data-table-grid > .data-row.selected {
+    background-color: var(--accent-100);
+  }
+
+  .data-table-grid > .data-row:last-child {
+    @apply border-b-0;
+  }
+
+  /* Header Cells within row */
+  .data-table-grid > .grid-header-row > .header-cell {
+    @apply flex items-center overflow-hidden;
+    @apply h-full gap-2 bg-[var(--bg-elevated)] px-3;
+  }
+
+  .data-table-grid > .grid-header-row > .header-cell.checkbox-cell {
+    @apply sticky flex w-10 max-w-10 min-w-10 shrink-0 justify-center p-0;
+    left: 0;
+    z-index: 15;
+    @apply bg-[var(--bg-elevated)];
+  }
+
+  .data-table-grid > .grid-header-row > .header-cell.actions-cell {
+    @apply sticky flex w-10 max-w-10 min-w-10 shrink-0 justify-center p-0;
+    right: 0;
+    z-index: 15;
+    @apply bg-[var(--bg-elevated)];
+  }
+
+  /* Data Cells within row */
+  .data-table-grid > .data-row > .data-cell {
+    @apply flex items-center overflow-hidden;
+    @apply truncate px-3 font-mono text-[13px] text-[var(--text-main)];
+    @apply h-full min-h-11;
+  }
+
+  .data-table-grid > .data-row > .data-cell.checkbox-cell {
+    @apply flex w-10 max-w-10 min-w-10 shrink-0 justify-center p-0;
+    @apply bg-inherit;
+  }
+
+  .data-table-grid > .data-row > .data-cell.actions-cell {
+    @apply flex w-10 max-w-10 min-w-10 shrink-0 justify-center p-0;
+    @apply bg-inherit;
+  }
+
+  /* Cell Types */
+  .checkbox-cell,
+  .actions-cell {
+    @apply relative shrink-0 justify-center;
+    @apply w-10 max-w-10 min-w-10 bg-[var(--bg-elevated)];
+    z-index: 10;
+  }
+
+  .checkbox-cell {
+    position: sticky;
+    left: 0;
+  }
+
+  .actions-cell {
+    position: sticky;
+    right: 0;
+  }
+
+  .grid-header-row .checkbox-cell {
+    @apply sticky left-0;
+    z-index: 15;
+  }
+
+  .grid-header-row .actions-cell {
+    @apply sticky right-0;
+    z-index: 15;
+  }
+
+  /* ============================================
+     Menu & Action Buttons
+     ============================================ */
+  .menu-btn {
+    @apply flex h-7 w-7 cursor-pointer items-center justify-center rounded border-none bg-transparent text-[var(--text-dim)] transition-all duration-150;
+  }
+
+  .menu-btn:hover {
+    @apply bg-[var(--bg-elevated)] text-[var(--accent)];
+  }
+
+  .menu-btn .icon {
+    @apply h-[18px] w-[18px] text-lg;
+  }
+
+  .action-btn {
+    @apply flex h-8 w-8 cursor-pointer items-center justify-center rounded-md border-none bg-transparent text-[var(--text-dim)] transition-all duration-150;
+  }
+
+  .action-btn:hover {
+    @apply bg-transparent text-[var(--accent)];
+  }
+
+  .action-btn .icon {
+    @apply h-4 w-4 text-base;
+  }
+
+  /* ============================================
+     Column Dropdown
+     ============================================ */
+  .column-dropdown {
+    @apply absolute z-50 min-w-48 overflow-hidden rounded-lg border border-[var(--border-color)] bg-transparent p-2 shadow-lg backdrop-blur-md;
+    top: 100%;
+    right: 0;
+    margin-top: 4px;
+  }
+
+  .column-dropdown-title {
+    @apply mb-2 px-2 text-xs font-semibold tracking-wide text-[var(--text-dim)] uppercase;
+  }
+
+  .column-dropdown-actions {
+    @apply mb-2 flex gap-3 border-b border-[var(--border-color)] px-2 pb-2;
+  }
+
+  .column-dropdown-actions button {
+    @apply cursor-pointer rounded px-2 py-1 text-xs transition-all duration-150;
+    @apply border-none bg-transparent text-[var(--text-dim)];
+  }
+
+  .column-dropdown-actions button:hover {
+    @apply bg-[var(--accent)]/10 text-[var(--accent)];
+  }
+
+  .column-dropdown-list {
+    @apply overflow-y-auto;
+    max-height: 200px;
+  }
+
+  .column-dropdown-item {
+    @apply flex cursor-pointer items-center gap-2 rounded px-2 py-2 transition-colors duration-150;
+  }
+
+  .column-dropdown-item:hover {
+    @apply bg-[var(--bg-elevated)];
+  }
+
+  .column-dropdown-item .col-name {
+    @apply flex-1 font-mono text-sm text-[var(--text-main)];
+  }
+
+  .column-dropdown-item .col-type {
+    @apply font-mono text-xs text-[var(--text-muted)];
+  }
+
+  /* ============================================
+     Column Drag Preview
+     ============================================ */
+  .column-drag-preview {
+    @apply flex flex-col rounded-xl shadow-xl;
+    @apply border border-[var(--accent)] bg-[var(--bg-card)] opacity-90;
+  }
+
+  .preview-header-cell {
+    @apply px-3 py-2 text-xs font-semibold text-[var(--text-main)];
+    @apply border-b border-[var(--border-visible)] bg-[var(--bg-sidebar)];
+  }
+
+  .preview-data-cell {
+    @apply px-3 py-1.5 text-xs text-[var(--text-dim)];
+    @apply border-b border-[var(--border-subtle)];
+  }
+
+  .preview-data-cell:last-child {
+    @apply border-b-0;
+  }
+
+  .preview-cell-content {
+    @apply truncate;
+  }
+
+  /* ============================================
+     Column Drag Placeholder
+     ============================================ */
+  .column-drag-placeholder {
+    @apply rounded-md transition-all duration-200;
+    @apply h-11 min-w-20 border-2 border-[var(--accent)] bg-gradient-to-r from-[var(--accent-muted)] to-[var(--accent)]/10;
+    box-shadow: 0 0 12px rgba(255, 107, 0, 0.2);
+  }
+
+  /* ============================================
+     Floating Bottom Navigation
+     ============================================ */
+  .floating-bottom-nav-container {
+    @apply pointer-events-auto fixed right-0 bottom-4 left-0 z-50 flex justify-center;
+  }
+
+  .floating-bottom-nav {
+    @apply flex items-center justify-center gap-1 rounded-full border border-[var(--accent)]/50 bg-zinc-800 px-3 py-0 shadow-lg shadow-black/20 backdrop-blur-sm;
+  }
+
+  :host-context(.light) .floating-bottom-nav {
+    @apply bg-white shadow-[var(--shadow-nav-light)];
+  }
+
+  .nav-item {
+    @apply flex min-h-8 min-w-8 cursor-pointer flex-col items-center justify-center rounded-xl p-2 text-[var(--text-dim)] no-underline transition-all duration-200;
+  }
+
+  .nav-item:hover {
+    @apply bg-transparent text-[var(--accent)];
+  }
+
+  .nav-item.nav-item-active {
+    @apply border border-[var(--accent)]/30 bg-transparent text-[var(--accent)];
+  }
+
+  .nav-icon {
+    @apply h-4 min-h-4 w-4 min-w-4 text-base;
+  }
+
+  .nav-item.nav-item-active .nav-icon {
+    @apply text-[var(--accent)];
+  }
+
+  .nav-label {
+    @apply mt-0.5 text-[9px];
+  }
+
+  /* ============================================
+     Custom Checkbox Component
+     ============================================ */
+  .custom-checkbox {
+    --checkbox-size: 18px;
+    --checkbox-border: 2px;
+    --checkbox-radius: 4px;
+    --checkbox-bg: transparent;
+    --checkbox-border-color: var(--border-visible);
+    --checkbox-check-color: var(--accent);
+    --checkbox-hover-border: var(--accent);
+    --checkbox-checked-bg: var(--accent);
+    --checkbox-checked-border: var(--accent);
+  }
+
+  .custom-checkbox.checkbox-gray {
+    --checkbox-check-color: var(--text-main);
+    --checkbox-hover-border: var(--text-dim);
+    --checkbox-checked-bg: var(--text-main);
+    --checkbox-checked-border: var(--text-main);
+  }
+
+  .checkbox-box {
+    @apply relative shrink-0;
+    width: var(--checkbox-size);
+    height: var(--checkbox-size);
+  }
+
+  .checkbox-inner {
+    @apply absolute inset-0 flex items-center justify-center rounded border-2 border-slate-700 bg-transparent transition-all duration-150;
+  }
+
+  .custom-checkbox:hover .checkbox-inner {
+    border-color: var(--checkbox-hover-border);
+  }
+
+  .custom-checkbox input:checked + .checkbox-box {
+    background: var(--checkbox-checked-bg);
+    border-color: var(--checkbox-checked-border);
+  }
+
+  .checkmark {
+    @apply hidden h-2.5 w-3 scale-50 text-white transition-all duration-150;
+  }
+
+  .custom-checkbox input:checked + .checkbox-box .checkmark {
+    @apply block scale-100 opacity-100;
+  }
+
+  .custom-checkbox input:focus-visible + .checkbox-box {
+    @apply outline-2 outline-offset-2;
+    outline-color: var(--checkbox-hover-border);
+  }
+
+  .checkbox-label {
+    @apply text-sm font-medium text-[var(--text-main)] transition-colors duration-150 select-none;
+  }
+
+  .custom-checkbox:hover .checkbox-label {
+    color: var(--checkbox-hover-border);
+  }
+
+  /* ============================================
+     Header Sticky
+     ============================================ */
+  .sticky-header {
+    @apply sticky top-0 z-40;
+  }
+
+  /* ============================================
+     Navigation
+     ============================================ */
+  .nav-rail {
+    @apply flex flex-col items-center gap-2 py-4;
+  }
+
+  .nav-rail-logo {
+    @apply mb-4 flex items-center justify-center;
+  }
+
+  .nav-rail-item {
+    @apply flex min-w-14 cursor-pointer flex-col items-center justify-center gap-1 rounded-xl p-3 text-[var(--text-dim)] transition-all duration-200;
+  }
+
+  .nav-rail-item:hover {
+    @apply bg-transparent text-[var(--accent)];
+  }
+
+  .nav-rail-item.active {
+    @apply border border-[var(--accent)]/30 bg-transparent text-[var(--accent)];
+  }
+
+  /* ============================================
+     Sidebar
+     ============================================ */
+  .sidebar-layout {
+    @apply flex h-full flex-col;
+  }
+
+  .sidebar-empty-state {
+    @apply flex flex-1 flex-col items-center justify-center p-4 text-center;
+  }
+
+  .sidebar-empty-cta {
+    @apply mt-2 text-sm text-[var(--text-dim)];
+  }
+
+  /* ============================================
+     Header
+     ============================================ */
+  .app-header {
+    @apply sticky top-0 z-40 flex h-14 items-center border-b border-transparent bg-transparent px-4 backdrop-blur-md;
+  }
+
+  /* ============================================
+     Filter Bar
+     ============================================ */
+  .filter-input-wrapper {
+    @apply relative flex-1;
+  }
+
+  .filter-actions {
+    @apply flex items-center gap-2;
+  }
+
+  /* ============================================
+     Schema Tree
+     ============================================ */
+  .schema-tree {
+    @apply flex h-full flex-col overflow-hidden;
+  }
+
+  /* ============================================
+     Form
+     ============================================ */
+  .form-field {
+    @apply mb-4;
+  }
+
+  /* ============================================
+     Table
+     ============================================ */
+  .table-scroll-container {
+    @apply flex-1 overflow-auto;
+  }
+
+  .data-cell-header {
+    @apply font-semibold text-[var(--text-dim)];
+  }
+
+  .sort-icon {
+    @apply ml-1 h-4 w-4;
+  }
+
+  .preview-col-name {
+    @apply font-mono text-sm text-[var(--text-main)];
+  }
+
+  /* ============================================
+     Column Manager
+     ============================================ */
+  .table-header-grid {
+    @apply grid gap-4;
+  }
+
+  /* ============================================
+     Bulk Action Bar
+     ============================================ */
+  .bulk-action-bar {
+    @apply fixed bottom-20 left-1/2 z-30 flex -translate-x-1/2 items-center gap-4 rounded-xl border border-[var(--border-visible)] bg-[var(--bg-card)] px-4 py-2 shadow-lg;
+  }
+
+  /* ============================================
+     Drawer
+     ============================================ */
+  .drawer-content {
+    @apply flex-1 overflow-y-auto p-4;
+  }
+
+  .drawer-footer {
+    @apply flex items-center justify-end gap-2 border-t border-[var(--border-subtle)] p-4;
+  }
+
+  /* ============================================
+     Pages
+     ============================================ */
+  .explorer-page {
+    @apply flex h-full flex-1 flex-col overflow-hidden;
+  }
+
+  .connections-container {
+    @apply flex flex-1 flex-col overflow-hidden;
+  }
+
+  .page-container {
+    @apply flex flex-1 flex-col overflow-hidden;
+  }
+
+  .dashboard-page {
+    @apply flex flex-1 flex-col overflow-hidden p-6;
+  }
+
+  .dashboard-grid {
+    @apply grid gap-6;
+  }
+
+  /* ============================================
+     Modal
+     ============================================ */
+  .connection-modal-backdrop {
+    @apply fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm;
+  }
+
+  /* ============================================
+     Checkbox Variants
+     ============================================ */
+  .checkbox-accent {
+    @apply text-[var(--accent)];
+  }
+
+  .checkbox-gray {
+    @apply text-[var(--text-main)];
+  }
 }
