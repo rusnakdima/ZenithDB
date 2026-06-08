@@ -307,9 +307,9 @@ export class SchemaTreeComponent implements OnInit, OnDestroy {
       case "integer":
       case "decimal":
       case "float":
-        return "text-orange-400";
+        return "text-[var(--accent)]";
       case "boolean":
-        return "text-orange-400";
+        return "text-[var(--accent)]";
       case "date":
       case "datetime":
       case "timestamp":

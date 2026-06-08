@@ -5,7 +5,7 @@
     </h2>
     <button
       (click)="refresh()"
-      class="rounded p-1 transition-colors hover:bg-[var(--bg-elevated)]"
+      class="rounded p-1 transition-colors hover:bg-transparent"
       title="Refresh"
     >
       <mat-icon fontIcon="refresh" class="h-6! w-5! text-xl! text-[var(--text-dim)]"></mat-icon>
@@ -23,7 +23,7 @@
         [value]="searchQuery()"
         (input)="setFilter($any($event.target).value)"
         placeholder="Search collections..."
-        class="w-full rounded-md border border-[var(--border-subtle)] bg-[var(--bg-input)] py-2 pr-4 pl-10 text-sm text-[var(--text-main)] placeholder-[var(--text-muted)] focus:border-[var(--accent)] focus:outline-none"
+        class="w-full rounded-md border border-[var(--border-color)] bg-[var(--bg-input)] py-2 pr-4 pl-10 text-sm text-[var(--text-main)] placeholder-[var(--text-muted)] focus:border-[var(--accent)] focus:outline-none"
       />
     </div>
   </div>
@@ -62,7 +62,7 @@
         </p>
         <button
           (click)="openNewCollectionModal()"
-          class="inline-flex items-center gap-1.5 rounded-lg bg-[var(--accent)] px-3 py-2 text-sm text-black transition-colors hover:opacity-90"
+          class="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm text-black transition-colors hover:opacity-90"
         >
           <mat-icon fontIcon="add" class="h-6! w-5! text-xl! text-black"></mat-icon>
           Create your first collection
@@ -74,7 +74,7 @@
       @for (col of filteredCollections(); track col.name) {
         <div (click)="selectCollection(col)">
           @if (renamingCollection() === col.name) {
-            <div class="flex items-center gap-2 rounded-lg bg-[var(--bg-elevated)] px-3 py-2">
+            <div class="flex items-center gap-2 rounded-lg bg-transparent px-3 py-2">
               <mat-icon
                 fontIcon="table_chart"
                 class="h-6! w-5! flex-shrink-0 text-xl! text-[var(--text-dim)]"
@@ -92,9 +92,9 @@
           } @else {
             <div
               class="group flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 transition-colors"
-              [class.bg-[var(--bg-elevated)]]="selectedCollection() === col.name"
+              [class.bg-transparent]="selectedCollection() === col.name"
               [class.text-[var(--text-main)]]="selectedCollection() === col.name"
-              [class.hover:bg-[var(--bg-elevated)]]="selectedCollection() !== col.name"
+              [class.hover:bg-transparent]="selectedCollection() !== col.name"
               [class.text-[var(--text-main)]]="selectedCollection() !== col.name"
               (click)="toggleExpand(col.name, $event)"
               (contextmenu)="onContextMenu($event, col)"
@@ -108,7 +108,7 @@
               <span class="text-xs text-[var(--text-dim)]">{{ col.count || 0 }}</span>
               <button
                 type="button"
-                class="pointer-events-auto min-w-[24px] rounded p-1 transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--accent)]"
+                class="pointer-events-auto min-w-[24px] rounded p-1 transition-colors hover:bg-transparent hover:text-[var(--accent)]"
                 (click)="viewData(col); $event.stopPropagation()"
                 title="Browse Data"
               >
@@ -136,7 +136,7 @@
                     ></mat-icon>
                     <span class="font-mono text-xs">{{ field.name }}</span>
                     <span
-                      class="rounded bg-[var(--bg-elevated)] px-1.5 py-0.5 text-xs"
+                      class="rounded bg-transparent px-1.5 py-0.5 text-xs"
                       [class]="getFieldTypeIcon(field.dataType)"
                     >
                       {{ field.dataType }}
@@ -154,7 +154,7 @@
               } @else {
                 <div class="flex items-center gap-2 px-3 py-1.5 text-sm text-[var(--text-dim)]">
                   <div
-                    class="h-3 w-3 animate-spin rounded-full border border-[var(--border-subtle)] border-t-transparent"
+                    class="h-3 w-3 animate-spin rounded-full border border-[var(--accent)] border-t-transparent"
                   ></div>
                   Loading fields...
                 </div>
@@ -169,26 +169,26 @@
 
 @if (contextMenu().show) {
   <div
-    class="fixed z-50 min-w-[160px] rounded-lg border border-[var(--border-visible)] bg-[var(--bg-card)] py-1 shadow-xl"
+    class="fixed z-50 min-w-[160px] rounded-lg border border-[var(--border-color)] bg-transparent py-1 shadow-xl"
     [style.left.px]="contextMenu().x"
     [style.top.px]="contextMenu().y"
   >
     <button
-      class="flex w-full items-center gap-2 px-3 py-2 text-sm text-[var(--text-main)] hover:bg-[var(--bg-elevated)]"
+      class="flex w-full items-center gap-2 px-3 py-2 text-sm text-[var(--text-main)] hover:bg-transparent"
       (click)="refresh()"
     >
       <mat-icon fontIcon="refresh" class="h-6! w-5! text-xl! text-[var(--text-dim)]"></mat-icon>
       Refresh
     </button>
     <button
-      class="flex w-full items-center gap-2 px-3 py-2 text-sm text-[var(--text-main)] hover:bg-[var(--bg-elevated)]"
+      class="flex w-full items-center gap-2 px-3 py-2 text-sm text-[var(--text-main)] hover:bg-transparent"
       (click)="openNewCollectionModal()"
     >
       <mat-icon fontIcon="add" class="h-6! w-5! text-xl! text-[var(--text-dim)]"></mat-icon>
       New Collection
     </button>
     <button
-      class="flex w-full items-center gap-2 px-3 py-2 text-sm text-[var(--text-main)] hover:bg-[var(--bg-elevated)]"
+      class="flex w-full items-center gap-2 px-3 py-2 text-sm text-[var(--text-main)] hover:bg-transparent"
       (click)="startRename(contextMenu().node!)"
     >
       <mat-icon fontIcon="edit" class="h-6! w-5! text-xl! text-[var(--text-dim)]"></mat-icon>
@@ -196,7 +196,7 @@
     </button>
     <div class="my-1 border-t border-[var(--border-subtle)]"></div>
     <button
-      class="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-[var(--bg-elevated)]"
+      class="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-transparent"
       (click)="dropCollection(contextMenu().node!)"
     >
       <mat-icon fontIcon="delete" class="h-6! w-5! text-xl! text-red-400"></mat-icon>
@@ -208,14 +208,14 @@
 @if (showNewCollectionModal()) {
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
     <div
-      class="w-full max-w-md rounded-xl border border-[var(--border-visible)] bg-[var(--bg-card)] p-6 shadow-2xl"
+      class="w-full max-w-md rounded-xl border border-[var(--border-color)] bg-transparent p-6 shadow-2xl"
     >
       <h3 class="mb-4 text-lg font-semibold text-[var(--text-main)]">Create New Collection</h3>
       <input
         type="text"
         [(ngModel)]="newCollectionName"
         placeholder="Collection name"
-        class="mb-4 w-full rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-input)] px-4 py-2.5 text-sm text-[var(--text-main)] placeholder-[var(--text-muted)] focus:border-[var(--accent)] focus:outline-none"
+        class="mb-4 w-full rounded-lg border border-[var(--border-color)] bg-[var(--bg-input)] px-4 py-2.5 text-sm text-[var(--text-main)] placeholder-[var(--text-muted)] focus:border-[var(--accent)] focus:outline-none"
         (keyup.enter)="createCollection()"
         (keyup.escape)="closeNewCollectionModal()"
         autofocus
@@ -223,13 +223,13 @@
       <div class="flex justify-end gap-3">
         <button
           (click)="closeNewCollectionModal()"
-          class="rounded-lg border border-[var(--border-subtle)] px-4 py-2 text-sm text-[var(--text-main)] hover:bg-[var(--bg-elevated)]"
+          class="rounded-lg border border-[var(--border-color)] px-4 py-2 text-sm text-[var(--text-main)] hover:bg-transparent"
         >
           Cancel
         </button>
         <button
           (click)="createCollection()"
-          class="rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-black hover:opacity-90"
+          class="rounded-lg px-4 py-2 text-sm font-medium text-black hover:opacity-90"
         >
           Create
         </button>
