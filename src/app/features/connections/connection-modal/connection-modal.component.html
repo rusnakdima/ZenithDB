@@ -38,9 +38,7 @@
               (mouseenter)="selectedIndex.set(i)"
             >
               <div class="relative">
-                <div
-                  class="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--accent)]/10"
-                >
+                <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-transparent">
                   <mat-icon
                     class="text-xl text-[var(--accent)]"
                     [fontIcon]="item.connection.provider === 'turso' ? 'database' : 'storage'"
