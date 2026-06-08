@@ -19,7 +19,6 @@ import { FloatingNavItem, NavRouteConfig } from "./floating-bottom-nav.model";
   standalone: true,
   imports: [CommonModule, RouterModule, MatIconModule],
   templateUrl: "./floating-bottom-nav.component.html",
-  styleUrl: "./floating-bottom-nav.component.css",
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FloatingBottomNavComponent implements OnInit, OnDestroy {

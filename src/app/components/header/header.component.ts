@@ -35,6 +35,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   pageTitle = signal("ZenithDB");
   breadcrumbs = signal<Breadcrumb[]>([]);
   historyLength = signal(0);
+  isDarkMode = this.themeService.isDarkMode;
 
   ngOnInit(): void {
     this.historyLength.set(window.history.length);
