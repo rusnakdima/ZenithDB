@@ -17,6 +17,7 @@ import { ToastContainerComponent } from "@components/toast/toast-container.compo
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { KeyboardShortcutsService } from "@shared/services/keyboard-shortcuts.service";
 import { ShortcutsHelpDialogComponent } from "@shared/components/shortcuts-help-dialog/shortcuts-help-dialog.component";
+import { CommandPaletteComponent } from "@shared/components/command-palette/command-palette.component";
 import { DialogService } from "@shared/services/dialog.service";
 import { ThemeService } from "@shared/services/theme.service";
 import { ConnectionModalComponent } from "@features/connections/connection-modal/connection-modal.component";
@@ -34,6 +35,7 @@ import { HeaderComponent } from "@components/header/header.component";
     LoadingOverlayComponent,
     ToastContainerComponent,
     ShortcutsHelpDialogComponent,
+    CommandPaletteComponent,
     ConnectionModalComponent,
     ConfirmDialogComponent,
     ConnectionFormComponent,
