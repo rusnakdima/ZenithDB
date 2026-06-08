@@ -1,0 +1,114 @@
+<div class="flex flex-col gap-4">
+  <div class="flex items-center justify-between">
+    <h3 class="text-lg font-semibold text-[var(--text-main)]">Cache Manager</h3>
+    <button
+      type="button"
+      class="rounded-lg bg-red-500/20 px-3 py-1.5 text-sm text-red-400 transition-colors hover:bg-red-500/30"
+      (click)="clearAllCache()"
+    >
+      Clear All
+    </button>
+  </div>
+
+  <div class="grid grid-cols-3 gap-4">
+    <div class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] p-4">
+      <p class="text-2xl font-bold text-[var(--text-main)]">{{ stats().totalEntries }}</p>
+      <p class="text-xs text-[var(--text-dim)]">Total Entries</p>
+    </div>
+    <div class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] p-4">
+      <p class="text-2xl font-bold text-[var(--text-main)]">
+        {{ formatBytes(stats().memoryUsed) }}
+      </p>
+      <p class="text-xs text-[var(--text-dim)]">Memory Used</p>
+    </div>
+    <div class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] p-4">
+      <p class="text-2xl font-bold text-[var(--accent)]">{{ stats().hitRate.toFixed(1) }}%</p>
+      <p class="text-xs text-[var(--text-dim)]">Hit Rate</p>
+    </div>
+  </div>
+
+  <div>
+    <input
+      type="text"
+      class="w-full rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-2 text-sm text-[var(--text-main)] placeholder-[var(--text-dim)] focus:border-[var(--accent)] focus:outline-none"
+      placeholder="Filter cache entries..."
+      [ngModel]="filterText()"
+      (ngModelChange)="filterText.set($event)"
+    />
+  </div>
+
+  <div class="max-h-96 space-y-2 overflow-auto">
+    @if (filteredEntries().length === 0) {
+      <div class="py-8 text-center text-sm text-[var(--text-dim)]">
+        @if (filterText()) {
+          No matching cache entries
+        } @else {
+          No cached queries
+        }
+      </div>
+    }
+    @for (entry of filteredEntries(); track entry.key) {
+      <div class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)]">
+        <div
+          class="flex cursor-pointer items-center justify-between p-3 hover:bg-[var(--bg-card)]"
+          (click)="toggleExpanded(entry.key)"
+        >
+          <div class="flex min-w-0 flex-1 items-center gap-2">
+            <svg
+              class="h-4 w-4 flex-shrink-0 text-[var(--text-dim)] transition-transform"
+              [class.rotate-90]="isExpanded(entry.key)"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+            <span class="truncate text-sm text-[var(--text-main)]">{{ entry.key }}</span>
+          </div>
+          <div class="flex items-center gap-4">
+            <span class="text-xs text-[var(--text-dim)]">{{ entry.hitCount }} hits</span>
+            <button
+              type="button"
+              class="rounded p-1 text-[var(--text-dim)] hover:bg-[var(--bg-card)] hover:text-red-400"
+              (click)="$event.stopPropagation(); clearEntry(entry.key)"
+            >
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+        @if (isExpanded(entry.key)) {
+          <div class="border-t border-[var(--border-subtle)] p-3">
+            <div class="mb-2 grid grid-cols-2 gap-2 text-xs">
+              <div>
+                <span class="text-[var(--text-dim)]">Created:</span>
+                <span class="ml-2 text-[var(--text-main)]">{{ formatAge(entry.createdAt) }}</span>
+              </div>
+              <div>
+                <span class="text-[var(--text-dim)]">Expires:</span>
+                <span class="ml-2 text-[var(--text-main)]">{{ formatAge(entry.expiresAt) }}</span>
+              </div>
+            </div>
+            <div class="rounded bg-[var(--bg-card)] p-2">
+              <p class="mb-1 text-xs text-[var(--text-dim)]">Cached Value:</p>
+              <pre class="overflow-x-auto text-xs text-[var(--text-main)]">{{
+                formatValue(entry.value)
+              }}</pre>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>

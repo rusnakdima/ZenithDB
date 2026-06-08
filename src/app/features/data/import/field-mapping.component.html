@@ -1,0 +1,111 @@
+<div class="flex flex-col gap-4">
+  <div class="flex items-center justify-between">
+    <h4 class="text-sm font-medium text-[var(--text-main)]">Field Mapping</h4>
+    <div class="flex gap-2">
+      <button
+        type="button"
+        class="text-xs text-[var(--accent)] hover:text-[var(--accent-hover)]"
+        (click)="autoMap()"
+      >
+        Auto-map
+      </button>
+      <span class="text-[var(--text-dim)]">|</span>
+      <button
+        type="button"
+        class="text-xs text-[var(--text-dim)] hover:text-[var(--text-main)]"
+        (click)="clearMappings()"
+      >
+        Clear
+      </button>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-2 gap-4">
+    <div>
+      <h5 class="mb-2 text-xs font-medium text-[var(--text-dim)] uppercase">Source Headers</h5>
+      <div class="space-y-1">
+        @for (option of mappingOptions(); track option.sourceField) {
+          <div
+            class="flex items-center gap-2 rounded-lg border border-[var(--accent)] bg-transparent p-2"
+            [class.opacity-50]="option.targetField"
+          >
+            <span class="flex-1 text-sm text-[var(--text-main)]">{{ option.sourceField }}</span>
+            @if (option.targetField) {
+              <span class="text-xs text-[var(--accent)]">&rarr; {{ option.targetField }}</span>
+            }
+          </div>
+        }
+        @if (unmappedSources().length > 0) {
+          <div class="mt-2">
+            <p class="mb-1 text-xs text-[var(--text-dim)]">Unmapped:</p>
+            @for (header of unmappedSources(); track header) {
+              <div
+                class="mb-1 cursor-grab rounded-lg border border-dashed border-[var(--border-visible)] bg-transparent p-2 text-sm text-[var(--text-dim)] hover:border-[var(--accent)]"
+                draggable="true"
+                (dragstart)="onSourceDragStart(header)"
+                (dragend)="onSourceDragEnd()"
+              >
+                {{ header }}
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <div>
+      <h5 class="mb-2 text-xs font-medium text-[var(--text-dim)] uppercase">Target Fields</h5>
+      <div class="space-y-1">
+        @for (field of targetFields(); track field) {
+          <div
+            class="mb-1 rounded-lg border border-dashed border-[var(--border-visible)] bg-transparent p-2 text-sm text-[var(--text-main)] transition-colors hover:border-[var(--accent)]"
+            [class.border-[var(--accent)]]="draggedSource()"
+            (dragover)="$event.preventDefault()"
+            (drop)="onDropToTarget(field)"
+          >
+            {{ field }}
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <h5 class="mb-2 text-xs font-medium text-[var(--text-dim)] uppercase">Mappings</h5>
+    <div class="max-h-48 space-y-1 overflow-auto">
+      @for (option of mappingOptions(); track option.sourceField) {
+        @if (option.targetField) {
+          <div
+            class="flex items-center gap-2 rounded-lg border border-[var(--accent)] bg-transparent p-2"
+          >
+            <span class="flex-1 text-sm text-[var(--text-main)]">{{ option.sourceField }}</span>
+            <select
+              class="flex-1 rounded border border-[var(--accent)] bg-transparent px-2 py-1 text-sm text-[var(--text-main)] focus:border-[var(--accent)] focus:outline-none"
+              [ngModel]="option.targetField"
+              (ngModelChange)="onMappingChange($index, $event)"
+            >
+              <option value="">-- Select --</option>
+              @for (field of targetFields(); track field) {
+                <option [value]="field">{{ field }}</option>
+              }
+            </select>
+            <button
+              type="button"
+              class="rounded p-1 text-[var(--text-dim)] hover:bg-transparent hover:text-red-400"
+              (click)="removeMapping(option.sourceField)"
+            >
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+        }
+      }
+    </div>
+  </div>
+</div>

@@ -1,0 +1,107 @@
+<app-modal
+  [open]="isOpen()"
+  [title]="title()"
+  [size]="size()"
+  [showFooter]="true"
+  (closed)="onClosed()"
+  (opened)="onOpened()"
+>
+  <div class="space-y-4">
+    <div>
+      <label class="mb-1.5 block text-sm font-medium text-[var(--text-main)]"> Index Name </label>
+      <input
+        type="text"
+        [value]="indexName()"
+        (input)="indexName.set($any($event.target).value)"
+        placeholder="Enter index name"
+        class="w-full rounded-lg border border-[var(--accent)] bg-[var(--bg-input)] px-3 py-2 text-sm text-[var(--text-main)] placeholder-[var(--text-dim)] focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none"
+      />
+    </div>
+
+    <div>
+      <label class="mb-1.5 block text-sm font-medium text-[var(--text-main)]"> Collection </label>
+      <div
+        class="rounded-lg border border-[var(--accent)] bg-transparent px-3 py-2 text-sm text-[var(--text-dim)]"
+      >
+        {{ collectionName }}
+      </div>
+    </div>
+
+    <div>
+      <label class="mb-1.5 block text-sm font-medium text-[var(--text-main)]">
+        Field Weights
+      </label>
+      <div class="max-h-64 overflow-y-auto rounded-lg border border-[var(--accent)] bg-transparent">
+        @for (weight of fieldWeights(); track weight.field) {
+          <div
+            class="flex items-center justify-between border-b border-[var(--accent)] px-3 py-2 last:border-b-0"
+          >
+            <div class="flex items-center gap-2">
+              <input
+                type="checkbox"
+                [checked]="weight.weight > 0"
+                (change)="updateWeight(weight.field, weight.weight > 0 ? 0 : 1)"
+                class="h-4 w-4 rounded border-[var(--accent)] bg-[var(--bg-input)] text-emerald-500 focus:ring-emerald-500/50"
+              />
+              <span class="text-sm text-[var(--text-main)]">{{ weight.field }}</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <input
+                type="range"
+                [value]="weight.weight"
+                (input)="updateWeight(weight.field, +$any($event.target).value)"
+                min="0"
+                max="10"
+                step="1"
+                class="h-1.5 w-20 cursor-pointer appearance-none rounded-full bg-[var(--bg-input)]"
+                [class.opacity-50]="weight.weight === 0"
+              />
+              <input
+                type="number"
+                [value]="weight.weight"
+                (input)="updateWeight(weight.field, +$any($event.target).value)"
+                min="0"
+                max="10"
+                step="1"
+                class="w-12 rounded border border-[var(--accent)] bg-[var(--bg-input)] px-1.5 py-1 text-center text-sm text-[var(--text-main)] focus:border-emerald-500/50 focus:outline-none"
+              />
+            </div>
+          </div>
+        } @empty {
+          <div class="px-3 py-4 text-center text-sm text-[var(--text-dim)]">
+            No string fields available for text indexing
+          </div>
+        }
+      </div>
+      <p class="mt-1.5 text-xs text-[var(--text-dim)]">
+        Set weight to 0 to exclude a field from the index. Range: 0-10
+      </p>
+    </div>
+
+    <div>
+      <label class="mb-1.5 block text-sm font-medium text-[var(--text-main)]"> Preview </label>
+      <pre
+        class="rounded-lg border border-[var(--accent)] bg-transparent p-3 font-mono text-xs whitespace-pre-wrap text-[var(--text-main)]"
+        >{{ getPreview() }}</pre
+      >
+    </div>
+  </div>
+
+  <div modal-footer class="flex items-center gap-3">
+    <button
+      type="button"
+      (click)="onClose()"
+      class="rounded-lg border border-[var(--accent)] bg-transparent px-4 py-2 text-sm font-medium text-[var(--text-main)] transition-colors hover:bg-[var(--bg-hover)]"
+    >
+      Cancel
+    </button>
+    <button
+      type="button"
+      (click)="onCreate()"
+      [disabled]="activeFieldWeightsCount() === 0"
+      class="rounded-lg px-4 py-2 text-sm font-medium text-black transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      Create Index
+    </button>
+  </div>
+</app-modal>

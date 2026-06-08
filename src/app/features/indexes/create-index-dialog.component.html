@@ -1,0 +1,67 @@
+<app-modal [open]="true" title="Create Index" size="lg" (closed)="onCancel()">
+  <div class="flex flex-col gap-6">
+    <div class="grid grid-cols-2 gap-6">
+      <div>
+        <h4 class="mb-3 text-sm font-medium text-[var(--text-main)]">Index Type</h4>
+        <app-index-type-selector
+          [selectedType]="indexType()"
+          (typeChange)="onIndexTypeChange($event)"
+        />
+      </div>
+
+      <div>
+        <h4 class="mb-3 text-sm font-medium text-[var(--text-main)]">Index Name</h4>
+        <input
+          type="text"
+          class="w-full rounded-lg border border-[var(--border-subtle)] bg-slate-700 px-3 py-2 text-sm text-slate-200 focus:border-[var(--accent)] focus:outline-none"
+          placeholder="Enter index name..."
+          [ngModel]="indexName()"
+          (ngModelChange)="onIndexNameChange($event)"
+        />
+      </div>
+    </div>
+
+    <div>
+      <h4 class="mb-3 text-sm font-medium text-[var(--text-main)]">Fields</h4>
+      <app-field-selector
+        [availableFields]="availableFields()"
+        [indexType]="indexType()"
+        (fieldsChange)="onFieldsChange($event)"
+      />
+    </div>
+
+    <div>
+      <h4 class="mb-3 text-sm font-medium text-[var(--text-main)]">Options</h4>
+      <app-index-options
+        [indexType]="indexType()"
+        [options]="options()"
+        (optionsChange)="onOptionsChange($event)"
+      />
+    </div>
+
+    <div>
+      <h4 class="mb-3 text-sm font-medium text-[var(--text-main)]">Preview</h4>
+      <pre
+        class="overflow-x-auto rounded-lg border border-[var(--border-subtle)] bg-slate-800 p-4 font-mono text-xs text-slate-300"
+        >{{ previewDefinition | json }}</pre
+      >
+    </div>
+  </div>
+
+  <div modal-footer>
+    <button
+      type="button"
+      class="rounded-lg px-4 py-2 text-sm text-slate-400 transition-colors hover:text-white"
+      (click)="onCancel()"
+    >
+      Cancel
+    </button>
+    <button
+      type="button"
+      class="rounded-lg px-4 py-2 text-sm font-medium text-black transition-colors"
+      (click)="onCreate()"
+    >
+      Create Index
+    </button>
+  </div>
+</app-modal>

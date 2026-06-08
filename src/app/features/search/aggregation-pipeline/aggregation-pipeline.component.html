@@ -1,0 +1,158 @@
+<div
+  class="flex h-full flex-col rounded-lg border border-[var(--border-color)] bg-[var(--bg-deep)]"
+>
+  <!-- Header -->
+  <div class="flex items-center justify-between border-b border-[var(--border-subtle)] px-4 py-3">
+    <div class="flex items-center gap-3">
+      <h3 class="text-sm font-medium text-[var(--text-main)]">Aggregation Pipeline</h3>
+      @if (collectionName) {
+        <span class="rounded px-2 py-1 text-xs text-[var(--accent)]">
+          {{ collectionName }}
+        </span>
+      }
+    </div>
+
+    <div class="flex items-center gap-2">
+      <button
+        type="button"
+        class="rounded px-2 py-1 text-xs text-[var(--text-dim)] transition-colors hover:bg-transparent hover:text-[var(--text-main)]"
+        (click)="clearAll()"
+      >
+        Clear All
+      </button>
+    </div>
+  </div>
+
+  <!-- Toolbar: Add Stage -->
+  <div class="flex items-center gap-2 border-b border-[var(--border-subtle)] px-4 py-2">
+    <span class="text-xs text-[var(--text-dim)]">Add Stage:</span>
+    <div class="flex flex-wrap gap-1">
+      @for (type of availableStages; track type) {
+        <button
+          type="button"
+          class="rounded border border-[var(--accent)] px-2 py-1 text-xs text-[var(--text-main)] transition-colors hover:bg-transparent hover:text-[var(--text-main)]"
+          (click)="addStage(type)"
+        >
+          {{ type }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Content: Pipeline Stages + JSON Editor -->
+  <div class="flex flex-1 overflow-hidden">
+    <!-- Visual Builder (Left) -->
+    <div class="flex-1 overflow-y-auto p-4">
+      @if (pipelineService.isEmpty()) {
+        <div class="flex h-full flex-col items-center justify-center text-center">
+          <div class="mb-4 rounded-full bg-transparent p-4">
+            <svg
+              class="h-12 w-12 text-[var(--text-muted)]"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="1.5"
+                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+              />
+            </svg>
+          </div>
+          <h3 class="mb-2 text-sm font-medium text-[var(--text-main)]">No stages yet</h3>
+          <p class="mb-4 text-xs text-[var(--text-muted)]">
+            Add a stage to start building your pipeline
+          </p>
+          <div class="flex flex-wrap justify-center gap-2">
+            @for (type of availableStages; track type) {
+              <button
+                type="button"
+                class="rounded px-3 py-1.5 text-xs text-black transition-colors"
+                (click)="addStage(type)"
+              >
+                + {{ type }}
+              </button>
+            }
+          </div>
+        </div>
+      } @else {
+        <div class="space-y-4">
+          @for (stage of pipelineService.stages(); track stage.id; let i = $index) {
+            <div class="relative">
+              @if (i > 0) {
+                <div class="absolute -top-4 left-1/2 z-10 -translate-x-1/2">
+                  <div class="rounded-full bg-transparent p-1">
+                    <svg
+                      class="h-3 w-3 text-[var(--text-dim)]"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </div>
+                </div>
+              }
+              <app-pipeline-stage
+                [stage]="stage"
+                [collectionName]="collectionName"
+                [index]="i"
+                [totalCount]="pipelineService.stageCount()"
+                (remove)="removeStage(stage.id)"
+                (moveUp)="moveStageUp(i)"
+                (moveDown)="moveStageDown(i)"
+                (configChange)="updateStageConfig(stage.id, $event)"
+              />
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- JSON Editor (Right) -->
+    <div class="w-[400px] border-l border-[var(--border-subtle)]">
+      <app-pipeline-json-editor
+        [json]="pipelineJson()"
+        (jsonChange)="onJsonChange($event)"
+        (parseError)="onParseError($event)"
+      />
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div
+    class="flex items-center justify-between border-t border-[var(--border-subtle)] bg-slate-800/50 px-4 py-3"
+  >
+    <div class="text-xs text-slate-500">
+      @if (pipelineService.stageCount() > 0) {
+        <span class="text-emerald-400">{{ pipelineService.stageCount() }} stage(s)</span>
+      } @else {
+        <span>No stages</span>
+      }
+    </div>
+
+    <div class="flex items-center gap-2">
+      <button
+        type="button"
+        class="rounded border border-[var(--border-subtle)] px-4 py-2 text-sm text-slate-300 transition-colors hover:border-[var(--border-visible)] hover:text-[var(--accent)]"
+        (click)="onCancel()"
+      >
+        Cancel
+      </button>
+      <button
+        type="button"
+        class="rounded px-4 py-2 text-sm text-black transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+        [disabled]="pipelineService.isEmpty()"
+        (click)="onExecute()"
+      >
+        Execute Pipeline
+      </button>
+    </div>
+  </div>
+</div>

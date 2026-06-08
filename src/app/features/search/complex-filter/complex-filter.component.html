@@ -1,0 +1,168 @@
+<div class="flex flex-col gap-4">
+  <div class="flex items-center justify-between border-b border-[var(--border-subtle)] pb-3">
+    <h3 class="text-lg font-semibold text-[var(--text-main)]">Complex Filter</h3>
+    <div class="flex items-center gap-2">
+      <button
+        type="button"
+        class="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm transition-colors"
+        [class.]="!showRawEditor()"
+        [class.text-white]="!showRawEditor()"
+        [class.text-slate-400]="showRawEditor()"
+        [class.hover:text-white]="showRawEditor()"
+        (click)="toggleRawEditor()"
+      >
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+          />
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+          />
+        </svg>
+        Visual
+      </button>
+      <button
+        type="button"
+        class="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm transition-colors"
+        [class.]="showRawEditor()"
+        [class.text-white]="showRawEditor()"
+        [class.text-slate-400]="!showRawEditor()"
+        [class.hover:text-white]="!showRawEditor()"
+        (click)="toggleRawEditor()"
+      >
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
+          />
+        </svg>
+        JSON
+      </button>
+      <div class="h-4 w-px bg-slate-600"></div>
+      <button
+        type="button"
+        class="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm text-slate-400 transition-colors hover:text-amber-400"
+        (click)="toggleHistory()"
+      >
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+        History
+      </button>
+      <button
+        type="button"
+        class="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm text-slate-400 transition-colors hover:text-emerald-400"
+        (click)="openSaveDialog()"
+      >
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"
+          />
+        </svg>
+        Save
+      </button>
+    </div>
+  </div>
+
+  @if (showHistory()) {
+    <app-filter-history
+      [namedFilters]="namedFilters()"
+      (historySelect)="onHistorySelect($event)"
+      (historyDelete)="onHistoryDelete($event)"
+      (namedFilterApply)="applyNamedFilter($event)"
+      (namedFilterDelete)="deleteNamedFilter($event)"
+    />
+  }
+
+  @if (showRawEditor()) {
+    <app-raw-filter-editor
+      [initialJson]="rawJson()"
+      (jsonChange)="onRawJsonChange($event)"
+      (jsonApply)="onRawJsonApply($event)"
+    />
+  } @else {
+    <div class="rounded-lg border border-[var(--border-color)] bg-transparent p-4">
+      <app-query-group
+        [group]="rootGroup()"
+        [collectionName]="collectionName"
+        [isRoot]="true"
+        (groupChange)="onGroupChange($event)"
+      />
+    </div>
+  }
+
+  <div class="flex items-center justify-between">
+    <button
+      type="button"
+      class="rounded-lg px-4 py-2 text-sm text-slate-400 transition-colors hover:text-red-400"
+      (click)="clearFilter()"
+    >
+      Clear Filter
+    </button>
+    <div class="flex items-center gap-3">
+      <button
+        type="button"
+        class="rounded-lg border border-[var(--border-subtle)] px-4 py-2 text-sm text-slate-300 transition-colors hover:border-[var(--border-visible)]"
+        (click)="filterChange.emit(buildFilter())"
+      >
+        Update Preview
+      </button>
+      <button
+        type="button"
+        class="rounded-lg px-4 py-2 text-sm font-medium text-black transition-colors"
+        (click)="applyCurrentFilter()"
+      >
+        Apply Filter
+      </button>
+    </div>
+  </div>
+</div>
+
+@if (showSaveDialog()) {
+  <app-modal [open]="showSaveDialog()" title="Save Filter" size="sm" (closed)="closeSaveDialog()">
+    <div class="flex flex-col gap-4">
+      <div>
+        <label class="mb-1 block text-sm font-medium text-[var(--text-main)]">Filter Name</label>
+        <input
+          type="text"
+          class="w-full rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-2 text-sm text-slate-200 focus:border-[var(--accent)] focus:outline-none"
+          placeholder="Enter a name for this filter..."
+          [ngModel]="saveFilterName()"
+          (ngModelChange)="saveFilterName.set($event)"
+        />
+      </div>
+    </div>
+    <div modal-footer>
+      <button
+        type="button"
+        class="rounded-lg px-4 py-2 text-sm text-slate-400 transition-colors hover:text-white"
+        (click)="closeSaveDialog()"
+      >
+        Cancel
+      </button>
+      <button
+        type="button"
+        class="rounded-lg px-4 py-2 text-sm font-medium text-black transition-colors"
+        (click)="saveNamedFilter()"
+      >
+        Save
+      </button>
+    </div>
+  </app-modal>
+}

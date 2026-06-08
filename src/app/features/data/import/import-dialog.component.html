@@ -1,0 +1,220 @@
+<app-modal [open]="isOpen()" title="Import Data" size="xl" (closed)="onClose()">
+  <div class="flex flex-col gap-6">
+    @if (!selectedFile()) {
+      <div
+        class="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-[var(--border-visible)] p-12 transition-colors"
+        [class.border-[var(--border-visible)]]="!dragOver()"
+        [class.border-[var(--accent)]]="dragOver()"
+        [class.bg-transparent]="dragOver()"
+        (dragover)="onDragOver($event)"
+        (dragleave)="onDragLeave($event)"
+        (drop)="onDrop($event)"
+      >
+        <svg
+          class="mb-4 h-16 w-16 text-[var(--text-dim)]"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1.5"
+            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+          />
+        </svg>
+        <p class="mb-2 text-lg font-medium text-[var(--text-main)]">Drop your file here</p>
+        <p class="mb-4 text-sm text-[var(--text-dim)]">
+          Supports CSV, JSON, and JSON Lines formats
+        </p>
+        <label
+          class="cursor-pointer rounded-lg px-4 py-2 text-sm font-medium text-black transition-colors"
+        >
+          Browse Files
+          <input
+            type="file"
+            class="hidden"
+            accept=".csv,.json,.jsonl,.ndjson"
+            (change)="onFileSelect($event)"
+          />
+        </label>
+      </div>
+    } @else {
+      <div
+        class="flex items-center justify-between rounded-lg border border-[var(--border-color)] bg-transparent p-4"
+      >
+        <div class="flex items-center gap-3">
+          <svg
+            class="h-8 w-8 text-[var(--accent)]"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.5"
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            />
+          </svg>
+          <div>
+            <p class="text-sm font-medium text-[var(--text-main)]">{{ selectedFile()?.name }}</p>
+            <p class="text-xs text-[var(--text-dim)]">
+              {{ parsedData()?.totalRows }} rows &middot; {{ parsedData()?.format | uppercase }}
+            </p>
+          </div>
+        </div>
+        <button
+          class="rounded-lg p-2 text-[var(--text-dim)] transition-colors hover:bg-transparent hover:text-[var(--text-main)]"
+          (click)="selectedFile.set(null); parsedData.set(null)"
+        >
+          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="mb-2 block text-sm font-medium text-[var(--text-main)]">Collection</label>
+          <select
+            class="w-full rounded-lg border border-[var(--accent)] bg-transparent px-3 py-2 text-sm text-[var(--text-main)] focus:border-[var(--accent)] focus:outline-none"
+            [ngModel]="selectedCollection()"
+            (ngModelChange)="onCollectionChange($event)"
+          >
+            <option value="">Select a collection...</option>
+            @for (collection of collections(); track collection) {
+              <option [value]="collection">{{ collection }}</option>
+            }
+          </select>
+        </div>
+
+        <div>
+          <label class="mb-2 block text-sm font-medium text-[var(--text-main)]">Batch Size</label>
+          <input
+            type="number"
+            class="w-full rounded-lg border border-[var(--accent)] bg-transparent px-3 py-2 text-sm text-[var(--text-main)] focus:border-[var(--accent)] focus:outline-none"
+            [ngModel]="batchSize()"
+            (ngModelChange)="onBatchSizeChange($event)"
+            min="1"
+            max="1000"
+          />
+        </div>
+      </div>
+
+      <div class="flex gap-4">
+        <label class="flex items-center gap-2 text-sm text-[var(--text-main)]">
+          <input
+            type="radio"
+            [ngModel]="!updateExisting()"
+            (ngModelChange)="updateExisting.set(false)"
+            class="text-[var(--accent)]"
+          />
+          Insert new
+        </label>
+        <label class="flex items-center gap-2 text-sm text-[var(--text-main)]">
+          <input
+            type="radio"
+            [ngModel]="updateExisting()"
+            (ngModelChange)="updateExisting.set(true)"
+            class="text-[var(--accent)]"
+          />
+          Update existing
+        </label>
+      </div>
+
+      @if (parsedData() && targetFields().length > 0) {
+        <app-field-mapping
+          [sourceHeaders]="parsedData()!.headers"
+          [targetFields]="targetFields()"
+          [mappings]="mappings()"
+          (mappingsChange)="onMappingsChange($event)"
+        />
+      }
+
+      @if (previewRows.length > 0) {
+        <div>
+          <h4 class="mb-3 text-sm font-medium text-[var(--text-main)]">Preview (first 10 rows)</h4>
+          <div class="max-h-64 overflow-auto rounded-lg border border-[var(--border-color)]">
+            <table class="w-full text-xs">
+              <thead class="sticky top-0 bg-transparent">
+                <tr>
+                  @for (mapping of mappings(); track mapping.targetField) {
+                    <th class="px-3 py-2 text-left font-medium text-[var(--text-main)]">
+                      {{ mapping.targetField }}
+                    </th>
+                  }
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of previewRows; track $index; let idx = $index) {
+                  <tr
+                    class="border-t border-[var(--border-subtle)]"
+                    [class.bg-red-500/10]="validationErrors().has(idx)"
+                  >
+                    @for (mapping of mappings(); track mapping.targetField) {
+                      <td
+                        class="px-3 py-2 text-[var(--text-dim)]"
+                        [class.text-red-400]="validationErrors().has(idx)"
+                      >
+                        {{ row[mapping.targetField] }}
+                      </td>
+                    }
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          @if (errorCount > 0) {
+            <p class="mt-2 text-xs text-red-400">{{ errorCount }} rows have validation errors</p>
+          }
+        </div>
+      }
+
+      @if (isImporting() && importProgress()) {
+        <div>
+          <div class="mb-2 flex justify-between text-sm">
+            <span class="text-[var(--text-main)]">Importing...</span>
+            <span class="text-[var(--text-dim)]"
+              >{{ importProgress()!.current }} / {{ importProgress()!.total }}</span
+            >
+          </div>
+          <div class="h-2 w-full rounded-full bg-transparent">
+            <div
+              class="h-full rounded-full transition-all duration-300"
+              [style.width.%]="importProgress()!.percentage"
+            ></div>
+          </div>
+        </div>
+      }
+    }
+  </div>
+
+  <div modal-footer>
+    <button
+      type="button"
+      class="rounded-lg px-4 py-2 text-sm text-[var(--text-dim)] transition-colors hover:text-[var(--text-main)]"
+      (click)="onClose()"
+      [disabled]="isImporting()"
+    >
+      Cancel
+    </button>
+    <button
+      type="button"
+      class="rounded-lg px-4 py-2 text-sm font-medium text-black transition-colors disabled:opacity-50"
+      (click)="onImport()"
+      [disabled]="!canImport"
+    >
+      @if (isImporting()) {
+        Importing...
+      } @else {
+        Import
+      }
+    </button>
+  </div>
+</app-modal>

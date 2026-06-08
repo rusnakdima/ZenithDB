@@ -1,0 +1,88 @@
+<div class="flex flex-col gap-4">
+  <div class="flex items-center justify-between">
+    <h4 class="text-sm font-medium text-[var(--text-main)]">Cache Settings</h4>
+    <button
+      type="button"
+      class="text-xs text-[var(--accent)] hover:text-[var(--accent-hover)]"
+      (click)="toggleAdvanced()"
+    >
+      {{ showAdvanced() ? "Hide" : "Show" }} Advanced
+    </button>
+  </div>
+
+  <div class="flex items-center justify-between">
+    <label class="text-sm text-[var(--text-main)]">Enable Cache</label>
+    <button
+      type="button"
+      class="relative h-6 w-11 rounded-full transition-colors"
+      [class.]="enabled()"
+      [class.bg-[var(--bg-elevated)]]="!enabled()"
+      (click)="onEnabledChange(!enabled())"
+    >
+      <span
+        class="absolute top-1 h-4 w-4 rounded-full bg-white transition-transform"
+        [class.left-1]="!enabled()"
+        [class.left-6]="enabled()"
+      ></span>
+    </button>
+  </div>
+
+  <div>
+    <label class="mb-2 block text-sm text-[var(--text-main)]">TTL (seconds)</label>
+    <input
+      type="number"
+      class="w-full rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-2 text-sm text-[var(--text-main)] focus:border-[var(--accent)] focus:outline-none"
+      [ngModel]="ttl()"
+      (ngModelChange)="onTtlChange($event)"
+      min="0"
+      max="3600"
+      [disabled]="!enabled()"
+    />
+    <p class="mt-1 text-xs text-[var(--text-dim)]">
+      Time to live for cached result (0 = no expiry)
+    </p>
+  </div>
+
+  @if (showAdvanced()) {
+    <div>
+      <label class="mb-2 block text-sm text-[var(--text-main)]">Custom Cache Key</label>
+      <input
+        type="text"
+        class="w-full rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-2 text-sm text-[var(--text-main)] focus:border-[var(--accent)] focus:outline-none"
+        [ngModel]="customKey()"
+        (ngModelChange)="onCustomKeyChange($event)"
+        placeholder="Auto-generated from query"
+      />
+      <p class="mt-1 text-xs text-[var(--text-dim)]">Override the default cache key</p>
+    </div>
+  }
+
+  @if (cacheStatus().cached) {
+    <div class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] p-3">
+      <h5 class="mb-2 text-xs font-medium text-[var(--text-dim)] uppercase">
+        Current Cache Status
+      </h5>
+      <div class="grid grid-cols-2 gap-2 text-sm">
+        <div>
+          <span class="text-[var(--text-dim)]">Hit Count:</span>
+          <span class="ml-2 text-[var(--text-main)]">{{ cacheStatus().hitCount }}</span>
+        </div>
+        <div>
+          <span class="text-[var(--text-dim)]">Age:</span>
+          <span class="ml-2 text-[var(--text-main)]">{{ formattedAge }}</span>
+        </div>
+        <div class="col-span-2">
+          <span class="text-[var(--text-dim)]">TTL Remaining:</span>
+          <span class="ml-2 text-[var(--text-main)]">{{ formattedTtlRemaining }}</span>
+        </div>
+      </div>
+      <button
+        type="button"
+        class="mt-2 text-xs text-red-400 hover:text-red-300"
+        (click)="clearCache()"
+      >
+        Clear This Cache
+      </button>
+    </div>
+  }
+</div>

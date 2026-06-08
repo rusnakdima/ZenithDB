@@ -1,0 +1,101 @@
+<div class="flex flex-col gap-4">
+  <div class="flex items-center justify-between">
+    <h3 class="text-sm font-medium text-[var(--text-main)]">Execution Plan</h3>
+    <div class="flex items-center gap-4">
+      <div class="rounded-lg border px-3 py-1 {{ scoreBgColor() }}">
+        <span class="text-xs text-[var(--text-dim)]">Score:</span>
+        <span class="ml-1 font-mono text-sm {{ scoreColor() }}">{{ score() }}</span>
+      </div>
+      <div class="text-xs text-[var(--text-dim)]">
+        Total Cost: <span class="font-mono {{ getCostColor(totalCost()) }}">{{ totalCost() }}</span>
+      </div>
+    </div>
+  </div>
+
+  @if (nodes().length === 0) {
+    <div class="rounded-lg border border-[var(--border-subtle)] bg-slate-800/50 p-6 text-center">
+      <svg
+        class="mx-auto h-12 w-12 text-slate-500"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.5"
+          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+        />
+      </svg>
+      <p class="mt-2 text-sm text-slate-400">No execution plan available</p>
+      <p class="text-xs text-slate-500">Execute a query to see the plan</p>
+    </div>
+  } @else {
+    <div class="space-y-2">
+      @for (node of nodes(); track trackByNodeId($index, node)) {
+        <ng-container
+          *ngTemplateOutlet="nodeTemplate; context: { node: node, depth: 0 }"
+        ></ng-container>
+      }
+    </div>
+  }
+</div>
+
+<ng-template #nodeTemplate let-node="node" let-depth="depth">
+  <div
+    class="rounded-lg border border-[var(--border-subtle)] bg-slate-800/50 transition-all"
+    [style.margin-left.px]="depth * 16"
+  >
+    <div
+      class="hover: flex cursor-pointer items-center gap-3 px-4 py-3"
+      (click)="hasChildren(node) && toggleNode(node.id)"
+      [class.cursor-default]="!hasChildren(node)"
+    >
+      @if (hasChildren(node)) {
+        <svg
+          class="h-4 w-4 text-slate-400 transition-transform"
+          [class.rotate-90]="isExpanded(node.id)"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+      } @else {
+        <div class="w-4"></div>
+      }
+
+      <div class="rounded px-2 py-0.5 text-xs font-medium {{ getOperationColor(node.operation) }}">
+        {{ node.operation }}
+      </div>
+
+      <div class="flex-1 text-sm text-slate-300">
+        {{ node.description }}
+      </div>
+
+      @if (node.indexUsed) {
+        <div class="rounded bg-emerald-500/20 px-2 py-0.5 text-xs text-emerald-400">
+          Index: {{ node.indexUsed }}
+        </div>
+      }
+
+      @if (node.isFullScan) {
+        <div class="rounded bg-red-500/20 px-2 py-0.5 text-xs text-red-400">Full Scan</div>
+      }
+
+      <div class="text-xs text-slate-500">
+        Cost: <span class="font-mono {{ getCostColor(node.cost) }}">{{ node.cost }}</span>
+      </div>
+    </div>
+
+    @if (hasChildren(node) && isExpanded(node.id)) {
+      <div class="border-t border-[var(--border-subtle)] bg-slate-800/30 px-4 py-2">
+        @for (child of node.children; track trackByNodeId($index, child)) {
+          <ng-container
+            *ngTemplateOutlet="nodeTemplate; context: { node: child, depth: depth + 1 }"
+          ></ng-container>
+        }
+      </div>
+    }
+  </div>
+</ng-template>

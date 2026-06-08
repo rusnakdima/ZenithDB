@@ -1,0 +1,184 @@
+import { Component, Input, Output, EventEmitter, signal, inject, OnInit } from "@angular/core";
+import { CommonModule } from "@angular/common";
+import { FormsModule } from "@angular/forms";
+import { ProjectConfig, ProjectField } from "../pipeline-builder.service";
+import { SchemaCompletionService } from "../../../query/services/schema-completion.service";
+import { FieldInfo } from "../../../query/models";
+
+@Component({
+  selector: "app-project-config",
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  template: `
+    <div class="space-y-4">
+      <div class="space-y-2">
+        <div class="flex items-center justify-between">
+          <label class="text-xs tracking-wide text-slate-400 uppercase">Fields</label>
+          <button
+            type="button"
+            class="text-xs text-[var(--accent)] transition-colors hover:text-[var(--accent-hover)]"
+            (click)="addField()"
+          >
+            + Add field
+          </button>
+        </div>
+
+        @if (config.fields.length === 0) {
+          <div
+            class="rounded border border-dashed border-slate-600 p-4 text-center text-xs text-slate-500"
+          >
+            No fields defined. Click "Add field" to include/exclude fields.
+          </div>
+        }
+
+        <div class="space-y-2">
+          @for (field of config.fields; track field.name; let i = $index) {
+            <div
+              class="flex items-center gap-2 rounded border border-slate-600 bg-slate-800/30 p-2"
+            >
+              <input
+                type="text"
+                class="flex-1 rounded border border-slate-600 bg-slate-700 px-2 py-1.5 text-sm text-slate-200 focus:border-[var(--accent)] focus:outline-none"
+                placeholder="Field name"
+                [ngModel]="field.name"
+                (ngModelChange)="updateFieldName(i, $event)"
+              />
+
+              <label class="flex items-center gap-1 text-xs text-slate-400">
+                <input
+                  type="checkbox"
+                  class="rounded border-slate-600 bg-slate-700"
+                  [ngModel]="field.include"
+                  (ngModelChange)="updateFieldInclude(i, $event)"
+                />
+                Include
+              </label>
+
+              <button
+                type="button"
+                class="p-1 text-slate-500 hover:text-red-400"
+                (click)="removeField(i)"
+              >
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            @if (field.include && field.name) {
+              <div class="ml-4 flex items-center gap-2">
+                <input
+                  type="text"
+                  class="flex-1 rounded border border-slate-600 bg-slate-700 px-2 py-1.5 font-mono text-xs text-slate-200 focus:border-[var(--accent)] focus:outline-none"
+                  placeholder="Expression (e.g., { $toUpper: '$name' })"
+                  [ngModel]="field.expression"
+                  (ngModelChange)="updateFieldExpression(i, $event)"
+                />
+              </div>
+            }
+          }
+        </div>
+      </div>
+
+      <div class="space-y-2">
+        <label class="text-xs tracking-wide text-slate-400 uppercase">Quick Actions</label>
+        <div class="flex flex-wrap gap-2">
+          <button
+            type="button"
+            class="rounded border border-slate-600 px-2 py-1 text-xs text-slate-400 transition-colors hover:bg-slate-700 hover:text-white"
+            (click)="includeAllFields()"
+          >
+            Include All
+          </button>
+          <button
+            type="button"
+            class="rounded border border-slate-600 px-2 py-1 text-xs text-slate-400 transition-colors hover:bg-slate-700 hover:text-white"
+            (click)="excludeAllFields()"
+          >
+            Exclude All
+          </button>
+        </div>
+      </div>
+    </div>
+  `,
+})
+export class ProjectConfigComponent implements OnInit {
+  private readonly schemaCompletion = inject(SchemaCompletionService);
+
+  @Input() config!: ProjectConfig;
+  @Input() collectionName = "";
+  @Output() configChange = new EventEmitter<ProjectConfig>();
+
+  fields = signal<FieldInfo[]>([]);
+
+  ngOnInit(): void {
+    this.loadFields();
+  }
+
+  private async loadFields(): Promise<void> {
+    if (this.collectionName) {
+      const fields = await this.schemaCompletion.getFields(this.collectionName);
+      this.fields.set(fields);
+    }
+  }
+
+  addField(): void {
+    const newField: ProjectField = { name: "", include: true };
+    this.configChange.emit({
+      ...this.config,
+      fields: [...this.config.fields, newField],
+    });
+  }
+
+  updateFieldName(index: number, name: string): void {
+    const fields = [...this.config.fields];
+    fields[index] = { ...fields[index], name };
+    this.configChange.emit({ ...this.config, fields });
+  }
+
+  updateFieldInclude(index: number, include: boolean): void {
+    const fields = [...this.config.fields];
+    fields[index] = { ...fields[index], include };
+    this.configChange.emit({ ...this.config, fields });
+  }
+
+  updateFieldExpression(index: number, expression: string): void {
+    const fields = [...this.config.fields];
+    fields[index] = { ...fields[index], expression };
+    this.configChange.emit({ ...this.config, fields });
+  }
+
+  removeField(index: number): void {
+    this.configChange.emit({
+      ...this.config,
+      fields: this.config.fields.filter((_, i) => i !== index),
+    });
+  }
+
+  includeAllFields(): void {
+    const allFields = this.fields().map((f) => ({
+      name: f.name,
+      include: true,
+    }));
+    this.configChange.emit({
+      ...this.config,
+      fields: allFields,
+    });
+  }
+
+  excludeAllFields(): void {
+    const allFields = this.fields().map((f) => ({
+      name: f.name,
+      include: false,
+    }));
+    this.configChange.emit({
+      ...this.config,
+      fields: allFields,
+    });
+  }
+}

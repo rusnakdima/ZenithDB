@@ -1,0 +1,101 @@
+<app-modal [open]="true" title="Bulk Update" size="md" (closed)="onCancel()">
+  <div class="flex flex-col gap-6">
+    <div class="rounded-lg border border-slate-600 bg-slate-800/50 p-4">
+      <div class="flex items-center gap-3">
+        <div
+          class="flex h-10 w-10 items-center justify-center rounded-full text-lg font-bold text-black"
+        >
+          {{ recordCount() }}
+        </div>
+        <div>
+          <p class="text-sm font-medium text-[var(--text-main)]">Selected Records</p>
+          <p class="text-xs text-[var(--text-dim)]">These records will be modified</p>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <label class="mb-2 block text-sm font-medium text-[var(--text-main)]"> Target Field </label>
+      <select
+        class="w-full rounded-lg border border-slate-600 bg-slate-700 px-3 py-2 text-sm text-slate-200 focus:border-emerald-500 focus:outline-none"
+        [ngModel]="selectedField()"
+        (ngModelChange)="onFieldChange($event)"
+      >
+        @for (field of availableFields(); track field.name) {
+          <option [value]="field.name">
+            {{ field.name }}
+            <span class="text-slate-400">({{ field.type }})</span>
+          </option>
+        }
+      </select>
+    </div>
+
+    <div>
+      <label class="mb-2 block text-sm font-medium text-[var(--text-main)]"> New Value </label>
+      <input
+        type="text"
+        class="w-full rounded-lg border border-slate-600 bg-slate-700 px-3 py-2 text-sm text-slate-200 focus:border-emerald-500 focus:outline-none"
+        placeholder="Enter new value..."
+        [ngModel]="newValue()"
+        (ngModelChange)="onValueChange($event)"
+      />
+    </div>
+
+    <div class="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4">
+      <div class="flex items-center gap-2 text-amber-300">
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+        <span class="text-sm font-medium">Preview</span>
+      </div>
+      <p class="mt-2 text-sm text-amber-200">
+        {{ getPreviewText() }}
+      </p>
+    </div>
+  </div>
+
+  <div modal-footer class="flex justify-end gap-3">
+    <button
+      type="button"
+      class="rounded-lg px-4 py-2 text-sm text-slate-400 transition-colors hover:text-white"
+      (click)="onCancel()"
+      [disabled]="isProcessing()"
+    >
+      Cancel
+    </button>
+    <button
+      type="button"
+      class="rounded-lg px-4 py-2 text-sm font-medium text-black transition-colors disabled:opacity-50"
+      (click)="onConfirm()"
+      [disabled]="isProcessing()"
+    >
+      @if (isProcessing()) {
+        <span class="flex items-center gap-2">
+          <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            ></circle>
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
+          </svg>
+          Updating...
+        </span>
+      } @else {
+        Update Records
+      }
+    </button>
+  </div>
+</app-modal>

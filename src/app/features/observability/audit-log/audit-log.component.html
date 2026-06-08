@@ -1,0 +1,194 @@
+<div class="audit-log flex h-full flex-col">
+  <div class="flex items-center justify-between border-b border-[var(--border-subtle)] p-4">
+    <div class="flex items-center gap-3">
+      <h3 class="text-sm font-bold text-[var(--text-main)]">Audit Log</h3>
+      <span class="text-xs text-[var(--text-dim)]">({{ filteredEntries().length }} entries)</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <button
+        class="flex items-center gap-1 rounded-lg border border-[var(--border-subtle)] bg-transparent px-3 py-1.5 text-xs text-[var(--text-dim)] transition-colors hover:border-[var(--border-visible)] hover:text-[var(--text-main)]"
+        (click)="loadAuditLog()"
+      >
+        <mat-icon fontIcon="refresh" class="h-4! w-4!" />
+        Refresh
+      </button>
+      <button
+        class="flex items-center gap-1 rounded-lg border border-[var(--border-subtle)] bg-transparent px-3 py-1.5 text-xs text-[var(--text-dim)] transition-colors hover:border-[var(--border-visible)] hover:text-[var(--text-main)]"
+        (click)="showExportDialog.set(true)"
+      >
+        <mat-icon fontIcon="download" class="h-4! w-4!" />
+        Export
+      </button>
+    </div>
+  </div>
+
+  <div
+    class="flex items-center gap-4 border-b border-[var(--border-subtle)] bg-[var(--bg-elevated)]/30 p-4"
+  >
+    <div class="flex items-center gap-2">
+      <span class="text-xs text-[var(--text-dim)]">Operations:</span>
+      @for (op of operations; track op) {
+        <button
+          class="rounded border border-[var(--border-subtle)] px-2 py-1 text-xs transition-colors"
+          [class.bg-transparent]="!isOperationSelected(op)"
+          [class.text-[var(--accent)]]="isOperationSelected(op)"
+          [class.text-[var(--text-dim)]]="!isOperationSelected(op)"
+          (click)="onToggleOperationFilter(op)"
+        >
+          {{ op }}
+        </button>
+      }
+    </div>
+    <input
+      type="text"
+      placeholder="Search..."
+      [value]="searchQuery()"
+      (input)="searchQuery.set($any($event.target).value)"
+      class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-main)] px-3 py-1.5 text-xs text-[var(--text-main)] placeholder:text-[var(--text-dim)]/50"
+    />
+    <input
+      type="text"
+      placeholder="Collection..."
+      [value]="filterCollection()"
+      (input)="filterCollection.set($any($event.target).value)"
+      class="w-32 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-main)] px-3 py-1.5 text-xs text-[var(--text-main)] placeholder:text-[var(--text-dim)]/50"
+    />
+    <div class="flex items-center gap-1">
+      <span class="text-xs text-[var(--text-dim)]">From:</span>
+      <input
+        type="date"
+        [value]="filterStartDate()"
+        (change)="filterStartDate.set($any($event.target).value)"
+        class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-main)] px-2 py-1 text-xs text-[var(--text-main)]"
+      />
+    </div>
+    <div class="flex items-center gap-1">
+      <span class="text-xs text-[var(--text-dim)]">To:</span>
+      <input
+        type="date"
+        [value]="filterEndDate()"
+        (change)="filterEndDate.set($any($event.target).value)"
+        class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-main)] px-2 py-1 text-xs text-[var(--text-main)]"
+      />
+    </div>
+    <button
+      class="px-2 py-1 text-xs text-[var(--text-dim)] transition-colors hover:text-[var(--text-main)]"
+      (click)="clearFilters()"
+    >
+      Clear
+    </button>
+  </div>
+
+  @if (loading()) {
+    <div class="flex flex-1 items-center justify-center">
+      <div class="text-[var(--text-dim)]">Loading audit log...</div>
+    </div>
+  } @else if (filteredEntries().length === 0) {
+    <div class="flex flex-1 flex-col items-center justify-center gap-3">
+      <mat-icon fontIcon="history" class="h-12! w-12! text-[var(--text-dim)]/50" />
+      <p class="text-[var(--text-dim)]">No audit entries found</p>
+    </div>
+  } @else {
+    <div class="flex-1 overflow-auto">
+      <table class="w-full">
+        <thead class="sticky top-0 bg-[var(--bg-main)]">
+          <tr>
+            <th class="w-[40px] px-2 py-2"></th>
+            <th class="px-3 py-2 text-left text-xs font-bold text-[var(--text-dim)] uppercase">
+              Timestamp
+            </th>
+            <th class="px-3 py-2 text-left text-xs font-bold text-[var(--text-dim)] uppercase">
+              Operation
+            </th>
+            <th class="px-3 py-2 text-left text-xs font-bold text-[var(--text-dim)] uppercase">
+              Collection
+            </th>
+            <th class="px-3 py-2 text-left text-xs font-bold text-[var(--text-dim)] uppercase">
+              Document ID
+            </th>
+            <th class="px-3 py-2 text-left text-xs font-bold text-[var(--text-dim)] uppercase">
+              User
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (entry of filteredEntries(); track entry.id) {
+            <tr
+              class="cursor-pointer border-t border-[var(--border-subtle)] transition-colors hover:bg-[var(--bg-elevated)]/50"
+              (click)="onSelectEntry(entry)"
+            >
+              <td class="w-[40px] px-2 py-2">
+                <button
+                  class="rounded p-1 transition-colors hover:bg-transparent"
+                  (click)="onToggleExpand(entry.id); $event.stopPropagation()"
+                >
+                  <mat-icon
+                    [fontIcon]="isExpanded(entry.id) ? 'expand_less' : 'expand_more'"
+                    class="h-4! w-4!"
+                  />
+                </button>
+              </td>
+              <td class="px-3 py-2 text-xs text-[var(--text-main)]">
+                {{ formatDate(entry.timestamp) }}
+              </td>
+              <td class="px-3 py-2 text-xs" [class]="getOperationClass(entry.operation)">
+                {{ entry.operation }}
+              </td>
+              <td class="px-3 py-2 text-xs text-[var(--text-main)]">{{ entry.collection }}</td>
+              <td class="px-3 py-2 font-mono text-xs text-[var(--text-main)]">
+                {{ entry.documentId }}
+              </td>
+              <td class="px-3 py-2 text-xs text-[var(--text-dim)]">{{ entry.user || "System" }}</td>
+            </tr>
+            @if (isExpanded(entry.id)) {
+              <tr class="border-t border-[var(--border-subtle)] bg-[var(--bg-elevated)]/30">
+                <td colspan="100%" class="p-4">
+                  <app-change-detail [before]="entry.before" [after]="entry.after" />
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  @if (selectedEntry()) {
+    <app-change-detail
+      class="fixed inset-0 z-50 bg-black/50"
+      [before]="selectedEntry()!.before"
+      [after]="selectedEntry()!.after"
+      (close)="onCloseDetail()"
+    />
+  }
+
+  @if (showExportDialog()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div
+        class="min-w-[300px] rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] p-6"
+      >
+        <h4 class="mb-4 text-sm font-bold text-[var(--text-main)]">Export Audit Log</h4>
+        <div class="flex gap-3">
+          <button
+            class="flex-1 rounded-lg border border-[var(--border-subtle)] bg-transparent px-4 py-2 text-sm text-[var(--text-main)] transition-colors hover:border-[var(--border-visible)]"
+            (click)="onExport('csv')"
+          >
+            CSV
+          </button>
+          <button
+            class="flex-1 rounded-lg border border-[var(--border-subtle)] bg-transparent px-4 py-2 text-sm text-[var(--text-main)] transition-colors hover:border-[var(--border-visible)]"
+            (click)="onExport('json')"
+          >
+            JSON
+          </button>
+        </div>
+        <button
+          class="mt-3 w-full px-4 py-2 text-sm text-[var(--text-dim)] transition-colors hover:text-[var(--text-main)]"
+          (click)="showExportDialog.set(false)"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  }
+</div>

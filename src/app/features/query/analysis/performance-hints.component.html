@@ -1,0 +1,138 @@
+<div class="flex flex-col gap-4">
+  <div class="flex items-center justify-between">
+    <h3 class="text-sm font-medium text-[var(--text-main)]">Performance Analysis</h3>
+    @if (score() > 0) {
+      <div class="flex items-center gap-2">
+        <span class="text-xs text-[var(--text-dim)]">Query Score:</span>
+        <div class="rounded-lg border px-3 py-1 {{ getScoreBgColor() }}">
+          <span class="font-mono text-sm {{ getScoreColor() }}">{{ score() }}/100</span>
+        </div>
+      </div>
+    }
+  </div>
+
+  @if (isLoading()) {
+    <div class="flex items-center justify-center py-8">
+      <svg class="h-6 w-6 animate-spin text-[var(--accent)]" fill="none" viewBox="0 0 24 24">
+        <circle
+          class="opacity-25"
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          stroke-width="4"
+        ></circle>
+        <path
+          class="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+        ></path>
+      </svg>
+    </div>
+  } @else if (hints().length === 0 && recommendations().length === 0) {
+    <div class="rounded-lg border border-[var(--border-subtle)] bg-transparent p-4">
+      <div class="flex items-center gap-2 text-[var(--accent)]">
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+        <span class="text-sm font-medium">Query looks good!</span>
+      </div>
+      <p class="mt-1 text-xs text-[var(--accent)]/70">No performance issues detected</p>
+    </div>
+  } @else {
+    <div class="space-y-3">
+      @for (hint of hints(); track hint.message) {
+        <div class="rounded-lg border p-3 {{ getHintColor(hint.type) }}">
+          <div class="flex items-start gap-3">
+            <svg
+              class="h-5 w-5 flex-shrink-0"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                [attr.d]="getHintIcon(hint.type)"
+              />
+            </svg>
+
+            <div class="flex-1">
+              <div class="flex items-center gap-2">
+                @if (hint.code) {
+                  <span class="font-mono text-xs opacity-60">[{{ hint.code }}]</span>
+                }
+              </div>
+              <p class="mt-1 text-sm">{{ hint.message }}</p>
+
+              @if (hint.action) {
+                <button
+                  type="button"
+                  class="mt-2 rounded px-3 py-1 text-xs font-medium text-white transition-colors {{
+                    getHintButtonColor(hint.type)
+                  }}"
+                  (click)="onHintAction(hint)"
+                >
+                  {{ hint.action.label }}
+                </button>
+              }
+            </div>
+          </div>
+        </div>
+      }
+
+      @for (rec of recommendations(); track rec.field) {
+        <div class="rounded-lg border border-[var(--border-subtle)] bg-blue-500/10 p-3">
+          <div class="flex items-start gap-3">
+            <svg
+              class="h-5 w-5 flex-shrink-0 text-blue-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+              />
+            </svg>
+
+            <div class="flex-1">
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-medium text-blue-300">
+                  Index Recommendation: {{ rec.field }}
+                </span>
+                <span
+                  class="rounded px-2 py-0.5 text-xs"
+                  [class.bg-emerald-500/20]="rec.impact === 'high'"
+                  [class.text-emerald-400]="rec.impact === 'high'"
+                  [class.bg-amber-500/20]="rec.impact === 'medium'"
+                  [class.text-amber-400]="rec.impact === 'medium'"
+                  [class.bg-slate-500/20]="rec.impact === 'low'"
+                  [class.text-slate-400]="rec.impact === 'low'"
+                >
+                  {{ rec.impact }} impact
+                </span>
+              </div>
+              <p class="mt-1 text-xs text-blue-200/70">{{ rec.reason }}</p>
+              <button
+                type="button"
+                class="mt-2 rounded bg-blue-600 px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-blue-500"
+                (click)="onCreateIndex(rec.field)"
+              >
+                Create Index
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

@@ -1,0 +1,146 @@
+<div class="deleted-records-view flex h-full flex-col">
+  <div class="flex items-center justify-between border-b border-[var(--border-subtle)] p-4">
+    <div class="flex items-center gap-3">
+      <h3 class="text-sm font-bold text-[var(--text-main)]">Deleted Records</h3>
+      <span class="text-xs text-[var(--text-dim)]">({{ deletedRecords().length }} records)</span>
+    </div>
+    <div class="flex items-center gap-2">
+      @if (selectedCount() > 0) {
+        <button
+          class="flex items-center gap-1 rounded-lg bg-green-900/30 px-3 py-1.5 text-xs text-green-400 transition-colors hover:bg-green-900/40"
+          (click)="restoreSelected()"
+        >
+          <mat-icon fontIcon="restore" class="h-4! w-4!" />
+          Restore Selected ({{ selectedCount() }})
+        </button>
+        <button
+          class="flex items-center gap-1 rounded-lg bg-red-900/30 px-3 py-1.5 text-xs text-red-400 transition-colors hover:bg-red-900/40"
+          (click)="permanentDeleteSelected()"
+        >
+          <mat-icon fontIcon="delete_forever" class="h-4! w-4!" />
+          Delete Selected ({{ selectedCount() }})
+        </button>
+      }
+      <button
+        class="flex items-center gap-1 rounded-lg border border-[var(--border-subtle)] px-3 py-1.5 text-xs text-[var(--text-dim)] transition-colors hover:border-[var(--border-visible)] hover:text-[var(--text-main)]"
+        (click)="loadDeletedRecords()"
+      >
+        <mat-icon fontIcon="refresh" class="h-4! w-4!" />
+        Refresh
+      </button>
+      <button
+        class="flex items-center gap-1 rounded-lg border border-[var(--border-subtle)] px-3 py-1.5 text-xs text-[var(--text-dim)] transition-colors hover:border-[var(--border-visible)] hover:text-[var(--text-main)]"
+        (click)="onClose()"
+      >
+        <mat-icon fontIcon="close" class="h-4! w-4!" />
+        Close
+      </button>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="flex flex-1 items-center justify-center">
+      <div class="text-[var(--text-dim)]">Loading deleted records...</div>
+    </div>
+  } @else if (deletedRecords().length === 0) {
+    <div class="flex flex-1 flex-col items-center justify-center gap-3">
+      <mat-icon fontIcon="delete" class="h-12! w-12! text-[var(--text-dim)]/50" />
+      <p class="text-[var(--text-dim)]">No deleted records</p>
+    </div>
+  } @else {
+    <div class="flex-1 overflow-auto">
+      <table class="w-full">
+        <thead class="sticky top-0 bg-[var(--bg-main)]">
+          <tr>
+            <th class="w-[40px] px-2 py-2">
+              <input
+                type="checkbox"
+                [checked]="allSelected()"
+                (change)="onToggleSelectAll()"
+                class="h-4 w-4 rounded border-[var(--accent)]"
+              />
+            </th>
+            @for (col of columns; track col.name) {
+              <th class="px-3 py-2 text-left text-xs font-bold text-[var(--text-dim)] uppercase">
+                {{ col.name }}
+              </th>
+            }
+            <th class="px-3 py-2 text-left text-xs font-bold text-[var(--text-dim)] uppercase">
+              Deleted At
+            </th>
+            <th
+              class="w-[100px] px-3 py-2 text-left text-xs font-bold text-[var(--text-dim)] uppercase"
+            >
+              Actions
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (record of deletedRecords(); track $index; let i = $index) {
+            <tr
+              class="border-t border-[var(--border-subtle)] transition-colors hover:bg-transparent/50"
+              [class.bg-red-900/10]="isSelected(i)"
+            >
+              <td class="w-[40px] px-2 py-2">
+                <input
+                  type="checkbox"
+                  [checked]="isSelected(i)"
+                  (change)="onToggleRow(i)"
+                  class="h-4 w-4 rounded border-[var(--accent)]"
+                />
+              </td>
+              @for (col of columns; track col.name) {
+                <td class="px-3 py-2 text-xs text-[var(--text-main)]">
+                  <span class="line-through opacity-60">{{ getCellValue(record, col.name) }}</span>
+                </td>
+              }
+              <td class="px-3 py-2 text-xs text-[var(--text-dim)]">
+                {{ formatDate(record._deletedAt) }}
+              </td>
+              <td class="px-3 py-2">
+                <div class="flex items-center gap-1">
+                  <button
+                    class="rounded p-1 text-green-400 transition-colors hover:bg-green-900/30"
+                    title="Restore"
+                    (click)="restoreRecord(i)"
+                  >
+                    <mat-icon fontIcon="restore" class="h-4! w-4!" />
+                  </button>
+                  <button
+                    class="rounded p-1 text-red-400 transition-colors hover:bg-red-900/30"
+                    title="Permanent Delete"
+                    (click)="permanentDeleteRecord(i)"
+                  >
+                    <mat-icon fontIcon="delete_forever" class="h-4! w-4!" />
+                  </button>
+                  <button
+                    class="rounded p-1 text-[var(--accent)] transition-colors hover:bg-transparent"
+                    title="View Details"
+                    (click)="onToggleExpand(i)"
+                  >
+                    <mat-icon
+                      [fontIcon]="isExpanded(i) ? 'expand_less' : 'expand_more'"
+                      class="h-4! w-4!"
+                    />
+                  </button>
+                </div>
+              </td>
+            </tr>
+            @if (isExpanded(i)) {
+              <tr class="border-t border-[var(--border-subtle)] bg-transparent/30">
+                <td colspan="100%" class="p-4">
+                  <div class="text-xs">
+                    <p class="mb-2 font-bold text-[var(--text-dim)]">Original Values:</p>
+                    <pre class="overflow-auto rounded-lg bg-black/30 p-3 text-[var(--text-main)]">{{
+                      formatOriginalValues(record)
+                    }}</pre>
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

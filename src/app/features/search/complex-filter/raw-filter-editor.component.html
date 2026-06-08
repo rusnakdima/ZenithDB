@@ -1,0 +1,35 @@
+<div class="flex flex-col gap-3">
+  <div class="flex items-center justify-between">
+    <label class="text-sm font-medium text-[var(--text-main)]">Raw JSON Filter</label>
+    @if (!isValid()) {
+      <span class="text-xs text-red-400">{{ validationError() }}</span>
+    }
+  </div>
+
+  <textarea
+    class="h-48 w-full rounded-lg border bg-slate-800 px-3 py-2 font-mono text-sm text-slate-200 focus:outline-none"
+    [class.border-red-500]="!isValid()"
+    [class.border-[var(--border-subtle)]]="isValid()"
+    [ngModel]="jsonInput()"
+    (ngModelChange)="onJsonInput($event)"
+    placeholder='{"and": [{"field": "name", "operator": "eq", "value": "test"}]}'
+  ></textarea>
+
+  <div class="flex items-center justify-between">
+    <span class="text-xs text-slate-500">
+      @if (isValid()) {
+        Valid JSON
+      } @else {
+        Invalid JSON - fix errors before applying
+      }
+    </span>
+    <button
+      type="button"
+      class="rounded-lg px-4 py-2 text-sm font-medium text-black transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+      [disabled]="!isValid()"
+      (click)="onApply()"
+    >
+      Apply JSON
+    </button>
+  </div>
+</div>

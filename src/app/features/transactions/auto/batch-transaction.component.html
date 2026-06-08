@@ -1,0 +1,108 @@
+<div class="batch-transaction flex h-full flex-col">
+  <div class="flex items-center justify-between border-b border-[var(--border-subtle)] p-4">
+    <div class="flex items-center gap-3">
+      <h3 class="text-sm font-bold text-[var(--text-main)]">Batch Mode</h3>
+      @if (queueCount() > 0) {
+        <span
+          class="rounded-full border border-[var(--border-subtle)] px-2 py-0.5 text-[10px] text-[var(--accent)]"
+        >
+          {{ queueCount() }} pending
+        </span>
+      }
+    </div>
+    @if (queueCount() > 0) {
+      <div class="flex items-center gap-2">
+        <button
+          class="flex items-center gap-1 rounded-lg bg-red-900/30 px-3 py-1.5 text-xs text-red-400 transition-colors hover:bg-red-900/40"
+          (click)="onClearQueue()"
+        >
+          <mat-icon fontIcon="delete_sweep" class="h-4! w-4!" />
+          Clear
+        </button>
+        <button
+          class="flex items-center gap-1 rounded-lg bg-green-900/30 px-3 py-1.5 text-xs text-green-400 transition-colors hover:bg-green-900/40"
+          (click)="onCommitAll()"
+          [disabled]="isCommitting()"
+        >
+          <mat-icon fontIcon="check" class="h-4! w-4!" />
+          Commit All
+        </button>
+      </div>
+    }
+  </div>
+
+  @if (error()) {
+    <div class="border-b border-[var(--border-subtle)] bg-red-900/10 p-4">
+      <div class="flex items-start gap-2">
+        <mat-icon fontIcon="error" class="h-5! w-5! text-red-400" />
+        <div>
+          <p class="text-xs font-bold text-red-400">Batch Failed</p>
+          <p class="text-xs text-red-300">{{ error()!.error }}</p>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (queueCount() === 0) {
+    <div class="flex flex-1 flex-col items-center justify-center gap-3 p-4">
+      <mat-icon fontIcon="queue" class="h-12! w-12! text-[var(--text-dim)]/50" />
+      <p class="text-xs text-[var(--text-dim)]">No pending operations</p>
+      <p class="text-center text-[10px] text-[var(--text-dim)]/70">
+        Queue insert, update, and delete operations to batch commit them together
+      </p>
+    </div>
+  } @else {
+    <div class="flex-1 overflow-auto p-4">
+      <div class="space-y-2">
+        @for (collection of collectionsList(); track collection) {
+          <div class="overflow-hidden rounded-lg border border-[var(--border-color)]">
+            <button
+              class="flex w-full items-center justify-between bg-transparent/50 px-3 py-2 text-xs font-medium text-[var(--text-main)] transition-colors hover:bg-transparent"
+              (click)="onToggleCollection(collection)"
+            >
+              <div class="flex items-center gap-2">
+                <mat-icon
+                  [fontIcon]="isCollectionExpanded(collection) ? 'expand_more' : 'chevron_right'"
+                  class="h-4! w-4!"
+                />
+                <span>{{ collection }}</span>
+                <span class="text-[10px] text-[var(--text-dim)]">
+                  ({{ getCollectionOperations(collection).length }})
+                </span>
+              </div>
+            </button>
+            @if (isCollectionExpanded(collection)) {
+              <div class="space-y-1 p-2">
+                @for (op of getCollectionOperations(collection); track op.id) {
+                  <div class="flex items-center gap-2 rounded-lg bg-[var(--bg-main)] p-2">
+                    <mat-icon
+                      [fontIcon]="getOperationIcon(op.type)"
+                      class="h-4! w-4!"
+                      [class]="getOperationClass(op.type)"
+                    />
+                    <div class="min-w-0 flex-1">
+                      <span class="text-xs" [class]="getOperationClass(op.type)">
+                        {{ op.type | titlecase }}
+                      </span>
+                      @if (op.documentId) {
+                        <span class="ml-2 font-mono text-[10px] text-[var(--text-dim)]">
+                          {{ op.documentId }}
+                        </span>
+                      }
+                    </div>
+                    <button
+                      class="rounded p-1 transition-colors hover:bg-red-900/30"
+                      (click)="onRemoveOperation(op.id)"
+                    >
+                      <mat-icon fontIcon="close" class="h-3! w-3! text-[var(--text-dim)]" />
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>

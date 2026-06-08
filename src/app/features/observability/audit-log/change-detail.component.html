@@ -1,0 +1,40 @@
+<div
+  class="change-detail mx-auto my-auto max-w-2xl rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] p-4"
+>
+  <div class="mb-4 flex items-center justify-between">
+    <h4 class="text-sm font-bold text-[var(--text-main)]">Change Details</h4>
+    <button class="rounded p-1 transition-colors hover:bg-transparent" (click)="onClose()">
+      <mat-icon fontIcon="close" class="h-5! w-5!" />
+    </button>
+  </div>
+
+  @if (diffs().length === 0) {
+    <div class="py-4 text-center text-[var(--text-dim)]">
+      <p>No changes detected</p>
+    </div>
+  } @else {
+    <div class="space-y-3">
+      @for (diff of diffs(); track diff.field) {
+        <div class="rounded-lg border border-[var(--border-subtle)] p-3">
+          <p class="mb-2 text-xs font-bold text-[var(--text-dim)]">{{ diff.field }}</p>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <p class="mb-1 text-[10px] text-red-400 uppercase">Before</p>
+              <pre
+                class="rounded bg-red-900/20 p-2 text-xs break-all whitespace-pre-wrap text-red-300"
+                >{{ formatValue(diff.before) }}</pre
+              >
+            </div>
+            <div>
+              <p class="mb-1 text-[10px] text-green-400 uppercase">After</p>
+              <pre
+                class="rounded bg-green-900/20 p-2 text-xs break-all whitespace-pre-wrap text-green-300"
+                >{{ formatValue(diff.after) }}</pre
+              >
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

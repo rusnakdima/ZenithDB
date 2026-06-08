@@ -1,0 +1,127 @@
+import { Component, Input, Output, EventEmitter, signal, inject, OnInit } from "@angular/core";
+import { CommonModule } from "@angular/common";
+import { FormsModule } from "@angular/forms";
+import { SortStageConfig } from "../pipeline-builder.service";
+import { SchemaCompletionService } from "../../../query/services/schema-completion.service";
+import { FieldInfo, SortConfig } from "../../../query/models";
+
+@Component({
+  selector: "app-sort-config",
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  template: `
+    <div class="space-y-3">
+      <div class="flex items-center justify-between">
+        <label class="text-xs tracking-wide text-slate-400 uppercase">Sort Fields</label>
+        <button
+          type="button"
+          class="text-xs text-[var(--accent)] transition-colors hover:text-[var(--accent-hover)]"
+          (click)="addSort()"
+        >
+          + Add sort field
+        </button>
+      </div>
+
+      @if (config.sorts.length === 0) {
+        <div
+          class="rounded border border-dashed border-slate-600 p-4 text-center text-xs text-slate-500"
+        >
+          No sort fields defined. Click "Add sort field" to add one.
+        </div>
+      }
+
+      <div class="space-y-2">
+        @for (sort of config.sorts; track $index; let i = $index) {
+          <div class="flex items-center gap-2 rounded border border-slate-600 bg-slate-800/30 p-2">
+            <select
+              class="flex-1 rounded border border-slate-600 bg-slate-700 px-2 py-1.5 text-sm text-slate-200 focus:border-[var(--accent)] focus:outline-none"
+              [ngModel]="sort.field"
+              (ngModelChange)="updateSortField(i, $event)"
+            >
+              <option value="">Select field...</option>
+              @for (field of fields(); track field.name) {
+                <option [value]="field.name">{{ field.name }} ({{ field.type }})</option>
+              }
+            </select>
+
+            <button
+              type="button"
+              class="rounded px-3 py-1.5 text-xs transition-colors"
+              [class.bg-[var(--accent)]]="sort.direction === 'asc'"
+              [class.text-white]="sort.direction === 'asc'"
+              [class.text-slate-400]="sort.direction !== 'asc'"
+              (click)="toggleDirection(i)"
+            >
+              {{ sort.direction === "asc" ? "↑ ASC" : "↓ DESC" }}
+            </button>
+
+            <button
+              type="button"
+              class="p-1 text-slate-500 hover:text-red-400"
+              (click)="removeSort(i)"
+            >
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+  `,
+})
+export class SortConfigComponent implements OnInit {
+  private readonly schemaCompletion = inject(SchemaCompletionService);
+
+  @Input() config!: SortStageConfig;
+  @Input() collectionName = "";
+  @Output() configChange = new EventEmitter<SortStageConfig>();
+
+  fields = signal<FieldInfo[]>([]);
+
+  ngOnInit(): void {
+    this.loadFields();
+  }
+
+  private async loadFields(): Promise<void> {
+    if (this.collectionName) {
+      const fields = await this.schemaCompletion.getFields(this.collectionName);
+      this.fields.set(fields);
+    }
+  }
+
+  addSort(): void {
+    const newSort: SortConfig = { field: "", direction: "asc" };
+    this.configChange.emit({
+      ...this.config,
+      sorts: [...this.config.sorts, newSort],
+    });
+  }
+
+  updateSortField(index: number, field: string): void {
+    const sorts = [...this.config.sorts];
+    sorts[index] = { ...sorts[index], field };
+    this.configChange.emit({ ...this.config, sorts });
+  }
+
+  toggleDirection(index: number): void {
+    const sorts = [...this.config.sorts];
+    sorts[index] = {
+      ...sorts[index],
+      direction: sorts[index].direction === "asc" ? "desc" : "asc",
+    };
+    this.configChange.emit({ ...this.config, sorts });
+  }
+
+  removeSort(index: number): void {
+    this.configChange.emit({
+      ...this.config,
+      sorts: this.config.sorts.filter((_, i) => i !== index),
+    });
+  }
+}

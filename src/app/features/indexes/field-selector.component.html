@@ -1,0 +1,85 @@
+<div class="flex flex-col gap-4">
+  <div
+    class="max-h-48 overflow-y-auto rounded-lg border border-[var(--border-subtle)] bg-slate-800/50"
+  >
+    @if (availableFields.length === 0) {
+      <div class="p-4 text-center text-sm text-slate-500">No fields available</div>
+    } @else {
+      @for (field of availableFields; track trackByField($index, field)) {
+        <div
+          class="flex cursor-pointer items-center justify-between border-b border-[var(--border-subtle)] px-3 py-2 transition-colors last:border-b-0 hover:bg-[var(--bg-elevated)]"
+          [class.bg-transparent]="isFieldSelected(field.name)"
+          (click)="onFieldToggle(field)"
+        >
+          <div class="flex items-center gap-2">
+            <input
+              type="checkbox"
+              class="h-4 w-4 rounded border-[var(--border-subtle)] bg-slate-700 text-[var(--accent)] focus:ring-[var(--accent)]"
+              [checked]="isFieldSelected(field.name)"
+              (click)="$event.stopPropagation()"
+              (change)="onFieldToggle(field)"
+            />
+            <span class="text-sm text-slate-200">{{ field.name }}</span>
+            <span class="text-xs text-slate-500">({{ field.type }})</span>
+          </div>
+        </div>
+      }
+    }
+  </div>
+
+  @if (selectedFields().length > 0) {
+    <div>
+      <h5 class="mb-2 text-xs font-medium tracking-wide text-slate-500 uppercase">
+        Selected Fields ({{ selectedFields().length }})
+      </h5>
+      <div class="flex flex-col gap-2">
+        @for (field of selectedFields(); track trackBySelected($index, field)) {
+          <div
+            class="flex items-center justify-between rounded-lg border border-[var(--border-subtle)] bg-slate-800/50 px-3 py-2"
+          >
+            <div class="flex items-center gap-3">
+              <span class="font-mono text-sm text-slate-200">{{ field.name }}</span>
+              <select
+                class="rounded border border-[var(--border-subtle)] bg-slate-700 px-2 py-1 text-xs text-slate-300 focus:border-[var(--accent)] focus:outline-none"
+                [ngModel]="getFieldDirection(field.name)"
+                (ngModelChange)="onDirectionChange(field.name, $event)"
+              >
+                <option value="asc">ASC</option>
+                <option value="desc">DESC</option>
+              </select>
+            </div>
+
+            @if (indexType === "text") {
+              <div class="flex items-center gap-2">
+                <label class="text-xs text-slate-500">Weight:</label>
+                <input
+                  type="number"
+                  class="w-16 rounded border border-[var(--border-subtle)] bg-slate-700 px-2 py-1 text-xs text-slate-300 focus:border-[var(--accent)] focus:outline-none"
+                  min="1"
+                  max="10"
+                  [ngModel]="getFieldWeight(field.name)"
+                  (ngModelChange)="onWeightChange(field.name, $event)"
+                />
+              </div>
+            }
+
+            <button
+              type="button"
+              class="rounded p-1 text-slate-500 transition-colors hover:text-red-400"
+              (click)="onRemoveField(field.name)"
+            >
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>

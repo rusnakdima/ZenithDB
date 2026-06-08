@@ -1,0 +1,225 @@
+<div class="flex h-full flex-col bg-[var(--bg-primary)]">
+  <div class="flex items-center justify-between border-b border-[var(--border-visible)] px-4 py-3">
+    <h2 class="text-lg font-semibold text-[var(--text-main)]">Query History</h2>
+    @if (history().length > 0) {
+      <button
+        type="button"
+        (click)="clearHistory($event)"
+        class="rounded-lg px-3 py-1.5 text-sm text-red-400 transition-colors hover:bg-red-500/10"
+      >
+        Clear All
+      </button>
+    }
+  </div>
+
+  <div class="flex items-center gap-2 border-b border-[var(--border-subtle)] px-4 py-2">
+    <div class="relative flex-1">
+      <input
+        type="text"
+        [value]="searchFilter()"
+        (input)="onSearchInput($any($event.target).value)"
+        placeholder="Filter queries..."
+        class="w-full rounded-lg border border-[var(--border-visible)] bg-[var(--bg-input)] px-4 py-1.5 pr-8 text-sm text-[var(--text-main)] placeholder-[var(--text-dim)] focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20 focus:outline-none"
+      />
+      @if (searchFilter()) {
+        <button
+          type="button"
+          (click)="clearSearch()"
+          class="absolute top-1/2 right-2 -translate-y-1/2 rounded p-1 text-[var(--text-dim)] hover:bg-[var(--bg-elevated)] hover:text-[var(--text-main)]"
+        >
+          <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      }
+    </div>
+  </div>
+
+  <div class="flex items-center gap-1 border-b border-[var(--border-subtle)] px-4 py-2">
+    <button
+      type="button"
+      (click)="setTab('all')"
+      class="rounded-lg px-3 py-1 text-sm transition-colors"
+      [class.]="activeTab() === 'all'"
+      [class.text-white]="activeTab() === 'all'"
+      [class.text-[var(--text-dim)]]="activeTab() !== 'all'"
+      [class.hover:bg-[var(--bg-elevated)]]="activeTab() !== 'all'"
+    >
+      All ({{ history().length }})
+    </button>
+    <button
+      type="button"
+      (click)="setTab('successful')"
+      class="rounded-lg px-3 py-1 text-sm transition-colors"
+      [class.]="activeTab() === 'successful'"
+      [class.text-white]="activeTab() === 'successful'"
+      [class.text-[var(--text-dim)]]="activeTab() !== 'successful'"
+      [class.hover:bg-[var(--bg-elevated)]]="activeTab() !== 'successful'"
+    >
+      Successful
+    </button>
+    <button
+      type="button"
+      (click)="setTab('failed')"
+      class="rounded-lg px-3 py-1 text-sm transition-colors"
+      [class.]="activeTab() === 'failed'"
+      [class.text-white]="activeTab() === 'failed'"
+      [class.text-[var(--text-dim)]]="activeTab() !== 'failed'"
+      [class.hover:bg-[var(--bg-elevated)]]="activeTab() !== 'failed'"
+    >
+      Failed
+    </button>
+  </div>
+
+  <div class="flex-1 overflow-auto">
+    @if (filteredHistory().length === 0) {
+      <div class="flex flex-col items-center justify-center py-12 text-center">
+        <svg
+          class="h-10 w-10 text-[var(--text-dim)]"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1.5"
+            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+        <p class="mt-3 text-sm text-[var(--text-dim)]">No query history yet</p>
+        <p class="mt-1 text-xs text-[var(--text-dim)]">Executed queries will appear here</p>
+      </div>
+    } @else {
+      <div class="divide-y divide-[var(--border-subtle)]">
+        @for (entry of filteredHistory(); track trackByEntry($index, entry)) {
+          <div
+            class="group cursor-pointer px-4 py-3 transition-colors hover:bg-[var(--bg-elevated)]"
+            (click)="loadQueryText(entry.query)"
+          >
+            <div class="flex items-start justify-between gap-2">
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-2">
+                  @if (entry.success) {
+                    <span class="rounded bg-emerald-500/20 px-1.5 py-0.5 text-xs text-emerald-400"
+                      >Success</span
+                    >
+                  } @else {
+                    <span class="rounded bg-red-500/20 px-1.5 py-0.5 text-xs text-red-400"
+                      >Failed</span
+                    >
+                  }
+                  <span class="text-xs text-[var(--text-dim)]">{{
+                    formatTimestamp(entry.timestamp)
+                  }}</span>
+                  @if (entry.collection) {
+                    <span
+                      class="rounded bg-[var(--bg-card)] px-1.5 py-0.5 text-xs text-[var(--text-dim)]"
+                      >{{ entry.collection }}</span
+                    >
+                  }
+                </div>
+                <p class="mt-1.5 truncate text-sm text-[var(--text-main)]" [title]="entry.query">
+                  {{ getQueryPreview(entry.query) }}
+                </p>
+              </div>
+              <div
+                class="flex items-center gap-3 opacity-0 transition-opacity group-hover:opacity-100"
+              >
+                <span class="text-xs text-[var(--text-dim)]">{{
+                  formatDuration(entry.duration)
+                }}</span>
+                <span class="text-xs text-[var(--text-dim)]">{{ entry.rowsReturned }} rows</span>
+                <button
+                  type="button"
+                  (click)="removeEntry(entry.id, $event)"
+                  class="rounded p-1 text-[var(--text-dim)] hover:bg-red-500/10 hover:text-red-400"
+                >
+                  <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <div class="border-t border-[var(--border-subtle)] px-4 py-3">
+    <div class="grid grid-cols-3 gap-4">
+      <div class="rounded-lg border border-[var(--border-color)] bg-[var(--bg-card)] p-3">
+        <div class="text-xs text-[var(--text-dim)]">Total Queries</div>
+        <div class="mt-1 text-lg font-semibold text-[var(--text-main)]">{{ totalQueries() }}</div>
+      </div>
+      <div class="rounded-lg border border-[var(--border-color)] bg-[var(--bg-card)] p-3">
+        <div class="text-xs text-[var(--text-dim)]">Avg Time</div>
+        <div class="mt-1 text-lg font-semibold text-[var(--text-main)]">
+          {{ formatDuration(averageExecutionTime()) }}
+        </div>
+      </div>
+      <div class="rounded-lg border border-[var(--border-color)] bg-[var(--bg-card)] p-3">
+        <div class="text-xs text-[var(--text-dim)]">Success Rate</div>
+        <div class="mt-1 text-lg font-semibold text-[var(--text-main)]">
+          {{
+            history().length > 0
+              ? ((successfulQueries().length / history().length) * 100).toFixed(0)
+              : 0
+          }}%
+        </div>
+      </div>
+    </div>
+
+    @if (mostFrequentQueries().length > 0) {
+      <div class="mt-3">
+        <h3 class="mb-2 text-xs font-medium text-[var(--text-dim)]">Most Frequent</h3>
+        <div class="space-y-1">
+          @for (query of mostFrequentQueries(); track query.id) {
+            <button
+              type="button"
+              (click)="loadQueryText(query.query)"
+              class="w-full rounded bg-[var(--bg-card)] px-2 py-1.5 text-left text-xs text-[var(--text-main)] hover:bg-[var(--bg-elevated)]"
+              [title]="query.query"
+            >
+              {{ getQueryPreview(query.query) }}
+            </button>
+          }
+        </div>
+      </div>
+    }
+
+    @if (slowestQueries().length > 0) {
+      <div class="mt-3">
+        <h3 class="mb-2 text-xs font-medium text-[var(--text-dim)]">Slowest Queries</h3>
+        <div class="space-y-1">
+          @for (query of slowestQueries(); track query.id) {
+            <button
+              type="button"
+              (click)="loadQueryText(query.query)"
+              class="flex w-full items-center justify-between rounded bg-[var(--bg-card)] px-2 py-1.5 text-left text-xs hover:bg-[var(--bg-elevated)]"
+              [title]="query.query"
+            >
+              <span class="truncate text-[var(--text-main)]">{{
+                getQueryPreview(query.query)
+              }}</span>
+              <span class="ml-2 flex-shrink-0 text-red-400">{{
+                formatDuration(query.duration)
+              }}</span>
+            </button>
+          }
+        </div>
+      </div>
+    }
+  </div>
+</div>

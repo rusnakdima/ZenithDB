@@ -1,0 +1,67 @@
+<div class="transaction-log flex h-full max-h-[300px] flex-col">
+  <div
+    class="flex items-center justify-between border-b border-[var(--border-subtle)] bg-transparent/50 p-3"
+  >
+    <h4 class="text-xs font-bold text-[var(--text-main)]">Operation Log</h4>
+    <div class="flex items-center gap-2">
+      <button
+        class="rounded p-1 transition-colors hover:bg-transparent"
+        (click)="onClearLog()"
+        title="Clear Log"
+      >
+        <mat-icon fontIcon="delete_sweep" class="h-4! w-4! text-[var(--text-dim)]" />
+      </button>
+      <button class="rounded p-1 transition-colors hover:bg-transparent" (click)="onClose()">
+        <mat-icon fontIcon="close" class="h-4! w-4! text-[var(--text-dim)]" />
+      </button>
+    </div>
+  </div>
+
+  @if (operationLog().length === 0) {
+    <div class="flex flex-1 items-center justify-center p-4">
+      <p class="text-xs text-[var(--text-dim)]">No operations in transaction</p>
+    </div>
+  } @else {
+    <div class="flex-1 overflow-auto">
+      <div class="space-y-1 p-2">
+        @for (op of operationLog(); track op.id; let i = $index; let last = $last) {
+          <div
+            class="flex items-center gap-2 rounded-lg p-2 transition-colors"
+            [class.bg-transparent]="last"
+          >
+            <mat-icon
+              [fontIcon]="getOperationIcon(op.type)"
+              class="h-4! w-4!"
+              [class]="getOperationClass(op.type)"
+            />
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-medium" [class]="getOperationClass(op.type)">
+                  {{ op.type | titlecase }}
+                </span>
+                <span class="text-xs text-[var(--text-dim)]">{{ op.collection }}</span>
+              </div>
+              @if (op.documentId) {
+                <p class="truncate font-mono text-[10px] text-[var(--text-dim)]">
+                  {{ op.documentId }}
+                </p>
+              }
+            </div>
+            <span class="text-[10px] text-[var(--text-dim)]">{{
+              formatTimestamp(op.timestamp)
+            }}</span>
+            @if (op.undoable && last) {
+              <button
+                class="rounded p-1 transition-colors hover:bg-transparent"
+                (click)="onUndoOperation(i)"
+                title="Undo"
+              >
+                <mat-icon fontIcon="undo" class="h-3! w-3! text-[var(--text-dim)]" />
+              </button>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>

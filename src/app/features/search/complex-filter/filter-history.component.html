@@ -1,0 +1,74 @@
+<div class="rounded-lg border border-[var(--border-color)] bg-transparent p-4">
+  <h4 class="mb-3 text-sm font-medium text-[var(--text-main)]">Recent Filters</h4>
+
+  @if (historyItems().length === 0 && namedFilters.length === 0) {
+    <p class="py-4 text-center text-sm text-slate-500">No filter history yet</p>
+  }
+
+  @if (historyItems().length > 0) {
+    <div class="mb-4">
+      <h5 class="mb-2 text-xs tracking-wide text-slate-500 uppercase">Recent</h5>
+      <div class="flex flex-col gap-2">
+        @for (item of historyItems(); track trackByFilter($index, item)) {
+          <div
+            class="group flex cursor-pointer items-center justify-between rounded-lg border border-[var(--border-subtle)] bg-slate-800/50 px-3 py-2 transition-colors hover:border-[var(--border-visible)]"
+            (click)="onHistoryItemSelect(item)"
+          >
+            <span class="flex-1 truncate text-sm text-slate-300">{{
+              formatFilterPreview(item)
+            }}</span>
+            <button
+              type="button"
+              class="ml-2 rounded p-1 text-slate-500 opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-400"
+              (click)="onHistoryItemDelete(item, $event)"
+            >
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  @if (namedFilters.length > 0) {
+    <div>
+      <h5 class="mb-2 text-xs tracking-wide text-slate-500 uppercase">Saved Filters</h5>
+      <div class="flex flex-col gap-2">
+        @for (filter of namedFilters; track filter.id) {
+          <div
+            class="group flex cursor-pointer items-center justify-between rounded-lg border border-[var(--border-subtle)] bg-amber-900/10 px-3 py-2 transition-colors hover:border-[var(--border-visible)]"
+            (click)="onNamedFilterApply(filter)"
+          >
+            <div class="flex-1">
+              <span class="text-sm font-medium text-amber-400">{{ filter.name }}</span>
+              <p class="truncate text-xs text-slate-500">
+                {{ formatFilterPreview(filter.filter) }}
+              </p>
+            </div>
+            <button
+              type="button"
+              class="ml-2 rounded p-1 text-slate-500 opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-400"
+              (click)="onNamedFilterDelete(filter.id, $event)"
+            >
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>

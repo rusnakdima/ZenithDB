@@ -1,0 +1,85 @@
+<div class="flex flex-col gap-6">
+  <div class="flex items-center justify-between">
+    <h2 class="text-xl font-bold text-[var(--text-main)]">Performance Dashboard</h2>
+    <div
+      class="flex gap-1 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] p-1"
+    >
+      @for (range of timeRanges; track range.value) {
+        <button
+          type="button"
+          class="rounded px-3 py-1.5 text-sm transition-colors"
+          [class.]="selectedTimeRange() === range.value"
+          [class.text-black]="selectedTimeRange() === range.value"
+          [class.text-[var(--text-dim)]]="selectedTimeRange() !== range.value"
+          [class.hover:text-[var(--text-main)]]="selectedTimeRange() !== range.value"
+          (click)="onTimeRangeChange(range.value)"
+        >
+          {{ range.label }}
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (isLoading() && !metrics()) {
+    <div class="flex items-center justify-center py-12">
+      <div
+        class="h-8 w-8 animate-spin rounded-full border-2 border-[var(--accent)] border-t-transparent"
+      ></div>
+    </div>
+  } @else if (metrics()) {
+    <div class="grid grid-cols-4 gap-4">
+      <div class="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-elevated)] p-4">
+        <p class="text-sm text-[var(--text-dim)]">Queries Per Second</p>
+        <p class="mt-1 text-3xl font-bold text-[var(--text-main)]">
+          {{ formatQps(metrics()!.qps) }}
+        </p>
+      </div>
+      <div class="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-elevated)] p-4">
+        <p class="text-sm text-[var(--text-dim)]">Avg Execution Time</p>
+        <p class="mt-1 text-3xl font-bold text-[var(--text-main)]">
+          {{ formatExecutionTime(metrics()!.avgExecutionTime) }}
+        </p>
+      </div>
+      <div class="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-elevated)] p-4">
+        <p class="text-sm text-[var(--text-dim)]">Slow Queries</p>
+        <p class="mt-1 text-3xl font-bold text-red-400">{{ metrics()!.slowQueryCount }}</p>
+      </div>
+      <div class="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-elevated)] p-4">
+        <p class="text-sm text-[var(--text-dim)]">Memory Usage</p>
+        <p class="mt-1 text-3xl font-bold text-[var(--text-main)]">--</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div class="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-elevated)] p-4">
+        <h3 class="mb-4 text-sm font-medium text-[var(--text-main)]">Query Latency Over Time</h3>
+        <app-metrics-chart
+          [data]="metrics()!.latencyOverTime"
+          type="line"
+          label="Latency (ms)"
+          color="rgb(34, 197, 94)"
+        />
+      </div>
+      <div class="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-elevated)] p-4">
+        <h3 class="mb-4 text-sm font-medium text-[var(--text-main)]">Query Volume Over Time</h3>
+        <app-metrics-chart
+          [data]="metrics()!.queriesOverTime"
+          type="bar"
+          label="Queries"
+          color="rgb(59, 130, 246)"
+        />
+      </div>
+      <div
+        class="col-span-2 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-elevated)] p-4"
+      >
+        <h3 class="mb-4 text-sm font-medium text-[var(--text-main)]">Error Rate Over Time</h3>
+        <app-metrics-chart
+          [data]="metrics()!.errorRateOverTime"
+          type="area"
+          label="Error Rate"
+          color="rgb(239, 68, 68)"
+        />
+      </div>
+    </div>
+  }
+</div>
