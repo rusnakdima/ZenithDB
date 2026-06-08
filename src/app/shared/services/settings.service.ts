@@ -6,6 +6,7 @@ type TabSize = 2 | 4 | 8;
 
 interface GeneralSettings {
   theme: ThemeSetting;
+  accentColor: string;
   language: string;
   startMinimized: boolean;
   checkUpdates: boolean;
@@ -40,6 +41,7 @@ interface AppSettings {
 const DEFAULT_SETTINGS: AppSettings = {
   general: {
     theme: "dark",
+    accentColor: "#ff6b00",
     language: "en",
     startMinimized: false,
     checkUpdates: true,

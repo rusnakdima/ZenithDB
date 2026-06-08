@@ -79,6 +79,12 @@ export const SHORTCUT_CONFIG: Record<string, Shortcut> = {
     category: "navigation",
     modifiers: ["ctrl", "shift"],
   },
+  "command-palette": {
+    key: "k",
+    description: "Open Command Palette",
+    category: "navigation",
+    modifiers: ["ctrl"],
+  },
 };
 
 export function formatShortcut(key: string, modifiers?: string[]): string {

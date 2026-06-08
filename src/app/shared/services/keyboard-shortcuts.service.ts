@@ -33,6 +33,7 @@ export class KeyboardShortcutsService {
     "duplicate-line": () => document.dispatchEvent(new CustomEvent("zenith:duplicate-line")),
     "open-connection-modal": () =>
       document.dispatchEvent(new CustomEvent("zenith:open-connection-modal")),
+    "command-palette": () => document.dispatchEvent(new CustomEvent("zenith:open-command-palette")),
   };
 
   private boundHandler: ((event: KeyboardEvent) => void) | null = null;

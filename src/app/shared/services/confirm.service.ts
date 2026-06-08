@@ -22,7 +22,7 @@ export class ConfirmService {
       itemName,
       confirmText: "Delete",
       confirmClass:
-        "rounded-xl border border-red-900/50 bg-red-900/20 px-4 py-3 text-sm font-medium text-red-400 transition-colors hover:bg-red-900/30",
+        "rounded-xl border border-[var(--accent)]/50 bg-transparent px-4 py-3 text-sm font-medium text-[var(--accent)] transition-colors hover:border-[var(--accent)]",
     });
   }
 
