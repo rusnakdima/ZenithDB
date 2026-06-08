@@ -67,7 +67,7 @@
 
         <button
           (click)="deleteConnection()"
-          class="ml-auto rounded-xl border border-red-900/50 bg-red-900/20 px-4 py-3 text-sm font-medium text-red-400 transition-colors hover:bg-red-900/30"
+          class="ml-auto rounded-xl border border-[var(--border-subtle)] bg-red-900/20 px-4 py-3 text-sm font-medium text-red-400 transition-colors hover:bg-red-900/30"
         >
           <mat-icon fontIcon="delete" class="mr-2 h-5! w-5! text-xl!" />
           Delete
@@ -101,7 +101,7 @@
         <div class="space-y-2">
           @for (db of databases(); track db.id) {
             <div
-              class="cursor-pointer rounded-xl border border-[var(--border-visible)] bg-[var(--bg-card)] p-4 transition-colors hover:bg-[var(--bg-elevated)]"
+              class="cursor-pointer rounded-xl border border-[var(--border-color)] bg-transparent p-4 transition-colors hover:bg-transparent"
               (click)="openDatabase(db.name)"
             >
               <div class="flex items-center gap-3">
@@ -128,7 +128,7 @@
             </div>
           } @empty {
             <div
-              class="rounded-xl border border-[var(--border-visible)] bg-[var(--bg-card)] p-8 text-center"
+              class="rounded-xl border border-[var(--border-color)] bg-transparent p-8 text-center"
             >
               <p class="text-sm text-[var(--text-muted)]">No databases added</p>
               <p class="mt-1 text-xs text-[var(--text-dim)]">Click "Add Database" to add one</p>

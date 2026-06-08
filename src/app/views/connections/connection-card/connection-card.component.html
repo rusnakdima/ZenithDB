@@ -1,7 +1,5 @@
 <div
-  class="card group cursor-pointer transition-all duration-300 hover:border-[var(--accent)]/50 hover:shadow-[var(--accent)]/10 hover:shadow-lg"
-  [class.border-2]="showActions()"
-  [class.border-[var(--accent)]]="showActions()"
+  class="card group cursor-pointer rounded-3xl border-2 border-[var(--border-color)] bg-transparent p-5 transition-all duration-300 hover:border-[var(--border-visible)] hover:shadow-lg"
   (mouseenter)="showCardActions()"
   (mouseleave)="hideCardActions()"
   (click)="onConnect()"
@@ -41,14 +39,14 @@
   >
     <button
       (click)="onEdit($event)"
-      class="rounded-lg bg-[var(--bg-elevated)] p-2 text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-card)] hover:text-[var(--text-main)]"
+      class="rounded-lg bg-transparent p-2 text-[var(--text-dim)] transition-colors hover:text-[var(--text-main)]"
       title="Edit"
     >
       <mat-icon fontIcon="edit" class="h-5! w-5! text-xl!" />
     </button>
     <button
       (click)="onDuplicate($event)"
-      class="rounded-lg bg-[var(--bg-elevated)] p-2 text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-card)] hover:text-[var(--text-main)]"
+      class="rounded-lg bg-transparent p-2 text-[var(--text-dim)] transition-colors hover:text-[var(--text-main)]"
       title="Duplicate"
     >
       <mat-icon fontIcon="content_copy" class="h-5! w-5! text-xl!" />

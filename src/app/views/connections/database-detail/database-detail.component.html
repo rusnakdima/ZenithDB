@@ -4,7 +4,7 @@
       <div class="glass-card p-12">
         <div class="flex flex-col items-center justify-center gap-4">
           <div
-            class="h-16 w-16 animate-spin rounded-full border-4 border-[var(--accent)]/20 border-t-[var(--accent)]"
+            class="h-16 w-16 animate-spin rounded-full border-4 border-[var(--border-subtle)] border-t-[var(--border-subtle)]"
           ></div>
           <p class="text-sm text-[var(--text-dim)]">Loading collections...</p>
         </div>
@@ -48,9 +48,9 @@
       @if (collections().length > 0) {
         <div class="mt-8">
           <h3 class="mb-4 text-lg font-semibold text-[var(--text-main)]">Collections</h3>
-          <div class="rounded-xl border border-[var(--border-visible)] bg-[var(--bg-card)]">
+          <div class="rounded-xl border border-[var(--border-color)] bg-transparent">
             <table class="w-full">
-              <thead class="border-b border-[var(--border-visible)] bg-[var(--bg-elevated)]">
+              <thead class="border-b border-[var(--border-subtle)] bg-transparent">
                 <tr
                   class="text-left text-xs font-semibold tracking-wider text-[var(--text-dim)] uppercase"
                 >
@@ -61,7 +61,7 @@
               </thead>
               <tbody class="divide-y divide-[var(--border-subtle)]">
                 @for (col of collections(); track col.name) {
-                  <tr class="hover:bg-[var(--bg-elevated)]">
+                  <tr class="border-b border-[var(--border-subtle)] hover:bg-transparent">
                     <td class="px-4 py-3">
                       <div class="flex items-center gap-3">
                         @if (editingCollection() === col.name) {
@@ -92,13 +92,13 @@
                       @if (editingCollection() === col.name) {
                         <button
                           (click)="saveEditCollection()"
-                          class="rounded p-1 text-[var(--accent)] hover:bg-[var(--bg-elevated)]"
+                          class="rounded p-1 text-[var(--accent)] hover:bg-transparent"
                         >
                           <mat-icon fontIcon="check" class="h-5! w-5! text-xl!" />
                         </button>
                         <button
                           (click)="cancelEditCollection()"
-                          class="rounded p-1 text-[var(--text-dim)] hover:bg-[var(--bg-elevated)]"
+                          class="rounded p-1 text-[var(--text-dim)] hover:bg-transparent"
                         >
                           <mat-icon fontIcon="close" class="h-5! w-5! text-xl!" />
                         </button>
@@ -117,7 +117,7 @@
                         </button>
                         <button
                           (click)="openCollection(col.name)"
-                          class="rounded-lg px-3 py-1 text-xs font-medium text-[var(--accent)] hover:bg-[var(--accent)]/10"
+                          class="rounded-lg px-3 py-1 text-xs font-medium text-[var(--accent)] hover:bg-transparent"
                         >
                           Explore
                         </button>
@@ -130,7 +130,7 @@
           </div>
         </div>
       } @else {
-        <div class="mt-8 rounded-xl border border-[var(--border-visible)] bg-[var(--bg-card)] p-12">
+        <div class="mt-8 rounded-xl border border-[var(--border-color)] bg-transparent p-12">
           <div class="flex flex-col items-center justify-center gap-4 text-center">
             <mat-icon
               fontIcon="folder_open"
@@ -147,7 +147,7 @@
 @if (showCreateCollection()) {
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
     <div
-      class="w-full max-w-md rounded-xl border border-[var(--border-visible)] bg-[var(--bg-card)] p-6 shadow-xl"
+      class="w-full max-w-md rounded-xl border border-[var(--border-color)] bg-transparent p-6 shadow-xl"
     >
       <h3 class="mb-4 text-lg font-semibold text-[var(--text-main)]">Create Collection</h3>
       <div class="mb-4">

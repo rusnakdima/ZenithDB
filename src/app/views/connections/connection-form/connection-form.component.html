@@ -31,7 +31,7 @@
       type="button"
       (click)="testConnection()"
       [disabled]="testing() || !isFormValid()"
-      class="w-full rounded-xl border border-[var(--border-visible)] bg-[var(--bg-elevated)] px-6 py-3 text-sm font-bold text-[var(--text-main)] transition-all hover:bg-[var(--bg-card)] disabled:opacity-50"
+      class="w-full rounded-xl border border-[var(--accent)] bg-transparent px-6 py-3 text-sm font-bold text-[var(--text-main)] transition-all hover:bg-transparent disabled:opacity-50"
     >
       @if (testing()) {
         <mat-icon fontIcon="sync" class="mr-2 h-6! w-5! text-xl!" />
@@ -77,7 +77,7 @@
     <button
       (click)="save()"
       [disabled]="!isFormValid() || saving()"
-      class="rounded-xl bg-[var(--accent)] px-6 py-3 text-sm font-bold text-black transition-all hover:opacity-90 disabled:opacity-50"
+      class="rounded-xl px-6 py-3 text-sm font-bold text-black transition-all hover:opacity-90 disabled:opacity-50"
     >
       @if (saving()) {
         <mat-icon fontIcon="sync" class="mr-2 h-6! w-5! text-xl!" />
