@@ -38,7 +38,7 @@
         <app-data-type-badge [dataType]="col.data_type" variant="icon" />
       </div>
       <div
-        class="resize-handle absolute top-0 right-0 bottom-0 w-2 cursor-col-resize bg-[var(--border-subtle)] transition-colors hover:bg-[var(--accent)]"
+        class="resize-handle hover: absolute top-0 right-0 bottom-0 w-2 cursor-col-resize bg-[var(--border-subtle)] transition-colors"
         (mousedown)="onColumnResizeStart(col.name, $event)"
       ></div>
     </div>

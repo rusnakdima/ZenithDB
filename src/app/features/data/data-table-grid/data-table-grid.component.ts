@@ -527,8 +527,8 @@ export class DataTableGridComponent implements OnInit, OnChanges, OnDestroy, Aft
     const t = dataType.toLowerCase();
     if (t === "string" || t === "text") return "text-blue-400";
     if (t === "number" || t === "integer" || t === "decimal" || t === "float")
-      return "text-emerald-400";
-    if (t === "boolean") return "text-orange-400";
+      return "text-[var(--accent)]";
+    if (t === "boolean") return "text-[var(--accent)]";
     if (t === "date" || t === "datetime" || t === "timestamp") return "text-purple-400";
     if (t === "object" || t === "json") return "text-yellow-400";
     if (t === "array") return "text-pink-400";

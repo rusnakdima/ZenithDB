@@ -1,6 +1,6 @@
 <div class="space-y-4">
   @if (mode() === "edit" && primaryKeyColumn()) {
-    <div class="mb-4 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] p-3">
+    <div class="mb-4 rounded-lg border border-[var(--border-color)] bg-transparent p-3">
       <div class="flex items-center gap-2">
         <span class="text-xs font-medium text-[var(--text-dim)]">ID (Read-only):</span>
         <span class="mono text-sm text-[var(--text-main)]">{{
@@ -24,7 +24,7 @@
         <textarea
           class="mono w-full rounded-lg border bg-[var(--bg-deep)] px-3 py-2 text-sm"
           [class.border-red-500]="getError(col.name)"
-          [class]="!getError(col.name) ? 'border-[var(--border-subtle)]' : ''"
+          [class]="!getError(col.name) ? 'border-[var(--accent)]' : ''"
           [value]="getFieldValue(col.name) ?? ''"
           (input)="updateField(col.name, $any($event.target).value)"
           (blur)="validateField(col.name, col.data_type, getFieldValue(col.name))"
@@ -36,7 +36,7 @@
             type="checkbox"
             [checked]="getFieldValue(col.name) === true"
             (change)="updateField(col.name, $any($event.target).checked)"
-            class="h-5 w-5 rounded border-[var(--border-subtle)] bg-[var(--bg-deep)] text-[var(--accent)] focus:ring-[var(--accent)]"
+            class="h-5 w-5 rounded border-[var(--accent)] bg-[var(--bg-deep)] text-[var(--accent)] focus:ring-[var(--accent)]"
           />
           <span class="text-sm text-[var(--text-muted)]">{{
             getFieldValue(col.name) ? "true" : "false"
@@ -47,7 +47,7 @@
           [type]="getInputType(col.data_type)"
           class="w-full rounded-lg border bg-[var(--bg-deep)] px-3 py-2 text-sm"
           [class.border-red-500]="getError(col.name)"
-          [class]="!getError(col.name) ? 'border-[var(--border-subtle)]' : ''"
+          [class]="!getError(col.name) ? 'border-[var(--accent)]' : ''"
           [value]="getFieldValue(col.name) ?? ''"
           (input)="updateField(col.name, $any($event.target).value)"
           (blur)="validateField(col.name, col.data_type, getFieldValue(col.name))"
@@ -65,14 +65,14 @@
       @if (!showDeleteConfirm()) {
         <button
           type="button"
-          class="flex w-full items-center justify-center gap-2 rounded-lg border border-red-900/30 bg-red-600/20 px-4 py-2.5 text-sm font-medium text-red-400 transition-all hover:bg-red-600/30"
+          class="flex w-full items-center justify-center gap-2 rounded-lg border border-[var(--border-subtle)] bg-red-600/20 px-4 py-2.5 text-sm font-medium text-red-400 transition-all hover:bg-red-600/30"
           (click)="onDeleteClick()"
         >
           <mat-icon fontIcon="delete" class="h-5! w-4! text-base!" />
           Delete Record
         </button>
       } @else {
-        <div class="rounded-lg border border-red-900/30 bg-red-900/10 p-4">
+        <div class="rounded-lg border border-[var(--border-subtle)] bg-red-900/10 p-4">
           <div class="mb-3 flex items-center gap-2">
             <mat-icon fontIcon="warning" class="h-5! w-4! text-base! text-red-400" />
             <span class="text-sm font-bold text-red-400">Confirm Delete</span>
@@ -90,7 +90,7 @@
             </button>
             <button
               type="button"
-              class="flex-1 rounded-lg border border-[var(--border-visible)] bg-[var(--bg-elevated)] px-3 py-2 text-sm font-medium text-[var(--text-dim)] transition-all hover:text-[var(--text-main)]"
+              class="flex-1 rounded-lg border border-[var(--border-color)] bg-transparent px-3 py-2 text-sm font-medium text-[var(--text-dim)] transition-all hover:text-[var(--text-main)]"
               (click)="onDeleteCancel()"
             >
               Cancel
