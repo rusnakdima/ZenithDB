@@ -183,54 +183,6 @@ pub async fn get_or_create_mysql_provider(
   Ok(provider)
 }
 
-pub async fn invalidate_provider_instance(conn_id: &str) {
-  get_mongo_provider_cache().remove(conn_id).await;
-  get_postgres_provider_cache().remove(conn_id).await;
-  get_mysql_provider_cache().remove(conn_id).await;
-}
-
-pub async fn get_cached_provider(
-  conn_id: &str,
-  config: &crate::commands::connection::ConnectionConfigEnum,
-) -> Result<(), String> {
-  let cache = get_provider_cache();
-  let config_json = serde_json::to_string(config).unwrap_or_default();
-
-  if cache.is_cached(conn_id).await {
-    tracing::debug!("Provider already cached for connection: {}", conn_id);
-    return Ok(());
-  }
-
-  match config {
-    crate::commands::connection::ConnectionConfigEnum::Json { path, .. } => {
-      create_json_provider(path).await?;
-    }
-    crate::commands::connection::ConnectionConfigEnum::Mongo { uri, database, .. } => {
-      create_mongo_provider(uri, database).await?;
-    }
-    crate::commands::connection::ConnectionConfigEnum::Redis { uri, .. } => {
-      create_redis_provider(uri).await?;
-    }
-    crate::commands::connection::ConnectionConfigEnum::Postgres { uri, .. } => {
-      create_postgres_provider(uri).await?;
-    }
-    crate::commands::connection::ConnectionConfigEnum::Sqlite { path, .. } => {
-      create_sqlite_provider(path).await?;
-    }
-    crate::commands::connection::ConnectionConfigEnum::MySql { uri, .. } => {
-      create_mysql_provider(uri).await?;
-    }
-  };
-
-  cache.mark_cached(conn_id.to_string(), config_json).await;
-  Ok(())
-}
-
-pub async fn invalidate_provider_cache(conn_id: &str) {
-  let cache = get_provider_cache();
-  cache.remove(conn_id).await;
-}
-
 pub async fn create_json_provider(
   path: &str,
 ) -> Result<nosql_orm::providers::JsonProvider, String> {

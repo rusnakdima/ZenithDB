@@ -10,6 +10,7 @@ use crate::commands::validate_name;
 use crate::dispatch_provider;
 use crate::dispatch_provider_cached;
 use crate::infrastructure::nosql_orm_adapter::NosqlOrmAdapter;
+use crate::models::response::ResponseModel;
 use nosql_orm::prelude::*;
 use std::path::PathBuf;
 
@@ -18,15 +19,22 @@ fn validate_safe_path(base: &str, user_input: &str) -> Result<PathBuf, String> {
 }
 
 #[tauri::command]
-pub async fn list_databases(connId: &str) -> Result<Vec<DatabaseMeta>, String> {
-  validate_conn_id(connId)?;
-  let entry = get_connection_entry(connId).await?;
+pub async fn list_databases(conn_id: &str) -> Result<ResponseModel, ResponseModel> {
+  validate_conn_id(conn_id).map_err(|e| ResponseModel::error(e))?;
+  let entry = get_connection_entry(conn_id)
+    .await
+    .map_err(|e| ResponseModel::error(e))?;
 
   match &entry.config.config {
-    ConnectionConfigEnum::Json { path, .. } => {
-      let provider = NosqlOrmAdapter::create_provider(&entry.config.config).await?;
-      let databases = provider.list_databases().await?;
-      Ok(databases)
+    ConnectionConfigEnum::Json { path: _, .. } => {
+      let provider = NosqlOrmAdapter::create_provider(&entry.config.config)
+        .await
+        .map_err(|e| ResponseModel::error(e.to_string()))?;
+      let databases = provider
+        .list_databases()
+        .await
+        .map_err(|e| ResponseModel::error(e.to_string()))?;
+      Ok(ResponseModel::success(databases))
     }
     ConnectionConfigEnum::Sqlite { path, .. } => {
       let db_name = std::path::Path::new(path)
@@ -34,16 +42,23 @@ pub async fn list_databases(connId: &str) -> Result<Vec<DatabaseMeta>, String> {
         .and_then(|n| n.to_str())
         .unwrap_or("database")
         .to_string();
-      Ok(vec![DatabaseMeta::from_name(&db_name)])
+      Ok(ResponseModel::success(vec![DatabaseMeta::from_name(
+        &db_name,
+      )]))
     }
-    ConnectionConfigEnum::Redis { .. } => Ok(vec![DatabaseMeta::from_name("default")]),
+    ConnectionConfigEnum::Redis { .. } => {
+      Ok(ResponseModel::success(vec![DatabaseMeta::from_name(
+        "default",
+      )]))
+    }
     ConnectionConfigEnum::Mongo { uri, .. } => {
-      let provider =
-        crate::commands::provider::get_or_create_mongo_provider(connId, uri, "admin").await?;
+      let provider = crate::commands::provider::get_or_create_mongo_provider(conn_id, uri, "admin")
+        .await
+        .map_err(|e| ResponseModel::error(e.to_string()))?;
       let result = provider
         .execute_raw("listDatabases", vec![])
         .await
-        .map_err_string()?;
+        .map_err(|e| ResponseModel::error(e.to_string()))?;
       let mut dbs = Vec::new();
       for row in result.rows {
         if let Some(doc) = row.get(0).and_then(|v| v.as_object()) {
@@ -56,202 +71,231 @@ pub async fn list_databases(connId: &str) -> Result<Vec<DatabaseMeta>, String> {
           }
         }
       }
-      Ok(dbs)
+      Ok(ResponseModel::success(dbs))
     }
     ConnectionConfigEnum::Postgres { uri, .. } => {
-      let provider =
-        crate::commands::provider::get_or_create_postgres_provider(connId, uri).await?;
+      let provider = crate::commands::provider::get_or_create_postgres_provider(conn_id, uri)
+        .await
+        .map_err(|e| ResponseModel::error(e.to_string()))?;
       let result = provider
         .execute_raw(
           "SELECT datname FROM pg_database WHERE datistemplate = false",
           vec![],
         )
         .await
-        .map_err_string()?;
-      Ok(parse_database_rows(&result.rows))
+        .map_err(|e| ResponseModel::error(e.to_string()))?;
+      Ok(ResponseModel::success(parse_database_rows(&result.rows)))
     }
     ConnectionConfigEnum::MySql { uri, .. } => {
-      let provider = crate::commands::provider::get_or_create_mysql_provider(connId, uri).await?;
+      let provider = crate::commands::provider::get_or_create_mysql_provider(conn_id, uri)
+        .await
+        .map_err(|e| ResponseModel::error(e.to_string()))?;
       let result = provider
         .execute_raw("SHOW DATABASES", vec![])
         .await
-        .map_err_string()?;
-      Ok(parse_database_rows(&result.rows))
+        .map_err(|e| ResponseModel::error(e.to_string()))?;
+      Ok(ResponseModel::success(parse_database_rows(&result.rows)))
     }
   }
 }
 
 #[tauri::command]
-pub async fn create_database(connId: &str, name: &str) -> Result<(), String> {
+pub async fn create_database(conn_id: &str, name: &str) -> Result<ResponseModel, ResponseModel> {
   let auth = get_auth_context();
-  if !auth.can_access_connection(connId) {
-    return Err("Access denied to connection".to_string());
+  if !auth.can_access_connection(conn_id) {
+    return Err(ResponseModel::error("Access denied to connection"));
   }
-  validate_conn_id(connId)?;
-  validate_name(name)?;
-  let entry = get_connection_entry(connId).await?;
+  validate_conn_id(conn_id).map_err(|e| ResponseModel::error(e))?;
+  validate_name(name).map_err(|e| ResponseModel::error(e))?;
+  let entry = get_connection_entry(conn_id)
+    .await
+    .map_err(|e| ResponseModel::error(e))?;
 
   match &entry.config.config {
     ConnectionConfigEnum::Sqlite { path, .. } => {
       if !std::path::Path::new(path).exists() {
-        tokio::fs::File::create(path).await.map_err_string()?;
+        tokio::fs::File::create(path)
+          .await
+          .map_err(|e| ResponseModel::error(e.to_string()))?;
       }
-      Ok(())
+      Ok(ResponseModel::success_message("Database created"))
     }
-    ConnectionConfigEnum::Json { path, .. } => {
-      NosqlOrmAdapter::create_database_json(path, name).await
-    }
-    ConnectionConfigEnum::Redis { .. } => Ok(()),
+    ConnectionConfigEnum::Json { path, .. } => NosqlOrmAdapter::create_database_json(path, name)
+      .await
+      .map(|_| ResponseModel::success_message("Database created"))
+      .map_err(|e| ResponseModel::error(e.to_string())),
+    ConnectionConfigEnum::Redis { .. } => Ok(ResponseModel::success_message("Database created")),
     ConnectionConfigEnum::Mongo { uri, .. } => {
-      let provider = crate::commands::provider::create_mongo_provider(uri, &name).await?;
+      let provider = crate::commands::provider::create_mongo_provider(uri, &name)
+        .await
+        .map_err(|e| ResponseModel::error(e.to_string()))?;
       provider
         .execute_raw("create", vec![])
         .await
-        .map_err_string()?;
-      Ok(())
+        .map_err(|e| ResponseModel::error(e.to_string()))?;
+      Ok(ResponseModel::success_message("Database created"))
     }
     ConnectionConfigEnum::Postgres { uri, .. } => {
-      let provider = crate::commands::provider::create_postgres_provider(uri).await?;
+      let provider = crate::commands::provider::create_postgres_provider(uri)
+        .await
+        .map_err(|e| ResponseModel::error(e.to_string()))?;
       provider
         .execute_raw(&format!("CREATE DATABASE \"{}\"", name), vec![])
         .await
-        .map_err_string()?;
-      Ok(())
+        .map_err(|e| ResponseModel::error(e.to_string()))?;
+      Ok(ResponseModel::success_message("Database created"))
     }
     ConnectionConfigEnum::MySql { uri, .. } => {
-      let provider = crate::commands::provider::create_mysql_provider(uri).await?;
+      let provider = crate::commands::provider::create_mysql_provider(uri)
+        .await
+        .map_err(|e| ResponseModel::error(e.to_string()))?;
       provider
         .execute_raw(&format!("CREATE DATABASE IF NOT EXISTS `{}`", name), vec![])
         .await
-        .map_err_string()?;
-      Ok(())
+        .map_err(|e| ResponseModel::error(e.to_string()))?;
+      Ok(ResponseModel::success_message("Database created"))
     }
   }
 }
 
 #[tauri::command]
-pub async fn rename_database(connId: &str, oldName: &str, newName: &str) -> Result<(), String> {
+pub async fn rename_database(
+  conn_id: &str,
+  old_name: &str,
+  new_name: &str,
+) -> Result<ResponseModel, ResponseModel> {
   let auth = get_auth_context();
-  if !auth.can_access_connection(connId) {
-    return Err("Access denied to connection".to_string());
+  if !auth.can_access_connection(conn_id) {
+    return Err(ResponseModel::error("Access denied to connection"));
   }
-  validate_conn_id(connId)?;
-  validate_name(oldName)?;
-  validate_name(newName)?;
-  let entry = get_connection_entry(connId).await?;
+  validate_conn_id(conn_id).map_err(|e| ResponseModel::error(e))?;
+  validate_name(old_name).map_err(|e| ResponseModel::error(e))?;
+  validate_name(new_name).map_err(|e| ResponseModel::error(e))?;
+  let entry = get_connection_entry(conn_id)
+    .await
+    .map_err(|e| ResponseModel::error(e))?;
 
   match &entry.config.config {
-    ConnectionConfigEnum::Sqlite { .. } => Err(
-      "SQLite database cannot be renamed. Create a new connection with a different file path."
-        .to_string(),
-    ),
+    ConnectionConfigEnum::Sqlite { .. } => Err(ResponseModel::error(
+      "SQLite database cannot be renamed. Create a new connection with a different file path.",
+    )),
     ConnectionConfigEnum::Json { path, .. } => {
-      let old_path = validate_safe_path(path, oldName)?;
-      let new_path = validate_safe_path(path, newName)?;
+      let old_path = validate_safe_path(path, old_name).map_err(|e| ResponseModel::error(e))?;
+      let new_path = validate_safe_path(path, new_name).map_err(|e| ResponseModel::error(e))?;
       if old_path.exists() {
         tokio::fs::rename(&old_path, &new_path)
           .await
-          .map_err_string()?;
+          .map_err(|e| ResponseModel::error(e.to_string()))?;
       }
-      Ok(())
+      Ok(ResponseModel::success_message("Database renamed"))
     }
-    ConnectionConfigEnum::Redis { .. } => {
-      Err("Redis does not support renaming databases.".to_string())
-    }
-    ConnectionConfigEnum::Mongo { uri: _, .. } => {
-      Err("MongoDB does not support renaming databases via this interface.".to_string())
-    }
+    ConnectionConfigEnum::Redis { .. } => Err(ResponseModel::error(
+      "Redis does not support renaming databases.",
+    )),
+    ConnectionConfigEnum::Mongo { uri: _, .. } => Err(ResponseModel::error(
+      "MongoDB does not support renaming databases via this interface.",
+    )),
     ConnectionConfigEnum::Postgres { uri, .. } => {
-      let provider = crate::commands::provider::create_postgres_provider(uri).await?;
+      let provider = crate::commands::provider::create_postgres_provider(uri)
+        .await
+        .map_err(|e| ResponseModel::error(e.to_string()))?;
       provider
         .execute_raw(
-          &format!("ALTER DATABASE \"{}\" RENAME TO \"{}\"", oldName, newName),
+          &format!("ALTER DATABASE \"{}\" RENAME TO \"{}\"", old_name, new_name),
           vec![],
         )
         .await
-        .map_err_string()?;
-      Ok(())
+        .map_err(|e| ResponseModel::error(e.to_string()))?;
+      Ok(ResponseModel::success_message("Database renamed"))
     }
-    ConnectionConfigEnum::MySql { uri: _, .. } => Err(
-      "MySQL does not support renaming databases directly. Create a new database and migrate data."
-        .to_string(),
-    ),
+    ConnectionConfigEnum::MySql { uri: _, .. } => Err(ResponseModel::error(
+      "MySQL does not support renaming databases directly. Create a new database and migrate data.",
+    )),
   }
 }
 
 #[tauri::command]
-pub async fn delete_database(connId: &str, name: &str) -> Result<(), String> {
+pub async fn delete_database(conn_id: &str, name: &str) -> Result<ResponseModel, ResponseModel> {
   let auth = get_auth_context();
-  if !auth.can_access_connection(connId) {
-    return Err("Access denied to connection".to_string());
+  if !auth.can_access_connection(conn_id) {
+    return Err(ResponseModel::error("Access denied to connection"));
   }
-  validate_conn_id(connId)?;
-  validate_name(name)?;
-  let entry = get_connection_entry(connId).await?;
+  validate_conn_id(conn_id).map_err(|e| ResponseModel::error(e))?;
+  validate_name(name).map_err(|e| ResponseModel::error(e))?;
+  let entry = get_connection_entry(conn_id)
+    .await
+    .map_err(|e| ResponseModel::error(e))?;
 
   match &entry.config.config {
-    ConnectionConfigEnum::Sqlite { .. } => Err(
-      "SQLite database cannot be deleted. Delete the connection and remove the file.".to_string(),
-    ),
-    ConnectionConfigEnum::Json { path, .. } => {
-      NosqlOrmAdapter::drop_database_json(path, name).await
-    }
-    ConnectionConfigEnum::Redis { .. } => {
-      Err("Redis does not support deleting databases.".to_string())
-    }
-    ConnectionConfigEnum::Mongo { .. } => {
-      Err("MongoDB database deletion is not supported via this interface.".to_string())
-    }
+    ConnectionConfigEnum::Sqlite { .. } => Err(ResponseModel::error(
+      "SQLite database cannot be deleted. Delete the connection and remove the file.",
+    )),
+    ConnectionConfigEnum::Json { path, .. } => NosqlOrmAdapter::drop_database_json(path, name)
+      .await
+      .map(|_| ResponseModel::success_message("Database deleted"))
+      .map_err(|e| ResponseModel::error(e.to_string())),
+    ConnectionConfigEnum::Redis { .. } => Err(ResponseModel::error(
+      "Redis does not support deleting databases.",
+    )),
+    ConnectionConfigEnum::Mongo { .. } => Err(ResponseModel::error(
+      "MongoDB database deletion is not supported via this interface.",
+    )),
     ConnectionConfigEnum::Postgres { uri, .. } => {
-      let provider = crate::commands::provider::create_postgres_provider(uri).await?;
+      let provider = crate::commands::provider::create_postgres_provider(uri)
+        .await
+        .map_err(|e| ResponseModel::error(e.to_string()))?;
       provider
         .execute_raw(&format!("DROP DATABASE \"{}\"", name), vec![])
         .await
-        .map_err_string()?;
-      Ok(())
+        .map_err(|e| ResponseModel::error(e.to_string()))?;
+      Ok(ResponseModel::success_message("Database deleted"))
     }
     ConnectionConfigEnum::MySql { uri, .. } => {
-      let provider = crate::commands::provider::create_mysql_provider(uri).await?;
+      let provider = crate::commands::provider::create_mysql_provider(uri)
+        .await
+        .map_err(|e| ResponseModel::error(e.to_string()))?;
       provider
         .execute_raw(&format!("DROP DATABASE IF EXISTS `{}`", name), vec![])
         .await
-        .map_err_string()?;
-      Ok(())
+        .map_err(|e| ResponseModel::error(e.to_string()))?;
+      Ok(ResponseModel::success_message("Database deleted"))
     }
   }
 }
 
 #[tauri::command]
 pub async fn list_collections(
-  connId: &str,
-  dbName: Option<String>,
-) -> Result<Vec<CollectionMeta>, String> {
+  conn_id: &str,
+  db_name: Option<String>,
+) -> Result<ResponseModel, ResponseModel> {
   let auth = get_auth_context();
-  if !auth.can_access_connection(connId) {
-    return Err("Access denied to connection".to_string());
+  if !auth.can_access_connection(conn_id) {
+    return Err(ResponseModel::error("Access denied to connection"));
   }
-  validate_conn_id(connId)?;
-  tracing::debug!("list_collections started for connection: {}", connId);
-  let entry = get_connection_entry(connId).await?;
-  tracing::debug!("list_collections got connection entry for: {}", connId);
+  validate_conn_id(conn_id).map_err(|e| ResponseModel::error(e))?;
+  tracing::debug!("list_collections started for connection: {}", conn_id);
+  let entry = get_connection_entry(conn_id)
+    .await
+    .map_err(|e| ResponseModel::error(e))?;
+  tracing::debug!("list_collections got connection entry for: {}", conn_id);
 
   tokio::time::timeout(std::time::Duration::from_secs(10), async {
-    match &entry.config.config {
+    match&entry.config.config {
       ConnectionConfigEnum::Json { path, .. } => {
         let path_obj = std::path::Path::new(path).to_path_buf();
         if !path_obj.is_dir() {
-          return Ok(Vec::new());
+          return Ok(ResponseModel::success(Vec::<CollectionMeta>::new()));
         }
 
-        if let Some(dbName) = dbName {
-          let db_path = path_obj.join(&dbName);
+        if let Some(db_name) = db_name {
+          let db_path = path_obj.join(&db_name);
           let collections = list_json_files_in_dir(db_path).await?;
-          Ok(collections)
+          Ok(ResponseModel::success(collections))
         } else {
           let mut all_collections: Vec<CollectionMeta> = Vec::new();
           let mut entries = match tokio::fs::read_dir(&path_obj).await {
             Ok(e) => e,
-            Err(_) => return Ok(Vec::new()),
+            Err(_) => return Ok(ResponseModel::success(Vec::<CollectionMeta>::new())),
           };
 
           while let Some(entry) = entries.next_entry().await.map_err_string()? {
@@ -261,30 +305,32 @@ pub async fn list_collections(
               all_collections.extend(collections);
             }
           }
-          Ok(all_collections)
+          Ok(ResponseModel::success(all_collections))
         }
       }
       _ => {
-        tracing::debug!("list_collections dispatching provider for: {}", connId);
-        dispatch_provider_cached!(entry, connId, provider => {
+        tracing::debug!("list_collections dispatching provider for: {}", conn_id);
+        dispatch_provider_cached!(entry, conn_id, provider => {
             tracing::debug!("list_collections provider dispatched, calling list_collections on provider");
             let collections = provider.list_collections().await.map_err_string()?;
             tracing::debug!("list_collections got {} collections", collections.len());
-            Ok(collections
+Ok(ResponseModel::success(
+              collections
                 .into_iter()
                 .map(|c| CollectionMeta {
                     name: c.name,
                     count: c.document_count,
                 })
-                .collect())
+                .collect::<Vec<CollectionMeta>>(),
+            ))
         })
       }
     }
   })
   .await
   .map_err(|_| {
-    tracing::error!("list_collections timed out for connection: {}", connId);
-    "List collections timed out".to_string()
+    tracing::error!("list_collections timed out for connection: {}", conn_id);
+    ResponseModel::error("List collections timed out")
   })?
 }
 
@@ -332,16 +378,18 @@ async fn list_json_files_in_dir(
 
 #[tauri::command]
 pub async fn describe_collection(
-  connId: &str,
+  conn_id: &str,
   collection: &str,
-) -> Result<CollectionSchema, String> {
+) -> Result<ResponseModel, ResponseModel> {
   let auth = get_auth_context();
-  if !auth.can_access_connection(connId) {
-    return Err("Access denied to connection".to_string());
+  if !auth.can_access_connection(conn_id) {
+    return Err(ResponseModel::error("Access denied to connection"));
   }
-  validate_conn_id(connId)?;
-  validate_name(collection)?;
-  let entry = get_connection_entry(connId).await?;
+  validate_conn_id(conn_id).map_err(|e| ResponseModel::error(e))?;
+  validate_name(collection).map_err(|e| ResponseModel::error(e))?;
+  let entry = get_connection_entry(conn_id)
+    .await
+    .map_err(|e| ResponseModel::error(e))?;
 
   let (schema, indexes) = dispatch_provider!(entry, provider => {
       let schema = provider.describe_collection(collection).await.map_err_string()?;
@@ -349,7 +397,8 @@ pub async fn describe_collection(
           .await
           .map_err_string()?;
       Ok::<_, String>((schema, indexes))
-  })?;
+  })
+  .map_err(|e| ResponseModel::error(e))?;
 
   let columns: Vec<ColumnInfo> = schema
     .fields
@@ -371,74 +420,83 @@ pub async fn describe_collection(
     })
     .collect();
 
-  Ok(CollectionSchema {
+  Ok(ResponseModel::success(CollectionSchema {
     name: collection.to_string(),
     columns,
     indexes: index_infos,
-  })
+  }))
 }
 
 #[tauri::command]
 pub async fn get_collection_stats(
-  connId: &str,
+  conn_id: &str,
   collection: &str,
-) -> Result<CollectionStats, String> {
+) -> Result<ResponseModel, ResponseModel> {
   let auth = get_auth_context();
-  if !auth.can_access_connection(connId) {
-    return Err("Access denied to connection".to_string());
+  if !auth.can_access_connection(conn_id) {
+    return Err(ResponseModel::error("Access denied to connection"));
   }
-  validate_conn_id(connId)?;
-  validate_name(collection)?;
-  let entry = get_connection_entry(connId).await?;
+  validate_conn_id(conn_id).map_err(|e| ResponseModel::error(e))?;
+  validate_name(collection).map_err(|e| ResponseModel::error(e))?;
+  let entry = get_connection_entry(conn_id)
+    .await
+    .map_err(|e| ResponseModel::error(e))?;
 
   let stats = dispatch_provider!(entry, provider => {
       provider.get_collection_stats(collection).await.map_err_string()
-  })?;
+  })
+  .map_err(|e| ResponseModel::error(e))?;
 
-  Ok(CollectionStats {
+  Ok(ResponseModel::success(CollectionStats {
     name: collection.to_string(),
     document_count: stats.document_count,
     size_bytes: stats.size_bytes,
     index_count: stats.index_count,
-  })
+  }))
 }
 
 #[tauri::command]
 pub async fn list_databases_for_uri(
   provider_type: &str,
   uri: &str,
-) -> Result<Vec<DatabaseMeta>, String> {
+) -> Result<ResponseModel, ResponseModel> {
   if uri.is_empty() {
-    return Err("URI cannot be empty".to_string());
+    return Err(ResponseModel::error("URI cannot be empty"));
   }
-  validate_name(provider_type)?;
+  validate_name(provider_type).map_err(|e| ResponseModel::error(e))?;
 
   match provider_type {
     "postgres" => {
-      let provider = crate::commands::provider::create_postgres_provider(uri).await?;
+      let provider = crate::commands::provider::create_postgres_provider(uri)
+        .await
+        .map_err(|e| ResponseModel::error(e.to_string()))?;
       let result = provider
         .execute_raw(
           "SELECT datname FROM pg_database WHERE datistemplate = false",
           vec![],
         )
         .await
-        .map_err_string()?;
-      Ok(parse_database_rows(&result.rows))
+        .map_err(|e| ResponseModel::error(e.to_string()))?;
+      Ok(ResponseModel::success(parse_database_rows(&result.rows)))
     }
     "mysql" => {
-      let provider = crate::commands::provider::create_mysql_provider(uri).await?;
+      let provider = crate::commands::provider::create_mysql_provider(uri)
+        .await
+        .map_err(|e| ResponseModel::error(e.to_string()))?;
       let result = provider
         .execute_raw("SHOW DATABASES", vec![])
         .await
-        .map_err_string()?;
-      Ok(parse_database_rows(&result.rows))
+        .map_err(|e| ResponseModel::error(e.to_string()))?;
+      Ok(ResponseModel::success(parse_database_rows(&result.rows)))
     }
     "mongodb" => {
-      let provider = crate::commands::provider::create_mongo_provider(uri, "admin").await?;
+      let provider = crate::commands::provider::create_mongo_provider(uri, "admin")
+        .await
+        .map_err(|e| ResponseModel::error(e.to_string()))?;
       let result = provider
         .execute_raw("listDatabases", vec![])
         .await
-        .map_err_string()?;
+        .map_err(|e| ResponseModel::error(e.to_string()))?;
       let mut dbs = Vec::new();
       for row in result.rows {
         if let Some(doc) = row.get(0).and_then(|v| v.as_object()) {
@@ -451,14 +509,16 @@ pub async fn list_databases_for_uri(
           }
         }
       }
-      Ok(dbs)
+      Ok(ResponseModel::success(dbs))
     }
     "redis" => {
-      let provider = crate::commands::provider::create_redis_provider(uri).await?;
+      let provider = crate::commands::provider::create_redis_provider(uri)
+        .await
+        .map_err(|e| ResponseModel::error(e.to_string()))?;
       let result = provider
         .execute_raw("INFO keyspace", vec![])
         .await
-        .map_err_string()?;
+        .map_err(|e| ResponseModel::error(e.to_string()))?;
       let mut dbs = Vec::new();
       for row in result.rows {
         if let Some(line) = row.first().and_then(|v| v.as_str()) {
@@ -482,12 +542,12 @@ pub async fn list_databases_for_uri(
           table_count: None,
         });
       }
-      Ok(dbs)
+      Ok(ResponseModel::success(dbs))
     }
-    _ => Ok(vec![DatabaseMeta {
+    _ => Ok(ResponseModel::success(vec![DatabaseMeta {
       name: "default".to_string(),
       size_bytes: None,
       table_count: None,
-    }]),
+    }])),
   }
 }

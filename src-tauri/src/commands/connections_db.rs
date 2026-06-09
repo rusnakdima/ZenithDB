@@ -49,29 +49,6 @@ impl ConnectionsDb {
     Ok(())
   }
 
-  pub fn save(&self, entity: &ConnectionEntity) -> Result<(), String> {
-    let config_json = serde_json::to_string(&entity.config).map_err(|e| e.to_string())?;
-
-    self
-      .conn
-      .execute(
-        "INSERT OR REPLACE INTO connections (id, type_, name, config, created_at, updated_at)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
-        params![
-          entity.id,
-          entity.type_,
-          entity.name,
-          config_json,
-          entity.created_at,
-          entity.updated_at
-        ],
-      )
-      .map_err(|e| e.to_string())?;
-
-    tracing::info!("Saved connection: {}", entity.id);
-    Ok(())
-  }
-
   pub fn find_by_id(&self, id: &str) -> Result<Option<ConnectionEntity>, String> {
     let mut stmt = self
       .conn
@@ -106,71 +83,11 @@ impl ConnectionsDb {
       Err(e) => Err(e.to_string()),
     }
   }
-
-  pub fn find_all(&self) -> Result<Vec<ConnectionEntity>, String> {
-    let mut stmt = self
-      .conn
-      .prepare("SELECT id, type_, name, config, created_at, updated_at FROM connections")
-      .map_err(|e| e.to_string())?;
-
-    let entities = stmt
-      .query_map([], |row| {
-        let config_json: String = row.get(3)?;
-        let config: crate::commands::connection::ConnectionConfig =
-          serde_json::from_str(&config_json).map_err(|e| {
-            rusqlite::Error::ToSqlConversionFailure(Box::new(std::io::Error::new(
-              std::io::ErrorKind::InvalidData,
-              e,
-            )))
-          })?;
-
-        Ok(ConnectionEntity {
-          id: row.get(0)?,
-          type_: row.get(1)?,
-          name: row.get(2)?,
-          config,
-          created_at: row.get(4)?,
-          updated_at: row.get(5)?,
-        })
-      })
-      .map_err(|e| e.to_string())?;
-
-    let mut result = Vec::new();
-    for entity in entities {
-      match entity {
-        Ok(e) => result.push(e),
-        Err(e) => return Err(e.to_string()),
-      }
-    }
-    Ok(result)
-  }
-
-  pub fn delete(&self, id: &str) -> Result<(), String> {
-    self
-      .conn
-      .execute("DELETE FROM connections WHERE id = ?1", params![id])
-      .map_err(|e| e.to_string())?;
-    tracing::info!("Deleted connection: {}", id);
-    Ok(())
-  }
-
-  pub fn exists(&self, id: &str) -> Result<bool, String> {
-    let mut stmt = self
-      .conn
-      .prepare("SELECT 1 FROM connections WHERE id = ?1")
-      .map_err(|e| e.to_string())?;
-    let exists = stmt.exists(params![id]).map_err(|e| e.to_string())?;
-    Ok(exists)
-  }
 }
 
 static CONNECTIONS_DB: std::sync::OnceLock<Arc<Mutex<ConnectionsDb>>> = std::sync::OnceLock::new();
 
 pub async fn get_connections_db() -> Result<Arc<Mutex<ConnectionsDb>>, String> {
-  let db = CONNECTIONS_DB.get_or_init(|| {
-    Arc::new(Mutex::new(
-      ConnectionsDb::new().expect("Failed to create ConnectionsDb"),
-    ))
-  });
+  let db = CONNECTIONS_DB.get_or_init(|| Arc::new(Mutex::new(ConnectionsDb::new().unwrap())));
   Ok(db.clone())
 }
