@@ -7,6 +7,8 @@ import {
   OnInit,
   OnDestroy,
   inject,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
 } from "@angular/core";
 import { CommonModule } from "@angular/common";
 
@@ -17,6 +19,7 @@ export type ModalContentPosition = "center" | "top";
 @Component({
   selector: "app-modal",
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule],
   templateUrl: "./modal.component.html",
 })
@@ -38,6 +41,7 @@ export class ModalComponent implements OnInit, OnDestroy {
   isAnimating = signal(false);
 
   private elementRef = inject(ElementRef);
+  private cdr = inject(ChangeDetectorRef);
   private previousActiveElement: HTMLElement | null = null;
   private openedTimeoutId: ReturnType<typeof setTimeout> | null = null;
   private closedTimeoutId: ReturnType<typeof setTimeout> | null = null;
@@ -82,6 +86,7 @@ export class ModalComponent implements OnInit, OnDestroy {
     this.openedTimeoutId = setTimeout(() => {
       this.openedTimeoutId = null;
       this.isAnimating.set(false);
+      this.cdr.markForCheck();
       this.opened.emit();
       this.trapFocus();
     }, 50);
@@ -101,6 +106,7 @@ export class ModalComponent implements OnInit, OnDestroy {
       this.closedTimeoutId = null;
       this.isVisible.set(false);
       this.isAnimating.set(false);
+      this.cdr.markForCheck();
       this.closed.emit();
       this.restoreFocus();
     }, 200);

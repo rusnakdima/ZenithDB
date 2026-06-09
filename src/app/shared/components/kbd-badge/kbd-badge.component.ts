@@ -5,10 +5,7 @@ import { CommonModule } from "@angular/common";
   selector: "app-kbd-badge",
   standalone: true,
   imports: [CommonModule],
-  template: `<kbd
-    class="rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 dark:bg-gray-700 dark:text-gray-200"
-    >{{ shortcut() }}</kbd
-  >`,
+  templateUrl: "./kbd-badge.component.html",
 })
 export class KbdBadgeComponent {
   shortcut = input.required<string>();

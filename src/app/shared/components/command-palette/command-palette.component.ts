@@ -6,6 +6,8 @@ import {
   HostListener,
   ElementRef,
   AfterViewInit,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
 } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
@@ -15,10 +17,12 @@ import { Command } from "./command.model";
 @Component({
   selector: "app-command-palette",
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, FormsModule],
   templateUrl: "./command-palette.component.html",
 })
 export class CommandPaletteComponent implements AfterViewInit {
+  private cdr = inject(ChangeDetectorRef);
   private service = inject(CommandPaletteService);
   private elementRef = inject(ElementRef);
 

@@ -7,6 +7,7 @@ import { ExportService } from "@shared/services/export.service";
 import { formatJsonLines, highlightJsonLine } from "@shared/utils/json.utils";
 import { RecordFormComponent } from "@features/data/record-form/record-form.component";
 import { ColumnInfo, RowData } from "@shared/models/connection.config";
+import { getRecordId } from "@shared/utils/record.utils";
 
 @Component({
   selector: "app-inspector-drawer",
@@ -15,7 +16,7 @@ import { ColumnInfo, RowData } from "@shared/models/connection.config";
   templateUrl: "./inspector-drawer.component.html",
 })
 export class InspectorDrawerComponent {
-  document = input<any>(null);
+  document = input<RowData | null>(null);
   columns = input<ColumnInfo[]>([]);
   close = output<void>();
   delete = output<void>();
@@ -34,7 +35,7 @@ export class InspectorDrawerComponent {
   documentId = computed(() => {
     const doc = this.document();
     if (!doc) return "New Document";
-    return doc?.["_id"] || doc?.["id"] || "Unknown";
+    return getRecordId(doc) ?? "Unknown";
   });
 
   isCreateMode = computed(() => {
@@ -46,7 +47,7 @@ export class InspectorDrawerComponent {
     const doc = this.document();
     if (!doc) return [];
     return [
-      { key: "_id", value: doc["_id"] || doc["id"] || "N/A", isInternal: true },
+      { key: "_id", value: getRecordId(doc) ?? "N/A", isInternal: true },
       {
         key: "_createdAt",
         value: doc["_createdAt"] || doc["createdAt"] || "N/A",
@@ -140,10 +141,12 @@ export class InspectorDrawerComponent {
 
   async exportDocument(format: "json" | "csv") {
     const doc = this.document();
+    if (!doc) return;
     try {
       await this.exportService.export({ format, filename: `document_${this.documentId()}` }, [doc]);
-    } catch (error: any) {
-      if (error.message !== "Export cancelled") {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error.message : "Unknown error";
+      if (err !== "Export cancelled") {
         this.toast.error("Export failed");
       }
     }

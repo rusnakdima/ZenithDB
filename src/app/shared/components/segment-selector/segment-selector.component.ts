@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter, signal } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { MatIconModule } from "@angular/material/icon";
 import { MatMenuModule } from "@angular/material/menu";
+import { findById } from "@shared/utils/array.utils";
 
 export interface SegmentOption {
   id: string;
@@ -24,7 +25,7 @@ export class SegmentSelectorComponent {
   isHovering = signal(false);
 
   getActiveOption(): SegmentOption | undefined {
-    return this.options.find((o) => o.id === this.active);
+    return findById(this.options, this.active);
   }
 
   onSelect(id: string): void {

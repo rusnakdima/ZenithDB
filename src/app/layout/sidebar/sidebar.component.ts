@@ -8,6 +8,8 @@ import {
   DestroyRef,
   effect,
   computed,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
 } from "@angular/core";
 import { Router, RouterLink, NavigationEnd } from "@angular/router";
 import { MatIconModule } from "@angular/material/icon";
@@ -25,10 +27,12 @@ import { TreeNode } from "@shared/models/tree-node.model";
 import { ConfirmService } from "@shared/services/confirm.service";
 import { ToastService } from "@services/toast.service";
 import { DatabaseService } from "@shared/services/database.service";
+import { findById } from "@shared/utils/array.utils";
 
 @Component({
   selector: "app-sidebar",
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink, MatIconModule],
   templateUrl: "./sidebar.component.html",
 })
@@ -45,6 +49,7 @@ export class SidebarComponent implements OnInit {
   private confirmService = inject(ConfirmService);
   private toast = inject(ToastService);
   private db = inject(DatabaseService);
+  private cdr = inject(ChangeDetectorRef);
   collectionSelected = output<string>();
 
   isStatsCollapsed = signal(true);
@@ -125,8 +130,8 @@ export class SidebarComponent implements OnInit {
   ngOnInit() {
     this.routerSub = this.router.events
       .pipe(filter((e) => e instanceof NavigationEnd))
-      .subscribe((e: any) => {
-        this.currentUrl.set(e.urlAfterRedirects);
+      .subscribe((e) => {
+        this.currentUrl.set((e as NavigationEnd).urlAfterRedirects);
       });
     this.currentUrl.set(this.router.url);
 
@@ -148,7 +153,7 @@ export class SidebarComponent implements OnInit {
     }
     this.isExpandingRoute.set(true);
     try {
-      const conn = this.dataStore.getConnections().find((c) => c.id === connId);
+      const conn = findById(this.dataStore.getConnections(), connId);
       if (!conn) {
         this.isExpandingRoute.set(false);
         return;
@@ -206,7 +211,7 @@ export class SidebarComponent implements OnInit {
       return;
     }
 
-    const conn = this.dataStore.getConnections().find((c) => c.id === connId);
+    const conn = findById(this.dataStore.getConnections(), connId);
     if (!conn) {
       return;
     }
@@ -286,7 +291,9 @@ export class SidebarComponent implements OnInit {
             this.dataStore.updateConnection(conn.id, { status: result.status });
           }
         })
-        .catch(() => {});
+        .catch((e) =>
+          this.errorHandler.handleError(e, "SidebarComponent.testConnectionStatusInBackground")
+        );
     }
   }
 
@@ -353,7 +360,7 @@ export class SidebarComponent implements OnInit {
   }
 
   async selectConnectionById(connId: string) {
-    const conn = this.dataStore.getConnections().find((c) => c.id === connId);
+    const conn = findById(this.dataStore.getConnections(), connId);
     if (conn) {
       this.selectConnection(conn);
     }
@@ -438,7 +445,7 @@ export class SidebarComponent implements OnInit {
         newSet.add(connId);
         return newSet;
       });
-      const conn = this.dataStore.getConnections().find((c) => c.id === connId);
+      const conn = findById(this.dataStore.getConnections(), connId);
       if (conn) {
         this.connState.setActiveConnection(conn);
       }
@@ -617,7 +624,9 @@ export class SidebarComponent implements OnInit {
   private loadCollectionData(collection: string) {
     const connId = this.activeConnectionId();
     if (connId) {
-      this.dataStore.queryData(collection, { limit: 100 }).catch(console.error);
+      this.dataStore
+        .queryData(collection, { limit: 100 })
+        .catch((e) => this.errorHandler.handleError(e, "loadCollectionData"));
     }
   }
 

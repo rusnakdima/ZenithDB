@@ -12,22 +12,7 @@ interface TypeConfig {
   selector: "app-data-type-badge",
   standalone: true,
   imports: [CommonModule],
-  template: `
-    @if (config(); as cfg) {
-      @switch (variant()) {
-        @case ("icon") {
-          <span class="type-icon" [class]="cfg.colorClass">{{ cfg.icon }}</span>
-        }
-        @case ("class") {
-          <span [class]="cfg.colorClass">{{ dataType() }}</span>
-        }
-        @case ("full") {
-          <span class="type-icon" [class]="cfg.colorClass">{{ cfg.icon }}</span>
-          <span [class]="cfg.colorClass">{{ dataType() }}</span>
-        }
-      }
-    }
-  `,
+  templateUrl: "./data-type-badge.component.html",
   styles: [
     `
       :host {

@@ -6,11 +6,7 @@ export type ConnectionStatus = "connected" | "disconnected" | undefined;
 @Component({
   selector: "app-connection-status-badge",
   standalone: true,
-  template: `
-    <span [class]="statusClass()">
-      {{ statusLabel() }}
-    </span>
-  `,
+  templateUrl: "./connection-status-badge.component.html",
 })
 export class ConnectionStatusBadgeComponent {
   status = input.required<ConnectionStatus>();

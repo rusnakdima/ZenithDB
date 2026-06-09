@@ -13,6 +13,9 @@ import {
   ViewChild,
   ElementRef,
   AfterViewInit,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  inject,
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
@@ -24,11 +27,13 @@ import { safeJsonParse } from "@shared/utils/json.utils";
 @Component({
   selector: "app-filter-bar",
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormsModule, MatIconModule],
   templateUrl: "./filter-bar.component.html",
 })
 export class FilterBarComponent implements OnInit, OnChanges, OnDestroy {
   private localStorage = new PersistentStorageService();
+  private cdr = inject(ChangeDetectorRef);
   @Input() filter = "";
   @Input() viewMode: "grid" | "json" = "grid";
   @Input() availableColumns: { name: string; data_type: string }[] = [];

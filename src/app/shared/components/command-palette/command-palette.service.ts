@@ -2,6 +2,7 @@ import { Injectable, inject } from "@angular/core";
 import { Router } from "@angular/router";
 import { Command } from "./command.model";
 import { ThemeService } from "@shared/services/theme.service";
+import { findById } from "@shared/utils/array.utils";
 
 @Injectable({ providedIn: "root" })
 export class CommandPaletteService {
@@ -149,7 +150,7 @@ export class CommandPaletteService {
       if (stored) {
         const ids = JSON.parse(stored) as string[];
         return ids
-          .map((id) => this.commands.find((c) => c.id === id))
+          .map((id) => findById(this.commands, id))
           .filter((c): c is Command => c !== undefined);
       }
     } catch (e) {

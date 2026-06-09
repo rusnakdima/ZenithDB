@@ -1,13 +1,21 @@
-import { Component, Input } from "@angular/core";
+import {
+  Component,
+  Input,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  inject,
+} from "@angular/core";
 
 type SkeletonVariant = "text" | "card" | "table-row" | "avatar" | "button";
 
 @Component({
   selector: "app-skeleton-loader",
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: "./skeleton-loader.component.html",
 })
 export class SkeletonLoaderComponent {
+  private cdr = inject(ChangeDetectorRef);
   @Input() variant: SkeletonVariant = "text";
   @Input() count: number = 1;
   @Input() columns: number = 4;

@@ -1,4 +1,4 @@
-<div class="flex h-full flex-col border-r border-[var(--border-subtle)] bg-[var(--bg-sidebar)]">
+<div class="flex h-full flex-col border-r border-[var(--accent)] bg-[var(--bg-sidebar)]">
   <div class="flex items-center justify-between border-b border-[var(--border-subtle)] px-4 py-3">
     <h2 class="text-xs font-semibold tracking-wider text-[var(--text-dim)] uppercase">
       Collections
@@ -169,7 +169,7 @@
 
 @if (contextMenu().show) {
   <div
-    class="fixed z-50 min-w-[160px] rounded-lg border border-[var(--border-color)] bg-transparent py-1 shadow-xl"
+    class="fixed z-50 min-w-[160px] rounded-lg border border-[var(--accent)] bg-transparent py-1 shadow-xl"
     [style.left.px]="contextMenu().x"
     [style.top.px]="contextMenu().y"
   >
@@ -208,7 +208,7 @@
 @if (showNewCollectionModal()) {
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
     <div
-      class="w-full max-w-md rounded-xl border border-[var(--border-color)] bg-transparent p-6 shadow-2xl"
+      class="w-full max-w-md rounded-xl border border-[var(--accent)] bg-transparent p-6 shadow-2xl"
     >
       <h3 class="mb-4 text-lg font-semibold text-[var(--text-main)]">Create New Collection</h3>
       <input
@@ -223,7 +223,7 @@
       <div class="flex justify-end gap-3">
         <button
           (click)="closeNewCollectionModal()"
-          class="rounded-lg border border-[var(--border-color)] px-4 py-2 text-sm text-[var(--text-main)] hover:bg-transparent"
+          class="rounded-lg border border-[var(--accent)] px-4 py-2 text-sm text-[var(--text-main)] hover:bg-transparent"
         >
           Cancel
         </button>
