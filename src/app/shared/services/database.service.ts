@@ -5,7 +5,13 @@ import { ConnectionService } from "@shared/services/connection.service";
 import { QueryService } from "@shared/services/query.service";
 import { SchemaService } from "@shared/services/schema.service";
 import { AdminService } from "@shared/services/admin.service";
-import { SystemMetrics } from "@shared/models/connection.config";
+import {
+  SystemMetrics,
+  ConnectionConfigEnum,
+  ConnectionConfig,
+  QueryParams,
+  TestConnectionConfig,
+} from "@shared/models/connection.config";
 
 @Injectable({ providedIn: "root" })
 export class DatabaseService {
@@ -25,7 +31,7 @@ export class DatabaseService {
     return this.connectionService.getConnection(id);
   }
 
-  async saveConnection(config: any) {
+  async saveConnection(config: TestConnectionConfig) {
     return this.connectionService.saveConnection(config);
   }
 
@@ -33,7 +39,7 @@ export class DatabaseService {
     return this.connectionService.deleteConnection(id);
   }
 
-  async testConnection(config: any) {
+  async testConnection(config: TestConnectionConfig) {
     return this.connectionService.testConnection(config);
   }
 
@@ -45,7 +51,7 @@ export class DatabaseService {
     return this.connectionService.testConnectionStatus(connId);
   }
 
-  async updateConnection(id: string, config: any) {
+  async updateConnection(id: string, config: ConnectionConfig) {
     return this.connectionService.updateConnection(id, config);
   }
 
@@ -69,7 +75,7 @@ export class DatabaseService {
     return this.schemaService.getServerVersion();
   }
 
-  async queryData(collection: string, params: any) {
+  async queryData(collection: string, params: QueryParams) {
     return this.queryService.queryData(collection, params);
   }
 

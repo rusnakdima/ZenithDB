@@ -10,6 +10,7 @@ import {
   DEFAULT_RETRY_CONFIG,
   ErrorLogEntry,
 } from "@shared/models/error.model";
+import { generateLogId } from "@shared/utils/id.utils";
 
 @Injectable({
   providedIn: "root",
@@ -224,7 +225,7 @@ export class ErrorHandlerService {
 
   private logError(error: AppError, context?: string): void {
     const entry: ErrorLogEntry = {
-      id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      id: generateLogId(),
       error,
       context,
       timestamp: new Date(),

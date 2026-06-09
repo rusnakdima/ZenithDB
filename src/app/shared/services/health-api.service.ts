@@ -1,6 +1,7 @@
 import { Injectable, inject, signal } from "@angular/core";
 import { CacheService } from "@shared/services/cache.service";
 import { TauriBridgeService } from "@providers/tauri-bridge.service";
+import { TIME_CONSTANTS, QUERY_CONSTANTS } from "@shared/utils/constants";
 import { ConnectionHealth } from "@shared/models/connection.config";
 
 @Injectable({ providedIn: "root" })
@@ -10,13 +11,16 @@ export class HealthApiService extends CacheService {
   private healthTimestamps = signal<Map<string, number>>(new Map());
   private refreshCallbacks = new Map<string, Set<() => void>>();
   private inFlightHealth = new Map<string, Promise<ConnectionHealth>>();
-  private readonly HEALTH_TTL_MS = 30 * 1000;
+  private readonly HEALTH_TTL_MS = TIME_CONSTANTS.THIRTY_SECONDS_MS;
 
   getHealth(connectionId: string): ConnectionHealth | null {
     return this.healthSignal().get(connectionId) ?? null;
   }
 
-  async checkHealth(connectionId: string, timeoutMs = 10000): Promise<ConnectionHealth> {
+  async checkHealth(
+    connectionId: string,
+    timeoutMs = QUERY_CONSTANTS.MAX_LIMIT
+  ): Promise<ConnectionHealth> {
     const cached = this.getHealth(connectionId);
     const timestamp = this.healthTimestamps().get(connectionId) ?? 0;
     if (cached && !this.isStale(timestamp, this.HEALTH_TTL_MS)) {

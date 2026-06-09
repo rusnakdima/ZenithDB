@@ -1,6 +1,7 @@
 import { Injectable, inject, signal } from "@angular/core";
 import { ConnectionHealth } from "@shared/models/connection.config";
 import { DatabaseService } from "./database.service";
+import { TIME_CONSTANTS } from "@shared/utils/constants";
 
 @Injectable({ providedIn: "root" })
 export class ConnectionHealthService {
@@ -8,7 +9,7 @@ export class ConnectionHealthService {
   private healthCache = signal<Map<string, { health: ConnectionHealth; timestamp: number }>>(
     new Map()
   );
-  private readonly CACHE_TTL_MS = 30000;
+  private readonly CACHE_TTL_MS = TIME_CONSTANTS.THIRTY_SECONDS_MS;
 
   getCachedHealth(connectionId: string): ConnectionHealth | null {
     const cached = this.healthCache().get(connectionId);

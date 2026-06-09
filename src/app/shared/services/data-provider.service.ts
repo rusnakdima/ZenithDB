@@ -8,6 +8,7 @@ import {
   QueryResult,
   FilterExpression,
 } from "@shared/models/connection.config";
+import { evictLRU } from "@shared/utils/cache.utils";
 
 export interface DataProviderParams {
   collection: string;
@@ -72,28 +73,10 @@ export class DataProviderService {
     return entries;
   }
 
-  private evictLRUFromCache<T extends { lastAccessed: number }>(
-    cache: Map<string, T>,
-    maxSize: number
-  ): Map<string, T> {
-    if (cache.size >= maxSize) {
-      const sorted = Array.from(cache.entries()).sort(
-        (a, b) => a[1].lastAccessed - b[1].lastAccessed
-      );
-      const toRemove = sorted.slice(0, cache.size - maxSize + 1);
-      const newCache = new Map(cache);
-      for (const [key] of toRemove) {
-        newCache.delete(key);
-      }
-      return newCache;
-    }
-    return cache;
-  }
-
   private evictLRU(collection: string): void {
     const entries = this.getCollectionEntries(collection);
     if (entries.size >= this.MAX_ENTRIES_PER_COLLECTION) {
-      const filteredEntries = this.evictLRUFromCache(entries, this.MAX_ENTRIES_PER_COLLECTION);
+      const filteredEntries = evictLRU(entries, this.MAX_ENTRIES_PER_COLLECTION);
       const newCache = new Map(this.collectionDataCache());
       for (const [key] of entries) {
         newCache.delete(key);
@@ -107,7 +90,7 @@ export class DataProviderService {
 
   private evictLRUColumns(): void {
     const cache = this.columnsCache();
-    const newCache = this.evictLRUFromCache(cache, this.MAX_COLUMNS_CACHE_SIZE);
+    const newCache = evictLRU(cache, this.MAX_COLUMNS_CACHE_SIZE);
     if (newCache !== cache) {
       this.columnsCache.set(newCache);
     }

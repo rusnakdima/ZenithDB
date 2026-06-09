@@ -84,8 +84,8 @@ export class CollectionsApiService extends CacheService {
       has_more: boolean;
       total_count: number;
     }>("collection_list", {
-      connId: connectionId,
-      dbName: dbName,
+      conn_id: connectionId,
+      db_name: dbName,
       offset,
       limit,
     });

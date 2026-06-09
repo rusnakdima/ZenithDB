@@ -1,5 +1,6 @@
 import { Injectable, signal, computed } from "@angular/core";
 import { QueryTab } from "@shared/models/query.model";
+import { findById } from "@shared/utils/array.utils";
 
 @Injectable({ providedIn: "root" })
 export class TabService {
@@ -9,7 +10,7 @@ export class TabService {
   readonly tabs = this.tabsSignal.asReadonly();
   readonly activeTabId = this.activeTabIdSignal.asReadonly();
   readonly activeTab = computed(() => {
-    return this.tabs().find((t) => t.id === this.activeTabIdSignal()) ?? this.tabs()[0];
+    return findById(this.tabs(), this.activeTabIdSignal()) ?? this.tabs()[0];
   });
 
   private createTab(name: string): QueryTab {

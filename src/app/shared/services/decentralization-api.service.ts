@@ -72,7 +72,7 @@ export class DecentralizationApiService extends CacheService {
     });
 
     const result = await this.tauri.invoke<DatabaseMetadata>("save_database_metadata", {
-      connectionId: connId,
+      conn_id: connId,
       name,
       path: path || null,
       metadata: null,
@@ -159,7 +159,7 @@ export class DecentralizationApiService extends CacheService {
         databases: DatabaseMetadata[];
         has_more: boolean;
         total_count: number;
-      }>("database_list", { connId: connectionId, offset, limit })
+      }>("database_list", { conn_id: connectionId, offset, limit })
       .then((result) => {
         this.databasesSignal.update((map) => {
           const newMap = new Map(map);

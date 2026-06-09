@@ -17,8 +17,12 @@ interface WithErrorHandlingOptions {
   showToastOnError?: boolean;
 }
 
-function isSignalLoading(loading: any): loading is { set: (value: boolean) => void } {
-  return loading && typeof loading.set === "function";
+function isSignalLoading(loading: unknown): loading is { set: (value: boolean) => void } {
+  return (
+    loading !== null &&
+    typeof loading === "object" &&
+    typeof (loading as { set?: unknown }).set === "function"
+  );
 }
 
 function resolveLoadingSetter(
@@ -67,14 +71,14 @@ export function withErrorHandling<T>(
 
       const appError = errorHandler
         ? {
-            code: "UNKNOWN",
+            code: "UNKNOWN" as ErrorCode,
             message: String(err),
             userMessage: options.errorMessage || "An error occurred",
             timestamp: new Date(),
             retryable: true,
           }
         : {
-            code: "UNKNOWN",
+            code: "UNKNOWN" as ErrorCode,
             message: String(err),
             userMessage: options.errorMessage || "An error occurred",
             timestamp: new Date(),

@@ -83,10 +83,10 @@ export class SettingsService {
 
   get(path: string): unknown {
     const keys = path.split(".");
-    let value: any = this.settingsSignal();
+    let value: AppSettings | Record<string, unknown> = this.settingsSignal();
     for (const key of keys) {
       if (value == null || typeof value !== "object") return undefined;
-      value = value[key];
+      value = (value as Record<string, unknown>)[key] as Record<string, unknown>;
     }
     return value;
   }

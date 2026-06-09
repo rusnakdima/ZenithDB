@@ -36,9 +36,9 @@ export class QueryExecutionService {
       this.toast.success(`Query executed (${executionTime.toFixed(0)}ms)`);
 
       return { results: rawResults, executionTime, success: true };
-    } catch (e: any) {
+    } catch (e: unknown) {
       const executionTime = performance.now() - startTime;
-      const errorMessage = e.message || "Query failed";
+      const errorMessage = e instanceof Error ? e.message : "Query failed";
 
       this.tabService.updateActiveTab({
         error: errorMessage,

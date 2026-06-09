@@ -10,7 +10,7 @@ export interface ProviderFormData {
   database: string;
 }
 
-export function parseProviderConfig(config: any): ProviderFormData {
+export function parseProviderConfig(config: Record<string, unknown>): ProviderFormData {
   const result: ProviderFormData = {
     path: "",
     uri: "",
@@ -23,20 +23,24 @@ export function parseProviderConfig(config: any): ProviderFormData {
 
   if (!config) return result;
 
-  switch (config.type) {
+  const configType = config["type"] as string;
+  const configUri = config["uri"] as string | undefined;
+  const configPath = config["path"] as string | undefined;
+
+  switch (configType) {
     case "Json":
-      result.path = config.path || "";
+      result.path = String(configPath || "");
       break;
     case "Sqlite":
-      result.path = config.path || "";
+      result.path = String(configPath || "");
       break;
     case "Mongo":
     case "Redis":
     case "Postgres":
     case "MySql":
-      result.uri = config.uri || "";
-      if (config.uri) {
-        const parsed = parseUri(config.uri, config.type);
+      result.uri = String(configUri || "");
+      if (configUri) {
+        const parsed = parseUri(String(configUri), String(configType));
         result.host = parsed.host;
         result.port = parsed.port;
         result.username = parsed.username;
