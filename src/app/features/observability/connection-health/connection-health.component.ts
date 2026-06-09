@@ -2,6 +2,7 @@ import { Component, signal, computed, inject, OnInit, OnDestroy } from "@angular
 import { CommonModule } from "@angular/common";
 import { MetricsApiService } from "@shared/services/metrics-api.service";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
+import { TIME_CONSTANTS } from "@shared/utils/constants";
 
 @Component({
   selector: "app-connection-health",
@@ -14,7 +15,7 @@ export class ConnectionHealthComponent implements OnInit, OnDestroy {
   private readonly connectionState = inject(ConnectionStateService);
 
   private refreshIntervalId: ReturnType<typeof setInterval> | null = null;
-  private readonly REFRESH_INTERVAL_MS = 30000;
+  private readonly REFRESH_INTERVAL_MS = TIME_CONSTANTS.THIRTY_SECONDS_MS;
 
   private readonly metricsSignal = signal<{
     latency: number;
@@ -93,8 +94,9 @@ export class ConnectionHealthComponent implements OnInit, OnDestroy {
         averageResponseTime: this.getAverageResponseTime(),
         activeConnections: this.getActiveConnections(),
       });
-    } catch (e: any) {
-      this.error.set(e.message || "Failed to load metrics");
+    } catch (e: unknown) {
+      const error = e instanceof Error ? e.message : "Failed to load metrics";
+      this.error.set(error);
     } finally {
       this.isLoading.set(false);
     }
@@ -105,7 +107,7 @@ export class ConnectionHealthComponent implements OnInit, OnDestroy {
   }
 
   private getLastSuccessfulQueryTime(): number | null {
-    return Date.now() - Math.random() * 300000;
+    return Date.now() - Math.random() * (5 * TIME_CONSTANTS.ONE_MINUTE_MS);
   }
 
   private getTotalQueries(): number {
@@ -133,7 +135,7 @@ export class ConnectionHealthComponent implements OnInit, OnDestroy {
     const date = new Date(timestamp);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
+    const diffMins = Math.floor(diffMs / TIME_CONSTANTS.ONE_MINUTE_MS);
 
     if (diffMins < 1) return "Just now";
     if (diffMins < 60) return `${diffMins}m ago`;

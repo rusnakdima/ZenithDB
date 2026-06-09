@@ -2,6 +2,7 @@ import { Component, inject, signal, OnInit, OnDestroy } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { PerformanceService, PerformanceMetrics } from "./performance.service";
+import { TIME_CONSTANTS } from "@shared/utils/constants";
 import { MetricsChartComponent } from "./metrics-chart.component";
 
 type TimeRange = "1h" | "6h" | "24h" | "7d";
@@ -30,7 +31,7 @@ export class PerformanceDashboardComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadMetrics();
-    this.refreshInterval = setInterval(() => this.loadMetrics(), 30000);
+    this.refreshInterval = setInterval(() => this.loadMetrics(), TIME_CONSTANTS.THIRTY_SECONDS_MS);
   }
 
   ngOnDestroy(): void {

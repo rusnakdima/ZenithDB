@@ -1,5 +1,6 @@
 import { Injectable, inject, signal, computed } from "@angular/core";
 import { MetricsApiService } from "@shared/services/metrics-api.service";
+import { TIME_CONSTANTS } from "@shared/utils/constants";
 
 export interface QueryMetric {
   timestamp: number;
@@ -57,19 +58,19 @@ export class PerformanceService {
 
     const queriesOverTime = this.aggregateByTimeBucket(
       recentMetrics,
-      60000,
+      TIME_CONSTANTS.ONE_MINUTE_MS,
       (m) => m.timestamp,
       () => 1
     );
     const latencyOverTime = this.aggregateByTimeBucket(
       recentMetrics,
-      60000,
+      TIME_CONSTANTS.ONE_MINUTE_MS,
       (m) => m.timestamp,
       (m) => m.executionTime
     );
     const errorRateOverTime = this.aggregateByTimeBucket(
       recentMetrics,
-      60000,
+      TIME_CONSTANTS.ONE_MINUTE_MS,
       (m) => m.timestamp,
       (m) => (m.success ? 0 : 1)
     );
@@ -112,13 +113,13 @@ export class PerformanceService {
   private getRangeMs(range: TimeRange): number {
     switch (range) {
       case "1h":
-        return 60 * 60 * 1000;
+        return TIME_CONSTANTS.ONE_HOUR_MS;
       case "6h":
-        return 6 * 60 * 60 * 1000;
+        return TIME_CONSTANTS.ONE_HOUR_MS * 6;
       case "24h":
-        return 24 * 60 * 60 * 1000;
+        return TIME_CONSTANTS.TWENTY_FOUR_HOURS_MS;
       case "7d":
-        return 7 * 24 * 60 * 60 * 1000;
+        return TIME_CONSTANTS.TWENTY_FOUR_HOURS_MS * 7;
     }
   }
 
@@ -162,7 +163,7 @@ export class PerformanceService {
         const cutoff = Date.now() - this.getRangeMs("7d");
         return metrics.filter((m) => m.timestamp >= cutoff);
       });
-    }, 30000);
+    }, TIME_CONSTANTS.THIRTY_SECONDS_MS);
   }
 
   ngOnDestroy(): void {
