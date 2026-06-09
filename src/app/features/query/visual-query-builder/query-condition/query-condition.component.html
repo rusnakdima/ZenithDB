@@ -1,0 +1,58 @@
+<div class="flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2">
+  <!-- Field Selector -->
+  <select
+    class="min-w-[120px] rounded border border-slate-600 bg-slate-700 px-2 py-1.5 text-sm text-slate-200 focus:border-[var(--accent)] focus:outline-none"
+    [ngModel]="condition.field"
+    (ngModelChange)="onFieldChange($event)"
+  >
+    <option value="">Field...</option>
+    @for (field of fields(); track field.name) {
+      <option [value]="field.name">{{ field.name }}</option>
+    }
+  </select>
+
+  <!-- Operator Selector -->
+  <select
+    class="min-w-[140px] rounded border border-slate-600 bg-slate-700 px-2 py-1.5 text-sm text-slate-200 focus:border-[var(--accent)] focus:outline-none"
+    [ngModel]="condition.operator"
+    (ngModelChange)="onOperatorChange($event)"
+  >
+    @for (op of availableOperators(); track op) {
+      <option [value]="op">{{ getOperatorLabel(op) }}</option>
+    }
+  </select>
+
+  <!-- Value Input -->
+  @if (!isNullOperator()) {
+    <input
+      type="text"
+      class="flex-1 rounded border border-slate-600 bg-slate-700 px-3 py-1.5 font-mono text-sm text-slate-200 focus:border-[var(--accent)] focus:outline-none"
+      placeholder="Value..."
+      [ngModel]="condition.value"
+      (ngModelChange)="onValueChange($event)"
+      (focus)="onValueFocus()"
+      (blur)="onValueBlur()"
+    />
+  } @else {
+    <span class="flex-1 px-3 text-sm text-slate-500 italic">
+      {{ condition.operator === "isNull" ? "is null" : "is not null" }}
+    </span>
+  }
+
+  <!-- Remove Button -->
+  <button
+    type="button"
+    class="rounded p-1 text-slate-400 transition-colors hover:text-red-400"
+    (click)="onRemove()"
+    title="Remove condition"
+  >
+    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M6 18L18 6M6 6l12 12"
+      />
+    </svg>
+  </button>
+</div>

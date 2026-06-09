@@ -1,0 +1,10 @@
+<div class="space-y-3">
+  <div class="text-xs tracking-wide text-slate-400 uppercase">Match Conditions</div>
+  <app-query-group
+    [group]="config.conditionGroup"
+    [collectionName]="collectionName"
+    [isNested]="false"
+    [isRoot]="true"
+    (groupChange)="onGroupChange($event)"
+  />
+</div>
