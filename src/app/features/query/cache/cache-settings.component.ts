@@ -1,15 +1,29 @@
-import { Component, input, output, signal, inject, OnInit, OnDestroy } from "@angular/core";
+import {
+  Component,
+  input,
+  output,
+  signal,
+  inject,
+  OnInit,
+  OnDestroy,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+} from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { QueryCacheService, CacheEntry } from "./cache.service";
+import { TIME_CONSTANTS } from "@shared/utils/constants";
+import { formatTimeAgo } from "@shared/utils/time.utils";
 
 @Component({
   selector: "app-cache-settings",
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, FormsModule],
   templateUrl: "./cache-settings.component.html",
 })
 export class CacheSettingsComponent implements OnInit, OnDestroy {
+  private cdr = inject(ChangeDetectorRef);
   private cacheService = inject(QueryCacheService);
 
   queryKey = input<string>("");
@@ -88,19 +102,17 @@ export class CacheSettingsComponent implements OnInit, OnDestroy {
   }
 
   get formattedAge(): string {
-    const age = this.cacheStatus().age;
-    if (age < 1000) return "< 1s";
-    if (age < 60000) return `${Math.floor(age / 1000)}s`;
-    if (age < 3600000) return `${Math.floor(age / 60000)}m`;
-    return `${Math.floor(age / 3600000)}h`;
+    return formatTimeAgo(this.cacheStatus().age);
   }
 
   get formattedTtlRemaining(): string {
     const ttl = this.cacheStatus().ttlRemaining;
     if (ttl <= 0) return "expired";
-    if (ttl < 1000) return "< 1s";
-    if (ttl < 60000) return `${Math.floor(ttl / 1000)}s`;
-    if (ttl < 3600000) return `${Math.floor(ttl / 60000)}m`;
-    return `${Math.floor(ttl / 3600000)}h`;
+    if (ttl < TIME_CONSTANTS.ONE_SECOND_MS) return "< 1s";
+    if (ttl < TIME_CONSTANTS.ONE_MINUTE_MS)
+      return `${Math.floor(ttl / TIME_CONSTANTS.ONE_SECOND_MS)}s`;
+    if (ttl < TIME_CONSTANTS.ONE_HOUR_MS)
+      return `${Math.floor(ttl / TIME_CONSTANTS.ONE_MINUTE_MS)}m`;
+    return `${Math.floor(ttl / TIME_CONSTANTS.ONE_HOUR_MS)}h`;
   }
 }

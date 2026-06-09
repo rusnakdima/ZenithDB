@@ -11,17 +11,17 @@
   </div>
 
   <div class="grid grid-cols-3 gap-4">
-    <div class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] p-4">
+    <div class="rounded-lg border border-[var(--accent)] bg-[var(--bg-elevated)] p-4">
       <p class="text-2xl font-bold text-[var(--text-main)]">{{ stats().totalEntries }}</p>
       <p class="text-xs text-[var(--text-dim)]">Total Entries</p>
     </div>
-    <div class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] p-4">
+    <div class="rounded-lg border border-[var(--accent)] bg-[var(--bg-elevated)] p-4">
       <p class="text-2xl font-bold text-[var(--text-main)]">
         {{ formatBytes(stats().memoryUsed) }}
       </p>
       <p class="text-xs text-[var(--text-dim)]">Memory Used</p>
     </div>
-    <div class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] p-4">
+    <div class="rounded-lg border border-[var(--accent)] bg-[var(--bg-elevated)] p-4">
       <p class="text-2xl font-bold text-[var(--accent)]">{{ stats().hitRate.toFixed(1) }}%</p>
       <p class="text-xs text-[var(--text-dim)]">Hit Rate</p>
     </div>
@@ -30,7 +30,7 @@
   <div>
     <input
       type="text"
-      class="w-full rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-2 text-sm text-[var(--text-main)] placeholder-[var(--text-dim)] focus:border-[var(--accent)] focus:outline-none"
+      class="w-full rounded-lg border border-[var(--accent)] bg-[var(--bg-elevated)] px-3 py-2 text-sm text-[var(--text-main)] placeholder-[var(--text-dim)] focus:border-[var(--accent)] focus:outline-none"
       placeholder="Filter cache entries..."
       [ngModel]="filterText()"
       (ngModelChange)="filterText.set($event)"
@@ -48,7 +48,7 @@
       </div>
     }
     @for (entry of filteredEntries(); track entry.key) {
-      <div class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)]">
+      <div class="rounded-lg border border-[var(--accent)] bg-[var(--bg-elevated)]">
         <div
           class="flex cursor-pointer items-center justify-between p-3 hover:bg-[var(--bg-card)]"
           (click)="toggleExpanded(entry.key)"

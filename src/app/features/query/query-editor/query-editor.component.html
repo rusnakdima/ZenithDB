@@ -128,7 +128,7 @@
     <div class="flex min-h-0 flex-1 gap-3">
       <!-- Main Editor Area -->
       <div
-        class="flex flex-1 flex-col overflow-hidden rounded-xl border border-[var(--border-visible)] bg-[var(--bg-card)]"
+        class="flex flex-1 flex-col overflow-hidden rounded-xl border border-[var(--accent)] bg-[var(--bg-card)]"
       >
         <!-- Toolbar -->
         <div
@@ -226,7 +226,7 @@
       <!-- History Sidebar -->
       @if (showHistory()) {
         <div
-          class="w-72 shrink-0 overflow-hidden rounded-xl border border-[var(--border-visible)] bg-[var(--bg-card)]"
+          class="w-72 shrink-0 overflow-hidden rounded-xl border border-[var(--accent)] bg-[var(--bg-card)]"
         >
           <div
             class="flex items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--bg-elevated)]/50 px-4 py-2"
@@ -352,9 +352,7 @@
 
     <!-- Results Section -->
     @if (activeTab().results) {
-      <div
-        class="flex-1 overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-neutral-900"
-      >
+      <div class="flex-1 overflow-hidden rounded-xl border border-[var(--accent)] bg-neutral-900">
         <div
           class="flex items-center justify-between border-b border-[var(--border-subtle)] bg-neutral-800/50 px-4 py-2"
         >

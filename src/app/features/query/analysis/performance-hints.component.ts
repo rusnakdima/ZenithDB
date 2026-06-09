@@ -8,19 +8,26 @@ import {
   OnInit,
   OnChanges,
   SimpleChanges,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
 } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { QueryAnalyzerService, QueryAnalysisResult } from "./query-analyzer.service";
 import { QueryHint, IndexRecommendation } from "../services/hint-analyzer.service";
+import { FilterExpression } from "@shared/models/connection.config";
+import { ErrorHandlerService } from "@shared/services/error-handler.service";
 
 @Component({
   selector: "app-performance-hints",
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule],
   templateUrl: "./performance-hints.component.html",
 })
 export class PerformanceHintsComponent implements OnInit, OnChanges {
+  private cdr = inject(ChangeDetectorRef);
   private readonly queryAnalyzer = inject(QueryAnalyzerService);
+  private readonly errorHandler = inject(ErrorHandlerService);
 
   @Input() collectionName = "";
   @Input() filterText = "";
@@ -53,7 +60,7 @@ export class PerformanceHintsComponent implements OnInit, OnChanges {
     this.isLoading.set(true);
 
     try {
-      let filter: any;
+      let filter: FilterExpression;
       try {
         filter = JSON.parse(this.filterText);
       } catch {
@@ -72,7 +79,7 @@ export class PerformanceHintsComponent implements OnInit, OnChanges {
       this.recommendations.set(result.recommendations);
       this.score.set(result.score);
     } catch (e) {
-      console.error("Failed to analyze query:", e);
+      this.errorHandler.handleError(e, "PerformanceHintsComponent.analyze");
       this.hints.set([]);
       this.recommendations.set([]);
     } finally {

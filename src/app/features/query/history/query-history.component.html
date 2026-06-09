@@ -159,17 +159,20 @@
 
   <div class="border-t border-[var(--border-subtle)] px-4 py-3">
     <div class="grid grid-cols-3 gap-4">
-      <div class="rounded-lg border border-[var(--border-color)] bg-[var(--bg-card)] p-3">
+      <div class="rounded-lg border border-[var(--accent)] bg-[var(--bg-card)] p-3">
+        >
         <div class="text-xs text-[var(--text-dim)]">Total Queries</div>
         <div class="mt-1 text-lg font-semibold text-[var(--text-main)]">{{ totalQueries() }}</div>
       </div>
-      <div class="rounded-lg border border-[var(--border-color)] bg-[var(--bg-card)] p-3">
+      <div class="rounded-lg border border-[var(--accent)] bg-[var(--bg-card)] p-3">
+        >
         <div class="text-xs text-[var(--text-dim)]">Avg Time</div>
         <div class="mt-1 text-lg font-semibold text-[var(--text-main)]">
           {{ formatDuration(averageExecutionTime()) }}
         </div>
       </div>
-      <div class="rounded-lg border border-[var(--border-color)] bg-[var(--bg-card)] p-3">
+      <div class="rounded-lg border border-[var(--accent)] bg-[var(--bg-card)] p-3">
+        >
         <div class="text-xs text-[var(--text-dim)]">Success Rate</div>
         <div class="mt-1 text-lg font-semibold text-[var(--text-main)]">
           {{

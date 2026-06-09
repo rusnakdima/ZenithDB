@@ -2,6 +2,7 @@ import { Injectable, inject, signal, computed } from "@angular/core";
 import { PersistentStorageService } from "@shared/services/persistent-storage.service";
 import { QueryTemplate, TemplateCategory, QueryTemplateFilter } from "../models";
 import { FilterOperator } from "@shared/models/connection.config";
+import { findById } from "@shared/utils/array.utils";
 
 const TEMPLATES_STORAGE_KEY = "zenith_query_templates";
 const FAVORITES_STORAGE_KEY = "zenith_template_favorites";
@@ -70,7 +71,7 @@ export class TemplateService {
   }
 
   getTemplateById(id: string): QueryTemplate | undefined {
-    return this.templatesSignal().find((t) => t.id === id);
+    return findById(this.templatesSignal(), id);
   }
 
   getTemplatesByCategory(category: TemplateCategory): QueryTemplate[] {

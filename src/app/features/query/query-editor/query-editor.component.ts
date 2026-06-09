@@ -108,12 +108,20 @@ export class QueryEditorComponent implements OnInit, OnDestroy {
   }
 
   loadHistory() {
-    const stored = this.storage.get<any[]>("zenith_query_history");
+    interface HistoryItem {
+      id: string;
+      query: string;
+      timestamp: string | Date;
+      collection?: string;
+      success?: boolean;
+    }
+    const stored = this.storage.get<HistoryItem[]>("zenith_query_history");
     if (stored) {
       this.history.set(
-        stored.map((h: any) => ({
+        stored.map((h) => ({
           ...h,
           timestamp: new Date(h.timestamp),
+          success: h.success ?? false,
         }))
       );
     } else {

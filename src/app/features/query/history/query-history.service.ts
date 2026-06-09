@@ -1,5 +1,6 @@
 import { Injectable, signal, computed } from "@angular/core";
 import { PersistentStorageService } from "@shared/services/persistent-storage.service";
+import { findById } from "@shared/utils/array.utils";
 
 export interface QueryHistoryEntry {
   id: string;
@@ -108,7 +109,7 @@ export class QueryHistoryService {
   }
 
   getQueryById(id: string): QueryHistoryEntry | undefined {
-    return this.historySignal().find((h) => h.id === id);
+    return findById(this.historySignal(), id);
   }
 
   getFilteredHistory(filter: "all" | "successful" | "failed"): QueryHistoryEntry[] {

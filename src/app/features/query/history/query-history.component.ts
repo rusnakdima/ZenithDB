@@ -2,6 +2,7 @@ import { Component, Output, EventEmitter, signal, computed, inject, OnInit } fro
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { QueryHistoryService, QueryHistoryEntry } from "./query-history.service";
+import { TIME_CONSTANTS } from "@shared/utils/constants";
 
 type FilterTab = "all" | "successful" | "failed";
 
@@ -72,9 +73,9 @@ export class QueryHistoryComponent implements OnInit {
     const date = new Date(timestamp);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
+    const diffMins = Math.floor(diffMs / TIME_CONSTANTS.ONE_MINUTE_MS);
+    const diffHours = Math.floor(diffMs / TIME_CONSTANTS.ONE_HOUR_MS);
+    const diffDays = Math.floor(diffMs / TIME_CONSTANTS.TWENTY_FOUR_HOURS_MS);
 
     if (diffMins < 1) return "Just now";
     if (diffMins < 60) return `${diffMins}m ago`;
@@ -86,8 +87,8 @@ export class QueryHistoryComponent implements OnInit {
 
   formatDuration(duration: number): string {
     if (duration < 1000) return `${duration}ms`;
-    if (duration < 60000) return `${(duration / 1000).toFixed(1)}s`;
-    return `${Math.floor(duration / 60000)}m ${Math.floor((duration % 60000) / 1000)}s`;
+    if (duration < TIME_CONSTANTS.ONE_MINUTE_MS) return `${(duration / 1000).toFixed(1)}s`;
+    return `${Math.floor(duration / TIME_CONSTANTS.ONE_MINUTE_MS)}m ${Math.floor((duration % TIME_CONSTANTS.ONE_MINUTE_MS) / 1000)}s`;
   }
 
   getQueryPreview(query: string): string {

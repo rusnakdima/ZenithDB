@@ -11,6 +11,8 @@ import {
   SimpleChanges,
   ViewChild,
   ElementRef,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
 } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
@@ -25,6 +27,7 @@ import { QueryResult } from "@shared/models/connection.config";
 import { formatSQL } from "@shared/utils";
 import { QueryTab } from "@shared/models/query.model";
 import { FilterExpression } from "@shared/models/connection.config";
+import { QueryTemplate } from "../models/query-template.model";
 
 import {
   ProviderDetectorService,
@@ -47,6 +50,7 @@ type PanelType = "templates" | "history" | "none";
 @Component({
   selector: "app-universal-query-editor",
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
     FormsModule,
@@ -55,7 +59,8 @@ type PanelType = "templates" | "history" | "none";
     QueryHintsComponent,
     ProviderAwareEditorComponent,
   ],
-  template: `
+  templateUrl: "./universal-query-editor.component.html",
+  /* // template: `
     <div class="flex h-full flex-col bg-slate-900">
       <!-- Toolbar -->
       <div
@@ -270,7 +275,7 @@ type PanelType = "templates" | "history" | "none";
         </div>
       </div>
     </div>
-  `,
+  ` */
 })
 export class UniversalQueryEditorComponent implements OnInit, OnChanges {
   private readonly connectionState = inject(ConnectionStateService);
@@ -287,6 +292,7 @@ export class UniversalQueryEditorComponent implements OnInit, OnChanges {
   private readonly filterBuilder = inject(FilterBuilderService);
   private readonly templateService = inject(TemplateService);
   private readonly hintAnalyzer = inject(HintAnalyzerService);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   @Input() collectionName = "";
   @Input() activeTab: QueryTab | null = null;
@@ -316,12 +322,20 @@ export class UniversalQueryEditorComponent implements OnInit, OnChanges {
   }
 
   private loadHistory(): void {
-    const stored = this.storage.get<any[]>("zenith_query_history");
+    interface HistoryItem {
+      id: string;
+      query: string;
+      timestamp: string | Date;
+      collection?: string;
+      success?: boolean;
+    }
+    const stored = this.storage.get<HistoryItem[]>("zenith_query_history");
     if (stored) {
       this.history.set(
-        stored.map((h: any) => ({
+        stored.map((h) => ({
           ...h,
           timestamp: new Date(h.timestamp),
+          success: h.success ?? false,
         }))
       );
     }
@@ -346,7 +360,7 @@ export class UniversalQueryEditorComponent implements OnInit, OnChanges {
     this.activePanel.update((current) => (current === panel ? "none" : panel));
   }
 
-  onSelectTemplate(template: any): void {
+  onSelectTemplate(template: QueryTemplate): void {
     this.activePanel.set("none");
 
     const variables: Record<string, unknown> = {};

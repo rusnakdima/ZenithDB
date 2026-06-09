@@ -25,7 +25,8 @@ import { SyntaxMode } from "../models";
   selector: "app-provider-aware-editor",
   standalone: true,
   imports: [CommonModule, FormsModule],
-  template: `
+  templateUrl: "./provider-aware-editor.component.html",
+  /* // template: `
     <div class="flex h-full flex-col rounded-lg border border-slate-700 bg-slate-900">
       <!-- Mode Selector -->
       <div
@@ -155,7 +156,7 @@ import { SyntaxMode } from "../models";
         </div>
       }
     </div>
-  `,
+  ` */
 })
 export class ProviderAwareEditorComponent implements OnInit, OnChanges {
   @ViewChild("editorTextarea") editorRef!: ElementRef<HTMLTextAreaElement>;

@@ -1,16 +1,28 @@
-import { Component, inject, signal, computed } from "@angular/core";
+import {
+  Component,
+  inject,
+  signal,
+  computed,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+} from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { QueryCacheService, CacheEntry } from "./cache.service";
 import { ToastService } from "@services/toast.service";
+import { TIME_CONSTANTS } from "@shared/utils/constants";
+import { formatTimeAgo } from "@shared/utils/time.utils";
+import { formatBytes } from "@shared/utils/number.utils";
 
 @Component({
   selector: "app-cache-manager",
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, FormsModule],
   templateUrl: "./cache-manager.component.html",
 })
 export class CacheManagerComponent {
+  private cdr = inject(ChangeDetectorRef);
   private cacheService = inject(QueryCacheService);
   private toast = inject(ToastService);
 
@@ -53,18 +65,11 @@ export class CacheManagerComponent {
     this.toast.success(`All cache cleared`);
   }
 
-  formatBytes(bytes: number): string {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  formatAge(timestamp: number): string {
+    return formatTimeAgo(timestamp);
   }
 
-  formatAge(timestamp: number): string {
-    const age = Date.now() - timestamp;
-    if (age < 60000) return `${Math.floor(age / 1000)}s ago`;
-    if (age < 3600000) return `${Math.floor(age / 60000)}m ago`;
-    return `${Math.floor(age / 3600000)}h ago`;
-  }
+  formatBytes = formatBytes;
 
   formatValue(value: unknown): string {
     const str = JSON.stringify(value);
