@@ -25,16 +25,9 @@ import {
   CdkDragPlaceholder,
   moveItemInArray,
 } from "@angular/cdk/drag-drop";
-import { ColumnInfo, RowData, FilterExpression } from "@shared/models/connection.config";
+import { ColumnInfo, RowData } from "@shared/models/connection.config";
 import { FormatValuePipe } from "@shared/pipes/format-value.pipe";
 import { trackByRow, isNullOrUndefined } from "@shared/utils/collection.utils";
-import { safeJsonParse } from "@shared/utils/json.utils";
-import { DataStoreService } from "@services/core/data-store.service";
-import { ClipboardService } from "@shared/services/clipboard.service";
-import { ToastService } from "@services/toast.service";
-import { ExportService } from "@shared/services/export.service";
-import { PersistentStorageService } from "@shared/services/persistent-storage.service";
-import { DiagnosticLoggerService } from "@shared/services/diagnostic-logger.service";
 import {
   ExportDialogComponent,
   ExportFormat,
@@ -42,6 +35,8 @@ import {
 import { ModalComponent } from "@shared/components/modal/modal.component";
 import { RecordFormComponent } from "@features/data/record-form/record-form.component";
 import { BulkActionBarComponent } from "@features/data/bulk-action-bar/bulk-action-bar.component";
+import { DataTableGridStore } from "./store/data-table-grid.store";
+import { DataTableGridService } from "./services/data-table-grid.service";
 
 @Component({
   selector: "app-data-table-grid",
@@ -63,17 +58,8 @@ import { BulkActionBarComponent } from "@features/data/bulk-action-bar/bulk-acti
   templateUrl: "./data-table-grid.component.html",
 })
 export class DataTableGridComponent implements OnInit, OnChanges, OnDestroy, AfterViewInit {
-  private isResizingInProgress = false;
-  private resizeMoveHandler: ((e: MouseEvent) => void) | null = null;
-  private resizeUpHandler: (() => void) | null = null;
-  private resizeRAFId: number | null = null;
-  private resizeLastWidth = 0;
-  private persistentStorage = inject(PersistentStorageService);
-  private diagLogger = inject(DiagnosticLoggerService);
-  private dataStore = inject(DataStoreService);
-  private toast = inject(ToastService);
-  private clipboard = inject(ClipboardService);
-  private exportService = inject(ExportService);
+  private store = inject(DataTableGridStore);
+  private service = inject(DataTableGridService);
 
   @ViewChild("headerScroll") headerScrollRef!: ElementRef<HTMLDivElement>;
   @ViewChild("bodyScroll") bodyScrollRef!: ElementRef<HTMLDivElement>;
@@ -99,20 +85,20 @@ export class DataTableGridComponent implements OnInit, OnChanges, OnDestroy, Aft
   private hasInitialized = false;
   private hasLoadedColumnOrder = false;
 
-  data = signal<RowData[]>([]);
-  total = signal(0);
-  loading = signal(false);
-  error = "";
+  data = this.store.data;
+  total = this.store.total;
+  loading = this.store.loading;
+  error = this.store.error;
 
-  sortColumn = signal("");
-  sortDirection = signal<"asc" | "desc">("asc");
+  sortColumn = this.store.sortColumn;
+  sortDirection = this.store.sortDirection;
 
-  selectedRows = signal<Set<number>>(new Set());
-  visibleColumns = signal<Set<string>>(new Set());
-  columnOrder = signal<string[]>([]);
+  selectedRows = this.store.selectedRows;
+  visibleColumns = this.store.visibleColumns;
+  columnOrder = this.store.columnOrder;
   showColumnMenu = signal(false);
   resizingColumn = signal<string | null>(null);
-  columnWidths = signal<Record<string, number>>({});
+  columnWidths = this.store.columnWidths;
 
   showExportDialog = signal(false);
   showRecordForm = signal(false);
@@ -120,9 +106,7 @@ export class DataTableGridComponent implements OnInit, OnChanges, OnDestroy, Aft
   editingRecord = signal<RowData | null>(null);
   showBulkDeleteConfirm = signal(false);
 
-  allSelected = computed(
-    () => this.data().length > 0 && this.selectedRows().size === this.data().length
-  );
+  allSelected = this.store.allSelected;
 
   startIndex = computed(() => this.page * this.pageSize + 1);
   endIndex = computed(() => Math.min((this.page + 1) * this.pageSize, this.total()));
@@ -190,21 +174,21 @@ export class DataTableGridComponent implements OnInit, OnChanges, OnDestroy, Aft
       this.lastPageNum = this.page;
       this.lastPageSizeNum = this.pageSize;
       this.hasInitialized = true;
-      this.loadData();
+      this.onLoadData();
     } else if (filterChanged || pageChanged || pageSizeChanged) {
       this.lastFilter = this.filter;
       this.lastPageNum = this.page;
       this.lastPageSizeNum = this.pageSize;
-      this.loadData(true);
+      this.onLoadData(true);
     } else if (columnsChanged && this.columns.length > 0 && this.collectionName) {
       this.initColumnWidths();
-      this.loadData();
+      this.onLoadData();
       return;
     }
 
     if (reloadTriggerChanged) {
       this.lastReloadTrigger = this.reloadTrigger;
-      this.loadData(true);
+      this.onLoadData(true);
     }
   }
 
@@ -230,78 +214,51 @@ export class DataTableGridComponent implements OnInit, OnChanges, OnDestroy, Aft
     this.hasInitialized = true;
     if (this.collectionName) {
       if (this.columns.length === 0) {
-        await this.loadColumnsFallback();
+        await this.onLoadColumnsFallback();
       } else {
         this.columns = [...this.columns];
         this.initColumnWidths();
       }
-      await this.loadData();
+      await this.onLoadData();
     }
   }
 
   ngOnDestroy() {
-    if (this.resizeMoveHandler) {
-      document.removeEventListener("mousemove", this.resizeMoveHandler);
-      this.resizeMoveHandler = null;
-    }
-    if (this.resizeUpHandler) {
-      document.removeEventListener("mouseup", this.resizeUpHandler);
-      this.resizeUpHandler = null;
-    }
-    if (this.resizeRAFId !== null) {
-      cancelAnimationFrame(this.resizeRAFId);
-      this.resizeRAFId = null;
-    }
-    this.isResizingInProgress = false;
+    this.store.reset();
   }
 
   initColumnWidths() {
-    const widths: Record<string, number> = {};
-
     const allColumnNames = this.columns.map((c) => c.name);
     const defaultOrder = allColumnNames;
 
     if (!this.hasLoadedColumnOrder) {
-      const savedOrder = this.loadColumnOrder();
+      const savedOrder = this.service.loadColumnOrder(this.collectionName, this.columns);
       if (savedOrder.length > 0) {
         const validCols = savedOrder.filter((c) => this.columns.some((col) => col.name === c));
         if (validCols.length > 0) {
-          const missing = allColumnNames.filter((c) => !validCols.includes(c));
-          this.columnOrder.set([...validCols, ...missing]);
+          this.store.setColumnOrder([
+            ...validCols,
+            ...allColumnNames.filter((c) => !validCols.includes(c)),
+          ]);
           this.hasLoadedColumnOrder = true;
         } else {
-          this.columnOrder.set(defaultOrder);
+          this.store.setColumnOrder(defaultOrder);
         }
       } else {
-        this.columnOrder.set(defaultOrder);
+        this.store.setColumnOrder(defaultOrder);
       }
     }
 
-    this.columns.forEach((c) => {
-      widths[c.name] = 150;
-    });
-    this.columnWidths.set(widths);
-
-    const visible = new Set<string>();
-    this.columns.forEach((c) => visible.add(c.name));
-    this.visibleColumns.set(visible);
+    this.store.initColumns(this.columns);
   }
 
-  async loadData(forceRefresh?: boolean) {
-    this.loading.set(true);
-    this.error = "";
-    const t0 = Date.now();
+  private async onLoadData(forceRefresh?: boolean) {
+    const filterObj = this.service.parseFilter(this.filter);
+    if (filterObj === undefined && this.filter) {
+      return;
+    }
     try {
-      let filterObj: FilterExpression | undefined;
-      if (this.filter) {
-        filterObj = safeJsonParse<FilterExpression | undefined>(this.filter, undefined);
-        if (filterObj === undefined) {
-          this.error = "Invalid filter JSON";
-          this.loading.set(false);
-          return;
-        }
-      }
-      const result = await this.dataStore.queryData(
+      await this.service.loadData(
         this.collectionName,
         {
           filter: filterObj,
@@ -312,39 +269,29 @@ export class DataTableGridComponent implements OnInit, OnChanges, OnDestroy, Aft
         },
         forceRefresh
       );
-      this.diagLogger.logDataLoad("datagrid-loadData", result.data.length, Date.now() - t0, {
-        total: result.total,
-        page: this.page,
-        pageSize: this.pageSize,
-      });
-      this.data.set(result.data as RowData[]);
-      this.total.set(result.total);
-    } catch (e) {
-      this.error = (e as Error).message || "Failed to load data";
-      this.toast.error(this.error);
-    } finally {
-      this.loading.set(false);
+    } catch {
+      // error handled in service
     }
   }
 
-  async loadColumnsFallback() {
+  private async onLoadColumnsFallback() {
     try {
-      const schema = await this.dataStore.describeCollection(this.collectionName);
-      this.columns = schema.columns;
+      const columns = await this.service.loadColumnsFallback(this.collectionName);
+      this.columns = columns;
       this.initColumnWidths();
-    } catch (e) {}
+    } catch {
+      // error handled in service
+    }
   }
 
   onSort(event: { column: string; direction: "asc" | "desc" }) {
-    this.sortColumn.set(event.column);
-    this.sortDirection.set(event.direction);
-    this.loadData();
+    this.store.setSort(event.column, event.direction);
+    this.onLoadData();
   }
 
   onSortByColumn(column: string) {
-    const newDirection: "asc" | "desc" =
-      this.sortColumn() === column && this.sortDirection() === "asc" ? "desc" : "asc";
-    this.sortChange.emit({ column, direction: newDirection });
+    this.store.toggleSort(column);
+    this.sortChange.emit({ column, direction: this.sortDirection() });
   }
 
   getSortIcon(column: string): "asc" | "desc" | "none" {
@@ -365,83 +312,43 @@ export class DataTableGridComponent implements OnInit, OnChanges, OnDestroy, Aft
       0,
       movedCol
     );
-    this.columnOrder.set(newOrder);
-    this.saveColumnOrder(newOrder);
+    this.store.setColumnOrder(newOrder);
+    this.service.saveColumnOrder(this.collectionName, newOrder);
     this.hasLoadedColumnOrder = true;
     this.columnsOrderChange.emit(newOrder);
-  }
-
-  private saveColumnOrder(order: string[]) {
-    if (!this.collectionName) return;
-    this.persistentStorage.setColumnOrder(this.collectionName, order);
-  }
-
-  private loadColumnOrder(): string[] {
-    if (!this.collectionName) return [];
-    const stored = this.persistentStorage.getColumnOrder(this.collectionName);
-    if (stored && stored.length > 0) {
-      const valid = stored.filter((c) => this.columns.some((col) => col.name === c));
-      if (valid.length > 0) return valid;
-    }
-    return [];
   }
 
   onColumnResizeStart(col: string, event: MouseEvent) {
     event.preventDefault();
     this.resizingColumn.set(col);
-    this.isResizingInProgress = true;
     const startX = event.clientX;
     const startWidth = this.columnWidths()[col] || 150;
-    this.resizeLastWidth = startWidth;
+    let resizeLastWidth = startWidth;
 
-    this.resizeMoveHandler = (e: MouseEvent) => {
-      if (this.resizeRAFId !== null) return;
-      this.resizeRAFId = requestAnimationFrame(() => {
-        this.resizeRAFId = null;
-        const newWidth = Math.max(80, startWidth + (e.clientX - startX));
-        if (Math.abs(newWidth - this.resizeLastWidth) >= 5) {
-          this.resizeLastWidth = newWidth;
-          this.columnWidths.update((w) => ({ ...w, [col]: newWidth }));
-        }
-      });
+    const moveHandler = (e: MouseEvent) => {
+      const newWidth = Math.max(80, startWidth + (e.clientX - startX));
+      if (Math.abs(newWidth - resizeLastWidth) >= 5) {
+        resizeLastWidth = newWidth;
+        this.store.setColumnWidth(col, newWidth);
+      }
     };
 
     const upHandler = () => {
-      if (this.resizeRAFId !== null) {
-        cancelAnimationFrame(this.resizeRAFId);
-        this.resizeRAFId = null;
-      }
       this.resizingColumn.set(null);
-      this.isResizingInProgress = false;
-      if (this.resizeMoveHandler) {
-        document.removeEventListener("mousemove", this.resizeMoveHandler);
-      }
+      document.removeEventListener("mousemove", moveHandler);
       document.removeEventListener("mouseup", upHandler);
-      this.resizeMoveHandler = null;
-      this.resizeUpHandler = null;
     };
-    this.resizeUpHandler = upHandler;
 
-    document.addEventListener("mousemove", this.resizeMoveHandler);
-    document.addEventListener("mouseup", this.resizeUpHandler);
+    document.addEventListener("mousemove", moveHandler);
+    document.addEventListener("mouseup", upHandler);
   }
 
   onToggleSelectAll() {
-    if (this.allSelected()) {
-      this.selectedRows.set(new Set());
-    } else {
-      this.selectedRows.set(new Set(this.data().map((_, i) => i)));
-    }
+    this.store.toggleSelectAll();
   }
 
   onToggleRow(index: number) {
-    const selected = new Set(this.selectedRows());
-    if (selected.has(index)) {
-      selected.delete(index);
-    } else {
-      selected.add(index);
-    }
-    this.selectedRows.set(selected);
+    this.store.toggleRow(index);
   }
 
   onRowHover(rowIndex: number) {
@@ -470,24 +377,15 @@ export class DataTableGridComponent implements OnInit, OnChanges, OnDestroy, Aft
   }
 
   showAllCols() {
-    const all = new Set(this.columns.map((c) => c.name));
-    this.visibleColumns.set(all);
+    this.store.showAllColumns(this.columns);
   }
 
   hideAllCols() {
-    this.visibleColumns.set(new Set());
+    this.store.hideAllColumns();
   }
 
   toggleColVisibility(colName: string) {
-    this.visibleColumns.update((v) => {
-      const newSet = new Set(v);
-      if (newSet.has(colName)) {
-        newSet.delete(colName);
-      } else {
-        newSet.add(colName);
-      }
-      return newSet;
-    });
+    this.store.toggleColumnVisibility(colName);
   }
 
   onDragStarted(columnName: string, width: number) {
@@ -509,7 +407,7 @@ export class DataTableGridComponent implements OnInit, OnChanges, OnDestroy, Aft
   trackRow = trackByRow;
 
   isSelected(index: number): boolean {
-    return this.selectedRows().has(index);
+    return this.store.isSelected(index);
   }
 
   getTypeIcon(dataType: string): string {
@@ -547,20 +445,14 @@ export class DataTableGridComponent implements OnInit, OnChanges, OnDestroy, Aft
   }
 
   getSelectedData(): RowData[] {
-    const selected = Array.from(this.selectedRows());
-    return selected.map((i) => this.data()[i]);
+    return this.store.getSelectedData();
   }
 
   async exportData(format: ExportFormat) {
-    const dataToExport = this.selectedRows().size > 0 ? this.getSelectedData() : this.data();
-    const filename = `${this.collectionName}_export_${Date.now()}`;
-
     try {
-      await this.exportService.export({ format, filename }, dataToExport);
-    } catch (error) {
-      if ((error as Error).message !== "Export cancelled") {
-        this.toast.error("Export failed");
-      }
+      await this.service.exportData(this.collectionName, format);
+    } catch {
+      // error handled in service
     }
     this.showExportDialog.set(false);
   }
@@ -593,34 +485,23 @@ export class DataTableGridComponent implements OnInit, OnChanges, OnDestroy, Aft
   async handleRecordSave(record: RowData) {
     if ((record as any).__delete) {
       delete (record as any).__delete;
-      await this.deleteRecord(record);
-    } else {
       try {
-        await this.dataStore.saveRow(this.collectionName, record);
-        this.toast.success(this.recordFormMode() === "add" ? "Record created" : "Record updated");
+        await this.service.deleteRecord(this.collectionName, record);
         this.closeRecordForm();
         this.dataChange.emit();
-        this.loadData(true);
-      } catch (e) {
-        this.toast.error("Failed to save record: " + (e as Error).message);
+        this.onLoadData(true);
+      } catch {
+        // error handled in service
       }
-    }
-  }
-
-  private async deleteRecord(record: RowData) {
-    const id = record["_id"] || record["id"];
-    if (!id) {
-      this.toast.error("Cannot delete: record has no ID");
-      return;
-    }
-    try {
-      await this.dataStore.deleteRow(this.collectionName, String(id));
-      this.toast.success("Record deleted");
-      this.closeRecordForm();
-      this.dataChange.emit();
-      this.loadData(true);
-    } catch (e) {
-      this.toast.error("Failed to delete record: " + (e as Error).message);
+    } else {
+      try {
+        await this.service.saveRecord(this.collectionName, record);
+        this.closeRecordForm();
+        this.dataChange.emit();
+        this.onLoadData(true);
+      } catch {
+        // error handled in service
+      }
     }
   }
 
@@ -633,32 +514,15 @@ export class DataTableGridComponent implements OnInit, OnChanges, OnDestroy, Aft
   }
 
   async confirmBulkDelete() {
-    const selectedData = this.getSelectedData();
-    let deleted = 0;
-    let failed = 0;
-
-    for (const record of selectedData) {
-      const id = record["_id"] || record["id"];
-      if (id) {
-        try {
-          await this.dataStore.deleteRow(this.collectionName, String(id));
-          deleted++;
-        } catch {
-          failed++;
-        }
-      }
+    try {
+      await this.service.bulkDelete(this.collectionName);
+      this.store.clearSelection();
+      this.showBulkDeleteConfirm.set(false);
+      this.dataChange.emit();
+      this.onLoadData(true);
+    } catch {
+      // error handled in service
     }
-
-    if (failed > 0) {
-      this.toast.warning(`Deleted ${deleted} records, ${failed} failed`);
-    } else {
-      this.toast.success(`Deleted ${deleted} records`);
-    }
-
-    this.selectedRows.set(new Set());
-    this.showBulkDeleteConfirm.set(false);
-    this.dataChange.emit();
-    this.loadData(true);
   }
 
   cancelBulkDelete() {
@@ -666,12 +530,15 @@ export class DataTableGridComponent implements OnInit, OnChanges, OnDestroy, Aft
   }
 
   clearSelection() {
-    this.selectedRows.set(new Set());
+    this.store.clearSelection();
+  }
+
+  clearError() {
+    this.store.clearError();
   }
 
   getIdField(): string | null {
-    const pkCol = this.columns.find((c) => c.is_primary_key);
-    return pkCol ? pkCol.name : null;
+    return this.service.getIdField(this.columns);
   }
 
   sortChange = new EventEmitter<{ column: string; direction: "asc" | "desc" }>();

@@ -16,7 +16,7 @@
       <div class="grid grid-cols-2 gap-3">
         @for (format of formats; track format.value) {
           <button
-            class="flex flex-col items-center gap-2 rounded-xl border border-[var(--border-subtle)] bg-transparent p-4 transition-all hover:border-[var(--border-visible)] hover:bg-transparent"
+            class="flex flex-col items-center gap-2 rounded-xl border border-[var(--accent)] bg-transparent p-4 transition-all hover:bg-transparent"
             (click)="onExport(format.value)"
           >
             <mat-icon [fontIcon]="format.icon" class="h-8! w-8! text-2xl! text-[var(--accent)]" />

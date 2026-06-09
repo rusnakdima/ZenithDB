@@ -2,6 +2,7 @@ import { Injectable, inject, signal } from "@angular/core";
 import { DataStoreService } from "@services/core/data-store.service";
 import { ToastService } from "@services/toast.service";
 import { RowData } from "@shared/models/connection.config";
+import { getRecordId } from "@shared/utils/record.utils";
 
 export interface DeletedRecord extends RowData {
   _deletedAt: string;
@@ -26,7 +27,7 @@ export class SoftDeleteService {
   }
 
   async softDelete(collection: string, record: RowData): Promise<void> {
-    const id = record["_id"] || record["id"];
+    const id = getRecordId(record);
     if (!id) {
       throw new Error("Record has no ID");
     }
@@ -41,7 +42,7 @@ export class SoftDeleteService {
   }
 
   async restore(collection: string, record: DeletedRecord): Promise<void> {
-    const id = record["_id"] || record["id"];
+    const id = getRecordId(record);
     if (!id) {
       throw new Error("Record has no ID");
     }
@@ -55,7 +56,7 @@ export class SoftDeleteService {
   }
 
   async permanentDelete(collection: string, record: DeletedRecord): Promise<void> {
-    const id = record["_id"] || record["id"];
+    const id = getRecordId(record);
     if (!id) {
       throw new Error("Record has no ID");
     }

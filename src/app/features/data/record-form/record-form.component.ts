@@ -1,4 +1,14 @@
-import { Component, input, output, signal, computed, effect } from "@angular/core";
+import {
+  Component,
+  input,
+  output,
+  signal,
+  computed,
+  effect,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  inject,
+} from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
 import { ColumnInfo, RowData } from "@shared/models/connection.config";
@@ -7,10 +17,12 @@ import { isNullOrUndefined } from "@shared/utils/collection.utils";
 @Component({
   selector: "app-record-form",
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormsModule, MatIconModule],
   templateUrl: "./record-form.component.html",
 })
 export class RecordFormComponent {
+  private cdr = inject(ChangeDetectorRef);
   mode = input<"add" | "edit">("add");
   columns = input<ColumnInfo[]>([]);
   data = input<RowData | null>(null);

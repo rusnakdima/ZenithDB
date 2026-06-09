@@ -1,4 +1,14 @@
-import { Component, Input, Output, EventEmitter, signal, computed } from "@angular/core";
+import {
+  Component,
+  Input,
+  Output,
+  EventEmitter,
+  signal,
+  computed,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  inject,
+} from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
 import {
@@ -18,6 +28,7 @@ import { CheckboxComponent } from "@shared/components/checkbox/checkbox.componen
 @Component({
   selector: "app-column-manager",
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
     MatIconModule,
@@ -31,6 +42,7 @@ import { CheckboxComponent } from "@shared/components/checkbox/checkbox.componen
   templateUrl: "./column-manager.component.html",
 })
 export class ColumnManagerComponent {
+  private cdr = inject(ChangeDetectorRef);
   @Input() columns: ColumnInfo[] = [];
   @Input() visibleColumnsList: string[] = [];
   @Input() columnOrder: string[] = [];

@@ -4,6 +4,7 @@ import { ToastService } from "@services/toast.service";
 import { SchemaCompletionService } from "@features/query/services";
 import { FieldInfo } from "@features/query/models";
 import { RowData } from "@shared/models/connection.config";
+import { getRecordId } from "@shared/utils/record.utils";
 
 export interface BulkUpdateRequest {
   collectionName: string;
@@ -158,6 +159,6 @@ export class BulkOperationsService {
   }
 
   getIdField(document: RowData): string | null {
-    return (document["_id"] as string) || (document["id"] as string) || null;
+    return getRecordId(document);
   }
 }
