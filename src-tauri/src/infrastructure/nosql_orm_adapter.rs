@@ -84,20 +84,6 @@ impl DbProvider {
   }
 }
 
-fn parse_database_rows(rows: &[Vec<serde_json::Value>]) -> Result<Vec<LocalDatabaseMeta>, String> {
-  let mut dbs = Vec::new();
-  for row in rows {
-    if let Some(name) = row.first().and_then(|v| v.as_str()) {
-      dbs.push(LocalDatabaseMeta {
-        name: name.to_string(),
-        size_bytes: None,
-        table_count: None,
-      });
-    }
-  }
-  Ok(dbs)
-}
-
 pub struct NosqlOrmAdapter;
 
 pub(crate) fn validate_safe_path(base: &str, user_input: &str) -> Result<PathBuf, String> {
