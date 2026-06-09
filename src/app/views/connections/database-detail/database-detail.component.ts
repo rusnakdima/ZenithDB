@@ -19,6 +19,7 @@ import { ToastService } from "@services/toast.service";
 import { ProviderUtils } from "@shared/utils/provider.utils";
 import { CollectionMeta } from "@shared/models/connection.config";
 import { withErrorHandling } from "@shared/utils/error-handler.utils";
+import { QUERY_CONSTANTS } from "@shared/utils/constants";
 import { AddDatabasePathComponent } from "../add-database-path/add-database-path.component";
 import { DiagnosticLoggerService } from "@shared/services/diagnostic-logger.service";
 import { Subscription } from "rxjs";
@@ -119,7 +120,12 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy {
     try {
       const result = await withErrorHandling(
         async () => {
-          const response = await this.store.listCollectionsPaginated(connId, dbName, 0, 10000);
+          const response = await this.store.listCollectionsPaginated(
+            connId,
+            dbName,
+            0,
+            QUERY_CONSTANTS.MAX_LIMIT
+          );
           return {
             collections: response.collections,
             total: response.collections.reduce((sum, c) => sum + c.count, 0),

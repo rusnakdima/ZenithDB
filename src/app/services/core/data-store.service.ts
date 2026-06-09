@@ -22,6 +22,7 @@ import {
   CollectionsApiService,
   CollectionListResult,
 } from "@shared/services/collections-api.service";
+import { findById } from "@shared/utils/array.utils";
 
 export interface CacheEntry<T> {
   data: T;
@@ -109,7 +110,7 @@ export class DataStoreService {
   }
 
   getConnection(id: string): ConnectionSummary | undefined {
-    return this.connectionsSignal().find((c) => c.id === id);
+    return findById(this.connectionsSignal(), id);
   }
 
   updateConnections(connections: ConnectionSummary[]): void {
@@ -259,28 +260,6 @@ export class DataStoreService {
     this.systemMetricsSignal.set(null);
   }
 
-  evictLRU<T>(collection: string): void {
-    const prefix = `query:${collection}_`;
-    const cache = this.collectionDataCacheSignal();
-    const entries: Array<{ key: string; entry: QueryCacheEntry }> = [];
-    for (const [key, entry] of cache.entries()) {
-      if (key.startsWith(prefix)) {
-        entries.push({ key, entry });
-      }
-    }
-    if (entries.length >= this.MAX_ENTRIES_PER_COLLECTION) {
-      entries.sort((a, b) => a.entry.queryParams.skip! - b.entry.queryParams.skip!);
-      const toRemove = entries.slice(0, entries.length - this.MAX_ENTRIES_PER_COLLECTION + 1);
-      this.collectionDataCacheSignal.update((map) => {
-        const newMap = new Map(map);
-        for (const { key } of toRemove) {
-          newMap.delete(key);
-        }
-        return newMap;
-      });
-    }
-  }
-
   private evictLRUCollections(connectionId: string): void {
     const cache = this.collectionsSignal();
     if (cache.size > this.MAX_COLLECTIONS_CACHE) {
@@ -366,7 +345,6 @@ export class DataStoreService {
     const requestPromise = (async () => {
       try {
         const result = await this.db.queryData(collection, params);
-        this.evictLRU(collection);
         this.collectionDataCacheSignal.update((map) => {
           const newMap = new Map(map);
           newMap.set(cacheKey, {

@@ -1,4 +1,11 @@
-import { Component, inject, OnInit, signal } from "@angular/core";
+import {
+  Component,
+  inject,
+  OnInit,
+  signal,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+} from "@angular/core";
 import { Router } from "@angular/router";
 import { MatIconModule } from "@angular/material/icon";
 import { ConnectionCardComponent } from "@views/connections/connection-card/connection-card.component";
@@ -12,6 +19,7 @@ import { ConnectionFormService } from "@shared/services/connection-form.service"
 @Component({
   selector: "app-connections",
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ConnectionCardComponent, MatIconModule],
   templateUrl: "./connections.view.html",
 })
@@ -22,6 +30,7 @@ export class ConnectionsComponent implements OnInit {
   private router = inject(Router);
   private confirm = inject(ConfirmService);
   private connectionFormService = inject(ConnectionFormService);
+  private cdr = inject(ChangeDetectorRef);
 
   connections = this.store.connections;
 

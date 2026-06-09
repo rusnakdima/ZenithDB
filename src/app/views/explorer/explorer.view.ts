@@ -20,6 +20,7 @@ import { ClipboardService } from "@shared/services/clipboard.service";
 import { ExportService } from "@shared/services/export.service";
 import { PersistentStorageService } from "@shared/services/persistent-storage.service";
 import { DiagnosticLoggerService } from "@shared/services/diagnostic-logger.service";
+import { ErrorHandlerService } from "@shared/services/error-handler.service";
 import {
   CollectionMeta,
   CollectionStats,
@@ -28,7 +29,10 @@ import {
   FilterExpression,
 } from "@shared/models/connection.config";
 import { formatJsonLines, highlightJsonLine, safeJsonParse } from "@shared/utils/json.utils";
+import { getRecordId } from "@shared/utils/record.utils";
+import { findById } from "@shared/utils/array.utils";
 import { formatCompactNumber } from "@shared/utils/number.utils";
+import { QUERY_CONSTANTS } from "@shared/utils/constants";
 import { FormatBytesPipe } from "@shared/pipes/format-bytes.pipe";
 import { InspectorDrawerComponent } from "@shared/components/inspector-drawer/inspector-drawer.component";
 import { CollectionTabsComponent } from "@shared/components/collection-tabs/collection-tabs.component";
@@ -79,6 +83,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private cdr = inject(ChangeDetectorRef);
   private diagLogger = inject(DiagnosticLoggerService);
+  private errorHandler = inject(ErrorHandlerService);
   private queryParamsSub: Subscription | null = null;
   private routeSub: Subscription | null = null;
   private routeParamSub: Subscription | null = null;
@@ -130,7 +135,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   async ngOnInit() {
     this.routeSub = this.router.events
       .pipe(filter((e) => e instanceof NavigationEnd))
-      .subscribe((e: any) => {
+      .subscribe(() => {
         this.handleRouteChange();
       });
 
@@ -177,7 +182,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
     const connIdIndex = segments.indexOf("connections");
     if (connIdIndex !== -1 && segments[connIdIndex + 1]) {
       this.currentConnectionId = segments[connIdIndex + 1];
-      const conn = this.store.connections().find((c) => c.id === this.currentConnectionId);
+      const conn = findById(this.store.connections(), this.currentConnectionId);
       if (conn) {
         this.connectionState.setActiveConnection(conn);
       }
@@ -258,7 +263,8 @@ export class ExplorerComponent implements OnInit, OnDestroy {
       const s = await this.store.getCollectionStats(collection);
       this.stats.set(s);
       this.total.set(s.document_count);
-    } catch {
+    } catch (e) {
+      this.errorHandler.handleError(e, "ExplorerComponent.loadStats");
       this.stats.set(null);
       this.total.set(0);
     }
@@ -278,7 +284,8 @@ export class ExplorerComponent implements OnInit, OnDestroy {
       this.availableColumnsMeta.set(columns);
       this.selectedColumns.set([...cols]);
       return columns;
-    } catch {
+    } catch (e) {
+      this.errorHandler.handleError(e, "ExplorerComponent.loadColumns");
       this.availableColumns.set([]);
       this.availableColumnsMeta.set([]);
       this.selectedColumns.set([]);
@@ -287,7 +294,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   }
 
   private worker: Worker | null = null;
-  private pendingWorkerTasks: Map<number, any> = new Map();
+  private pendingWorkerTasks: Map<number, unknown> = new Map();
 
   constructor() {
     if (typeof Worker !== "undefined") {
@@ -302,8 +309,13 @@ export class ExplorerComponent implements OnInit, OnDestroy {
 
     this.worker.onmessage = ({ data }) => {
       if (data.type === "result") {
+        interface ProcessedItem {
+          index: number;
+          highlightedLines: Array<{ num: number; html: string }>;
+          json: string;
+        }
         const docMap = new Map(this.jsonDocumentsMap());
-        data.processed.forEach((item: any) => {
+        data.processed.forEach((item: ProcessedItem) => {
           docMap.set(item.index, {
             highlightedLines: item.highlightedLines,
             json: item.json,
@@ -355,8 +367,13 @@ export class ExplorerComponent implements OnInit, OnDestroy {
             const progress = Math.round((totalProcessed.count / totalRows) * 100);
             this.jsonLoadProgress.set(progress);
 
+            interface ProcessedItem {
+              index: number;
+              highlightedLines: Array<{ num: number; html: string }>;
+              json: string;
+            }
             const docMap = new Map(this.jsonDocumentsMap());
-            event.data.processed.forEach((item: any) => {
+            event.data.processed.forEach((item: ProcessedItem) => {
               docMap.set(item.index, {
                 highlightedLines: item.highlightedLines,
                 json: item.json,
@@ -573,7 +590,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
       }
       const result = await this.store.queryData(this.activeCollection(), {
         filter: filterObj,
-        limit: 10000,
+        limit: QUERY_CONSTANTS.MAX_LIMIT,
       });
 
       const exportFormat = format === "csv" ? "csv" : format === "json" ? "json" : "sql";
@@ -709,7 +726,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   }
 
   async deleteDocument(doc: RowData) {
-    const id = doc["_id"] || doc["id"];
+    const id = getRecordId(doc);
     if (!id) {
       this.toast.error("Cannot delete: document has no ID");
       return;

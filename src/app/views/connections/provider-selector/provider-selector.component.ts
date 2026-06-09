@@ -13,51 +13,7 @@ interface ProviderOption {
   selector: "app-provider-selector",
   standalone: true,
   imports: [MatIconModule],
-  template: `
-    <div class="mb-6">
-      <label class="form-label">Select Provider</label>
-      <div class="grid grid-cols-2 gap-3 md:grid-cols-3">
-        @for (p of providers; track p.type) {
-          <button
-            type="button"
-            (click)="selectProvider(p.type)"
-            class="flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-all"
-            [class.border-[var(--accent)]]="selected() === p.type"
-            [class.bg-[var(--accent-muted)]]]="selected() === p.type"
-            [class.border-slate-700]="selected() !== p.type"
-          >
-            <div
-              class="flex h-12 w-12 items-center justify-center rounded-lg"
-              [class.bg-[var(--accent-muted)]]]="selected() === p.type"
-              [class.text-[var(--accent)]]]="selected() === p.type"
-              [class.bg-slate-800]="selected() !== p.type"
-              [class.text-slate-400]="selected() !== p.type"
-            >
-              <mat-icon [fontIcon]="p.icon" class="h-6! w-5! text-xl!" />
-            </div>
-            <span class="text-sm font-medium text-[var(--text-main)]">{{ p.label }}</span>
-          </button>
-        }
-      </div>
-    </div>
-
-    <div class="flex justify-end gap-3">
-      <button
-        (click)="cancelled.emit()"
-        class="rounded-xl border border-[var(--border-visible)] bg-[var(--bg-elevated)] px-6 py-3 text-sm font-bold text-[var(--text-main)] transition-all hover:bg-[var(--bg-card)]"
-      >
-        Cancel
-      </button>
-      <button
-        (click)="next.emit()"
-        [disabled]="!selected()"
-        class="rounded-xl bg-[var(--accent)] px-6 py-3 text-sm font-bold text-black transition-all hover:opacity-90 disabled:opacity-50"
-      >
-        Next
-        <mat-icon fontIcon="arrow_forward" class="ml-2 h-6! w-5! text-xl!" />
-      </button>
-    </div>
-  `,
+  templateUrl: "./provider-selector.component.html",
 })
 export class ProviderSelectorComponent {
   selected = input<ProviderType | null>(null);

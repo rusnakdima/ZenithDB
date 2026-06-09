@@ -48,7 +48,7 @@
       @if (collections().length > 0) {
         <div class="mt-8">
           <h3 class="mb-4 text-lg font-semibold text-[var(--text-main)]">Collections</h3>
-          <div class="rounded-xl border border-[var(--border-color)] bg-transparent">
+          <div class="rounded-xl border border-[var(--accent)] bg-transparent">
             <table class="w-full">
               <thead class="border-b border-[var(--border-subtle)] bg-transparent">
                 <tr
@@ -130,7 +130,7 @@
           </div>
         </div>
       } @else {
-        <div class="mt-8 rounded-xl border border-[var(--border-color)] bg-transparent p-12">
+        <div class="mt-8 rounded-xl border border-[var(--accent)] bg-transparent p-12">
           <div class="flex flex-col items-center justify-center gap-4 text-center">
             <mat-icon
               fontIcon="folder_open"
@@ -147,7 +147,7 @@
 @if (showCreateCollection()) {
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
     <div
-      class="w-full max-w-md rounded-xl border border-[var(--border-color)] bg-transparent p-6 shadow-xl"
+      class="w-full max-w-md rounded-xl border border-[var(--accent)] bg-transparent p-6 shadow-xl"
     >
       <h3 class="mb-4 text-lg font-semibold text-[var(--text-main)]">Create Collection</h3>
       <div class="mb-4">

@@ -6,6 +6,7 @@ import {
   OnDestroy,
   output,
   effect,
+  ChangeDetectionStrategy,
   ChangeDetectorRef,
 } from "@angular/core";
 import { Router, ActivatedRoute } from "@angular/router";
@@ -29,6 +30,7 @@ import { ConnectionFormService } from "@shared/services/connection-form.service"
 @Component({
   selector: "app-connection-form",
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormsModule, MatIconModule, ModalComponent, ConnectionConfigFormComponent],
   templateUrl: "./connection-form.component.html",
 })

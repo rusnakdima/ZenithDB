@@ -101,7 +101,7 @@
         <div class="space-y-2">
           @for (db of databases(); track db.id) {
             <div
-              class="cursor-pointer rounded-xl border border-[var(--border-color)] bg-transparent p-4 transition-colors hover:bg-transparent"
+              class="cursor-pointer rounded-xl border border-[var(--accent)] bg-transparent p-4 transition-colors hover:bg-transparent"
               (click)="openDatabase(db.name)"
             >
               <div class="flex items-center gap-3">
@@ -127,9 +127,7 @@
               </div>
             </div>
           } @empty {
-            <div
-              class="rounded-xl border border-[var(--border-color)] bg-transparent p-8 text-center"
-            >
+            <div class="rounded-xl border border-[var(--accent)] bg-transparent p-8 text-center">
               <p class="text-sm text-[var(--text-muted)]">No databases added</p>
               <p class="mt-1 text-xs text-[var(--text-dim)]">Click "Add Database" to add one</p>
             </div>

@@ -1,4 +1,14 @@
-import { Component, input, output, signal, OnInit, OnChanges, SimpleChanges } from "@angular/core";
+import {
+  Component,
+  input,
+  output,
+  signal,
+  OnInit,
+  OnChanges,
+  SimpleChanges,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+} from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
 import { ProviderType } from "@shared/models/provider.model";
@@ -17,6 +27,7 @@ export interface ConnectionFormData {
 @Component({
   selector: "app-connection-config-form",
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormsModule, MatIconModule],
   templateUrl: "./connection-config-form.component.html",
 })

@@ -13,7 +13,9 @@ import { MatIconModule } from "@angular/material/icon";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { ThemeService } from "@shared/services/theme.service";
 import { DataStoreService } from "@services/core/data-store.service";
+import { ErrorHandlerService } from "@shared/services/error-handler.service";
 import { toSignal } from "@angular/core/rxjs-interop";
+import { findById } from "@shared/utils/array.utils";
 
 export interface Breadcrumb {
   label: string;
@@ -32,6 +34,7 @@ export class AppHeaderComponent implements OnDestroy {
   themeService = inject(ThemeService);
   router = inject(Router);
   private dataStore = inject(DataStoreService);
+  private errorHandler = inject(ErrorHandlerService);
 
   private searchInputRef = viewChild<ElementRef<HTMLInputElement>>("searchInput");
 
@@ -101,7 +104,7 @@ export class AppHeaderComponent implements OnDestroy {
   }
 
   private getConnectionName(connId: string): string {
-    const conn = this.dataStore.getConnections().find((c) => c.id === connId);
+    const conn = findById(this.dataStore.getConnections(), connId);
     return conn?.name || connId;
   }
 
@@ -142,7 +145,8 @@ export class AppHeaderComponent implements OnDestroy {
           try {
             const result = await this.dataStore.listCollectionsPaginated(connId);
             collections = result.collections || [];
-          } catch {
+          } catch (e) {
+            this.errorHandler.handleError(e, "HeaderComponent.onSearch");
             collections = [];
           }
         } else {

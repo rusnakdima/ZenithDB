@@ -6,6 +6,8 @@ import {
   ElementRef,
   HostListener,
   OnDestroy,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
@@ -20,10 +22,12 @@ import { QueryTab } from "@shared/models/query.model";
 import { TabService } from "@shared/services/tab.service";
 import { QueryExecutionService } from "@shared/services/query-execution.service";
 import { formatSQL } from "@shared/utils/sql-formatter.utils";
+import { findById } from "@shared/utils/array.utils";
 
 @Component({
   selector: "app-workbench",
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormsModule, MatIconModule, SqlEditorComponent, OutputConsoleComponent],
   templateUrl: "./workbench.view.html",
 })
@@ -33,6 +37,7 @@ export class WorkbenchComponent implements OnDestroy {
   protected toast = inject(ToastService);
   protected tabService = inject(TabService);
   private readonly queryExecution = inject(QueryExecutionService);
+  private cdr = inject(ChangeDetectorRef);
 
   @ViewChild("splitContainer") splitContainer!: ElementRef<HTMLDivElement>;
 
@@ -85,7 +90,7 @@ export class WorkbenchComponent implements OnDestroy {
   }
 
   private async executeTab(tabId: string) {
-    const tab = this.tabs().find((t) => t.id === tabId);
+    const tab = findById(this.tabs(), tabId);
     if (!tab || !tab.query.trim()) return;
 
     this.tabService.updateTab(tabId, { loading: true, error: "" });
@@ -102,10 +107,11 @@ export class WorkbenchComponent implements OnDestroy {
         executionTime,
         modified: false,
       });
-    } catch (e: any) {
+    } catch (e: unknown) {
       const executionTime = performance.now() - startTime;
+      const errorMessage = e instanceof Error ? e.message : "Query failed";
       this.tabService.updateTab(tabId, {
-        error: e.message || "Query failed",
+        error: errorMessage,
         loading: false,
         executionTime,
       });

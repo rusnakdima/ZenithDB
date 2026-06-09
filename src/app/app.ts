@@ -93,7 +93,7 @@ export class AppComponent implements OnInit, OnDestroy {
     document.addEventListener("visibilitychange", this.boundVisibilityChange);
     this.routeSub = this.router.events
       .pipe(filter((e) => e instanceof NavigationEnd))
-      .subscribe((e: any) => {
+      .subscribe(() => {
         this.isExplorerRoute.set(this.router.url.includes("/explorer"));
       });
   }

@@ -5,6 +5,7 @@ import {
   OnInit,
   OnDestroy,
   ChangeDetectionStrategy,
+  ChangeDetectorRef,
 } from "@angular/core";
 import { Router, RouterLink, ActivatedRoute } from "@angular/router";
 import { TitleCasePipe } from "@angular/common";
@@ -24,6 +25,7 @@ import {
 import { StatusBadgeComponent } from "@shared/components/status-badge/status-badge.component";
 import { ConnectionStatusBadgeComponent } from "@shared/components/connection-status-badge/connection-status-badge.component";
 import { withErrorHandling } from "@shared/utils/error-handler.utils";
+import { findById } from "@shared/utils/array.utils";
 import { AddDatabasePathComponent } from "../add-database-path/add-database-path.component";
 import { Subscription } from "rxjs";
 import { distinctUntilChanged, debounceTime } from "rxjs/operators";
@@ -47,6 +49,7 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
   private confirm = inject(ConfirmService);
   private errorHandler = inject(ErrorHandlerService);
   private toast = inject(ToastService);
+  private cdr = inject(ChangeDetectorRef);
   providerUtils = inject(ProviderUtils);
   route = inject(ActivatedRoute);
   router = inject(Router);
@@ -103,7 +106,7 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
 
     this.connectionId.set(id);
     const connections = this.store.connections();
-    const conn = connections.find((c) => c.id === id);
+    const conn = findById(connections, id);
     if (conn) {
       this.connectionName.set(conn.name);
       this.provider.set(conn.provider);
@@ -169,7 +172,7 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
       this.health.set(healthResult);
       this.loading.set(false);
     } catch (e) {
-      console.error("[ConnectionDetail] Failed to load health/version:", e);
+      this.errorHandler.handleError(e, "loadHealthAndVersion");
       this.loading.set(false);
     }
   }
