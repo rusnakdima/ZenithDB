@@ -20,7 +20,7 @@ fn get_log_dir() -> Result<PathBuf, String> {
   Ok(log_dir)
 }
 
-pub fn init_logger() {
+pub fn init_logger() -> Result<(), String> {
   let log_enabled = std::env::var("ZENITH_LOG")
     .map(|v| v.to_lowercase() != "false")
     .unwrap_or(true);
@@ -29,14 +29,14 @@ pub fn init_logger() {
     tracing_subscriber::registry()
       .with(EnvFilter::new("off"))
       .init();
-    return;
+    return Ok(());
   }
 
   let log_level = std::env::var("ZENITH_LOG_LEVEL").unwrap_or_else(|_| "info".to_string());
 
   let env_filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new(&log_level));
 
-  let file_appender = tracing_appender::rolling::daily(get_log_dir().unwrap(), "zenith.log");
+  let file_appender = tracing_appender::rolling::daily(get_log_dir()?, "zenith.log");
   let (non_blocking, guard) = tracing_appender::non_blocking(file_appender);
 
   LOG_GUARD.set(guard).ok();
@@ -57,8 +57,7 @@ pub fn init_logger() {
     .with(file_layer)
     .with(console_layer)
     .init();
-
-  tracing::info!("Logger initialized");
+  return Ok(());
 }
 
 pub fn set_log_level(level: Level) {

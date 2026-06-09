@@ -1,7 +1,12 @@
 mod commands;
 mod infrastructure;
 mod logger;
+mod models;
+mod services;
+mod state;
 mod types;
+
+use tauri::Manager;
 
 use commands::admin::{
   create_collection, drop_collection, execute_raw, get_server_version, rename_collection,
@@ -27,8 +32,10 @@ use commands::entities::connection::routes as connection_routes;
 use commands::entities::database::routes as database_routes;
 use commands::entities::query::routes as query_routes;
 
-pub fn run() {
-  logger::init_logger();
+use state::AppState;
+
+pub fn run() -> Result<(), String> {
+  logger::init_logger()?;
 
   std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
   std::env::set_var("__NV_DISABLE_EXPLICIT_SYNC", "1");
@@ -37,6 +44,15 @@ pub fn run() {
     .plugin(tauri_plugin_opener::init())
     .plugin(tauri_plugin_dialog::init())
     .plugin(tauri_plugin_mcp_bridge::init())
+    .setup(|app| {
+      let app_state = AppState::new().map_err(|e| {
+        tracing::error!("Failed to create AppState: {}", e);
+        e
+      })?;
+      app.manage(app_state);
+      tracing::info!("AppState initialized");
+      Ok(())
+    })
     .invoke_handler(tauri::generate_handler![
       save_connection,
       list_connections,
@@ -89,5 +105,6 @@ pub fn run() {
       query_routes::query_server_version,
     ])
     .run(tauri::generate_context!())
-    .expect("error while running tauri application");
+    .map_err(|e| e.to_string())?;
+  Ok(())
 }
