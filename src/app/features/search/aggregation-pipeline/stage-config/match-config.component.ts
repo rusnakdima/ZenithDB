@@ -9,18 +9,7 @@ import { ConditionGroup } from "../../../query/models";
   selector: "app-match-config",
   standalone: true,
   imports: [CommonModule, FormsModule, QueryGroupComponent],
-  template: `
-    <div class="space-y-3">
-      <div class="text-xs tracking-wide text-slate-400 uppercase">Match Conditions</div>
-      <app-query-group
-        [group]="config.conditionGroup"
-        [collectionName]="collectionName"
-        [isNested]="false"
-        [isRoot]="true"
-        (groupChange)="onGroupChange($event)"
-      />
-    </div>
-  `,
+  templateUrl: "./match-config.component.html",
 })
 export class MatchConfigComponent {
   @Input() config!: MatchConfig;

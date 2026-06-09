@@ -2,6 +2,7 @@ import { Injectable, inject, signal, computed } from "@angular/core";
 import { TransactionService, TransactionOperationType } from "../transaction.service";
 import { ToastService } from "@services/toast.service";
 import { RowData } from "@shared/models/connection.config";
+import { generateBatchId } from "@shared/utils/id.utils";
 
 export type PendingOperationType = "insert" | "update" | "delete";
 
@@ -46,7 +47,7 @@ export class AutoTransactionService {
 
   queueInsert(collection: string, data: RowData): void {
     const operation: PendingOperation = {
-      id: `batch_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: generateBatchId(),
       type: "insert",
       collection,
       data,
@@ -57,7 +58,7 @@ export class AutoTransactionService {
 
   queueUpdate(collection: string, documentId: string, data: RowData): void {
     const operation: PendingOperation = {
-      id: `batch_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: generateBatchId(),
       type: "update",
       collection,
       documentId,
@@ -69,7 +70,7 @@ export class AutoTransactionService {
 
   queueDelete(collection: string, documentId: string): void {
     const operation: PendingOperation = {
-      id: `batch_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: generateBatchId(),
       type: "delete",
       collection,
       documentId,

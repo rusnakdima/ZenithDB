@@ -6,7 +6,8 @@ import { FormsModule } from "@angular/forms";
   selector: "app-pipeline-json-editor",
   standalone: true,
   imports: [CommonModule, FormsModule],
-  template: `
+  templateUrl: "./pipeline-json-editor.component.html",
+  /* // template: `
     <div class="flex h-full flex-col rounded-lg border border-slate-700 bg-slate-900">
       <!-- Header -->
       <div class="flex items-center justify-between border-b border-slate-700 px-4 py-3">
@@ -69,7 +70,7 @@ import { FormsModule } from "@angular/forms";
         <span class="text-xs text-slate-500">{{ lineCount() }} lines</span>
       </div>
     </div>
-  `,
+  ` */
 })
 export class PipelineJsonEditorComponent {
   @Input() set json(value: string) {
@@ -116,8 +117,9 @@ export class PipelineJsonEditorComponent {
       this.error.set(null);
       this.isValid.set(true);
       this.parseError.emit(null);
-    } catch (e: any) {
-      this.error.set(`Invalid JSON: ${e.message}`);
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : "Invalid JSON";
+      this.error.set(`Invalid JSON: ${message}`);
       this.isValid.set(false);
       this.parseError.emit(this.error());
     }

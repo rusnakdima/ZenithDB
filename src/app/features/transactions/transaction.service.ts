@@ -5,6 +5,7 @@ import { LoadingService } from "@shared/services/loading.service";
 import { ToastService } from "@services/toast.service";
 import { RowData } from "@shared/models/connection.config";
 import { withConnectionAndLoading } from "@shared/utils/api-wrapper.util";
+import { generateId, generateTransactionId } from "@shared/utils/id.utils";
 
 export type IsolationLevel = "Read Committed" | "Read Uncommitted" | "Repeatable Read";
 
@@ -68,7 +69,7 @@ export class TransactionService {
         savepoints: [],
         startedAt: new Date().toISOString(),
         status: "active",
-        id: result?.transactionId || `tx_${Date.now()}`,
+        id: result?.transactionId || generateTransactionId(),
       });
       this.operationLogSignal.set([]);
       this.toast.success("Transaction started");
@@ -80,7 +81,7 @@ export class TransactionService {
         savepoints: [],
         startedAt: new Date().toISOString(),
         status: "active",
-        id: `tx_${Date.now()}`,
+        id: generateTransactionId(),
       });
       this.operationLogSignal.set([]);
       this.toast.success("Transaction started (local mode)");
@@ -168,7 +169,7 @@ export class TransactionService {
     }
 
     const operation: TransactionOperation = {
-      id: `op_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: generateId("op_"),
       type,
       collection,
       documentId,

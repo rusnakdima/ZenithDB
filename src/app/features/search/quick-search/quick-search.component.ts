@@ -43,6 +43,7 @@ export class QuickSearchComponent implements OnInit, OnDestroy {
   searchQuery = signal("");
   selectedIndex = signal(-1);
   private refreshCallbacks: Set<() => void> = new Set();
+  private boundGlobalFocusHandler: (() => void) | null = null;
 
   readonly isSearching = this.searchService.isSearching;
   readonly error = this.searchService.error;
@@ -68,12 +69,15 @@ export class QuickSearchComponent implements OnInit, OnDestroy {
   readonly totalResults = computed(() => this.flatResults().length);
 
   ngOnInit(): void {
+    this.boundGlobalFocusHandler = this.handleGlobalFocus.bind(this);
     this.refreshCallbacks.add(this.handleKeyNavigation.bind(this));
-    document.addEventListener("zenith:focus-search", this.handleGlobalFocus.bind(this));
+    document.addEventListener("zenith:focus-search", this.boundGlobalFocusHandler);
   }
 
   ngOnDestroy(): void {
-    document.removeEventListener("zenith:focus-search", this.handleGlobalFocus.bind(this));
+    if (this.boundGlobalFocusHandler) {
+      document.removeEventListener("zenith:focus-search", this.boundGlobalFocusHandler);
+    }
     this.searchService.cancelSearch();
   }
 

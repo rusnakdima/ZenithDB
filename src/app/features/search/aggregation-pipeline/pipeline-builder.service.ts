@@ -1,5 +1,12 @@
 import { Injectable, signal, computed } from "@angular/core";
-import { ConditionGroup, Condition, SortConfig, createEmptyGroup } from "../../query/models";
+import {
+  ConditionGroup,
+  Condition,
+  SortConfig,
+  createEmptyGroup,
+  FieldType,
+} from "../../query/models";
+import { FilterOperator } from "@shared/models/connection.config";
 
 export type StageType =
   | "$match"
@@ -304,7 +311,7 @@ export class PipelineBuilderService {
     return result;
   }
 
-  private parsePipeline(pipeline: any[]): PipelineStage[] {
+  private parsePipeline(pipeline: object[]): PipelineStage[] {
     const stages: PipelineStage[] = [];
 
     for (let i = 0; i < pipeline.length; i++) {
@@ -314,22 +321,22 @@ export class PipelineBuilderService {
       if (stageKeys.length === 0) continue;
 
       const type = stageKeys[0] as StageType;
-      const value = stage[type];
+      const value = (stage as Record<string, unknown>)[type];
 
       let config: StageConfig | undefined;
       let parsed = false;
 
       switch (type) {
         case "$match":
-          config = { conditionGroup: this.queryToConditionGroup(value) };
+          config = { conditionGroup: this.queryToConditionGroup(value as Record<string, unknown>) };
           parsed = true;
           break;
         case "$group":
-          config = this.aggregationToGroupConfig(value);
+          config = this.aggregationToGroupConfig(value as Record<string, unknown>);
           parsed = true;
           break;
         case "$sort":
-          config = this.aggregationToSortConfig(value);
+          config = this.aggregationToSortConfig(value as Record<string, unknown>);
           parsed = true;
           break;
         case "$skip":
@@ -341,11 +348,12 @@ export class PipelineBuilderService {
           parsed = true;
           break;
         case "$project":
-          config = this.aggregationToProjectConfig(value);
+          config = this.aggregationToProjectConfig(value as Record<string, unknown>);
           parsed = true;
           break;
         case "$replaceRoot":
-          config = { expression: JSON.stringify(value.newRoot || {}) };
+          const replaceRootValue = value as Record<string, unknown>;
+          config = { expression: JSON.stringify(replaceRootValue["newRoot"] || {}) };
           parsed = true;
           break;
       }
@@ -363,33 +371,41 @@ export class PipelineBuilderService {
     return stages;
   }
 
-  private queryToConditionGroup(query: any): ConditionGroup {
+  private queryToConditionGroup(query: Record<string, unknown>): ConditionGroup {
     const group = createEmptyGroup();
 
     if (!query) return group;
 
-    if (query.$and) {
+    const queryAnd = query["$and"];
+    const queryOr = query["$or"];
+
+    if (queryAnd) {
       group.operator = "and";
       group.conditions = [];
-      group.groups = query.$and.map((q: any) => this.queryToConditionGroup(q));
-    } else if (query.$or) {
+      group.groups = (queryAnd as Record<string, unknown>[]).map((q) =>
+        this.queryToConditionGroup(q)
+      );
+    } else if (queryOr) {
       group.operator = "or";
       group.conditions = [];
-      group.groups = query.$or.map((q: any) => this.queryToConditionGroup(q));
+      group.groups = (queryOr as Record<string, unknown>[]).map((q) =>
+        this.queryToConditionGroup(q)
+      );
     } else {
       const field = Object.keys(query)[0];
       if (field) {
         const value = query[field];
         if (value && typeof value === "object" && !Array.isArray(value)) {
-          const op = Object.keys(value)[0];
-          const opValue = value[op];
+          const op = Object.keys(value as object)[0];
+          const opValue = (value as Record<string, unknown>)[op];
+          const queryField = field as keyof typeof query;
           group.conditions = [
             {
               id: crypto.randomUUID(),
               field,
               operator: this.mapOperator(op),
               value: opValue,
-              valueType: typeof opValue as any,
+              valueType: typeof opValue as FieldType,
             },
           ];
         } else {
@@ -399,7 +415,7 @@ export class PipelineBuilderService {
               field,
               operator: "eq",
               value,
-              valueType: typeof value as any,
+              valueType: typeof value as FieldType,
             },
           ];
         }
@@ -409,8 +425,8 @@ export class PipelineBuilderService {
     return group;
   }
 
-  private mapOperator(op: string): any {
-    const opMap: Record<string, any> = {
+  private mapOperator(op: string): FilterOperator {
+    const opMap: Record<string, FilterOperator> = {
       $eq: "eq",
       $ne: "neq",
       $gt: "gt",
@@ -424,11 +440,12 @@ export class PipelineBuilderService {
     return opMap[op] || "eq";
   }
 
-  private aggregationToGroupConfig(agg: any): GroupConfig {
+  private aggregationToGroupConfig(agg: Record<string, unknown>): GroupConfig {
     const config: GroupConfig = { groupByField: "", accumulators: [] };
 
-    if (agg._id !== undefined) {
-      const idStr = String(agg._id);
+    const aggId = agg["_id"];
+    if (aggId !== undefined) {
+      const idStr = String(aggId);
       if (idStr.startsWith("$")) {
         config.groupByField = idStr.substring(1);
       }
@@ -482,7 +499,7 @@ export class PipelineBuilderService {
     return config;
   }
 
-  private aggregationToSortConfig(sort: any): SortStageConfig {
+  private aggregationToSortConfig(sort: Record<string, unknown>): SortStageConfig {
     const sorts: SortConfig[] = [];
 
     for (const [field, direction] of Object.entries(sort)) {
@@ -495,7 +512,7 @@ export class PipelineBuilderService {
     return { sorts };
   }
 
-  private aggregationToProjectConfig(proj: any): ProjectConfig {
+  private aggregationToProjectConfig(proj: Record<string, unknown>): ProjectConfig {
     const fields: ProjectField[] = [];
 
     for (const [name, value] of Object.entries(proj)) {

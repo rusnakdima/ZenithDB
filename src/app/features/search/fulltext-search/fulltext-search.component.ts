@@ -1,4 +1,14 @@
-import { Component, Input, signal, computed, inject, OnInit, OnDestroy } from "@angular/core";
+import {
+  Component,
+  Input,
+  signal,
+  computed,
+  inject,
+  OnInit,
+  OnDestroy,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+} from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { SchemaCompletionService } from "../../query/services/schema-completion.service";
@@ -6,6 +16,7 @@ import { ProviderDetectorService } from "../../query/services/provider-detector.
 import { FieldInfo } from "../../query/models";
 import { TextIndexDialogComponent } from "./text-index-dialog.component";
 import { DialogService } from "@shared/services/dialog.service";
+import { TIME_CONSTANTS } from "@shared/utils/constants";
 
 export interface SearchResult {
   document: Record<string, unknown>;
@@ -23,10 +34,12 @@ export type SortOrder = "relevance" | "date";
 @Component({
   selector: "app-fulltext-search",
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, FormsModule],
   templateUrl: "./fulltext-search.component.html",
 })
 export class FulltextSearchComponent implements OnInit, OnDestroy {
+  private cdr = inject(ChangeDetectorRef);
   private readonly schemaCompletionService = inject(SchemaCompletionService);
   private readonly providerDetectorService = inject(ProviderDetectorService);
   private readonly dialogService = inject(DialogService);
@@ -79,8 +92,9 @@ export class FulltextSearchComponent implements OnInit, OnDestroy {
         .filter((f) => f.type === "string")
         .map((f) => ({ field: f.name, weight: 1 }));
       this.fieldWeights.set(weights);
-    } catch (e: any) {
-      this.error.set(e.message || "Failed to load fields");
+    } catch (e: unknown) {
+      const error = e instanceof Error ? e.message : "Failed to load fields";
+      this.error.set(error);
     }
   }
 
@@ -118,8 +132,9 @@ export class FulltextSearchComponent implements OnInit, OnDestroy {
       const weightedFields = this.fieldWeights();
       const searchResults = await this.performSearch(query, weightedFields);
       this.results.set(searchResults);
-    } catch (e: any) {
-      this.error.set(e.message || "Search failed");
+    } catch (e: unknown) {
+      const error = e instanceof Error ? e.message : "Search failed";
+      this.error.set(error);
       this.results.set([]);
     } finally {
       this.isSearching.set(false);
@@ -143,13 +158,13 @@ export class FulltextSearchComponent implements OnInit, OnDestroy {
         id: 2,
         name: "Another example",
         content: "More content containing " + query,
-        createdAt: new Date(Date.now() - 86400000).toISOString(),
+        createdAt: new Date(Date.now() - TIME_CONSTANTS.TWENTY_FOUR_HOURS_MS).toISOString(),
       },
       {
         id: 3,
         name: "Third result",
         content: "Additional information here",
-        createdAt: new Date(Date.now() - 172800000).toISOString(),
+        createdAt: new Date(Date.now() - TIME_CONSTANTS.TWENTY_FOUR_HOURS_MS * 2).toISOString(),
       },
     ];
 

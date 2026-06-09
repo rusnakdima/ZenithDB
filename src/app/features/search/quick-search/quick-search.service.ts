@@ -53,8 +53,9 @@ export class QuickSearchService {
       try {
         const results = await this.performSearch(query);
         this.searchResultsSignal.set(results);
-      } catch (e: any) {
-        this.errorSignal.set(e.message || "Search failed");
+      } catch (e: unknown) {
+        const error = e instanceof Error ? e.message : "Search failed";
+        this.errorSignal.set(error);
         this.searchResultsSignal.set([]);
       } finally {
         this.isSearchingSignal.set(false);

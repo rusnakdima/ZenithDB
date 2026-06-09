@@ -20,7 +20,8 @@ import { LimitConfigComponent } from "./stage-config/limit-config.component";
     ProjectConfigComponent,
     LimitConfigComponent,
   ],
-  template: `
+  templateUrl: "./pipeline-stage.component.html",
+  /* // template: `
     <div class="rounded-lg border border-slate-600 bg-slate-800/50">
       <!-- Stage Header -->
       <div class="flex items-center gap-3 border-b border-slate-600 px-4 py-3">
@@ -141,7 +142,7 @@ import { LimitConfigComponent } from "./stage-config/limit-config.component";
         }
       </div>
     </div>
-  `,
+  ` */
 })
 export class PipelineStageComponent {
   @Input() stage!: PipelineStage;
