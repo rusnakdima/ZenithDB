@@ -4,6 +4,7 @@ use crate::commands::types::{CollectionMeta, CollectionSchema, CollectionStats, 
 use crate::commands::validate_conn_id;
 use crate::commands::validate_name;
 use crate::dispatch_provider;
+use crate::models::response::ResponseModel;
 use nosql_orm::prelude::*;
 use serde::{Deserialize, Serialize};
 use tokio::io::{AsyncBufReadExt, BufReader};
@@ -22,13 +23,13 @@ pub struct CollectionListResult {
 
 #[tauri::command]
 pub async fn collection_list(
-  connId: String,
-  dbName: Option<String>,
+  conn_id: String,
+  _db_name: Option<String>,
   offset: Option<usize>,
   limit: Option<usize>,
 ) -> Result<CollectionListResult, String> {
-  validate_conn_id(&connId)?;
-  let entry = get_connection_entry(&connId).await?;
+  validate_conn_id(&conn_id)?;
+  let entry = get_connection_entry(&conn_id).await?;
   let offset = offset.unwrap_or(0);
   let limit = limit.unwrap_or(10000);
 
@@ -67,10 +68,13 @@ pub async fn collection_list(
 }
 
 #[tauri::command]
-pub async fn collection_describe(connId: String, name: String) -> Result<CollectionSchema, String> {
-  validate_conn_id(&connId)?;
+pub async fn collection_describe(
+  conn_id: String,
+  name: String,
+) -> Result<CollectionSchema, String> {
+  validate_conn_id(&conn_id)?;
   validate_name(&name)?;
-  let entry = get_connection_entry(&connId).await?;
+  let entry = get_connection_entry(&conn_id).await?;
 
   let (schema, indexes) = dispatch_provider!(entry, provider => {
       let schema = provider.describe_collection(&name).await.map_err_string()?;
@@ -108,9 +112,9 @@ pub async fn collection_describe(connId: String, name: String) -> Result<Collect
 }
 
 #[tauri::command]
-pub async fn collection_stats(connId: String, name: String) -> Result<CollectionStats, String> {
-  validate_conn_id(&connId)?;
-  let entry = get_connection_entry(&connId).await?;
+pub async fn collection_stats(conn_id: String, name: String) -> Result<CollectionStats, String> {
+  validate_conn_id(&conn_id)?;
+  let entry = get_connection_entry(&conn_id).await?;
 
   let stats = dispatch_provider!(entry, provider => {
       provider.get_collection_stats(&name).await.map_err_string()
@@ -125,18 +129,18 @@ pub async fn collection_stats(connId: String, name: String) -> Result<Collection
 }
 
 #[tauri::command]
-pub async fn collection_create(connId: String, name: String) -> Result<(), String> {
-  validate_conn_id(&connId)?;
-  let entry = get_connection_entry(&connId).await?;
+pub async fn collection_create(conn_id: String, name: String) -> Result<(), String> {
+  validate_conn_id(&conn_id)?;
+  let entry = get_connection_entry(&conn_id).await?;
   dispatch_provider!(entry, provider => {
       provider.create_collection(&name, None).await.map_err_string()
   })
 }
 
 #[tauri::command]
-pub async fn collection_drop(connId: String, name: String) -> Result<(), String> {
-  validate_conn_id(&connId)?;
-  let entry = get_connection_entry(&connId).await?;
+pub async fn collection_drop(conn_id: String, name: String) -> Result<(), String> {
+  validate_conn_id(&conn_id)?;
+  let entry = get_connection_entry(&conn_id).await?;
   dispatch_provider!(entry, provider => {
       provider.drop_collection(&name).await.map_err_string()
   })
@@ -144,20 +148,20 @@ pub async fn collection_drop(connId: String, name: String) -> Result<(), String>
 
 #[tauri::command]
 pub async fn collection_rename(
-  connId: String,
-  oldName: String,
-  newName: String,
+  conn_id: String,
+  old_name: String,
+  new_name: String,
 ) -> Result<(), String> {
-  validate_conn_id(&connId)?;
-  validate_name(&oldName)?;
-  validate_name(&newName)?;
-  let entry = get_connection_entry(&connId).await?;
+  validate_conn_id(&conn_id)?;
+  validate_name(&old_name)?;
+  validate_name(&new_name)?;
+  let entry = get_connection_entry(&conn_id).await?;
   dispatch_provider!(entry, provider => {
-      let data = provider.find_many(&oldName, None, None, None, None, true).await.map_err_string()?;
+      let data = provider.find_many(&old_name, None, None, None, None, true).await.map_err_string()?;
       for item in data {
-          provider.insert(&newName, item.clone()).await.map_err_string()?;
+          provider.insert(&new_name, item.clone()).await.map_err_string()?;
       }
-      provider.drop_collection(&oldName).await.map_err_string()
+      provider.drop_collection(&old_name).await.map_err_string()
   })
 }
 
@@ -206,7 +210,7 @@ async fn list_all_json_collections_recursive(
       }
 
       collections.sort_by(|a, b| a.name.cmp(&b.name));
-      let total = collections.len();
+      let total_count = collections.len();
       let has_more = offset + limit < total_count.min(MAX_COLLECTIONS_TOTAL);
       let result = collections.into_iter().skip(offset).take(limit).collect();
 
@@ -237,66 +241,4 @@ async fn count_jsonl_documents(path: &std::path::Path) -> Result<u64, String> {
     }
   }
   Ok(count)
-}
-
-async fn list_json_files_in_dir(
-  path_obj: std::path::PathBuf,
-  offset: usize,
-  limit: usize,
-) -> Result<CollectionListResult, String> {
-  let timeout_result =
-    tokio::time::timeout(std::time::Duration::from_secs(SCAN_TIMEOUT_SECS), async {
-      let mut entries = match tokio::fs::read_dir(&path_obj).await {
-        Ok(e) => e,
-        Err(_) => {
-          return Ok(CollectionListResult {
-            collections: Vec::new(),
-            has_more: false,
-            total_count: 0,
-          })
-        }
-      };
-
-      let mut all_collections: Vec<CollectionMeta> = Vec::new();
-
-      while let Some(entry) = entries.next_entry().await.map_err_string()? {
-        let entry_path = entry.path();
-        if entry_path.is_file() && entry_path.extension().is_some_and(|ext| ext == "json") {
-          if all_collections.len() < MAX_FILES_PER_DIR {
-            let file_name = entry
-              .file_name()
-              .into_string()
-              .ok()
-              .map(|n| n.trim_end_matches(".json").to_string());
-
-            if let Some(name) = file_name {
-              let count = count_jsonl_documents(&entry_path).await.unwrap_or(0);
-              all_collections.push(CollectionMeta { name, count });
-            }
-          }
-        }
-      }
-
-      all_collections.sort_by(|a, b| a.name.cmp(&b.name));
-      let total_count = all_collections.len();
-      let has_more = offset + limit < total_count;
-      let collections = all_collections
-        .into_iter()
-        .skip(offset)
-        .take(limit)
-        .collect();
-
-      Ok(CollectionListResult {
-        collections,
-        has_more,
-        total_count,
-      })
-    })
-    .await;
-
-  match timeout_result {
-    Ok(Ok(result)) => Ok(result),
-    Ok(Err(e)) => Err(e),
-    Err(_) => Err("Collection listing timed out".to_string()),
-  }
 }
