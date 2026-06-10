@@ -43,12 +43,20 @@
   /* Status Colors */
   --color-success: #10b981;
   --color-success-light: #34d399;
+  --color-success-bg: rgba(16, 185, 129, 0.15);
+  --color-success-border: rgba(16, 185, 129, 0.3);
   --color-warning: #f59e0b;
   --color-warning-light: #fbbf24;
+  --color-warning-bg: rgba(245, 158, 11, 0.15);
+  --color-warning-border: rgba(245, 158, 11, 0.3);
   --color-error: #ef4444;
   --color-error-light: #f87171;
+  --color-error-bg: rgba(239, 68, 68, 0.15);
+  --color-error-border: rgba(239, 68, 68, 0.3);
   --color-info: #3b82f6;
   --color-info-light: #60a5fa;
+  --color-info-bg: rgba(59, 130, 246, 0.15);
+  --color-info-border: rgba(59, 130, 246, 0.3);
 
   /* JSON Viewer Colors */
   --color-json-key: #fbbf24;
@@ -247,10 +255,14 @@
   --bg-sidebar: rgba(15, 23, 42, 0.85);
   --bg-card: transparent;
   --bg-elevated: rgba(51, 65, 85, 0.6);
-  --bg-input: transparent;
+  --bg-input: rgba(51, 65, 85, 0.6);
+  --bg-modal: rgba(15, 23, 42, 0.95);
+  --bg-toast: rgba(15, 23, 42, 0.95);
   --text-main: #ffffff;
   --text-dim: #94a3b8;
   --text-muted: #64748b;
+  --text-input: #ffffff;
+  --text-on-accent: #000000;
   --border-color: rgba(255, 255, 255, 0.15);
   --border-light: rgba(255, 255, 255, 0.1);
   --border-subtle: rgba(255, 255, 255, 0.06);
@@ -264,10 +276,34 @@ html.light {
   --bg-sidebar: rgba(255, 255, 255, 0.9);
   --bg-card: transparent;
   --bg-elevated: rgba(241, 245, 249, 0.7);
-  --bg-input: transparent;
+  --bg-input: rgba(241, 245, 249, 0.9);
+  --bg-modal: rgba(255, 255, 255, 0.98);
+  --bg-toast: rgba(255, 255, 255, 0.95);
   --text-main: #0f172a;
   --text-dim: #64748b;
   --text-muted: #94a3b8;
+  --text-input: #0f172a;
+  --text-on-accent: #ffffff;
+  --border-color: rgba(0, 0, 0, 0.12);
+  --color-success: #059669;
+  --color-success-light: #10b981;
+  --color-success-bg: rgba(16, 185, 129, 0.1);
+  --color-success-border: rgba(5, 150, 105, 0.3);
+
+  --color-error: #dc2626;
+  --color-error-light: #ef4444;
+  --color-error-bg: rgba(239, 68, 68, 0.1);
+  --color-error-border: rgba(220, 38, 38, 0.3);
+
+  --color-warning: #d97706;
+  --color-warning-light: #f59e0b;
+  --color-warning-bg: rgba(245, 158, 11, 0.1);
+  --color-warning-border: rgba(217, 119, 6, 0.3);
+
+  --color-info: #2563eb;
+  --color-info-light: #3b82f6;
+  --color-info-bg: rgba(59, 130, 246, 0.1);
+  --color-info-border: rgba(37, 99, 235, 0.3);
   --border-color: rgba(0, 0, 0, 0.12);
   --border-light: rgba(0, 0, 0, 0.08);
   --border-subtle: rgba(0, 0, 0, 0.06);
@@ -277,6 +313,13 @@ html.light {
 
 html.dark {
   color-scheme: dark;
+}
+
+html.light .json-key {
+  --color-json-key: #d97706;
+  --color-json-string: #059669;
+  --color-json-number: #2563eb;
+  --color-json-boolean: #dc2626;
 }
 
 @layer components {
@@ -474,7 +517,7 @@ html.dark {
   }
 
   .json-line-num {
-    @apply w-10 shrink-0 pr-3 text-right text-xs text-slate-400 select-none;
+    @apply w-10 shrink-0 pr-3 text-right text-xs text-[var(--text-muted)] select-none;
   }
 
   .dark .json-line-num {
@@ -486,31 +529,31 @@ html.dark {
   }
 
   .json-key {
-    @apply text-amber-400;
+    @apply text-[var(--color-json-key)];
   }
 
   .json-string {
-    @apply text-emerald-400;
+    @apply text-[var(--color-json-string)];
   }
 
   .json-number {
-    @apply text-blue-400;
+    @apply text-[var(--color-json-number)];
   }
 
   .json-boolean {
-    @apply text-red-400;
+    @apply text-[var(--color-json-boolean)];
   }
 
   .json-null {
-    @apply text-slate-400;
+    @apply text-[var(--text-muted)];
   }
 
   .json-punctuation {
-    @apply text-slate-400;
+    @apply text-[var(--text-muted)];
   }
 
   .json-bracket {
-    @apply text-slate-300;
+    @apply text-[var(--text-dim)];
   }
 
   .json-line.bracket-line {
@@ -729,7 +772,7 @@ html.dark {
   }
 
   .form-btn-primary {
-    @apply border-[var(--accent)] bg-[var(--accent)] text-black;
+    @apply border-[var(--accent)] bg-[var(--accent)] text-[var(--text-on-accent)];
   }
   .form-btn-primary:hover {
     @apply border-[var(--accent-hover)] bg-[var(--accent-hover)];

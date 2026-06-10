@@ -1,8 +1,8 @@
-<div class="flex h-full flex-col rounded-lg border border-slate-700 bg-slate-900">
+<div class="flex h-full flex-col rounded-lg border border-[var(--border-color)] bg-slate-900">
   <!-- Header -->
-  <div class="flex items-center justify-between border-b border-slate-700 px-4 py-3">
+  <div class="flex items-center justify-between border-b border-[var(--border-color)] px-4 py-3">
     <div class="flex items-center gap-3">
-      <h3 class="text-sm font-medium text-slate-200">Visual Query Builder</h3>
+      <h3 class="text-sm font-medium text-[var(--text-main)]">Visual Query Builder</h3>
       @if (collectionName) {
         <span class="rounded bg-[var(--accent-muted)] px-2 py-1 text-xs text-[var(--accent)]">
           {{ collectionName }}
@@ -13,7 +13,7 @@
     <div class="flex items-center gap-2">
       <button
         type="button"
-        class="rounded px-2 py-1 text-xs text-slate-400 transition-colors hover:bg-slate-700 hover:text-white"
+        class="rounded px-2 py-1 text-xs text-[var(--text-dim)] transition-colors hover:bg-slate-700 hover:text-white"
         (click)="clearAll()"
       >
         Clear All
@@ -33,9 +33,14 @@
     />
 
     <!-- Sort Section -->
-    <div class="rounded-lg border border-slate-600 bg-slate-800/30 p-3">
+    <div class="rounded-lg border border-[var(--border-color)] bg-slate-800/30 p-3">
       <div class="mb-3 flex items-center gap-2">
-        <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          class="h-4 w-4 text-[var(--text-dim)]"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
           <path
             stroke-linecap="round"
             stroke-linejoin="round"
@@ -43,7 +48,7 @@
             d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
           />
         </svg>
-        <span class="text-xs tracking-wide text-slate-400 uppercase">Sort</span>
+        <span class="text-xs tracking-wide text-[var(--text-dim)] uppercase">Sort</span>
       </div>
 
       @if (sorts().length > 0) {
@@ -66,7 +71,7 @@
                 class="rounded px-3 py-1.5 text-xs transition-colors"
                 [class.bg-slate-600]="sort.direction === 'asc'"
                 [class.text-white]="sort.direction === 'asc'"
-                [class.text-slate-400]="sort.direction !== 'asc'"
+                [class.text-[var(--text-dim)]]="sort.direction !== 'asc'"
                 (click)="toggleSortDirection(i)"
               >
                 {{ sort.direction === "asc" ? "↑ ASC" : "↓ DESC" }}
@@ -74,7 +79,7 @@
 
               <button
                 type="button"
-                class="p-1 text-slate-500 hover:text-red-400"
+                class="p-1 text-[var(--text-muted)] hover:text-red-400"
                 (click)="removeSort(i)"
               >
                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -93,7 +98,7 @@
 
       <button
         type="button"
-        class="mt-2 flex items-center gap-2 text-sm text-slate-400 transition-colors hover:text-[var(--accent)]"
+        class="mt-2 flex items-center gap-2 text-sm text-[var(--text-dim)] transition-colors hover:text-[var(--accent)]"
         (click)="addSort()"
       >
         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -109,9 +114,14 @@
     </div>
 
     <!-- Limit Section -->
-    <div class="rounded-lg border border-slate-600 bg-slate-800/30 p-3">
+    <div class="rounded-lg border border-[var(--border-color)] bg-slate-800/30 p-3">
       <div class="mb-3 flex items-center gap-2">
-        <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          class="h-4 w-4 text-[var(--text-dim)]"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
           <path
             stroke-linecap="round"
             stroke-linejoin="round"
@@ -119,12 +129,12 @@
             d="M4 6h16M4 10h16M4 14h16M4 18h16"
           />
         </svg>
-        <span class="text-xs tracking-wide text-slate-400 uppercase">Limit</span>
+        <span class="text-xs tracking-wide text-[var(--text-dim)] uppercase">Limit</span>
       </div>
 
       <div class="flex items-center gap-4">
         <div class="flex items-center gap-2">
-          <label class="text-xs text-slate-400">Skip</label>
+          <label class="text-xs text-[var(--text-dim)]">Skip</label>
           <input
             type="number"
             class="w-20 rounded border border-slate-600 bg-slate-700 px-2 py-1.5 text-sm text-slate-200 focus:border-[var(--accent)] focus:outline-none"
@@ -135,7 +145,7 @@
         </div>
 
         <div class="flex items-center gap-2">
-          <label class="text-xs text-slate-400">Limit</label>
+          <label class="text-xs text-[var(--text-dim)]">Limit</label>
           <input
             type="number"
             class="w-20 rounded border border-slate-600 bg-slate-700 px-2 py-1.5 text-sm text-slate-200 focus:border-[var(--accent)] focus:outline-none"
@@ -150,9 +160,9 @@
 
   <!-- Footer with Actions -->
   <div
-    class="flex items-center justify-between border-t border-slate-700 bg-slate-800/50 px-4 py-3"
+    class="flex items-center justify-between border-t border-[var(--border-color)] bg-[var(--bg-elevated)] px-4 py-3"
   >
-    <div class="text-xs text-slate-500">
+    <div class="text-xs text-[var(--text-muted)]">
       @if (hasConditions()) {
         <span class="text-[var(--accent)]">{{ conditionCount() }} condition(s)</span>
       } @else {
@@ -163,7 +173,7 @@
     <div class="flex items-center gap-2">
       <button
         type="button"
-        class="rounded border border-slate-600 px-4 py-2 text-sm text-slate-300 transition-colors hover:bg-slate-700 hover:text-white"
+        class="rounded border border-[var(--border-color)] px-4 py-2 text-sm text-[var(--text-main)] transition-colors hover:bg-slate-700 hover:text-white"
         (click)="onCancel()"
       >
         Cancel

@@ -1,9 +1,14 @@
 <app-modal [open]="true" title="Drop Index" size="sm" (closed)="onCancel()">
   <div class="flex flex-col gap-4">
     <div
-      class="flex items-start gap-3 rounded-lg border border-[var(--border-subtle)] bg-red-900/20 p-4"
+      class="flex items-start gap-3 rounded-lg border border-[var(--border-subtle)] bg-[var(--color-error-bg)] p-4"
     >
-      <svg class="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg
+        class="h-5 w-5 text-[var(--color-error)]"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
         <path
           stroke-linecap="round"
           stroke-linejoin="round"
@@ -12,10 +17,10 @@
         />
       </svg>
       <div>
-        <h4 class="font-medium text-red-400">Confirm Drop Index</h4>
-        <p class="mt-1 text-sm text-slate-300">
+        <h4 class="font-medium text-[var(--color-error)]">Confirm Drop Index</h4>
+        <p class="mt-1 text-sm text-[var(--text-main)]">
           Are you sure you want to drop the index
-          <span class="font-mono text-red-300">{{ indexName }}</span
+          <span class="font-mono text-[var(--color-error-light)]">{{ indexName }}</span
           >? This action cannot be undone.
         </p>
       </div>
@@ -25,14 +30,14 @@
   <div modal-footer>
     <button
       type="button"
-      class="rounded-lg px-4 py-2 text-sm text-slate-400 transition-colors hover:text-white"
+      class="rounded-lg px-4 py-2 text-sm text-[var(--text-dim)] transition-colors hover:text-[var(--text-main)]"
       (click)="onCancel()"
     >
       Cancel
     </button>
     <button
       type="button"
-      class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-500"
+      class="rounded-lg bg-[var(--color-error)] px-4 py-2 text-sm font-medium text-white transition-colors hover:opacity-90"
       (click)="onConfirm()"
     >
       Drop Index

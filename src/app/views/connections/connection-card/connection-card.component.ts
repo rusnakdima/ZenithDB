@@ -1,4 +1,4 @@
-import { Component, input, output, signal, inject } from "@angular/core";
+import { Component, input, output, signal, inject, OnInit } from "@angular/core";
 import { MatIconModule } from "@angular/material/icon";
 import { ConnectionSummary } from "@shared/models/connection.config";
 import { ProviderUtils } from "@shared/utils/provider.utils";
@@ -10,7 +10,7 @@ import { ConnectionStatusBadgeComponent } from "@shared/components/connection-st
   imports: [MatIconModule, ConnectionStatusBadgeComponent],
   templateUrl: "./connection-card.component.html",
 })
-export class ConnectionCardComponent {
+export class ConnectionCardComponent implements OnInit {
   connection = input.required<ConnectionSummary>();
   viewMode = input<"grid" | "list">("grid");
 
@@ -21,6 +21,8 @@ export class ConnectionCardComponent {
 
   showActions = signal(false);
   providerUtils = inject(ProviderUtils);
+
+  ngOnInit(): void {}
 
   get lastConnectedLabel(): string {
     return "Last connected: 2 days ago";

@@ -1,6 +1,6 @@
 <app-modal [open]="true" title="Bulk Update" size="md" (closed)="onCancel()">
   <div class="flex flex-col gap-6">
-    <div class="rounded-lg border border-[var(--accent)] bg-slate-800/50 p-4">
+    <div class="rounded-lg border border-[var(--accent)] bg-[var(--bg-elevated)] p-4">
       <div class="flex items-center gap-3">
         <div
           class="flex h-10 w-10 items-center justify-center rounded-full text-lg font-bold text-black"
@@ -17,14 +17,14 @@
     <div>
       <label class="mb-2 block text-sm font-medium text-[var(--text-main)]"> Target Field </label>
       <select
-        class="w-full rounded-lg border border-slate-600 bg-slate-700 px-3 py-2 text-sm text-slate-200 focus:border-emerald-500 focus:outline-none"
+        class="w-full rounded-lg border border-[var(--border-color)] bg-[var(--bg-input)] px-3 py-2 text-sm text-[var(--text-input)] focus:border-emerald-500 focus:outline-none"
         [ngModel]="selectedField()"
         (ngModelChange)="onFieldChange($event)"
       >
         @for (field of availableFields(); track field.name) {
           <option [value]="field.name">
             {{ field.name }}
-            <span class="text-slate-400">({{ field.type }})</span>
+            <span class="text-[var(--text-dim)]">({{ field.type }})</span>
           </option>
         }
       </select>
@@ -34,15 +34,17 @@
       <label class="mb-2 block text-sm font-medium text-[var(--text-main)]"> New Value </label>
       <input
         type="text"
-        class="w-full rounded-lg border border-slate-600 bg-slate-700 px-3 py-2 text-sm text-slate-200 focus:border-emerald-500 focus:outline-none"
+        class="w-full rounded-lg border border-[var(--border-color)] bg-[var(--bg-input)] px-3 py-2 text-sm text-[var(--text-input)] focus:border-emerald-500 focus:outline-none"
         placeholder="Enter new value..."
         [ngModel]="newValue()"
         (ngModelChange)="onValueChange($event)"
       />
     </div>
 
-    <div class="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4">
-      <div class="flex items-center gap-2 text-amber-300">
+    <div
+      class="rounded-lg border border-[var(--color-warning-border)] bg-[var(--color-warning-bg)] p-4"
+    >
+      <div class="flex items-center gap-2 text-[var(--color-warning)]">
         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             stroke-linecap="round"
@@ -53,7 +55,7 @@
         </svg>
         <span class="text-sm font-medium">Preview</span>
       </div>
-      <p class="mt-2 text-sm text-amber-200">
+      <p class="mt-2 text-sm text-[var(--color-warning-light)]">
         {{ getPreviewText() }}
       </p>
     </div>
@@ -62,7 +64,7 @@
   <div modal-footer class="flex justify-end gap-3">
     <button
       type="button"
-      class="rounded-lg px-4 py-2 text-sm text-slate-400 transition-colors hover:text-white"
+      class="rounded-lg px-4 py-2 text-sm text-[var(--text-dim)] transition-colors hover:text-[var(--text-main)]"
       (click)="onCancel()"
       [disabled]="isProcessing()"
     >
@@ -70,7 +72,7 @@
     </button>
     <button
       type="button"
-      class="rounded-lg px-4 py-2 text-sm font-medium text-black transition-colors disabled:opacity-50"
+      class="rounded-lg px-4 py-2 text-sm font-medium text-[var(--text-on-accent)] transition-colors disabled:opacity-50"
       (click)="onConfirm()"
       [disabled]="isProcessing()"
     >

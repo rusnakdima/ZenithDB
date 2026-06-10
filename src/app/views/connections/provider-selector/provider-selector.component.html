@@ -8,14 +8,14 @@
         class="flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-all"
         [class.border-[var(--accent)]]="selected() === p.type"
         [class.bg-[var(--accent-muted)]]]="selected() === p.type"
-        [class.border-slate-700]="selected() !== p.type"
+        [class.border-[var(--border-color)]]="selected() !== p.type"
       >
         <div
           class="flex h-12 w-12 items-center justify-center rounded-lg"
           [class.bg-[var(--accent-muted)]]]="selected() === p.type"
           [class.text-[var(--accent)]]]="selected() === p.type"
-          [class.bg-slate-800]="selected() !== p.type"
-          [class.text-slate-400]="selected() !== p.type"
+          [class.bg-[var(--bg-elevated)]]="selected() !== p.type"
+          [class.text-[var(--text-dim)]]="selected() !== p.type"
         >
           <mat-icon [fontIcon]="p.icon" class="h-6! w-5! text-xl!" />
         </div>

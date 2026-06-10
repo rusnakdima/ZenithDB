@@ -1,7 +1,7 @@
 <div class="space-y-4">
   <div class="space-y-2">
     <div class="flex items-center justify-between">
-      <label class="text-xs tracking-wide text-slate-400 uppercase">Fields</label>
+      <label class="text-xs tracking-wide text-[var(--text-dim)] uppercase">Fields</label>
       <button
         type="button"
         class="text-xs text-[var(--accent)] transition-colors hover:text-[var(--accent-hover)]"
@@ -13,7 +13,7 @@
 
     @if (config.fields.length === 0) {
       <div
-        class="rounded border border-dashed border-slate-600 p-4 text-center text-xs text-slate-500"
+        class="rounded border border-dashed border-[var(--border-color)] p-4 text-center text-xs text-[var(--text-muted)]"
       >
         No fields defined. Click "Add field" to include/exclude fields.
       </div>
@@ -21,19 +21,21 @@
 
     <div class="space-y-2">
       @for (field of config.fields; track field.name; let i = $index) {
-        <div class="flex items-center gap-2 rounded border border-slate-600 bg-slate-800/30 p-2">
+        <div
+          class="flex items-center gap-2 rounded border border-[var(--border-color)] bg-[var(--bg-elevated)] p-2"
+        >
           <input
             type="text"
-            class="flex-1 rounded border border-slate-600 bg-slate-700 px-2 py-1.5 text-sm text-slate-200 focus:border-[var(--accent)] focus:outline-none"
+            class="flex-1 rounded border border-[var(--border-color)] bg-[var(--bg-elevated)] px-2 py-1.5 text-sm text-[var(--text-main)] focus:border-[var(--accent)] focus:outline-none"
             placeholder="Field name"
             [ngModel]="field.name"
             (ngModelChange)="updateFieldName(i, $event)"
           />
 
-          <label class="flex items-center gap-1 text-xs text-slate-400">
+          <label class="flex items-center gap-1 text-xs text-[var(--text-dim)]">
             <input
               type="checkbox"
-              class="rounded border-slate-600 bg-slate-700"
+              class="rounded border-[var(--border-color)] bg-[var(--bg-elevated)]"
               [ngModel]="field.include"
               (ngModelChange)="updateFieldInclude(i, $event)"
             />
@@ -42,7 +44,7 @@
 
           <button
             type="button"
-            class="p-1 text-slate-500 hover:text-red-400"
+            class="p-1 text-[var(--text-muted)] hover:text-red-400"
             (click)="removeField(i)"
           >
             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -60,7 +62,7 @@
           <div class="ml-4 flex items-center gap-2">
             <input
               type="text"
-              class="flex-1 rounded border border-slate-600 bg-slate-700 px-2 py-1.5 font-mono text-xs text-slate-200 focus:border-[var(--accent)] focus:outline-none"
+              class="flex-1 rounded border border-[var(--border-color)] bg-[var(--bg-elevated)] px-2 py-1.5 font-mono text-xs text-[var(--text-main)] focus:border-[var(--accent)] focus:outline-none"
               placeholder="Expression (e.g., { $toUpper: '$name' })"
               [ngModel]="field.expression"
               (ngModelChange)="updateFieldExpression(i, $event)"
@@ -72,18 +74,18 @@
   </div>
 
   <div class="space-y-2">
-    <label class="text-xs tracking-wide text-slate-400 uppercase">Quick Actions</label>
+    <label class="text-xs tracking-wide text-[var(--text-dim)] uppercase">Quick Actions</label>
     <div class="flex flex-wrap gap-2">
       <button
         type="button"
-        class="rounded border border-slate-600 px-2 py-1 text-xs text-slate-400 transition-colors hover:bg-slate-700 hover:text-white"
+        class="rounded border border-[var(--border-color)] px-2 py-1 text-xs text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--text-main)]"
         (click)="includeAllFields()"
       >
         Include All
       </button>
       <button
         type="button"
-        class="rounded border border-slate-600 px-2 py-1 text-xs text-slate-400 transition-colors hover:bg-slate-700 hover:text-white"
+        class="rounded border border-[var(--border-color)] px-2 py-1 text-xs text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--text-main)]"
         (click)="excludeAllFields()"
       >
         Exclude All

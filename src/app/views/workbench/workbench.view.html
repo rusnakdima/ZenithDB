@@ -56,7 +56,9 @@
           [class.hover:text-[var(--text-main)]]="activeTabId() !== tab.id"
         >
           @if (tab.modified) {
-            <span class="absolute -top-1 -left-1 h-2 w-2 rounded-full bg-amber-500"></span>
+            <span
+              class="absolute -top-1 -left-1 h-2 w-2 rounded-full bg-[var(--color-warning)]"
+            ></span>
           }
           <span>{{ tab.name }}</span>
           @if (tabs().length > 1) {

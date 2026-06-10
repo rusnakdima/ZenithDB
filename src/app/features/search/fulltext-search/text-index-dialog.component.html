@@ -41,7 +41,7 @@
                 type="checkbox"
                 [checked]="weight.weight > 0"
                 (change)="updateWeight(weight.field, weight.weight > 0 ? 0 : 1)"
-                class="h-4 w-4 rounded border-[var(--accent)] bg-[var(--bg-input)] text-emerald-500 focus:ring-emerald-500/50"
+                class="h-4 w-4 rounded border-[var(--accent)] bg-[var(--bg-input)] text-[var(--color-success)] focus:ring-emerald-500/50"
               />
               <span class="text-sm text-[var(--text-main)]">{{ weight.field }}</span>
             </div>

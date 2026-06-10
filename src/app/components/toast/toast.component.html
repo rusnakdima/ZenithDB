@@ -1,15 +1,20 @@
 <div
-  class="relative flex items-start gap-3 rounded-lg border-l-4 bg-slate-900 p-4 text-slate-200 shadow-lg"
-  [class.border-emerald-500]="toast().type === 'success'"
-  [class.border-red-500]="toast().type === 'error'"
-  [class.border-amber-500]="toast().type === 'warning'"
-  [class.border-blue-500]="toast().type === 'info'"
+  class="relative flex items-start gap-3 rounded-lg border-l-4 bg-[var(--bg-toast)] p-4 text-[var(--text-main)] shadow-lg"
+  [class.border-[var(--color-success)]]="toast().type === 'success'"
+  [class.border-[var(--color-error)]]="toast().type === 'error'"
+  [class.border-[var(--color-warning)]]="toast().type === 'warning'"
+  [class.border-[var(--color-info)]]="toast().type === 'info'"
   role="alert"
 >
   <div class="mt-0.5 flex-shrink-0">
     @switch (toast().type) {
       @case ("success") {
-        <svg class="h-5 w-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg
+          class="h-5 w-5 text-[var(--color-success)]"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
           <path
             stroke-linecap="round"
             stroke-linejoin="round"
@@ -19,7 +24,12 @@
         </svg>
       }
       @case ("error") {
-        <svg class="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg
+          class="h-5 w-5 text-[var(--color-error)]"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
           <path
             stroke-linecap="round"
             stroke-linejoin="round"
@@ -29,7 +39,12 @@
         </svg>
       }
       @case ("warning") {
-        <svg class="h-5 w-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg
+          class="h-5 w-5 text-[var(--color-warning)]"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
           <path
             stroke-linecap="round"
             stroke-linejoin="round"
@@ -39,7 +54,12 @@
         </svg>
       }
       @case ("info") {
-        <svg class="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg
+          class="h-5 w-5 text-[var(--color-info)]"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
           <path
             stroke-linecap="round"
             stroke-linejoin="round"
@@ -58,7 +78,7 @@
     <p class="text-sm" [class.font-medium]="!toast().title">{{ toast().message }}</p>
     @if (toast().action) {
       <button
-        class="mt-2 text-sm font-medium text-emerald-400 transition-colors hover:text-emerald-300"
+        class="mt-2 text-sm font-medium text-[var(--color-success)] transition-colors hover:text-[var(--color-success)]"
         (click)="onAction()"
       >
         {{ toast().action!.label }}
@@ -67,7 +87,7 @@
   </div>
 
   <button
-    class="flex-shrink-0 text-slate-400 transition-colors hover:text-slate-200"
+    class="flex-shrink-0 text-[var(--text-dim)] transition-colors hover:text-[var(--text-main)]"
     (click)="onDismiss()"
     aria-label="Dismiss"
   >
@@ -82,13 +102,15 @@
   </button>
 
   @if (!toast().persistent && toast().duration && toast().duration > 0) {
-    <div class="absolute right-0 bottom-0 left-0 h-1 overflow-hidden rounded-b-lg bg-slate-700">
+    <div
+      class="absolute right-0 bottom-0 left-0 h-1 overflow-hidden rounded-b-lg bg-[var(--bg-elevated)]"
+    >
       <div
         class="h-full"
-        [class.bg-emerald-500]="toast().type === 'success'"
-        [class.bg-red-500]="toast().type === 'error'"
-        [class.bg-amber-500]="toast().type === 'warning'"
-        [class.bg-blue-500]="toast().type === 'info'"
+        [class.bg-[var(--color-success)]]="toast().type === 'success'"
+        [class.bg-[var(--color-error)]]="toast().type === 'error'"
+        [class.bg-[var(--color-warning)]]="toast().type === 'warning'"
+        [class.bg-[var(--color-info)]]="toast().type === 'info'"
         [style.width]="'100%'"
       ></div>
     </div>

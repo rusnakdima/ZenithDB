@@ -125,11 +125,11 @@
 
   <!-- Footer -->
   <div
-    class="flex items-center justify-between border-t border-[var(--border-subtle)] bg-slate-800/50 px-4 py-3"
+    class="flex items-center justify-between border-t border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-4 py-3"
   >
-    <div class="text-xs text-slate-500">
+    <div class="text-xs text-[var(--text-muted)]">
       @if (pipelineService.stageCount() > 0) {
-        <span class="text-emerald-400">{{ pipelineService.stageCount() }} stage(s)</span>
+        <span class="text-[var(--color-success)]">{{ pipelineService.stageCount() }} stage(s)</span>
       } @else {
         <span>No stages</span>
       }
@@ -138,7 +138,7 @@
     <div class="flex items-center gap-2">
       <button
         type="button"
-        class="rounded border border-[var(--border-subtle)] px-4 py-2 text-sm text-slate-300 transition-colors hover:border-[var(--border-visible)] hover:text-[var(--accent)]"
+        class="rounded border border-[var(--border-subtle)] px-4 py-2 text-sm text-[var(--text-main)] transition-colors hover:border-[var(--border-visible)] hover:text-[var(--accent)]"
         (click)="onCancel()"
       >
         Cancel

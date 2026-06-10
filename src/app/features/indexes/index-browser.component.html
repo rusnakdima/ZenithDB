@@ -5,13 +5,13 @@
       <div class="relative">
         <input
           type="text"
-          class="w-64 rounded-lg border border-[var(--border-subtle)] bg-slate-700 px-3 py-1.5 pl-9 text-sm text-slate-200 placeholder-slate-400 focus:border-[var(--accent)] focus:outline-none"
+          class="w-64 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-input)] px-3 py-1.5 pl-9 text-sm text-[var(--text-input)] placeholder-[var(--text-muted)] focus:border-[var(--accent)] focus:outline-none"
           placeholder="Search indexes..."
           [ngModel]="searchQuery()"
           (ngModelChange)="searchQuery.set($event)"
         />
         <svg
-          class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400"
+          class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-[var(--text-dim)]"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -41,7 +41,7 @@
       </button>
       <button
         type="button"
-        class="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm text-slate-400 transition-colors hover:text-amber-400"
+        class="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm text-[var(--text-dim)] transition-colors hover:text-[var(--color-warning)]"
         (click)="toggleRecommendations()"
       >
         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -69,16 +69,18 @@
       <div
         class="h-6 w-6 animate-spin rounded-full border-2 border-[var(--border-subtle)] border-t-transparent"
       ></div>
-      <span class="ml-3 text-sm text-slate-400">Loading indexes...</span>
+      <span class="ml-3 text-sm text-[var(--text-dim)]">Loading indexes...</span>
     </div>
   } @else if (error()) {
     <div class="rounded-lg border border-[var(--border-subtle)] bg-red-900/20 p-4">
       <p class="text-sm text-red-400">{{ error() }}</p>
     </div>
   } @else if (filteredIndexes.length === 0) {
-    <div class="rounded-lg border border-[var(--border-subtle)] bg-slate-800/50 p-8 text-center">
+    <div
+      class="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] p-8 text-center"
+    >
       <svg
-        class="mx-auto h-12 w-12 text-slate-500"
+        class="mx-auto h-12 w-12 text-[var(--text-muted)]"
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"
@@ -90,7 +92,7 @@
           d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"
         />
       </svg>
-      <p class="mt-4 text-sm text-slate-400">No indexes found</p>
+      <p class="mt-4 text-sm text-[var(--text-dim)]">No indexes found</p>
       <button
         type="button"
         class="mt-4 text-sm text-emerald-400 hover:text-emerald-300"
@@ -102,75 +104,75 @@
   } @else {
     <div class="overflow-hidden rounded-lg border border-[var(--border-subtle)]">
       <table class="min-w-full divide-y divide-[var(--border-subtle)]">
-        <thead class="bg-slate-800/50">
+        <thead class="bg-[var(--bg-elevated)]">
           <tr>
             <th
-              class="cursor-pointer px-4 py-3 text-left text-xs font-medium tracking-wide text-slate-400 uppercase"
+              class="cursor-pointer px-4 py-3 text-left text-xs font-medium tracking-wide text-[var(--text-dim)] uppercase"
               (click)="onSort('name')"
             >
               <div class="flex items-center gap-1">
                 Name
                 @if (getSortIcon("name")) {
-                  <span class="text-emerald-400">{{
+                  <span class="text-[var(--color-success)]">{{
                     getSortIcon("name") === "asc" ? "↑" : "↓"
                   }}</span>
                 }
               </div>
             </th>
             <th
-              class="cursor-pointer px-4 py-3 text-left text-xs font-medium tracking-wide text-slate-400 uppercase"
+              class="cursor-pointer px-4 py-3 text-left text-xs font-medium tracking-wide text-[var(--text-dim)] uppercase"
               (click)="onSort('type')"
             >
               <div class="flex items-center gap-1">
                 Type
                 @if (getSortIcon("type")) {
-                  <span class="text-emerald-400">{{
+                  <span class="text-[var(--color-success)]">{{
                     getSortIcon("type") === "asc" ? "↑" : "↓"
                   }}</span>
                 }
               </div>
             </th>
             <th
-              class="cursor-pointer px-4 py-3 text-left text-xs font-medium tracking-wide text-slate-400 uppercase"
+              class="cursor-pointer px-4 py-3 text-left text-xs font-medium tracking-wide text-[var(--text-dim)] uppercase"
               (click)="onSort('fields')"
             >
               <div class="flex items-center gap-1">
                 Fields
                 @if (getSortIcon("fields")) {
-                  <span class="text-emerald-400">{{
+                  <span class="text-[var(--color-success)]">{{
                     getSortIcon("fields") === "asc" ? "↑" : "↓"
                   }}</span>
                 }
               </div>
             </th>
             <th
-              class="cursor-pointer px-4 py-3 text-left text-xs font-medium tracking-wide text-slate-400 uppercase"
+              class="cursor-pointer px-4 py-3 text-left text-xs font-medium tracking-wide text-[var(--text-dim)] uppercase"
               (click)="onSort('unique')"
             >
               <div class="flex items-center gap-1">
                 Unique
                 @if (getSortIcon("unique")) {
-                  <span class="text-emerald-400">{{
+                  <span class="text-[var(--color-success)]">{{
                     getSortIcon("unique") === "asc" ? "↑" : "↓"
                   }}</span>
                 }
               </div>
             </th>
             <th
-              class="px-4 py-3 text-right text-xs font-medium tracking-wide text-slate-400 uppercase"
+              class="px-4 py-3 text-right text-xs font-medium tracking-wide text-[var(--text-dim)] uppercase"
             >
               Actions
             </th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-[var(--border-subtle)] bg-slate-800/30">
+        <tbody class="divide-y divide-[var(--border-subtle)] bg-[var(--bg-elevated)]">
           @for (index of filteredIndexes; track trackByIndex($index, index)) {
             <tr class="hover: transition-colors">
               <td class="px-4 py-3 whitespace-nowrap">
                 <div class="flex items-center gap-2">
                   <button
                     type="button"
-                    class="text-slate-400 transition-transform"
+                    class="text-[var(--text-dim)] transition-transform"
                     [class.rotate-90]="expandedIndex() === index.name"
                     (click)="toggleExpand(index.name)"
                   >
@@ -183,7 +185,7 @@
                       />
                     </svg>
                   </button>
-                  <span class="font-mono text-sm text-slate-200">{{ index.name }}</span>
+                  <span class="font-mono text-sm text-[var(--text-main)]">{{ index.name }}</span>
                 </div>
               </td>
               <td class="px-4 py-3 whitespace-nowrap">
@@ -195,12 +197,12 @@
                   [class.text-purple-400]="index.name.includes('geospatial')"
                   [class.bg-amber-900/30]="index.name.includes('ttl')"
                   [class.text-amber-400]="index.name.includes('ttl')"
-                  [class.bg-slate-700]="
+                  [class.bg-[var(--bg-elevated)]]="
                     !index.name.includes('text') &&
                     !index.name.includes('geospatial') &&
                     !index.name.includes('ttl')
                   "
-                  [class.text-slate-300]="
+                  [class.text-[var(--text-main)]]="
                     !index.name.includes('text') &&
                     !index.name.includes('geospatial') &&
                     !index.name.includes('ttl')
@@ -218,7 +220,7 @@
                 </span>
               </td>
               <td class="px-4 py-3 whitespace-nowrap">
-                <span class="text-sm text-slate-300">{{ index.columns.join(", ") }}</span>
+                <span class="text-sm text-[var(--text-main)]">{{ index.columns.join(", ") }}</span>
               </td>
               <td class="px-4 py-3 whitespace-nowrap">
                 @if (index.is_unique) {
@@ -228,14 +230,14 @@
                     Yes
                   </span>
                 } @else {
-                  <span class="text-sm text-slate-500">No</span>
+                  <span class="text-sm text-[var(--text-muted)]">No</span>
                 }
               </td>
               <td class="px-4 py-3 text-right whitespace-nowrap">
                 <div class="flex items-center justify-end gap-2">
                   <button
                     type="button"
-                    class="rounded p-1 text-slate-400 transition-colors hover:text-emerald-400"
+                    class="rounded p-1 text-[var(--text-dim)] transition-colors hover:text-[var(--color-success)]"
                     title="Rebuild index"
                     (click)="onRebuildIndex(index.name)"
                   >
@@ -250,7 +252,7 @@
                   </button>
                   <button
                     type="button"
-                    class="rounded p-1 text-slate-400 transition-colors hover:text-red-400"
+                    class="rounded p-1 text-[var(--text-dim)] transition-colors hover:text-[var(--color-error)]"
                     title="Drop index"
                     (click)="openDropDialog(index)"
                   >
@@ -268,29 +270,31 @@
             </tr>
             @if (expandedIndex() === index.name) {
               <tr>
-                <td colspan="5" class="bg-slate-900/50 px-4 py-3">
+                <td colspan="5" class="bg-[var(--bg-deep)] px-4 py-3">
                   <div class="grid grid-cols-2 gap-4 text-sm">
                     <div>
-                      <h5 class="mb-2 font-medium text-slate-300">Index Details</h5>
+                      <h5 class="mb-2 font-medium text-[var(--text-main)]">Index Details</h5>
                       <dl class="space-y-1">
                         <div class="flex">
-                          <dt class="w-24 text-slate-500">Name:</dt>
-                          <dd class="font-mono text-slate-200">{{ index.name }}</dd>
+                          <dt class="w-24 text-[var(--text-muted)]">Name:</dt>
+                          <dd class="font-mono text-[var(--text-main)]">{{ index.name }}</dd>
                         </div>
                         <div class="flex">
-                          <dt class="w-24 text-slate-500">Fields:</dt>
-                          <dd class="text-slate-200">{{ index.columns.join(", ") }}</dd>
+                          <dt class="w-24 text-[var(--text-muted)]">Fields:</dt>
+                          <dd class="text-[var(--text-main)]">{{ index.columns.join(", ") }}</dd>
                         </div>
                         <div class="flex">
-                          <dt class="w-24 text-slate-500">Unique:</dt>
-                          <dd class="text-slate-200">{{ index.is_unique ? "Yes" : "No" }}</dd>
+                          <dt class="w-24 text-[var(--text-muted)]">Unique:</dt>
+                          <dd class="text-[var(--text-main)]">
+                            {{ index.is_unique ? "Yes" : "No" }}
+                          </dd>
                         </div>
                       </dl>
                     </div>
                     <div>
-                      <h5 class="mb-2 font-medium text-slate-300">JSON Definition</h5>
+                      <h5 class="mb-2 font-medium text-[var(--text-main)]">JSON Definition</h5>
                       <pre
-                        class="overflow-x-auto rounded bg-slate-800 p-2 font-mono text-xs text-slate-400"
+                        class="overflow-x-auto rounded bg-[var(--bg-elevated)] p-2 font-mono text-xs text-[var(--text-dim)]"
                         >{{ getIndexJson(index) }}</pre
                       >
                     </div>

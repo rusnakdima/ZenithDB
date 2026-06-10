@@ -113,8 +113,12 @@
                   class="rounded px-2 py-0.5 text-xs"
                   [class.bg-emerald-500/20]="rec.impact === 'high'"
                   [class.text-emerald-400]="rec.impact === 'high'"
+                  [class.bg-[var(--color-success-bg)]]="rec.impact === 'high'"
+                  [class.text-[var(--color-success)]]="rec.impact === 'high'"
                   [class.bg-amber-500/20]="rec.impact === 'medium'"
                   [class.text-amber-400]="rec.impact === 'medium'"
+                  [class.bg-[var(--color-warning-bg)]]="rec.impact === 'medium'"
+                  [class.text-[var(--color-warning)]]="rec.impact === 'medium'"
                   [class.bg-slate-500/20]="rec.impact === 'low'"
                   [class.text-slate-400]="rec.impact === 'low'"
                 >

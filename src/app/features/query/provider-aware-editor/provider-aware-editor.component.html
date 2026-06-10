@@ -88,7 +88,7 @@
   @if (validationResult()) {
     <div class="border-t border-slate-700 px-4 py-2">
       @if (!validationResult()!.isValid) {
-        <div class="flex items-center gap-2 text-xs text-red-400">
+        <div class="flex items-center gap-2 text-xs text-[var(--color-error)]">
           <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               stroke-linecap="round"
@@ -100,7 +100,7 @@
           <span>{{ validationResult()!.errors[0]?.message }}</span>
         </div>
       } @else if (validationResult()!.warnings.length > 0) {
-        <div class="flex items-center gap-2 text-xs text-amber-400">
+        <div class="flex items-center gap-2 text-xs text-[var(--color-warning)]">
           <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               stroke-linecap="round"

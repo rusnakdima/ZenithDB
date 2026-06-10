@@ -8,20 +8,20 @@
 }
 
 .btn-secondary {
-  @apply inline-flex items-center gap-2 rounded-lg border border-[var(--accent)] bg-transparent px-4 py-2 text-sm font-medium text-neutral-200 transition-colors hover:bg-[var(--accent)]/10;
+  @apply inline-flex items-center gap-2 rounded-lg border border-[var(--accent)] bg-transparent px-4 py-2 text-sm font-medium text-[var(--text-main)] transition-colors hover:bg-[var(--accent)]/10;
 }
 
 .btn-danger {
-  @apply inline-flex items-center gap-2 rounded-lg border border-red-800/50 bg-red-900/30 px-4 py-2 text-sm font-medium text-red-400 backdrop-blur-sm transition-colors hover:bg-red-900/50;
+  @apply inline-flex items-center gap-2 rounded-lg border border-[var(--color-error-border)] bg-[var(--color-error-bg)] px-4 py-2 text-sm font-medium text-[var(--color-error)] backdrop-blur-sm transition-colors hover:bg-[var(--color-error)];
 }
 
 /* Form inputs */
 .input-field {
-  @apply w-full rounded-lg border border-[var(--border-color)] bg-transparent px-4 py-2 text-sm text-white placeholder-neutral-500 transition-colors outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)];
+  @apply w-full rounded-lg border border-[var(--border-color)] bg-transparent px-4 py-2 text-sm text-[var(--text-main)] placeholder-[var(--text-muted)] transition-colors outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)];
 }
 
 .select-field {
-  @apply w-full cursor-pointer rounded-lg border border-[var(--border-color)] bg-transparent px-4 py-2 text-sm text-white transition-colors outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)];
+  @apply w-full cursor-pointer rounded-lg border border-[var(--border-color)] bg-transparent px-4 py-2 text-sm text-[var(--text-main)] transition-colors outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)];
 }
 
 /* Cards */
@@ -39,7 +39,7 @@
 }
 
 .table-header {
-  @apply bg-transparent text-xs font-medium tracking-wider text-neutral-400 uppercase;
+  @apply bg-transparent text-xs font-medium tracking-wider text-[var(--text-dim)] uppercase;
 }
 
 .table-row {
@@ -47,7 +47,7 @@
 }
 
 .table-cell {
-  @apply px-4 py-3 text-sm text-neutral-200;
+  @apply px-4 py-3 text-sm text-[var(--text-main)];
 }
 
 /* Status indicators */
@@ -56,15 +56,15 @@
 }
 
 .status-connected {
-  @apply bg-emerald-500;
+  @apply bg-[var(--color-success)];
 }
 
 .status-disconnected {
-  @apply bg-neutral-600;
+  @apply bg-[var(--text-muted)];
 }
 
 .status-error {
-  @apply bg-red-500;
+  @apply bg-[var(--color-error)];
 }
 
 /* Badges */
@@ -73,25 +73,25 @@
 }
 
 .badge-neutral {
-  @apply border border-[var(--border-color)] bg-neutral-800/50 text-neutral-400 backdrop-blur-sm;
+  @apply border border-[var(--border-color)] bg-[var(--bg-elevated)] text-[var(--text-dim)] backdrop-blur-sm;
 }
 
 .badge-emerald {
-  @apply border border-emerald-800/50 bg-emerald-900/30 text-emerald-400 backdrop-blur-sm;
+  @apply border border-emerald-800/50 bg-[var(--color-success-bg)] text-[var(--color-success)] backdrop-blur-sm;
 }
 
 .badge-red {
-  @apply border border-red-800/50 bg-red-900/30 text-red-400 backdrop-blur-sm;
+  @apply border border-red-800/50 bg-[var(--color-error-bg)] text-[var(--color-error)] backdrop-blur-sm;
 }
 
 /* Loading spinner */
 .spinner {
-  @apply h-6 w-6 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent;
+  @apply h-6 w-6 animate-spin rounded-full border-2 border-[var(--color-success)] border-t-transparent;
 }
 
 /* Nav items */
 .nav-item {
-  @apply flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-neutral-400 transition-colors hover:bg-transparent hover:text-[var(--accent)];
+  @apply flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-[var(--text-dim)] transition-colors hover:bg-transparent hover:text-[var(--accent)];
 }
 
 .nav-item-active {

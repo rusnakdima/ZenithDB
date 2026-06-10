@@ -1,9 +1,9 @@
 @if (hints().length > 0) {
-  <div class="border-t border-slate-700 bg-slate-800/50">
+  <div class="border-t border-slate-700 bg-[var(--bg-elevated)]">
     <!-- Header -->
     <button
       type="button"
-      class="flex w-full items-center justify-between px-4 py-2 text-xs text-slate-400 transition-colors hover:text-slate-300"
+      class="flex w-full items-center justify-between px-4 py-2 text-xs text-[var(--text-dim)] transition-colors hover:text-[var(--text-main)]"
       (click)="toggleExpanded()"
     >
       <div class="flex items-center gap-2">
@@ -35,15 +35,18 @@
         @for (hint of hints(); track hint.message) {
           <div
             class="flex items-start gap-3 rounded p-2 text-sm"
-            [class.bg-amber-500/10]="hint.type === 'warning'"
-            [class.border-amber-500/30]="hint.type === 'warning'"
-            [class.text-amber-300]="hint.type === 'warning'"
+            [class.bg-[var(--color-warning-bg)]]="hint.type === 'warning'"
+            [class.border-[var(--color-warning-border)]]="hint.type === 'warning'"
+            [class.text-[var(--color-warning)]]="hint.type === 'warning'"
             [class.bg-[var(--accent-muted)]]="hint.type === 'info'"
             [class.border-[var(--accent)]]="hint.type === 'info'"
             [class.text-[var(--accent-hover)]]="hint.type === 'info'"
             [class.bg-red-500/10]="hint.type === 'error'"
             [class.border-red-500/30]="hint.type === 'error'"
             [class.text-red-300]="hint.type === 'error'"
+            [class.bg-[var(--color-error-bg)]]="hint.type === 'error'"
+            [class.border-[var(--color-error)]]="hint.type === 'error'"
+            [class.text-[var(--color-error)]]="hint.type === 'error'"
             [class.border]="hint.type !== 'info'"
           >
             <div class="flex-1">
@@ -57,8 +60,8 @@
               <button
                 type="button"
                 class="rounded px-2 py-1 text-xs transition-colors"
-                [class.bg-amber-600]="hint.type === 'warning'"
-                [class.hover:bg-amber-500]="hint.type === 'warning'"
+                [class.bg-[var(--color-warning)]]="hint.type === 'warning'"
+                [class.hover:bg-[var(--color-warning-light)]]="hint.type === 'warning'"
                 [class.bg-[var(--accent)]]="hint.type === 'info'"
                 [class.hover:bg-[var(--accent-hover)]]="hint.type === 'info'"
                 [class.text-white]="hint.type !== 'error'"

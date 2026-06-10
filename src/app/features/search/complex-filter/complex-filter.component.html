@@ -7,7 +7,7 @@
         class="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm transition-colors"
         [class.]="!showRawEditor()"
         [class.text-white]="!showRawEditor()"
-        [class.text-slate-400]="showRawEditor()"
+        [class.text-[var(--text-dim)]]="showRawEditor()"
         [class.hover:text-white]="showRawEditor()"
         (click)="toggleRawEditor()"
       >
@@ -32,7 +32,7 @@
         class="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm transition-colors"
         [class.]="showRawEditor()"
         [class.text-white]="showRawEditor()"
-        [class.text-slate-400]="!showRawEditor()"
+        [class.text-[var(--text-dim)]]="!showRawEditor()"
         [class.hover:text-white]="!showRawEditor()"
         (click)="toggleRawEditor()"
       >
@@ -46,10 +46,10 @@
         </svg>
         JSON
       </button>
-      <div class="h-4 w-px bg-slate-600"></div>
+      <div class="h-4 w-px bg-[var(--border-color)]"></div>
       <button
         type="button"
-        class="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm text-slate-400 transition-colors hover:text-amber-400"
+        class="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm text-[var(--text-dim)] transition-colors hover:text-[var(--color-warning)]"
         (click)="toggleHistory()"
       >
         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -64,7 +64,7 @@
       </button>
       <button
         type="button"
-        class="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm text-slate-400 transition-colors hover:text-emerald-400"
+        class="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm text-[var(--text-dim)] transition-colors hover:text-[var(--color-success)]"
         (click)="openSaveDialog()"
       >
         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -110,7 +110,7 @@
   <div class="flex items-center justify-between">
     <button
       type="button"
-      class="rounded-lg px-4 py-2 text-sm text-slate-400 transition-colors hover:text-red-400"
+      class="rounded-lg px-4 py-2 text-sm text-[var(--text-dim)] transition-colors hover:text-[var(--color-error)]"
       (click)="clearFilter()"
     >
       Clear Filter
@@ -118,7 +118,7 @@
     <div class="flex items-center gap-3">
       <button
         type="button"
-        class="rounded-lg border border-[var(--border-subtle)] px-4 py-2 text-sm text-slate-300 transition-colors hover:border-[var(--border-visible)]"
+        class="rounded-lg border border-[var(--border-subtle)] px-4 py-2 text-sm text-[var(--text-main)] transition-colors hover:border-[var(--border-visible)]"
         (click)="filterChange.emit(buildFilter())"
       >
         Update Preview
@@ -141,7 +141,7 @@
         <label class="mb-1 block text-sm font-medium text-[var(--text-main)]">Filter Name</label>
         <input
           type="text"
-          class="w-full rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-2 text-sm text-slate-200 focus:border-[var(--accent)] focus:outline-none"
+          class="w-full rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-2 text-sm text-[var(--text-main)] focus:border-[var(--accent)] focus:outline-none"
           placeholder="Enter a name for this filter..."
           [ngModel]="saveFilterName()"
           (ngModelChange)="saveFilterName.set($event)"
@@ -151,7 +151,7 @@
     <div modal-footer>
       <button
         type="button"
-        class="rounded-lg px-4 py-2 text-sm text-slate-400 transition-colors hover:text-white"
+        class="rounded-lg px-4 py-2 text-sm text-[var(--text-dim)] transition-colors hover:text-[var(--text-main)]"
         (click)="closeSaveDialog()"
       >
         Cancel

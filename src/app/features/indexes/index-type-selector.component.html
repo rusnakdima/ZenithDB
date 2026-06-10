@@ -12,22 +12,22 @@
       <div class="mb-1 flex items-center gap-2">
         <span
           class="flex h-6 w-6 items-center justify-center rounded text-xs font-bold"
-          [class.]="isSelected(option.type)"
+          [class.bg-[var(--bg-elevated)]]="!isSelected(option.type)"
+          [class.text-[var(--text-main)]]="!isSelected(option.type)"
+          [class.bg-emerald-900/20]="isSelected(option.type)"
           [class.text-white]="isSelected(option.type)"
-          [class.bg-slate-700]="!isSelected(option.type)"
-          [class.text-slate-300]="!isSelected(option.type)"
         >
           {{ option.icon }}
         </span>
         <span
           class="text-sm font-medium"
-          [class.text-emerald-400]="isSelected(option.type)"
-          [class.text-slate-300]="!isSelected(option.type)"
+          [class.text-[var(--color-success)]]="isSelected(option.type)"
+          [class.text-[var(--text-main)]]="!isSelected(option.type)"
         >
           {{ option.label }}
         </span>
       </div>
-      <p class="text-xs text-slate-500">{{ option.description }}</p>
+      <p class="text-xs text-[var(--text-muted)]">{{ option.description }}</p>
     </button>
   }
 </div>

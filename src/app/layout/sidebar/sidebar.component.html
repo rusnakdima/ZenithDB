@@ -199,7 +199,7 @@
       <hr class="my-1 border-[var(--border-subtle)]" />
       @if (contextMenu().node?.type === "collection") {
         <button
-          class="flex w-full items-center gap-2 px-4 py-2 text-xs text-red-500 hover:bg-red-500/10"
+          class="flex w-full items-center gap-2 px-4 py-2 text-xs text-[var(--color-error)] hover:bg-[var(--color-error-bg)]"
           (click)="onDeleteClick()"
         >
           <mat-icon fontIcon="delete" class="h-6! w-5! text-xl!" />
