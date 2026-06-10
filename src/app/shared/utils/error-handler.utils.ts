@@ -18,11 +18,23 @@ interface WithErrorHandlingOptions {
 }
 
 function isSignalLoading(loading: unknown): loading is { set: (value: boolean) => void } {
-  return (
-    loading !== null &&
-    typeof loading === "object" &&
-    typeof (loading as { set?: unknown }).set === "function"
-  );
+  if (loading === null || loading === undefined) return false;
+  if (typeof loading === "boolean") return false;
+
+  const loadingObj = loading as { set?: unknown };
+
+  // Direct function check
+  if (typeof loadingObj.set === "function") {
+    return true;
+  }
+
+  // Angular signals use getters, so check descriptor
+  const descriptor = Object.getOwnPropertyDescriptor(loadingObj, "set");
+  if (descriptor && typeof descriptor.get === "function") {
+    return true;
+  }
+
+  return false;
 }
 
 function resolveLoadingSetter(
@@ -46,8 +58,12 @@ export function withErrorHandling<T>(
   const toastService = services?.toastService;
 
   const setLoading = resolveLoadingSetter(options.loading);
+  console.log("[ErrorHandler] setLoading function:", setLoading ? "found" : "not found");
 
-  if (setLoading) setLoading(true);
+  if (setLoading) {
+    console.log("[ErrorHandler] Setting loading to true");
+    setLoading(true);
+  }
 
   return operation()
     .then((data) => {
@@ -88,6 +104,9 @@ export function withErrorHandling<T>(
       return { success: false, error: appError } as Result<T>;
     })
     .finally(() => {
-      if (setLoading) setLoading(false);
+      if (setLoading) {
+        console.log("[ErrorHandler] Setting loading to false");
+        setLoading(false);
+      }
     });
 }

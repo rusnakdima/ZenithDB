@@ -56,13 +56,15 @@ export class ApiProvider {
   }
 
   async listConnections(): Promise<ConnectionSummary[]> {
-    const connections = await this.tauriBridge.invoke<ConnectionSummary[]>(
-      "list_connections",
-      {},
-      { suppressError: true }
-    );
-    this.dataStore.updateConnections(connections);
-    return connections;
+    return this.tauriBridge
+      .invoke<ConnectionSummary[]>("list_connections", {}, { suppressError: true })
+      .then((connections) => {
+        return connections;
+      })
+      .catch((err) => {
+        console.error("[API] listConnections error:", err);
+        throw err;
+      });
   }
 
   async getConnection(id: string): Promise<ConnectionConfigResult> {

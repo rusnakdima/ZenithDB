@@ -503,6 +503,7 @@ export class DataStoreService {
 
   async refreshConnections(): Promise<ConnectionSummary[]> {
     const connections = await this.db.listConnections();
+    console.log("[DataStore] refreshConnections got connections:", connections);
     this.connectionsSignal.set(connections);
     return connections;
   }

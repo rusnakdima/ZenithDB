@@ -1,11 +1,11 @@
 @if (status() === "connected") {
   <span
-    class="inline-block rounded border border-green-500/30 bg-green-500/20 px-2 py-0.5 text-[10px] font-bold text-green-400"
+    class="inline-block rounded border border-[var(--color-success-border)] bg-[var(--color-success-bg)] px-2 py-0.5 text-[10px] font-bold text-[var(--color-success)]"
     >CONNECTED</span
   >
 } @else if (status() === "offline") {
   <span
-    class="inline-block rounded border border-slate-700 bg-slate-800 px-2 py-0.5 text-[10px] font-bold text-slate-500"
+    class="inline-block rounded border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-2 py-0.5 text-[10px] font-bold text-[var(--text-muted)]"
     >OFFLINE</span
   >
 }

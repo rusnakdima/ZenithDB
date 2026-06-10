@@ -8,13 +8,11 @@
 >
   <div class="grid grid-cols-2 gap-6">
     <div>
-      <h3 class="mb-3 text-sm font-semibold text-gray-500 uppercase dark:text-gray-400">
-        Navigation
-      </h3>
+      <h3 class="mb-3 text-sm font-semibold text-[var(--text-muted)] uppercase">Navigation</h3>
       <div class="space-y-2">
         @for (shortcut of navigationShortcuts; track shortcut.key) {
           <div class="flex items-center justify-between text-sm">
-            <span class="text-gray-700 dark:text-gray-300">{{ shortcut.desc }}</span>
+            <span class="text-[var(--text-main)]">{{ shortcut.desc }}</span>
             <app-kbd-badge [shortcut]="shortcut.key"></app-kbd-badge>
           </div>
         }
@@ -22,11 +20,11 @@
     </div>
 
     <div>
-      <h3 class="mb-3 text-sm font-semibold text-gray-500 uppercase dark:text-gray-400">Editor</h3>
+      <h3 class="mb-3 text-sm font-semibold text-[var(--text-muted)] uppercase">Editor</h3>
       <div class="space-y-2">
         @for (shortcut of editorShortcuts; track shortcut.key) {
           <div class="flex items-center justify-between text-sm">
-            <span class="text-gray-700 dark:text-gray-300">{{ shortcut.desc }}</span>
+            <span class="text-[var(--text-main)]">{{ shortcut.desc }}</span>
             <app-kbd-badge [shortcut]="shortcut.key"></app-kbd-badge>
           </div>
         }
@@ -34,32 +32,32 @@
     </div>
 
     <div class="col-span-2">
-      <h3 class="mb-3 text-sm font-semibold text-gray-500 uppercase dark:text-gray-400">
+      <h3 class="mb-3 text-sm font-semibold text-[var(--text-muted)] uppercase">
         Table Navigation
       </h3>
       <div class="grid grid-cols-2 gap-4">
         <div class="flex items-center justify-between text-sm">
-          <span class="text-gray-700 dark:text-gray-300">Navigate Cells</span>
+          <span class="text-[var(--text-main)]">Navigate Cells</span>
           <app-kbd-badge shortcut="↑ ↓ ← →"></app-kbd-badge>
         </div>
         <div class="flex items-center justify-between text-sm">
-          <span class="text-gray-700 dark:text-gray-300">Edit Cell / Confirm</span>
+          <span class="text-[var(--text-main)]">Edit Cell / Confirm</span>
           <app-kbd-badge shortcut="Enter"></app-kbd-badge>
         </div>
         <div class="flex items-center justify-between text-sm">
-          <span class="text-gray-700 dark:text-gray-300">Next Cell</span>
+          <span class="text-[var(--text-main)]">Next Cell</span>
           <app-kbd-badge shortcut="Tab"></app-kbd-badge>
         </div>
         <div class="flex items-center justify-between text-sm">
-          <span class="text-gray-700 dark:text-gray-300">Cancel Edit</span>
+          <span class="text-[var(--text-main)]">Cancel Edit</span>
           <app-kbd-badge shortcut="Esc"></app-kbd-badge>
         </div>
         <div class="flex items-center justify-between text-sm">
-          <span class="text-gray-700 dark:text-gray-300">Delete Selected Rows</span>
+          <span class="text-[var(--text-main)]">Delete Selected Rows</span>
           <app-kbd-badge shortcut="Shift+Del"></app-kbd-badge>
         </div>
         <div class="flex items-center justify-between text-sm">
-          <span class="text-gray-700 dark:text-gray-300">Select All</span>
+          <span class="text-[var(--text-main)]">Select All</span>
           <app-kbd-badge shortcut="Ctrl+A"></app-kbd-badge>
         </div>
       </div>

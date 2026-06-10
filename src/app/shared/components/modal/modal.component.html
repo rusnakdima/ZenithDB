@@ -1,6 +1,6 @@
 @if (isVisible()) {
   <div
-    class="modal-backdrop fixed inset-0 z-50 flex justify-center bg-black/60 backdrop-blur-sm transition-opacity duration-200"
+    class="modal-backdrop fixed inset-0 z-50 flex justify-center bg-black/75 backdrop-blur-sm transition-opacity duration-200"
     [class.opacity-0]="isAnimating()"
     [class.opacity-100]="!isAnimating()"
     [class]="contentPositionClasses"
@@ -10,7 +10,7 @@
       role="dialog"
       aria-modal="true"
       [attr.aria-labelledby]="'modal-title-' + title()"
-      class="relative w-full rounded-2xl border border-[var(--accent)] bg-transparent shadow-2xl backdrop-blur-md transition-all duration-200"
+      class="relative w-full rounded-2xl border border-[var(--accent)] bg-[var(--bg-modal)] shadow-2xl backdrop-blur-md transition-all duration-200"
       [class.scale-95]="isAnimating()"
       [class.scale-100]="!isAnimating()"
       [class]="sizeClasses"
