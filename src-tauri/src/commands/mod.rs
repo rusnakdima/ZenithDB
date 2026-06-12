@@ -7,6 +7,7 @@ pub mod connection;
 pub mod connection_entity;
 pub mod connections_db;
 pub mod data;
+pub mod dataflow;
 pub mod decentralization;
 pub mod entities;
 pub mod error_utils;

@@ -1,5 +1,6 @@
 use crate::commands::get_auth_context;
 use crate::commands::validate_conn_id;
+use crate::logger::{redact_sensitive_data, DataflowTimer};
 use crate::models::response::ResponseModel;
 use crate::state::AppState;
 use tauri::State;
@@ -82,20 +83,39 @@ pub async fn save_connection(
   state: State<'_, AppState>,
   config: ConnectionConfig,
 ) -> Result<ResponseModel, ResponseModel> {
+  let timer = DataflowTimer::new("save_connection");
   let auth = get_auth_context();
   if !auth.can_access_connection("*") {
-    return Err(ResponseModel::error("Access denied"));
+    let err = ResponseModel::error("Access denied");
+    timer.finish_error("Access denied");
+    return Err(err);
   }
-  state.connection_service.save_connection(config).await
+  let params = serde_json::json!({ "config": &config });
+  tracing::debug!(command = "save_connection", params = %redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default()), "[COMMAND_ENTRY]");
+  let result = state.connection_service.save_connection(config).await;
+  match &result {
+    Ok(r) => timer.finish(r),
+    Err(e) => timer.finish_error(&e.message),
+  }
+  result
 }
 
 #[tauri::command]
 pub async fn list_connections(state: State<'_, AppState>) -> Result<ResponseModel, ResponseModel> {
+  let timer = DataflowTimer::new("list_connections");
   let auth = get_auth_context();
   if !auth.can_access_connection("*") {
-    return Err(ResponseModel::error("Access denied"));
+    let err = ResponseModel::error("Access denied");
+    timer.finish_error("Access denied");
+    return Err(err);
   }
-  state.connection_service.list_connections().await
+  tracing::debug!(command = "list_connections", "[COMMAND_ENTRY]");
+  let result = state.connection_service.list_connections().await;
+  match &result {
+    Ok(r) => timer.finish(r),
+    Err(e) => timer.finish_error(&e.message),
+  }
+  result
 }
 
 #[tauri::command]
@@ -103,25 +123,53 @@ pub async fn test_connection_status(
   state: State<'_, AppState>,
   id: &str,
 ) -> Result<ResponseModel, ResponseModel> {
+  let timer = DataflowTimer::new("test_connection_status");
   let auth = get_auth_context();
   if !auth.can_access_connection(id) {
-    return Err(ResponseModel::error("Access denied to connection"));
+    let err = ResponseModel::error("Access denied to connection");
+    timer.finish_error("Access denied");
+    return Err(err);
   }
-  validate_conn_id(id).map_err(|e| ResponseModel::error(e))?;
-  state.connection_service.test_connection_status(id).await
+  if let Err(e) = validate_conn_id(id) {
+    let err = ResponseModel::error(&e);
+    timer.finish_error(&e);
+    return Err(err);
+  }
+  let params = serde_json::json!({ "id": id });
+  tracing::debug!(command = "test_connection_status", params = %redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default()), "[COMMAND_ENTRY]");
+  let result = state.connection_service.test_connection_status(id).await;
+  match &result {
+    Ok(r) => timer.finish(r),
+    Err(e) => timer.finish_error(&e.message),
+  }
+  result
 }
 
 #[tauri::command]
 pub async fn check_health(
   state: State<'_, AppState>,
-  conn_id: &str,
+  connId: &str,
 ) -> Result<ResponseModel, ResponseModel> {
+  let timer = DataflowTimer::new("check_health");
   let auth = get_auth_context();
-  if !auth.can_access_connection(conn_id) {
-    return Err(ResponseModel::error("Access denied to connection"));
+  if !auth.can_access_connection(connId) {
+    let err = ResponseModel::error("Access denied to connection");
+    timer.finish_error("Access denied");
+    return Err(err);
   }
-  validate_conn_id(conn_id).map_err(|e| ResponseModel::error(e))?;
-  state.connection_service.check_health(conn_id).await
+  if let Err(e) = validate_conn_id(connId) {
+    let err = ResponseModel::error(&e);
+    timer.finish_error(&e);
+    return Err(err);
+  }
+  let params = serde_json::json!({ "connId": connId });
+  tracing::debug!(command = "check_health", params = %redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default()), "[COMMAND_ENTRY]");
+  let result = state.connection_service.check_health(connId).await;
+  match &result {
+    Ok(r) => timer.finish(r),
+    Err(e) => timer.finish_error(&e.message),
+  }
+  result
 }
 
 #[tauri::command]
@@ -129,12 +177,26 @@ pub async fn delete_connection(
   state: State<'_, AppState>,
   id: &str,
 ) -> Result<ResponseModel, ResponseModel> {
+  let timer = DataflowTimer::new("delete_connection");
   let auth = get_auth_context();
   if !auth.can_access_connection(id) {
-    return Err(ResponseModel::error("Access denied to connection"));
+    let err = ResponseModel::error("Access denied");
+    timer.finish_error("Access denied");
+    return Err(err);
   }
-  validate_conn_id(id).map_err(|e| ResponseModel::error(e))?;
-  state.connection_service.delete_connection(id).await
+  if let Err(e) = validate_conn_id(id) {
+    let err = ResponseModel::error(&e);
+    timer.finish_error(&e);
+    return Err(err);
+  }
+  let params = serde_json::json!({ "id": id });
+  tracing::debug!(command = "delete_connection", params = %redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default()), "[COMMAND_ENTRY]");
+  let result = state.connection_service.delete_connection(id).await;
+  match &result {
+    Ok(r) => timer.finish(r),
+    Err(e) => timer.finish_error(&e.message),
+  }
+  result
 }
 
 #[tauri::command]
@@ -143,12 +205,26 @@ pub async fn update_connection(
   id: &str,
   config: ConnectionConfig,
 ) -> Result<ResponseModel, ResponseModel> {
+  let timer = DataflowTimer::new("update_connection");
   let auth = get_auth_context();
   if !auth.can_access_connection(id) {
-    return Err(ResponseModel::error("Access denied to connection"));
+    let err = ResponseModel::error("Access denied");
+    timer.finish_error("Access denied");
+    return Err(err);
   }
-  validate_conn_id(id).map_err(|e| ResponseModel::error(e))?;
-  state.connection_service.update_connection(id, config).await
+  if let Err(e) = validate_conn_id(id) {
+    let err = ResponseModel::error(&e);
+    timer.finish_error(&e);
+    return Err(err);
+  }
+  let params = serde_json::json!({ "id": id, "config": &config });
+  tracing::debug!(command = "update_connection", params = %redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default()), "[COMMAND_ENTRY]");
+  let result = state.connection_service.update_connection(id, config).await;
+  match &result {
+    Ok(r) => timer.finish(r),
+    Err(e) => timer.finish_error(&e.message),
+  }
+  result
 }
 
 #[tauri::command]
@@ -156,12 +232,26 @@ pub async fn get_connection(
   state: State<'_, AppState>,
   id: &str,
 ) -> Result<ResponseModel, ResponseModel> {
+  let timer = DataflowTimer::new("get_connection");
   let auth = get_auth_context();
   if !auth.can_access_connection(id) {
-    return Err(ResponseModel::error("Access denied to connection"));
+    let err = ResponseModel::error("Access denied");
+    timer.finish_error("Access denied");
+    return Err(err);
   }
-  validate_conn_id(id).map_err(|e| ResponseModel::error(e))?;
-  state.connection_service.get_connection(id).await
+  if let Err(e) = validate_conn_id(id) {
+    let err = ResponseModel::error(&e);
+    timer.finish_error(&e);
+    return Err(err);
+  }
+  let params = serde_json::json!({ "id": id });
+  tracing::debug!(command = "get_connection", params = %redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default()), "[COMMAND_ENTRY]");
+  let result = state.connection_service.get_connection(id).await;
+  match &result {
+    Ok(r) => timer.finish(r),
+    Err(e) => timer.finish_error(&e.message),
+  }
+  result
 }
 
 #[tauri::command]
@@ -169,5 +259,13 @@ pub async fn test_connection(
   state: State<'_, AppState>,
   config: ConnectionConfig,
 ) -> Result<ResponseModel, ResponseModel> {
-  state.connection_service.test_connection(config).await
+  let timer = DataflowTimer::new("test_connection");
+  let params = serde_json::json!({ "config": &config });
+  tracing::debug!(command = "test_connection", params = %redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default()), "[COMMAND_ENTRY]");
+  let result = state.connection_service.test_connection(config).await;
+  match &result {
+    Ok(r) => timer.finish(r),
+    Err(e) => timer.finish_error(&e.message),
+  }
+  result
 }

@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
 use tokio::sync::RwLock;
+use tracing::debug;
 
 const MAX_REQUESTS: usize = 100;
 const WINDOW_SECS: u64 = 60;
@@ -59,29 +60,46 @@ impl RateLimiter {
     entry.timestamps.retain(|t| now.duration_since(*t) < window);
 
     if entry.timestamps.len() >= MAX_REQUESTS {
+      debug!(conn_id = %conn_id, request_count = %entry.timestamps.len(), "[RATE_LIMIT] Rate limit exceeded");
       return Err("Rate limit exceeded".to_string());
     }
 
     entry.timestamps.push(now);
+    debug!(conn_id = %conn_id, request_count = %entry.timestamps.len(), "[RATE_LIMIT] Request allowed");
     Ok(())
   }
 
   pub async fn cleanup_stale(&self) {
     let mut requests = self.requests.write().await;
-    requests.retain(|_, entry| !entry.is_stale());
+    let before_count = requests.len();
+    requests.retain(|conn_id, entry| {
+      if entry.is_stale() {
+        debug!(conn_id = %conn_id, "[RATE_LIMIT] Cleaning stale entry");
+        false
+      } else {
+        true
+      }
+    });
+    let removed_count = before_count - requests.len();
+    if removed_count > 0 {
+      debug!(removed = %removed_count, remaining = %requests.len(), "[RATE_LIMIT] Cleanup completed");
+    }
   }
 
   pub async fn start_background_cleanup(self: &Arc<Self>) {
+    debug!("[RATE_LIMIT] Starting background cleanup task");
     let limiter = self.clone();
     let handle = tokio::spawn(async move {
       let mut interval = tokio::time::interval(Duration::from_secs(CLEANUP_INTERVAL_SECS));
       while !limiter.shutdown.load(Ordering::Relaxed) {
         tokio::select! {
             _ = interval.tick() => {
+                debug!("[RATE_LIMIT] Running periodic cleanup");
                 limiter.cleanup_stale().await;
             }
         }
       }
+      debug!("[RATE_LIMIT] Background cleanup task shutting down");
     });
     let mut task = self.cleanup_task.write().await;
     *task = Some(handle);

@@ -4,6 +4,7 @@ use crate::commands::get_connection_entry;
 use crate::commands::validate_conn_id;
 use crate::commands::validate_name;
 use crate::dispatch_provider;
+use crate::logger::DataflowTimer;
 use crate::types::{QueryParams, QueryResult};
 use nosql_orm::prelude::*;
 use serde_json::Value;
@@ -20,17 +21,27 @@ fn parse_filter(filter_val: Option<String>) -> Result<Option<Filter>, String> {
 
 #[tauri::command]
 pub async fn query_data(
-  conn_id: &str,
+  connId: &str,
   collection: &str,
   query: QueryParams,
 ) -> Result<QueryResult<Value>, String> {
+  let timer = DataflowTimer::new("query_data");
   let auth = get_auth_context();
-  if !auth.can_access_connection(conn_id) {
+  if !auth.can_access_connection(connId) {
+    timer.finish_error("Access denied to connection");
     return Err("Access denied to connection".to_string());
   }
-  validate_conn_id(conn_id)?;
-  validate_name(collection)?;
-  let entry = get_connection_entry(conn_id).await?;
+  if let Err(e) = validate_conn_id(connId) {
+    timer.finish_error(&e);
+    return Err(e);
+  }
+  if let Err(e) = validate_name(collection) {
+    timer.finish_error(&e);
+    return Err(e);
+  }
+  let params = serde_json::json!({ "connId": connId, "collection": collection, "query": &query });
+  tracing::debug!(command = "query_data", params = %crate::logger::redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default()), "[COMMAND_ENTRY]");
+  let entry = get_connection_entry(connId).await?;
   let filter = parse_filter(query.filter)?;
   let skip = query.skip;
   let limit = query.limit;
@@ -52,35 +63,59 @@ pub async fn query_data(
     false
   };
 
-  Ok(QueryResult {
-    data,
+  let result = QueryResult {
+    data: data.clone(),
     total: total as i64,
     has_more,
-  })
+  };
+  tracing::debug!(command = "query_data", result_count = %data.len(), total = %total, has_more = %has_more, "[COMMAND_RESULT]");
+  Ok(result)
 }
 
 #[tauri::command]
-pub async fn save_row(conn_id: &str, collection: &str, data: Value) -> Result<Value, String> {
-  validate_conn_id(conn_id)?;
-  validate_name(collection)?;
-  let entry = get_connection_entry(conn_id).await?;
-  dispatch_provider!(entry, provider => {
+pub async fn save_row(connId: &str, collection: &str, data: Value) -> Result<Value, String> {
+  let timer = DataflowTimer::new("save_row");
+  if let Err(e) = validate_conn_id(connId) {
+    timer.finish_error(&e);
+    return Err(e);
+  }
+  if let Err(e) = validate_name(collection) {
+    timer.finish_error(&e);
+    return Err(e);
+  }
+  let params = serde_json::json!({ "connId": connId, "collection": collection, "data": &data });
+  tracing::debug!(command = "save_row", params = %crate::logger::redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default()), "[COMMAND_ENTRY]");
+  let entry = get_connection_entry(connId).await?;
+  let result = dispatch_provider!(entry, provider => {
       if let Some(id) = data.get("id").and_then(|v| v.as_str()) {
           if provider.exists(collection, id).await.map_err_string()? {
               return provider.update(collection, id, data.clone()).await.map_err_string();
           }
       }
       provider.insert(collection, data).await.map_err_string()
-  })
+  })?;
+  tracing::debug!(command = "save_row", "[COMMAND_RESULT]");
+  Ok(result)
 }
 
 #[tauri::command]
-pub async fn delete_row(conn_id: &str, collection: &str, id: &str) -> Result<(), String> {
-  validate_conn_id(conn_id)?;
-  validate_name(collection)?;
-  let entry = get_connection_entry(conn_id).await?;
-  dispatch_provider!(entry, provider => {
+pub async fn delete_row(connId: &str, collection: &str, id: &str) -> Result<(), String> {
+  let timer = DataflowTimer::new("delete_row");
+  if let Err(e) = validate_conn_id(connId) {
+    timer.finish_error(&e);
+    return Err(e);
+  }
+  if let Err(e) = validate_name(collection) {
+    timer.finish_error(&e);
+    return Err(e);
+  }
+  let params = serde_json::json!({ "connId": connId, "collection": collection, "id": id });
+  tracing::debug!(command = "delete_row", params = %crate::logger::redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default()), "[COMMAND_ENTRY]");
+  let entry = get_connection_entry(connId).await?;
+  let _: () = dispatch_provider!(entry, provider => {
       provider.delete(collection, id).await.map_err_string()?;
-      Ok(())
-  })
+      Ok::<(), String>(())
+  })?;
+  tracing::debug!(command = "delete_row", "[COMMAND_RESULT]");
+  Ok(())
 }

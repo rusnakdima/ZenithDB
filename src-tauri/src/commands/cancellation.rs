@@ -3,6 +3,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
 use tokio::sync::CancellationToken;
 use tokio::sync::RwLock;
+use tracing::debug;
 
 const ENTRY_TTL_SECS: u64 = 300;
 
@@ -67,27 +68,36 @@ impl CancellationRegistry {
     let now = Instant::now();
     let ttl = Duration::from_secs(ENTRY_TTL_SECS);
     let mut tokens = self.tokens.write().await;
-    tokens.retain(|_, entry| {
+    let before_count = tokens.len();
+    tokens.retain(|query_id, entry| {
       if now.duration_since(entry.registered_at) > ttl {
+        debug!(query_id = %query_id, "[CANCELLATION] Removing stale cancellation");
         entry.token.cancel();
         false
       } else {
         true
       }
     });
+    let removed_count = before_count - tokens.len();
+    if removed_count > 0 {
+      debug!(removed = %removed_count, remaining = %tokens.len(), "[CANCELLATION] Cleanup completed");
+    }
   }
 
   pub async fn start_background_cleanup(self: &Arc<Self>) {
+    debug!("[CANCELLATION] Starting background cleanup task");
     let registry = self.clone();
     let handle = tokio::spawn(async move {
       let mut interval = tokio::time::interval(Duration::from_secs(60));
       while !registry.shutdown.load(Ordering::Relaxed) {
         tokio::select! {
             _ = interval.tick() => {
+                debug!("[CANCELLATION] Running periodic cleanup");
                 registry.cleanup_stale().await;
             }
         }
       }
+      debug!("[CANCELLATION] Background cleanup task shutting down");
     });
     let mut task = self.cleanup_task.write().await;
     *task = Some(handle);

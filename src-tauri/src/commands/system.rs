@@ -1,3 +1,5 @@
+use crate::logger::DataflowTimer;
+use crate::models::response::ResponseModel;
 use serde::{Deserialize, Serialize};
 use sysinfo::{Disks, Networks, System};
 
@@ -37,6 +39,8 @@ fn calculate_status(cpu_usage: f32, ram_used: u64, ram_total: u64) -> String {
 
 #[tauri::command]
 pub async fn get_system_status() -> Result<SystemMetrics, String> {
+  let timer = DataflowTimer::new("get_system_status");
+  tracing::debug!(command = "get_system_status", "[COMMAND_ENTRY]");
   let sys = tokio::task::spawn_blocking(|| {
     let mut sys = System::new_all();
     sys.refresh_cpu_all();
@@ -82,7 +86,13 @@ pub async fn get_system_status() -> Result<SystemMetrics, String> {
     }
   })
   .await
-  .map_err(|e| format!("Task join error: {}", e))?;
+  .map_err(|e| {
+    timer
+      .clone()
+      .finish_error(&format!("Task join error: {}", e));
+    format!("Task join error: {}", e)
+  })?;
 
+  timer.finish(&ResponseModel::success(&sys));
   Ok(sys)
 }

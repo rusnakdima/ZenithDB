@@ -3,6 +3,7 @@ use prometheus::{
   Registry,
 };
 use std::time::Instant;
+use crate::logger::DataflowTimer;
 
 pub struct Metrics {
   pub registry: Registry,
@@ -137,11 +138,21 @@ pub async fn record_query<F, T>(f: F) -> Result<T, String>
 where
   F: std::future::Future<Output = Result<T, String>>,
 {
+  let timer = DataflowTimer::new("record_query");
   let guard = {
     let metrics = METRICS.lock().await;
     metrics.record_query_start()
   };
   let result = f.await;
   drop(guard);
+  match &result {
+    Ok(_) => {
+      tracing::debug!(command = "record_query", status = "success", "[METRICS]");
+    }
+    Err(e) => {
+      timer.finish_error(e);
+      return result;
+    }
+  }
   result
 }

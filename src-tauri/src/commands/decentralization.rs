@@ -1,3 +1,5 @@
+use crate::logger::{redact_sensitive_data, DataflowTimer};
+use crate::models::response::ResponseModel;
 use rusqlite::{params, Connection, OptionalExtension};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
@@ -269,7 +271,18 @@ impl DecentralizedStorage {
 
 #[tauri::command]
 pub async fn init_decentralized_storage() -> Result<(), String> {
-  DecentralizedStorage::init().await
+  let timer = DataflowTimer::new("init_decentralized_storage");
+  tracing::debug!(command = "init_decentralized_storage", "[COMMAND_ENTRY]");
+  match DecentralizedStorage::init().await {
+    Ok(()) => {
+      timer.finish(&ResponseModel::success(()));
+      Ok(())
+    }
+    Err(e) => {
+      timer.finish_error(&e);
+      Err(e)
+    }
+  }
 }
 
 #[tauri::command]
@@ -279,25 +292,72 @@ pub async fn save_database_metadata(
   path: Option<String>,
   metadata: Option<String>,
 ) -> Result<DatabaseMetadata, String> {
-  DecentralizedStorage::save_database(&connection_id, &name, path.as_deref(), metadata.as_deref())
-    .await
+  let timer = DataflowTimer::new("save_database_metadata");
+  let params = serde_json::json!({ "connection_id": &connection_id, "name": &name, "path": path, "metadata": metadata });
+  tracing::debug!(command = "save_database_metadata", params = %redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default()), "[COMMAND_ENTRY]");
+  match DecentralizedStorage::save_database(
+    &connection_id,
+    &name,
+    path.as_deref(),
+    metadata.as_deref(),
+  )
+  .await
+  {
+    Ok(result) => {
+      timer.finish(&ResponseModel::success(&result));
+      Ok(result)
+    }
+    Err(e) => {
+      timer.finish_error(&e);
+      Err(e)
+    }
+  }
 }
 
 #[tauri::command]
 pub async fn list_databases_metadata(
   connection_id: String,
 ) -> Result<Vec<DatabaseMetadata>, String> {
-  tokio::time::timeout(
+  let timer = DataflowTimer::new("list_databases_metadata");
+  let params = serde_json::json!({ "connection_id": &connection_id });
+  tracing::debug!(command = "list_databases_metadata", params = %redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default()), "[COMMAND_ENTRY]");
+  match tokio::time::timeout(
     std::time::Duration::from_secs(10),
     DecentralizedStorage::list_databases(&connection_id),
   )
   .await
-  .map_err(|_| "List databases timed out".to_string())?
+  {
+    Ok(Ok(result)) => {
+      timer.finish(&ResponseModel::success(&result));
+      Ok(result)
+    }
+    Ok(Err(e)) => {
+      timer.finish_error(&e);
+      Err(e)
+    }
+    Err(_) => {
+      let e = "List databases timed out".to_string();
+      timer.finish_error(&e);
+      Err(e)
+    }
+  }
 }
 
 #[tauri::command]
 pub async fn get_database_metadata(id: i64) -> Result<Option<DatabaseMetadata>, String> {
-  DecentralizedStorage::get_database(id).await
+  let timer = DataflowTimer::new("get_database_metadata");
+  let params = serde_json::json!({ "id": id });
+  tracing::debug!(command = "get_database_metadata", params = %redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default()), "[COMMAND_ENTRY]");
+  match DecentralizedStorage::get_database(id).await {
+    Ok(result) => {
+      timer.finish(&ResponseModel::success(&result));
+      Ok(result)
+    }
+    Err(e) => {
+      timer.finish_error(&e);
+      Err(e)
+    }
+  }
 }
 
 #[tauri::command]
@@ -307,15 +367,52 @@ pub async fn update_database_metadata(
   path: Option<String>,
   metadata: Option<String>,
 ) -> Result<DatabaseMetadata, String> {
-  DecentralizedStorage::update_database(id, &name, path.as_deref(), metadata.as_deref()).await
+  let timer = DataflowTimer::new("update_database_metadata");
+  let params = serde_json::json!({ "id": id, "name": &name, "path": path, "metadata": metadata });
+  tracing::debug!(command = "update_database_metadata", params = %redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default()), "[COMMAND_ENTRY]");
+  match DecentralizedStorage::update_database(id, &name, path.as_deref(), metadata.as_deref()).await
+  {
+    Ok(result) => {
+      timer.finish(&ResponseModel::success(&result));
+      Ok(result)
+    }
+    Err(e) => {
+      timer.finish_error(&e);
+      Err(e)
+    }
+  }
 }
 
 #[tauri::command]
 pub async fn delete_database_metadata(id: i64) -> Result<(), String> {
-  DecentralizedStorage::delete_database(id).await
+  let timer = DataflowTimer::new("delete_database_metadata");
+  let params = serde_json::json!({ "id": id });
+  tracing::debug!(command = "delete_database_metadata", params = %redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default()), "[COMMAND_ENTRY]");
+  match DecentralizedStorage::delete_database(id).await {
+    Ok(()) => {
+      timer.finish(&ResponseModel::success(()));
+      Ok(())
+    }
+    Err(e) => {
+      timer.finish_error(&e);
+      Err(e)
+    }
+  }
 }
 
 #[tauri::command]
 pub async fn delete_connection_databases_metadata(connection_id: String) -> Result<(), String> {
-  DecentralizedStorage::delete_connection_databases(&connection_id).await
+  let timer = DataflowTimer::new("delete_connection_databases_metadata");
+  let params = serde_json::json!({ "connection_id": &connection_id });
+  tracing::debug!(command = "delete_connection_databases_metadata", params = %redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default()), "[COMMAND_ENTRY]");
+  match DecentralizedStorage::delete_connection_databases(&connection_id).await {
+    Ok(()) => {
+      timer.finish(&ResponseModel::success(()));
+      Ok(())
+    }
+    Err(e) => {
+      timer.finish_error(&e);
+      Err(e)
+    }
+  }
 }

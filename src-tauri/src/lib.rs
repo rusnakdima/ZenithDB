@@ -16,6 +16,7 @@ use commands::connection::{
   test_connection, test_connection_status, update_connection,
 };
 use commands::data::{delete_row, query_data, save_row};
+use commands::dataflow::{append_log_file, capture_screenshot, save_log_file};
 use commands::decentralization::{
   delete_connection_databases_metadata, delete_database_metadata, get_database_metadata,
   init_decentralized_storage, list_databases_metadata, save_database_metadata,
@@ -103,6 +104,9 @@ pub fn run() -> Result<(), String> {
       query_routes::query_delete,
       query_routes::query_raw,
       query_routes::query_server_version,
+      capture_screenshot,
+      save_log_file,
+      append_log_file,
     ])
     .run(tauri::generate_context!())
     .map_err(|e| e.to_string())?;
