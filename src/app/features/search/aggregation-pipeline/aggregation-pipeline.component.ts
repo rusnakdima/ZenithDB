@@ -45,19 +45,8 @@ export class AggregationPipelineComponent implements OnInit {
     "$replaceRoot",
   ];
 
-  pipelineJson = signal("[]");
+  pipelineJson = computed(() => this.pipelineService.toJson());
   jsonError = signal<string | null>(null);
-
-  private isInternalChange = false;
-
-  constructor() {
-    effect(() => {
-      if (!this.isInternalChange) {
-        const json = this.pipelineService.toJson();
-        this.pipelineJson.set(json);
-      }
-    });
-  }
 
   ngOnInit(): void {
     this.logger.debug("[SEARCH_PIPELINE]", "Aggregation pipeline component initialized", {
@@ -68,47 +57,34 @@ export class AggregationPipelineComponent implements OnInit {
   addStage(type: StageType): void {
     this.logger.debug("[SEARCH_PIPELINE]", "Adding stage", { type });
     this.pipelineService.addStage(type);
-    this.updateJsonFromStages();
   }
 
   removeStage(id: string): void {
     this.logger.debug("[SEARCH_PIPELINE]", "Removing stage", { id });
     this.pipelineService.removeStage(id);
-    this.updateJsonFromStages();
   }
 
   moveStageUp(index: number): void {
     this.pipelineService.moveStageUp(index);
-    this.updateJsonFromStages();
   }
 
   moveStageDown(index: number): void {
     this.pipelineService.moveStageDown(index);
-    this.updateJsonFromStages();
   }
 
   updateStageConfig(id: string, config: StageConfig): void {
     this.pipelineService.updateStageConfig(id, config);
-    this.updateJsonFromStages();
   }
 
   clearAll(): void {
     this.logger.info("[SEARCH_PIPELINE]", "Clearing all pipeline stages");
     this.pipelineService.clearAll();
-    this.updateJsonFromStages();
   }
 
   onJsonChange(json: string): void {
-    this.isInternalChange = true;
-    this.pipelineJson.set(json);
-
     if (!this.jsonError()) {
-      const success = this.pipelineService.fromJson(json);
-      if (success) {
-        this.updateJsonFromStages();
-      }
+      this.pipelineService.fromJson(json);
     }
-    this.isInternalChange = false;
   }
 
   onParseError(error: string | null): void {
@@ -124,12 +100,5 @@ export class AggregationPipelineComponent implements OnInit {
     const pipeline = this.pipelineService.buildPipeline();
     this.logger.info("[SEARCH_PIPELINE]", "Executing aggregation pipeline", { pipeline });
     this.execute.emit(pipeline);
-  }
-
-  private updateJsonFromStages(): void {
-    this.isInternalChange = true;
-    const json = this.pipelineService.toJson();
-    this.pipelineJson.set(json);
-    this.isInternalChange = false;
   }
 }

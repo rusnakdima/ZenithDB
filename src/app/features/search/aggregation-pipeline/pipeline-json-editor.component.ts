@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, signal, effect, inject } from "@angular/core";
+import { Component, Input, Output, EventEmitter, signal, computed, inject } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { AppLoggerService } from "@shared/services/app-logger.service";
@@ -86,14 +86,7 @@ export class PipelineJsonEditorComponent {
   jsonContent = signal("");
   error = signal<string | null>(null);
   isValid = signal(false);
-  lineCount = signal(0);
-
-  constructor() {
-    effect(() => {
-      const content = this.jsonContent();
-      this.lineCount.set(content.split("\n").length);
-    });
-  }
+  lineCount = computed(() => this.jsonContent().split("\n").length);
 
   onJsonChange(value: string): void {
     this.jsonContent.set(value);
