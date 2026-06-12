@@ -2,15 +2,28 @@
   <!-- Header -->
   <div class="flex items-center justify-between border-b border-[var(--border-subtle)] px-4 py-3">
     <div class="flex items-center gap-2">
-      <svg class="h-5 w-5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+      <svg
+        class="h-5 w-5 text-[var(--accent)]"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+        ></path>
       </svg>
       <span class="font-medium text-[var(--text-main)]">Data Flow Logs</span>
       <span class="rounded bg-[var(--accent)]/20 px-2 py-0.5 text-xs text-[var(--accent)]">
         {{ logger.entryCount() }}
       </span>
       @if (logger.problemCount() > 0) {
-        <span class="rounded bg-red-500/20 px-2 py-0.5 text-xs text-red-500 cursor-pointer" (click)="toggleProblemsOnly()">
+        <span
+          class="cursor-pointer rounded bg-red-500/20 px-2 py-0.5 text-xs text-red-500"
+          (click)="toggleProblemsOnly()"
+        >
           {{ logger.problemCount() }} problems
         </span>
       }
@@ -22,7 +35,12 @@
         title="Export logs"
       >
         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+          ></path>
         </svg>
       </button>
       @if (logger.problemCount() > 0) {
@@ -32,7 +50,12 @@
           title="Export problems"
         >
           <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+            ></path>
           </svg>
         </button>
       }
@@ -42,7 +65,12 @@
         title="Clear logs"
       >
         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+          ></path>
         </svg>
       </button>
       <button
@@ -50,7 +78,12 @@
         class="rounded p-1.5 text-[var(--text-muted)] transition-colors hover:bg-transparent hover:text-[var(--text-dim)]"
       >
         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M6 18L18 6M6 6l12 12"
+          ></path>
         </svg>
       </button>
     </div>
@@ -148,8 +181,18 @@
   <div class="flex-1 overflow-auto">
     @if (filteredEntries().length === 0) {
       <div class="flex flex-col items-center justify-center py-12 text-center">
-        <svg class="h-12 w-12 text-neutral-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+        <svg
+          class="h-12 w-12 text-neutral-700"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1.5"
+            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+          ></path>
         </svg>
         <p class="mt-3 text-sm text-[var(--text-muted)]">No log entries</p>
         <p class="mt-1 text-xs text-[var(--text-dim)]">Data flow logs will appear here</p>
@@ -157,12 +200,12 @@
     } @else {
       <div class="divide-y divide-[var(--border-subtle)]">
         @for (entry of filteredEntries(); track trackById($index, entry)) {
-          <div class="flex items-start gap-2 px-4 py-2 text-xs hover:bg-transparent/30 group">
+          <div class="group flex items-start gap-2 px-4 py-2 text-xs hover:bg-transparent/30">
             <span class="shrink-0 font-mono text-[var(--text-dim)]">
               {{ entry.timestamp | date: "HH:mm:ss.SSS" }}
             </span>
             <span
-              class="shrink-0 w-6 text-center font-bold"
+              class="w-6 shrink-0 text-center font-bold"
               [class.text-[var(--color-success)]]="entry.direction === 'in'"
               [class.text-[var(--accent)]]="entry.direction === 'out'"
               [class.text-[var(--color-warning)]]="entry.direction === 'user_action'"
@@ -170,14 +213,18 @@
               {{ getDirectionIcon(entry) }}
             </span>
             @if (entry.markedAsProblem) {
-              <span class="shrink-0 w-2 h-2 rounded-full {{ getSeverityColor(entry.problemSeverity) }}"></span>
+              <span
+                class="shrink-0 w-2 h-2 rounded-full {{ getSeverityColor(entry.problemSeverity) }}"
+              ></span>
             }
             <span class="shrink-0 rounded bg-[var(--accent)]/20 px-1.5 py-0.5 text-[var(--accent)]">
               {{ entry.page }}
             </span>
             <span class="text-[var(--text-main)]">{{ entry.operation }}</span>
             @if (entry.command) {
-              <span class="shrink-0 rounded bg-[var(--text-muted)]/20 px-1.5 py-0.5 text-[var(--text-muted)]">
+              <span
+                class="shrink-0 rounded bg-[var(--text-muted)]/20 px-1.5 py-0.5 text-[var(--text-muted)]"
+              >
                 {{ entry.command }}
               </span>
             }
@@ -187,7 +234,9 @@
             @if (entry.durationMs !== undefined) {
               <span class="shrink-0 text-[var(--text-dim)]">[{{ entry.durationMs }}ms]</span>
             }
-            <div class="ml-auto flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div
+              class="ml-auto flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100"
+            >
               @if (entry.markedAsProblem) {
                 <button
                   (click)="unmarkProblem(entry)"
@@ -195,7 +244,12 @@
                   title="Unmark problem"
                 >
                   <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path>
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
+                    ></path>
                   </svg>
                 </button>
               } @else {
@@ -205,7 +259,12 @@
                   title="Mark as problem"
                 >
                   <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                    ></path>
                   </svg>
                 </button>
               }
@@ -263,7 +322,9 @@
   }
 
   <!-- Footer -->
-  <div class="flex items-center justify-between border-t border-[var(--border-subtle)] px-4 py-2 text-xs text-[var(--text-muted)]">
+  <div
+    class="flex items-center justify-between border-t border-[var(--border-subtle)] px-4 py-2 text-xs text-[var(--text-muted)]"
+  >
     <span>Ctrl+Shift+L to toggle</span>
     <span>{{ filteredEntries().length }} / {{ logger.entryCount() }} entries</span>
   </div>

@@ -5,9 +5,9 @@ import {
   OnInit,
   OnDestroy,
   output,
-  effect,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
+  computed,
 } from "@angular/core";
 import { Router, ActivatedRoute } from "@angular/router";
 import { FormsModule } from "@angular/forms";
@@ -55,7 +55,13 @@ export class ConnectionFormComponent implements OnInit {
   private readonly page = "ConnectionForm";
 
   editingId: string | null = null;
-  isEditing = signal(false);
+
+  private isFormOpen = signal(false);
+
+  isEditing = computed(() => {
+    const editId = this.connectionFormService.editingId();
+    return this.isFormOpen() && editId !== null && !this.connectionFormService.isDuplicate();
+  });
 
   provider: ProviderType = "json";
   formData = signal<ConnectionFormData>({
@@ -74,29 +80,20 @@ export class ConnectionFormComponent implements OnInit {
   saving = signal(false);
 
   constructor() {
-    effect(() => {
-      const isOpen = this.connectionFormService.isOpen();
-      const editId = this.connectionFormService.editingId();
-      const isDup = this.connectionFormService.isDuplicate();
+    const isOpen = this.connectionFormService.isOpen();
+    const editId = this.connectionFormService.editingId();
+    const isDup = this.connectionFormService.isDuplicate();
 
-      if (isOpen) {
-        if (editId) {
-          if (isDup) {
-            this.editingId = null;
-            this.isEditing.set(false);
-            this.loadConnection(editId, true);
-          } else {
-            this.editingId = editId;
-            this.isEditing.set(true);
-            this.loadConnection(editId, false);
-          }
-        } else {
-          this.editingId = null;
-          this.isEditing.set(false);
-          this.resetForm();
-        }
+    if (isOpen) {
+      this.isFormOpen.set(true);
+      if (editId) {
+        this.editingId = editId;
+        this.loadConnection(editId, isDup);
+      } else {
+        this.editingId = null;
+        this.resetForm();
       }
-    });
+    }
   }
 
   ngOnInit() {
