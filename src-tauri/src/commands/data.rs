@@ -5,6 +5,7 @@ use crate::commands::validate_conn_id;
 use crate::commands::validate_name;
 use crate::dispatch_provider;
 use crate::logger::DataflowTimer;
+use crate::models::response::ResponseModel;
 use crate::types::{QueryParams, QueryResult};
 use nosql_orm::prelude::*;
 use serde_json::Value;
@@ -73,29 +74,50 @@ pub async fn query_data(
 }
 
 #[tauri::command]
-pub async fn save_row(connId: &str, collection: &str, data: Value) -> Result<Value, String> {
+pub async fn save_row(
+  connId: &str,
+  collection: &str,
+  data: Value,
+) -> Result<ResponseModel, ResponseModel> {
   let timer = DataflowTimer::new("save_row");
   if let Err(e) = validate_conn_id(connId) {
     timer.finish_error(&e);
-    return Err(e);
+    return Err(ResponseModel::error(e));
   }
   if let Err(e) = validate_name(collection) {
     timer.finish_error(&e);
-    return Err(e);
+    return Err(ResponseModel::error(e));
   }
   let params = serde_json::json!({ "connId": connId, "collection": collection, "data": &data });
   tracing::debug!(command = "save_row", params = %crate::logger::redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default()), "[COMMAND_ENTRY]");
-  let entry = get_connection_entry(connId).await?;
-  let result = dispatch_provider!(entry, provider => {
-      if let Some(id) = data.get("id").and_then(|v| v.as_str()) {
+  let entry = match get_connection_entry(connId).await {
+    Ok(e) => e,
+    Err(e) => {
+      timer.finish_error(&e);
+      return Err(ResponseModel::error(e));
+    }
+  };
+  let result: Value = match dispatch_provider!(entry, provider => {
+      let value = if let Some(id) = data.get("id").and_then(|v| v.as_str()) {
           if provider.exists(collection, id).await.map_err_string()? {
-              return provider.update(collection, id, data.clone()).await.map_err_string();
+              provider.update(collection, id, data.clone()).await.map_err_string()?
+          } else {
+              provider.insert(collection, data).await.map_err_string()?
           }
-      }
-      provider.insert(collection, data).await.map_err_string()
-  })?;
+      } else {
+          provider.insert(collection, data).await.map_err_string()?
+      };
+      Ok::<_, String>(value)
+  }) {
+    Ok(r) => r,
+    Err(e) => {
+      timer.finish_error(&e);
+      return Err(ResponseModel::error(e));
+    }
+  };
   tracing::debug!(command = "save_row", "[COMMAND_RESULT]");
-  Ok(result)
+  timer.finish(&ResponseModel::success(&result));
+  Ok(ResponseModel::success(result))
 }
 
 #[tauri::command]

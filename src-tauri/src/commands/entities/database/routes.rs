@@ -3,6 +3,7 @@ use crate::commands::error_utils::ToStringError;
 use crate::commands::get_connection_entry;
 use crate::commands::types::DatabaseMeta;
 use crate::commands::validate_conn_id;
+use crate::logger::{redact_sensitive_data, DataflowTimer};
 use crate::models::response::ResponseModel;
 use nosql_orm::prelude::*;
 
@@ -19,18 +20,28 @@ pub struct DatabaseListResult {
 
 #[tauri::command]
 pub async fn database_list(
-  conn_id: String,
+  connId: String,
   offset: Option<usize>,
   limit: Option<usize>,
 ) -> Result<ResponseModel, ResponseModel> {
-  validate_conn_id(&conn_id).map_err(|e| ResponseModel::error(e))?;
-  let entry = get_connection_entry(&conn_id)
-    .await
-    .map_err(|e| ResponseModel::error(e))?;
+  let timer = DataflowTimer::new("database_list");
+  let params = serde_json::json!({ "connId": &connId, "offset": offset, "limit": limit });
+  tracing::debug!(command = "database_list", params = %redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default()), "[COMMAND_ENTRY]");
+  if let Err(e) = validate_conn_id(&connId) {
+    timer.clone().finish_error(&e);
+    return Err(ResponseModel::error(e));
+  }
+  let entry = match get_connection_entry(&connId).await {
+    Ok(e) => e,
+    Err(e) => {
+      timer.clone().finish_error(&e);
+      return Err(ResponseModel::error(e));
+    }
+  };
   let offset = offset.unwrap_or(0);
   let limit = limit.unwrap_or(MAX_DIRS_PER_LEVEL);
 
-  match &entry.config.config {
+  let result = match &entry.config.config {
     ConnectionConfigEnum::Json { path, .. } => {
       let path_obj = std::path::Path::new(path).to_path_buf();
       if !path_obj.is_dir() {
@@ -41,99 +52,132 @@ pub async fn database_list(
         }));
       }
 
-      let result = list_json_databases(path_obj.clone(), offset, limit)
-        .await
-        .map_err(|e| ResponseModel::error(e))?;
-      Ok(ResponseModel::success(result))
+      match list_json_databases(path_obj.clone(), offset, limit).await {
+        Ok(r) => ResponseModel::success(r),
+        Err(e) => {
+          timer.clone().finish_error(&e);
+          ResponseModel::error(e)
+        }
+      }
     }
-    ConnectionConfigEnum::Sqlite { path, .. } => {
-      let db_name = std::path::Path::new(path)
-        .file_stem()
-        .and_then(|n| n.to_str())
-        .unwrap_or("database")
-        .to_string();
-      Ok(ResponseModel::success(DatabaseListResult {
-        databases: vec![DatabaseMeta::from_name(&db_name)],
-        has_more: false,
-        total_count: 1,
-      }))
-    }
-    ConnectionConfigEnum::Redis { .. } => Ok(ResponseModel::success(DatabaseListResult {
+    ConnectionConfigEnum::Sqlite { path, .. } => ResponseModel::success(DatabaseListResult {
+      databases: vec![DatabaseMeta::from_name(
+        std::path::Path::new(path)
+          .file_stem()
+          .and_then(|n| n.to_str())
+          .unwrap_or("database"),
+      )],
+      has_more: false,
+      total_count: 1,
+    }),
+    ConnectionConfigEnum::Redis { .. } => ResponseModel::success(DatabaseListResult {
       databases: vec![DatabaseMeta::from_name("default")],
       has_more: false,
       total_count: 1,
-    })),
+    }),
     ConnectionConfigEnum::Mongo { uri, .. } => {
-      let provider =
-        crate::commands::provider::get_or_create_mongo_provider(&conn_id, uri, "admin")
-          .await
-          .map_err(|e| ResponseModel::error(e.to_string()))?;
-      let db_names = provider.list_databases().await.map_err_string()?;
-      let total_count = db_names.len();
-      let has_more = offset + limit < total_count;
-      let dbs: Vec<DatabaseMeta> = db_names
-        .into_iter()
-        .skip(offset)
-        .take(limit)
-        .map(|name| DatabaseMeta {
-          name,
-          size_bytes: None,
-          table_count: None,
-        })
-        .collect();
-      Ok(ResponseModel::success(DatabaseListResult {
-        databases: dbs,
-        has_more,
-        total_count,
-      }))
+      match crate::commands::provider::get_or_create_mongo_provider(&connId, uri, "admin").await {
+        Ok(provider) => match provider.list_databases().await.map_err_string() {
+          Ok(db_names) => {
+            let total_count = db_names.len();
+            let has_more = offset + limit < total_count;
+            let dbs: Vec<DatabaseMeta> = db_names
+              .into_iter()
+              .skip(offset)
+              .take(limit)
+              .map(|name| DatabaseMeta {
+                name,
+                size_bytes: None,
+                table_count: None,
+              })
+              .collect();
+            ResponseModel::success(DatabaseListResult {
+              databases: dbs,
+              has_more,
+              total_count,
+            })
+          }
+          Err(e) => {
+            timer.clone().finish_error(&e);
+            ResponseModel::error(e.to_string())
+          }
+        },
+        Err(e) => {
+          timer.clone().finish_error(&e.to_string());
+          ResponseModel::error(e.to_string())
+        }
+      }
     }
     ConnectionConfigEnum::Postgres { uri, .. } => {
-      let provider = crate::commands::provider::get_or_create_postgres_provider(&conn_id, uri)
-        .await
-        .map_err(|e| ResponseModel::error(e.to_string()))?;
-      let db_names = provider.list_databases().await.map_err_string()?;
-      let total_count = db_names.len();
-      let has_more = offset + limit < total_count;
-      let dbs: Vec<DatabaseMeta> = db_names
-        .into_iter()
-        .skip(offset)
-        .take(limit)
-        .map(|name| DatabaseMeta {
-          name,
-          size_bytes: None,
-          table_count: None,
-        })
-        .collect();
-      Ok(ResponseModel::success(DatabaseListResult {
-        databases: dbs,
-        has_more,
-        total_count,
-      }))
+      match crate::commands::provider::get_or_create_postgres_provider(&connId, uri).await {
+        Ok(provider) => match provider.list_databases().await.map_err_string() {
+          Ok(db_names) => {
+            let total_count = db_names.len();
+            let has_more = offset + limit < total_count;
+            let dbs: Vec<DatabaseMeta> = db_names
+              .into_iter()
+              .skip(offset)
+              .take(limit)
+              .map(|name| DatabaseMeta {
+                name,
+                size_bytes: None,
+                table_count: None,
+              })
+              .collect();
+            ResponseModel::success(DatabaseListResult {
+              databases: dbs,
+              has_more,
+              total_count,
+            })
+          }
+          Err(e) => {
+            timer.clone().finish_error(&e);
+            ResponseModel::error(e)
+          }
+        },
+        Err(e) => {
+          timer.clone().finish_error(&e.to_string());
+          ResponseModel::error(e.to_string())
+        }
+      }
     }
     ConnectionConfigEnum::MySql { uri, .. } => {
-      let provider = crate::commands::provider::get_or_create_mysql_provider(&conn_id, uri)
-        .await
-        .map_err(|e| ResponseModel::error(e.to_string()))?;
-      let db_names = provider.list_databases().await.map_err_string()?;
-      let total_count = db_names.len();
-      let has_more = offset + limit < total_count;
-      let dbs: Vec<DatabaseMeta> = db_names
-        .into_iter()
-        .skip(offset)
-        .take(limit)
-        .map(|name| DatabaseMeta {
-          name,
-          size_bytes: None,
-          table_count: None,
-        })
-        .collect();
-      Ok(ResponseModel::success(DatabaseListResult {
-        databases: dbs,
-        has_more,
-        total_count,
-      }))
+      match crate::commands::provider::get_or_create_mysql_provider(&connId, uri).await {
+        Ok(provider) => match provider.list_databases().await.map_err_string() {
+          Ok(db_names) => {
+            let total_count = db_names.len();
+            let has_more = offset + limit < total_count;
+            let dbs: Vec<DatabaseMeta> = db_names
+              .into_iter()
+              .skip(offset)
+              .take(limit)
+              .map(|name| DatabaseMeta {
+                name,
+                size_bytes: None,
+                table_count: None,
+              })
+              .collect();
+            ResponseModel::success(DatabaseListResult {
+              databases: dbs,
+              has_more,
+              total_count,
+            })
+          }
+          Err(e) => {
+            timer.clone().finish_error(&e);
+            ResponseModel::error(e)
+          }
+        },
+        Err(e) => {
+          timer.clone().finish_error(&e.to_string());
+          ResponseModel::error(e.to_string())
+        }
+      }
     }
-  }
+  };
+
+  timer.finish(&result);
+  Ok(result)
 }
 
 async fn list_json_databases(

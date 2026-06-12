@@ -1,4 +1,5 @@
 use crate::logger::DataflowTimer;
+use crate::models::response::ResponseModel;
 use base64::{engine::general_purpose::STANDARD, Engine};
 use chrono::Local;
 use serde::{Deserialize, Serialize};
@@ -191,7 +192,7 @@ pub async fn capture_screenshot(_app: AppHandle) -> Result<ScreenshotResult, Str
 }
 
 #[tauri::command]
-pub async fn save_log_file(filename: String, data: String) -> Result<String, String> {
+pub async fn save_log_file(filename: String, data: String) -> Result<ResponseModel, ResponseModel> {
   let timer = DataflowTimer::new("save_log_file");
   let logs_dir = get_logs_dir()?;
   let file_path = logs_dir.join(&filename);
@@ -200,15 +201,17 @@ pub async fn save_log_file(filename: String, data: String) -> Result<String, Str
     timer
       .clone()
       .finish_error(&format!("Failed to write log file: {}", e));
-    format!("Failed to write log file: {}", e)
+    ResponseModel::error(format!("Failed to write log file: {}", e))
   })?;
 
   tracing::debug!(command = "save_log_file", filename = %filename, "[DATAFLOW]");
-  Ok(file_path.to_string_lossy().to_string())
+  Ok(ResponseModel::success(
+    file_path.to_string_lossy().to_string(),
+  ))
 }
 
 #[tauri::command]
-pub async fn append_log_file(data: String) -> Result<String, String> {
+pub async fn append_log_file(data: String) -> Result<ResponseModel, ResponseModel> {
   let timer = DataflowTimer::new("append_log_file");
   let logs_dir = get_logs_dir()?;
   let date = Local::now().format("%Y-%m-%d").to_string();
@@ -223,16 +226,18 @@ pub async fn append_log_file(data: String) -> Result<String, String> {
       timer
         .clone()
         .finish_error(&format!("Failed to open log file: {}", e));
-      format!("Failed to open log file: {}", e)
+      ResponseModel::error(format!("Failed to open log file: {}", e))
     })?;
 
   writeln!(file, "{}", data).map_err(|e| {
     timer
       .clone()
       .finish_error(&format!("Failed to write to log file: {}", e));
-    format!("Failed to write to log file: {}", e)
+    ResponseModel::error(format!("Failed to write to log file: {}", e))
   })?;
 
   tracing::debug!(command = "append_log_file", date = %date, "[DATAFLOW]");
-  Ok(file_path.to_string_lossy().to_string())
+  Ok(ResponseModel::success(
+    file_path.to_string_lossy().to_string(),
+  ))
 }

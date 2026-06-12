@@ -3,7 +3,7 @@ use crate::commands::get_connection_entry;
 use crate::commands::types::{CollectionMeta, CollectionSchema, CollectionStats, ColumnInfo};
 use crate::commands::validate_conn_id;
 use crate::commands::validate_name;
-use crate::dispatch_provider;
+use crate::logger::{redact_sensitive_data, DataflowTimer};
 use crate::models::response::ResponseModel;
 use nosql_orm::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -23,146 +23,761 @@ pub struct CollectionListResult {
 
 #[tauri::command]
 pub async fn collection_list(
-  conn_id: String,
+  connId: String,
   _db_name: Option<String>,
   offset: Option<usize>,
   limit: Option<usize>,
 ) -> Result<CollectionListResult, String> {
-  validate_conn_id(&conn_id)?;
-  let entry = get_connection_entry(&conn_id).await?;
+  let timer = DataflowTimer::new("collection_list");
+  let params = serde_json::json!({ "connId": &connId, "_db_name": _db_name, "offset": offset, "limit": limit });
+  tracing::debug!(command = "collection_list", params = %redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default()), "[COMMAND_ENTRY]");
+
+  if let Err(e) = validate_conn_id(&connId) {
+    timer.finish_error(&e);
+    return Err(e);
+  }
+
+  let entry = match get_connection_entry(&connId).await {
+    Ok(e) => e,
+    Err(e) => {
+      timer.finish_error(&e);
+      return Err(e);
+    }
+  };
+
   let offset = offset.unwrap_or(0);
   let limit = limit.unwrap_or(10000);
 
-  match &entry.config.config {
+  let result = match &entry.config.config {
     crate::commands::connection::ConnectionConfigEnum::Json { path, .. } => {
       let path_obj = std::path::Path::new(path).to_path_buf();
       if !path_obj.is_dir() {
-        return Ok(CollectionListResult {
+        let result = CollectionListResult {
           collections: Vec::new(),
           has_more: false,
           total_count: 0,
-        });
+        };
+        timer.finish(&ResponseModel::success(&result));
+        return Ok(result);
       }
-
-      let result = list_all_json_collections_recursive(path_obj, offset, limit).await?;
-      Ok(result)
+      match list_all_json_collections_recursive(path_obj, offset, limit).await {
+        Ok(r) => {
+          timer.finish(&ResponseModel::success(&r));
+          r
+        }
+        Err(e) => {
+          timer.finish_error(&e);
+          return Err(e);
+        }
+      }
     }
-    _ => {
-      dispatch_provider!(entry, provider => {
-          let all_collections = provider.list_collections().await.map_err_string()?;
-          let total_count = all_collections.len();
-          let collections: Vec<CollectionMeta> = all_collections
-              .into_iter()
-              .skip(offset)
-              .take(limit)
-              .map(|c| CollectionMeta {
-                  name: c.name,
-                  count: c.document_count,
-              })
-              .collect();
-          let has_more = offset + limit < total_count;
-          Ok(CollectionListResult { collections, has_more, total_count })
-      })
+    crate::commands::connection::ConnectionConfigEnum::Mongo { uri, database, .. } => {
+      let provider = crate::commands::provider::create_mongo_provider(uri, database)
+        .await
+        .map_err_string()?;
+      let all_collections = provider.list_collections().await.map_err_string()?;
+      let total_count = all_collections.len();
+      let collections: Vec<CollectionMeta> = all_collections
+        .into_iter()
+        .skip(offset)
+        .take(limit)
+        .map(|c| CollectionMeta {
+          name: c.name,
+          count: c.document_count,
+        })
+        .collect();
+      let has_more = offset + limit < total_count;
+      let result = CollectionListResult {
+        collections,
+        has_more,
+        total_count,
+      };
+      timer.finish(&ResponseModel::success(&result));
+      result
     }
-  }
+    crate::commands::connection::ConnectionConfigEnum::Postgres { uri, .. } => {
+      let provider = crate::commands::provider::create_postgres_provider(uri)
+        .await
+        .map_err_string()?;
+      let all_collections = provider.list_collections().await.map_err_string()?;
+      let total_count = all_collections.len();
+      let collections: Vec<CollectionMeta> = all_collections
+        .into_iter()
+        .skip(offset)
+        .take(limit)
+        .map(|c| CollectionMeta {
+          name: c.name,
+          count: c.document_count,
+        })
+        .collect();
+      let has_more = offset + limit < total_count;
+      let result = CollectionListResult {
+        collections,
+        has_more,
+        total_count,
+      };
+      timer.finish(&ResponseModel::success(&result));
+      result
+    }
+    crate::commands::connection::ConnectionConfigEnum::Redis { uri, .. } => {
+      let provider = crate::commands::provider::create_redis_provider(uri)
+        .await
+        .map_err_string()?;
+      let all_collections = provider.list_collections().await.map_err_string()?;
+      let total_count = all_collections.len();
+      let collections: Vec<CollectionMeta> = all_collections
+        .into_iter()
+        .skip(offset)
+        .take(limit)
+        .map(|c| CollectionMeta {
+          name: c.name,
+          count: c.document_count,
+        })
+        .collect();
+      let has_more = offset + limit < total_count;
+      let result = CollectionListResult {
+        collections,
+        has_more,
+        total_count,
+      };
+      timer.finish(&ResponseModel::success(&result));
+      result
+    }
+    crate::commands::connection::ConnectionConfigEnum::Sqlite { path, .. } => {
+      let provider = crate::commands::provider::create_sqlite_provider(path)
+        .await
+        .map_err_string()?;
+      let all_collections = provider.list_collections().await.map_err_string()?;
+      let total_count = all_collections.len();
+      let collections: Vec<CollectionMeta> = all_collections
+        .into_iter()
+        .skip(offset)
+        .take(limit)
+        .map(|c| CollectionMeta {
+          name: c.name,
+          count: c.document_count,
+        })
+        .collect();
+      let has_more = offset + limit < total_count;
+      let result = CollectionListResult {
+        collections,
+        has_more,
+        total_count,
+      };
+      timer.finish(&ResponseModel::success(&result));
+      result
+    }
+    crate::commands::connection::ConnectionConfigEnum::MySql { uri, .. } => {
+      let provider = crate::commands::provider::create_mysql_provider(uri)
+        .await
+        .map_err_string()?;
+      let all_collections = provider.list_collections().await.map_err_string()?;
+      let total_count = all_collections.len();
+      let collections: Vec<CollectionMeta> = all_collections
+        .into_iter()
+        .skip(offset)
+        .take(limit)
+        .map(|c| CollectionMeta {
+          name: c.name,
+          count: c.document_count,
+        })
+        .collect();
+      let has_more = offset + limit < total_count;
+      let result = CollectionListResult {
+        collections,
+        has_more,
+        total_count,
+      };
+      timer.finish(&ResponseModel::success(&result));
+      result
+    }
+  };
+  Ok(result)
 }
 
 #[tauri::command]
-pub async fn collection_describe(
-  conn_id: String,
-  name: String,
-) -> Result<CollectionSchema, String> {
-  validate_conn_id(&conn_id)?;
-  validate_name(&name)?;
-  let entry = get_connection_entry(&conn_id).await?;
+pub async fn collection_describe(connId: String, name: String) -> Result<CollectionSchema, String> {
+  let timer = DataflowTimer::new("collection_describe");
+  let params = serde_json::json!({ "connId": &connId, "name": &name });
+  tracing::debug!(command = "collection_describe", params = %redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default()), "[COMMAND_ENTRY]");
 
-  let (schema, indexes) = dispatch_provider!(entry, provider => {
+  if let Err(e) = validate_conn_id(&connId) {
+    timer.finish_error(&e);
+    return Err(e);
+  }
+  if let Err(e) = validate_name(&name) {
+    timer.finish_error(&e);
+    return Err(e);
+  }
+
+  let entry = match get_connection_entry(&connId).await {
+    Ok(e) => e,
+    Err(e) => {
+      timer.finish_error(&e);
+      return Err(e);
+    }
+  };
+
+  let result = match &entry.config.config {
+    crate::commands::connection::ConnectionConfigEnum::Mongo { uri, database, .. } => {
+      let provider = crate::commands::provider::create_mongo_provider(uri, database)
+        .await
+        .map_err_string()?;
       let schema = provider.describe_collection(&name).await.map_err_string()?;
       let indexes = nosql_orm::provider::SchemaIntrospection::list_indexes(&provider, &name)
-          .await
-          .map_err_string()?;
-      Ok::<_, String>((schema, indexes))
-  })?;
+        .await
+        .map_err_string()?;
+      let columns: Vec<ColumnInfo> = schema
+        .fields
+        .iter()
+        .map(|(n, field)| ColumnInfo {
+          name: n.clone(),
+          data_type: field.field_type.clone(),
+          nullable: field.nullable,
+          is_primary_key: false,
+        })
+        .collect();
+      let index_infos: Vec<crate::commands::types::IndexInfo> = indexes
+        .into_iter()
+        .map(|idx| crate::commands::types::IndexInfo {
+          name: idx.name,
+          columns: idx.fields,
+          is_unique: idx.unique,
+        })
+        .collect();
+      CollectionSchema {
+        name,
+        columns,
+        indexes: index_infos,
+      }
+    }
+    crate::commands::connection::ConnectionConfigEnum::Postgres { uri, .. } => {
+      let provider = crate::commands::provider::create_postgres_provider(uri)
+        .await
+        .map_err_string()?;
+      let schema = provider.describe_collection(&name).await.map_err_string()?;
+      let indexes = nosql_orm::provider::SchemaIntrospection::list_indexes(&provider, &name)
+        .await
+        .map_err_string()?;
+      let columns: Vec<ColumnInfo> = schema
+        .fields
+        .iter()
+        .map(|(n, field)| ColumnInfo {
+          name: n.clone(),
+          data_type: field.field_type.clone(),
+          nullable: field.nullable,
+          is_primary_key: false,
+        })
+        .collect();
+      let index_infos: Vec<crate::commands::types::IndexInfo> = indexes
+        .into_iter()
+        .map(|idx| crate::commands::types::IndexInfo {
+          name: idx.name,
+          columns: idx.fields,
+          is_unique: idx.unique,
+        })
+        .collect();
+      CollectionSchema {
+        name,
+        columns,
+        indexes: index_infos,
+      }
+    }
+    crate::commands::connection::ConnectionConfigEnum::Redis { uri, .. } => {
+      let provider = crate::commands::provider::create_redis_provider(uri)
+        .await
+        .map_err_string()?;
+      let schema = provider.describe_collection(&name).await.map_err_string()?;
+      let indexes = nosql_orm::provider::SchemaIntrospection::list_indexes(&provider, &name)
+        .await
+        .map_err_string()?;
+      let columns: Vec<ColumnInfo> = schema
+        .fields
+        .iter()
+        .map(|(n, field)| ColumnInfo {
+          name: n.clone(),
+          data_type: field.field_type.clone(),
+          nullable: field.nullable,
+          is_primary_key: false,
+        })
+        .collect();
+      let index_infos: Vec<crate::commands::types::IndexInfo> = indexes
+        .into_iter()
+        .map(|idx| crate::commands::types::IndexInfo {
+          name: idx.name,
+          columns: idx.fields,
+          is_unique: idx.unique,
+        })
+        .collect();
+      CollectionSchema {
+        name,
+        columns,
+        indexes: index_infos,
+      }
+    }
+    crate::commands::connection::ConnectionConfigEnum::Sqlite { path, .. } => {
+      let provider = crate::commands::provider::create_sqlite_provider(path)
+        .await
+        .map_err_string()?;
+      let schema = provider.describe_collection(&name).await.map_err_string()?;
+      let indexes = nosql_orm::provider::SchemaIntrospection::list_indexes(&provider, &name)
+        .await
+        .map_err_string()?;
+      let columns: Vec<ColumnInfo> = schema
+        .fields
+        .iter()
+        .map(|(n, field)| ColumnInfo {
+          name: n.clone(),
+          data_type: field.field_type.clone(),
+          nullable: field.nullable,
+          is_primary_key: false,
+        })
+        .collect();
+      let index_infos: Vec<crate::commands::types::IndexInfo> = indexes
+        .into_iter()
+        .map(|idx| crate::commands::types::IndexInfo {
+          name: idx.name,
+          columns: idx.fields,
+          is_unique: idx.unique,
+        })
+        .collect();
+      CollectionSchema {
+        name,
+        columns,
+        indexes: index_infos,
+      }
+    }
+    crate::commands::connection::ConnectionConfigEnum::MySql { uri, .. } => {
+      let provider = crate::commands::provider::create_mysql_provider(uri)
+        .await
+        .map_err_string()?;
+      let schema = provider.describe_collection(&name).await.map_err_string()?;
+      let indexes = nosql_orm::provider::SchemaIntrospection::list_indexes(&provider, &name)
+        .await
+        .map_err_string()?;
+      let columns: Vec<ColumnInfo> = schema
+        .fields
+        .iter()
+        .map(|(n, field)| ColumnInfo {
+          name: n.clone(),
+          data_type: field.field_type.clone(),
+          nullable: field.nullable,
+          is_primary_key: false,
+        })
+        .collect();
+      let index_infos: Vec<crate::commands::types::IndexInfo> = indexes
+        .into_iter()
+        .map(|idx| crate::commands::types::IndexInfo {
+          name: idx.name,
+          columns: idx.fields,
+          is_unique: idx.unique,
+        })
+        .collect();
+      CollectionSchema {
+        name,
+        columns,
+        indexes: index_infos,
+      }
+    }
+    crate::commands::connection::ConnectionConfigEnum::Json { path, .. } => {
+      let provider = crate::commands::provider::create_json_provider(path)
+        .await
+        .map_err_string()?;
+      let schema = provider.describe_collection(&name).await.map_err_string()?;
+      let indexes = nosql_orm::provider::SchemaIntrospection::list_indexes(&provider, &name)
+        .await
+        .map_err_string()?;
+      let columns: Vec<ColumnInfo> = schema
+        .fields
+        .iter()
+        .map(|(n, field)| ColumnInfo {
+          name: n.clone(),
+          data_type: field.field_type.clone(),
+          nullable: field.nullable,
+          is_primary_key: false,
+        })
+        .collect();
+      let index_infos: Vec<crate::commands::types::IndexInfo> = indexes
+        .into_iter()
+        .map(|idx| crate::commands::types::IndexInfo {
+          name: idx.name,
+          columns: idx.fields,
+          is_unique: idx.unique,
+        })
+        .collect();
+      CollectionSchema {
+        name,
+        columns,
+        indexes: index_infos,
+      }
+    }
+  };
 
-  let columns: Vec<ColumnInfo> = schema
-    .fields
-    .iter()
-    .map(|(name, field)| ColumnInfo {
-      name: name.clone(),
-      data_type: field.field_type.clone(),
-      nullable: field.nullable,
-      is_primary_key: false,
-    })
-    .collect();
-
-  let index_infos: Vec<crate::commands::types::IndexInfo> = indexes
-    .into_iter()
-    .map(|idx| crate::commands::types::IndexInfo {
-      name: idx.name,
-      columns: idx.fields,
-      is_unique: idx.unique,
-    })
-    .collect();
-
-  Ok(CollectionSchema {
-    name,
-    columns,
-    indexes: index_infos,
-  })
+  timer.finish(&ResponseModel::success(&result));
+  Ok(result)
 }
 
 #[tauri::command]
-pub async fn collection_stats(conn_id: String, name: String) -> Result<CollectionStats, String> {
-  validate_conn_id(&conn_id)?;
-  let entry = get_connection_entry(&conn_id).await?;
+pub async fn collection_stats(connId: String, name: String) -> Result<CollectionStats, String> {
+  let timer = DataflowTimer::new("collection_stats");
+  let params = serde_json::json!({ "connId": &connId, "name": &name });
+  tracing::debug!(command = "collection_stats", params = %redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default()), "[COMMAND_ENTRY]");
 
-  let stats = dispatch_provider!(entry, provider => {
-      provider.get_collection_stats(&name).await.map_err_string()
-  })?;
+  if let Err(e) = validate_conn_id(&connId) {
+    timer.finish_error(&e);
+    return Err(e);
+  }
 
-  Ok(CollectionStats {
+  let entry = match get_connection_entry(&connId).await {
+    Ok(e) => e,
+    Err(e) => {
+      timer.finish_error(&e);
+      return Err(e);
+    }
+  };
+
+  let stats = match &entry.config.config {
+    crate::commands::connection::ConnectionConfigEnum::Mongo { uri, database, .. } => {
+      let provider = crate::commands::provider::create_mongo_provider(uri, database)
+        .await
+        .map_err_string()?;
+      provider
+        .get_collection_stats(&name)
+        .await
+        .map_err_string()?
+    }
+    crate::commands::connection::ConnectionConfigEnum::Postgres { uri, .. } => {
+      let provider = crate::commands::provider::create_postgres_provider(uri)
+        .await
+        .map_err_string()?;
+      provider
+        .get_collection_stats(&name)
+        .await
+        .map_err_string()?
+    }
+    crate::commands::connection::ConnectionConfigEnum::Redis { uri, .. } => {
+      let provider = crate::commands::provider::create_redis_provider(uri)
+        .await
+        .map_err_string()?;
+      provider
+        .get_collection_stats(&name)
+        .await
+        .map_err_string()?
+    }
+    crate::commands::connection::ConnectionConfigEnum::Sqlite { path, .. } => {
+      let provider = crate::commands::provider::create_sqlite_provider(path)
+        .await
+        .map_err_string()?;
+      provider
+        .get_collection_stats(&name)
+        .await
+        .map_err_string()?
+    }
+    crate::commands::connection::ConnectionConfigEnum::MySql { uri, .. } => {
+      let provider = crate::commands::provider::create_mysql_provider(uri)
+        .await
+        .map_err_string()?;
+      provider
+        .get_collection_stats(&name)
+        .await
+        .map_err_string()?
+    }
+    crate::commands::connection::ConnectionConfigEnum::Json { path, .. } => {
+      let provider = crate::commands::provider::create_json_provider(path)
+        .await
+        .map_err_string()?;
+      provider
+        .get_collection_stats(&name)
+        .await
+        .map_err_string()?
+    }
+  };
+
+  let result = CollectionStats {
     name,
     document_count: stats.document_count,
     size_bytes: stats.size_bytes,
     index_count: stats.index_count,
-  })
+  };
+  timer.finish(&ResponseModel::success(&result));
+  Ok(result)
 }
 
 #[tauri::command]
-pub async fn collection_create(conn_id: String, name: String) -> Result<(), String> {
-  validate_conn_id(&conn_id)?;
-  let entry = get_connection_entry(&conn_id).await?;
-  dispatch_provider!(entry, provider => {
-      provider.create_collection(&name, None).await.map_err_string()
-  })
+pub async fn collection_create(connId: String, name: String) -> Result<(), String> {
+  let timer = DataflowTimer::new("collection_create");
+  let params = serde_json::json!({ "connId": &connId, "name": &name });
+  tracing::debug!(command = "collection_create", params = %redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default()), "[COMMAND_ENTRY]");
+
+  if let Err(e) = validate_conn_id(&connId) {
+    timer.finish_error(&e);
+    return Err(e);
+  }
+
+  let entry = match get_connection_entry(&connId).await {
+    Ok(e) => e,
+    Err(e) => {
+      timer.finish_error(&e);
+      return Err(e);
+    }
+  };
+
+  match &entry.config.config {
+    crate::commands::connection::ConnectionConfigEnum::Mongo { uri, database, .. } => {
+      let provider = crate::commands::provider::create_mongo_provider(uri, database)
+        .await
+        .map_err_string()?;
+      provider
+        .create_collection(&name, None)
+        .await
+        .map_err_string()?;
+    }
+    crate::commands::connection::ConnectionConfigEnum::Postgres { uri, .. } => {
+      let provider = crate::commands::provider::create_postgres_provider(uri)
+        .await
+        .map_err_string()?;
+      provider
+        .create_collection(&name, None)
+        .await
+        .map_err_string()?;
+    }
+    crate::commands::connection::ConnectionConfigEnum::Redis { uri, .. } => {
+      let provider = crate::commands::provider::create_redis_provider(uri)
+        .await
+        .map_err_string()?;
+      provider
+        .create_collection(&name, None)
+        .await
+        .map_err_string()?;
+    }
+    crate::commands::connection::ConnectionConfigEnum::Sqlite { path, .. } => {
+      let provider = crate::commands::provider::create_sqlite_provider(path)
+        .await
+        .map_err_string()?;
+      provider
+        .create_collection(&name, None)
+        .await
+        .map_err_string()?;
+    }
+    crate::commands::connection::ConnectionConfigEnum::MySql { uri, .. } => {
+      let provider = crate::commands::provider::create_mysql_provider(uri)
+        .await
+        .map_err_string()?;
+      provider
+        .create_collection(&name, None)
+        .await
+        .map_err_string()?;
+    }
+    crate::commands::connection::ConnectionConfigEnum::Json { path, .. } => {
+      let provider = crate::commands::provider::create_json_provider(path)
+        .await
+        .map_err_string()?;
+      provider
+        .create_collection(&name, None)
+        .await
+        .map_err_string()?;
+    }
+  };
+
+  timer.finish(&ResponseModel::success(&()));
+  Ok(())
 }
 
 #[tauri::command]
-pub async fn collection_drop(conn_id: String, name: String) -> Result<(), String> {
-  validate_conn_id(&conn_id)?;
-  let entry = get_connection_entry(&conn_id).await?;
-  dispatch_provider!(entry, provider => {
-      provider.drop_collection(&name).await.map_err_string()
-  })
+pub async fn collection_drop(connId: String, name: String) -> Result<(), String> {
+  let timer = DataflowTimer::new("collection_drop");
+  let params = serde_json::json!({ "connId": &connId, "name": &name });
+  tracing::debug!(command = "collection_drop", params = %redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default()), "[COMMAND_ENTRY]");
+
+  if let Err(e) = validate_conn_id(&connId) {
+    timer.finish_error(&e);
+    return Err(e);
+  }
+
+  let entry = match get_connection_entry(&connId).await {
+    Ok(e) => e,
+    Err(e) => {
+      timer.finish_error(&e);
+      return Err(e);
+    }
+  };
+
+  match &entry.config.config {
+    crate::commands::connection::ConnectionConfigEnum::Mongo { uri, database, .. } => {
+      let provider = crate::commands::provider::create_mongo_provider(uri, database)
+        .await
+        .map_err_string()?;
+      provider.drop_collection(&name).await.map_err_string()?;
+    }
+    crate::commands::connection::ConnectionConfigEnum::Postgres { uri, .. } => {
+      let provider = crate::commands::provider::create_postgres_provider(uri)
+        .await
+        .map_err_string()?;
+      provider.drop_collection(&name).await.map_err_string()?;
+    }
+    crate::commands::connection::ConnectionConfigEnum::Redis { uri, .. } => {
+      let provider = crate::commands::provider::create_redis_provider(uri)
+        .await
+        .map_err_string()?;
+      provider.drop_collection(&name).await.map_err_string()?;
+    }
+    crate::commands::connection::ConnectionConfigEnum::Sqlite { path, .. } => {
+      let provider = crate::commands::provider::create_sqlite_provider(path)
+        .await
+        .map_err_string()?;
+      provider.drop_collection(&name).await.map_err_string()?;
+    }
+    crate::commands::connection::ConnectionConfigEnum::MySql { uri, .. } => {
+      let provider = crate::commands::provider::create_mysql_provider(uri)
+        .await
+        .map_err_string()?;
+      provider.drop_collection(&name).await.map_err_string()?;
+    }
+    crate::commands::connection::ConnectionConfigEnum::Json { path, .. } => {
+      let provider = crate::commands::provider::create_json_provider(path)
+        .await
+        .map_err_string()?;
+      provider.drop_collection(&name).await.map_err_string()?;
+    }
+  };
+
+  timer.finish(&ResponseModel::success(&()));
+  Ok(())
 }
 
 #[tauri::command]
 pub async fn collection_rename(
-  conn_id: String,
+  connId: String,
   old_name: String,
   new_name: String,
 ) -> Result<(), String> {
-  validate_conn_id(&conn_id)?;
-  validate_name(&old_name)?;
-  validate_name(&new_name)?;
-  let entry = get_connection_entry(&conn_id).await?;
-  dispatch_provider!(entry, provider => {
-      let data = provider.find_many(&old_name, None, None, None, None, true).await.map_err_string()?;
+  let timer = DataflowTimer::new("collection_rename");
+  let params =
+    serde_json::json!({ "connId": &connId, "old_name": &old_name, "new_name": &new_name });
+  tracing::debug!(command = "collection_rename", params = %redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default()), "[COMMAND_ENTRY]");
+
+  if let Err(e) = validate_conn_id(&connId) {
+    timer.finish_error(&e);
+    return Err(e);
+  }
+  if let Err(e) = validate_name(&old_name) {
+    timer.finish_error(&e);
+    return Err(e);
+  }
+  if let Err(e) = validate_name(&new_name) {
+    timer.finish_error(&e);
+    return Err(e);
+  }
+
+  let entry = match get_connection_entry(&connId).await {
+    Ok(e) => e,
+    Err(e) => {
+      timer.finish_error(&e);
+      return Err(e);
+    }
+  };
+
+  match &entry.config.config {
+    crate::commands::connection::ConnectionConfigEnum::Mongo { uri, database, .. } => {
+      let provider = crate::commands::provider::create_mongo_provider(uri, database)
+        .await
+        .map_err_string()?;
+      let data = provider
+        .find_many(&old_name, None, None, None, None, true)
+        .await
+        .map_err_string()?;
       for item in data {
-          provider.insert(&new_name, item.clone()).await.map_err_string()?;
+        provider
+          .insert(&new_name, item.clone())
+          .await
+          .map_err_string()?;
       }
-      provider.drop_collection(&old_name).await.map_err_string()
-  })
+      provider.drop_collection(&old_name).await.map_err_string()?;
+    }
+    crate::commands::connection::ConnectionConfigEnum::Postgres { uri, .. } => {
+      let provider = crate::commands::provider::create_postgres_provider(uri)
+        .await
+        .map_err_string()?;
+      let data = provider
+        .find_many(&old_name, None, None, None, None, true)
+        .await
+        .map_err_string()?;
+      for item in data {
+        provider
+          .insert(&new_name, item.clone())
+          .await
+          .map_err_string()?;
+      }
+      provider.drop_collection(&old_name).await.map_err_string()?;
+    }
+    crate::commands::connection::ConnectionConfigEnum::Redis { uri, .. } => {
+      let provider = crate::commands::provider::create_redis_provider(uri)
+        .await
+        .map_err_string()?;
+      let data = provider
+        .find_many(&old_name, None, None, None, None, true)
+        .await
+        .map_err_string()?;
+      for item in data {
+        provider
+          .insert(&new_name, item.clone())
+          .await
+          .map_err_string()?;
+      }
+      provider.drop_collection(&old_name).await.map_err_string()?;
+    }
+    crate::commands::connection::ConnectionConfigEnum::Sqlite { path, .. } => {
+      let provider = crate::commands::provider::create_sqlite_provider(path)
+        .await
+        .map_err_string()?;
+      let data = provider
+        .find_many(&old_name, None, None, None, None, true)
+        .await
+        .map_err_string()?;
+      for item in data {
+        provider
+          .insert(&new_name, item.clone())
+          .await
+          .map_err_string()?;
+      }
+      provider.drop_collection(&old_name).await.map_err_string()?;
+    }
+    crate::commands::connection::ConnectionConfigEnum::MySql { uri, .. } => {
+      let provider = crate::commands::provider::create_mysql_provider(uri)
+        .await
+        .map_err_string()?;
+      let data = provider
+        .find_many(&old_name, None, None, None, None, true)
+        .await
+        .map_err_string()?;
+      for item in data {
+        provider
+          .insert(&new_name, item.clone())
+          .await
+          .map_err_string()?;
+      }
+      provider.drop_collection(&old_name).await.map_err_string()?;
+    }
+    crate::commands::connection::ConnectionConfigEnum::Json { path, .. } => {
+      let provider = crate::commands::provider::create_json_provider(path)
+        .await
+        .map_err_string()?;
+      let data = provider
+        .find_many(&old_name, None, None, None, None, true)
+        .await
+        .map_err_string()?;
+      for item in data {
+        provider
+          .insert(&new_name, item.clone())
+          .await
+          .map_err_string()?;
+      }
+      provider.drop_collection(&old_name).await.map_err_string()?;
+    }
+  };
+
+  timer.finish(&ResponseModel::success(&()));
+  Ok(())
 }
 
 async fn list_all_json_collections_recursive(

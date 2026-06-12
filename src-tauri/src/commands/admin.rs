@@ -138,23 +138,23 @@ fn validate_sql(sql: &str) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub async fn execute_raw(connId: &str, sql: &str) -> Result<RawResult, String> {
+pub async fn execute_raw(connId: &str, sql: &str) -> Result<ResponseModel, ResponseModel> {
   let timer = DataflowTimer::new("execute_raw");
   let params = serde_json::json!({ "connId": connId, "sql": sql });
   tracing::debug!(command = "execute_raw", params = %redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default()), "[COMMAND_ENTRY]");
   if let Err(e) = validate_conn_id(connId) {
     timer.finish_error(&e);
-    return Err(e);
+    return Err(ResponseModel::error(e));
   }
   if let Err(e) = validate_sql(sql) {
     timer.finish_error(&e);
-    return Err(e);
+    return Err(ResponseModel::error(e));
   }
   let entry = match get_connection_entry(connId).await {
     Ok(e) => e,
     Err(e) => {
       timer.finish_error(&e);
-      return Err(e);
+      return Err(ResponseModel::error(e));
     }
   };
   let result = dispatch_provider!(entry, provider => {
@@ -168,29 +168,29 @@ pub async fn execute_raw(connId: &str, sql: &str) -> Result<RawResult, String> {
   match result {
     Ok(r) => {
       timer.finish(&ResponseModel::success(&r));
-      Ok(r)
+      Ok(ResponseModel::success(r))
     }
     Err(e) => {
       timer.finish_error(&e);
-      Err(e)
+      Err(ResponseModel::error(e))
     }
   }
 }
 
 #[tauri::command]
-pub async fn get_server_version(connId: &str) -> Result<String, String> {
+pub async fn get_server_version(connId: &str) -> Result<ResponseModel, ResponseModel> {
   let timer = DataflowTimer::new("get_server_version");
   let params = serde_json::json!({ "connId": connId });
   tracing::debug!(command = "get_server_version", params = %redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default()), "[COMMAND_ENTRY]");
   if let Err(e) = validate_conn_id(connId) {
     timer.finish_error(&e);
-    return Err(e);
+    return Err(ResponseModel::error(e));
   }
   let entry = match get_connection_entry(connId).await {
     Ok(e) => e,
     Err(e) => {
       timer.finish_error(&e);
-      return Err(e);
+      return Err(ResponseModel::error(e));
     }
   };
   let version = match &entry.config.config {
@@ -204,7 +204,7 @@ pub async fn get_server_version(connId: &str) -> Result<String, String> {
         Ok(v) => v,
         Err(e) => {
           timer.finish_error(&e);
-          return Err(e);
+          return Err(ResponseModel::error(e));
         }
       }
     }
@@ -216,11 +216,12 @@ pub async fn get_server_version(connId: &str) -> Result<String, String> {
         Ok(v) => v,
         Err(e) => {
           timer.finish_error(&e);
-          return Err(e);
+          return Err(ResponseModel::error(e));
         }
       }
     }
   };
-  timer.finish(&ResponseModel::success(&version));
-  Ok(version)
+  let response = ResponseModel::success(&version);
+  timer.finish(&response);
+  Ok(response)
 }
