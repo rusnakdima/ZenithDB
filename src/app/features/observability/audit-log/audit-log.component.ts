@@ -12,6 +12,7 @@ import { AuditService, AuditEntry, AuditOperation, AuditFilter } from "./audit.s
 import { ExportService } from "@shared/services/export.service";
 import { ToastService } from "@services/toast.service";
 import { ChangeDetailComponent } from "./change-detail.component";
+import { AppLoggerService } from "@shared/services/app-logger.service";
 
 @Component({
   selector: "app-audit-log",
@@ -24,6 +25,7 @@ export class AuditLogComponent implements OnInit {
   private auditService = inject(AuditService);
   private exportService = inject(ExportService);
   private toast = inject(ToastService);
+  private logger = inject(AppLoggerService);
 
   auditLog = signal<AuditEntry[]>([]);
   loading = signal(false);
@@ -58,6 +60,7 @@ export class AuditLogComponent implements OnInit {
   async loadAuditLog(): Promise<void> {
     this.loading.set(true);
     try {
+      this.logger.debug("[AUDIT]", "Loading audit log");
       const entries = await this.auditService.fetchAuditLog();
       this.auditLog.set(entries);
     } catch (e) {
@@ -114,6 +117,7 @@ export class AuditLogComponent implements OnInit {
     };
 
     try {
+      this.logger.info("[AUDIT]", "Exporting audit log", { format });
       const { filename, content } = await this.auditService.exportAuditLog(format, filter);
       const data = format === "json" ? JSON.parse(content) : [];
       await this.exportService.export({ format, filename }, data as any[]);

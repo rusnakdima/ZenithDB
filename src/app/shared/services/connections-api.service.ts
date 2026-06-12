@@ -2,6 +2,7 @@ import { Injectable, inject, signal } from "@angular/core";
 import { CacheService } from "@shared/services/cache.service";
 import { TauriBridgeService } from "@providers/tauri-bridge.service";
 import { DataStoreService } from "@services/core/data-store.service";
+import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
 import { ConnectionSummary } from "@shared/models/connection.config";
 
 @Injectable({ providedIn: "root" })
@@ -10,6 +11,8 @@ export class ConnectionsApiService extends CacheService {
   private refreshCallbacks: Set<() => void> = new Set();
   private tauriBridge = inject(TauriBridgeService);
   private dataStore = inject(DataStoreService);
+  private dataflowLogger = inject(DataflowLoggerService);
+  private readonly page = "ConnectionsApiService";
 
   getConnections(): ConnectionSummary[] {
     return this.connectionsSignal();
@@ -22,9 +25,31 @@ export class ConnectionsApiService extends CacheService {
   }
 
   async listConnectionsWithRefresh(): Promise<ConnectionSummary[]> {
-    const result = await this.fetchConnections();
-    this.notifyRefresh();
-    return result;
+    this.dataflowLogger.logApiCall(this.page, "listConnectionsWithRefresh", "list_connections", {});
+    const startTime = performance.now();
+    try {
+      const result = await this.fetchConnections();
+      this.notifyRefresh();
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logDataReceive(
+        this.page,
+        "listConnectionsWithRefresh",
+        "list_connections",
+        { count: result.length },
+        duration
+      );
+      return result;
+    } catch (err) {
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logError(
+        this.page,
+        "listConnectionsWithRefresh",
+        "list_connections",
+        String(err),
+        duration
+      );
+      throw err;
+    }
   }
 
   onConnectionsRefreshed(callback: () => void): () => void {

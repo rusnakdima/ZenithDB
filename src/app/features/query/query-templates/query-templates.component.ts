@@ -13,6 +13,7 @@ import { FormsModule } from "@angular/forms";
 import { QueryTemplate, TEMPLATE_CATEGORIES, TemplateCategory } from "../models";
 import { TemplateService } from "../services";
 import { TemplateCardComponent } from "./template-card/template-card.component";
+import { AppLoggerService } from "@shared/services/app-logger.service";
 
 @Component({
   selector: "app-query-templates",
@@ -22,6 +23,7 @@ import { TemplateCardComponent } from "./template-card/template-card.component";
 })
 export class QueryTemplatesComponent implements OnInit {
   private readonly templateService = inject(TemplateService);
+  private readonly logger = inject(AppLoggerService);
 
   @Output() selectTemplate = new EventEmitter<QueryTemplate>();
   @Output() close = new EventEmitter<void>();
@@ -66,6 +68,10 @@ export class QueryTemplatesComponent implements OnInit {
   }
 
   onSelectTemplate(template: QueryTemplate): void {
+    this.logger.debug("[QUERY_TEMPLATE]", "Template selected from UI", {
+      id: template.id,
+      name: template.name,
+    });
     this.selectTemplate.emit(template);
   }
 

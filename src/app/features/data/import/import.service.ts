@@ -2,6 +2,7 @@ import { Injectable, inject, signal } from "@angular/core";
 import { ToastService } from "@services/toast.service";
 import { ApiProvider } from "@providers/api.provider";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
+import { AppLoggerService } from "@shared/services/app-logger.service";
 
 export interface ParsedData {
   headers: string[];
@@ -40,6 +41,7 @@ export class ImportService {
   private toast = inject(ToastService);
   private api = inject(ApiProvider);
   private connectionState = inject(ConnectionStateService);
+  private logger = inject(AppLoggerService);
 
   private progressSignal = signal<ImportProgress | null>(null);
   readonly progress = this.progressSignal.asReadonly();
@@ -209,6 +211,11 @@ export class ImportService {
     const total = data.length;
     this.progressSignal.set({ current: 0, total, percentage: 0 });
 
+    this.logger.debug(
+      "[DATA_IMPORT]",
+      `Importing ${total} rows to ${collection}, batchSize=${options.batchSize}`
+    );
+
     for (let i = 0; i < data.length; i += options.batchSize) {
       const batch = data.slice(i, i + options.batchSize);
       const mappedBatch = batch.map((row) => this.applyMappings(row, options.mappings));
@@ -235,6 +242,11 @@ export class ImportService {
 
     const duration = performance.now() - startTime;
     this.progressSignal.set(null);
+
+    this.logger.info(
+      "[DATA_IMPORT]",
+      `Import completed: ${imported} imported, ${updated} updated, ${errors.length} errors`
+    );
 
     if (errors.length > 0) {
       this.toast.warning(`Import completed with ${errors.length} errors`);

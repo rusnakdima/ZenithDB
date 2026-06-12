@@ -16,6 +16,7 @@ import { QueryGroupComponent } from "./query-group/query-group.component";
 import { ConditionGroup, SortConfig, createEmptyGroup } from "../models";
 import { FilterBuilderService, SchemaCompletionService } from "../services";
 import { FilterExpression } from "@shared/models/connection.config";
+import { AppLoggerService } from "@shared/services/app-logger.service";
 
 @Component({
   selector: "app-visual-query-builder",
@@ -26,6 +27,7 @@ import { FilterExpression } from "@shared/models/connection.config";
 export class VisualQueryBuilderComponent implements OnInit, OnChanges {
   private readonly filterBuilder = inject(FilterBuilderService);
   private readonly schemaCompletion = inject(SchemaCompletionService);
+  private readonly logger = inject(AppLoggerService);
 
   @Input() collectionName = "";
   @Input() initialFilter: FilterExpression | null = null;
@@ -155,6 +157,7 @@ export class VisualQueryBuilderComponent implements OnInit, OnChanges {
   }
 
   onApply(): void {
+    this.logger.debug("[QUERY]", "Visual query builder apply");
     const filter = this.filterBuilder.buildFilter([this.rootGroup()]);
     const validSorts = this.sorts().filter((s) => s.field);
 

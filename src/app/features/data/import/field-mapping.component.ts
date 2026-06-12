@@ -1,7 +1,8 @@
-import { Component, input, output, signal, computed } from "@angular/core";
+import { Component, input, output, signal, computed, inject } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { FieldMapping } from "./import.service";
+import { AppLoggerService } from "@shared/services/app-logger.service";
 
 interface MappingOption {
   sourceField: string;
@@ -15,6 +16,8 @@ interface MappingOption {
   templateUrl: "./field-mapping.component.html",
 })
 export class FieldMappingComponent {
+  private logger = inject(AppLoggerService);
+
   sourceHeaders = input<string[]>([]);
   targetFields = input<string[]>([]);
   mappings = input<FieldMapping[]>([]);
@@ -125,6 +128,9 @@ export class FieldMappingComponent {
       }
     }
 
+    this.logger.debug("[DATA_IMPORT]", `Auto-mapped ${newMappings.length} fields`, {
+      count: newMappings.length,
+    });
     this.mappingsChange.emit(newMappings);
   }
 

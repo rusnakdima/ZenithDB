@@ -1,6 +1,7 @@
 import { Injectable, inject, signal } from "@angular/core";
 import { CacheService } from "@shared/services/cache.service";
 import { TauriBridgeService } from "@providers/tauri-bridge.service";
+import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
 import { DatabaseMetadata } from "@shared/models/connection.config";
 
 export interface DatabaseListResult {
@@ -15,6 +16,8 @@ export class DecentralizationApiService extends CacheService {
   private refreshCallbacks = new Map<string, Set<() => void>>();
   private inFlightDatabases = new Map<string, Promise<DatabaseListResult>>();
   private tauri = inject(TauriBridgeService);
+  private dataflowLogger = inject(DataflowLoggerService);
+  private readonly page = "DecentralizationApiService";
 
   getDatabases(connectionId: string): DatabaseMetadata[] {
     return this.databasesSignal().get(connectionId) ?? [];
@@ -49,88 +52,186 @@ export class DecentralizationApiService extends CacheService {
   }
 
   async listDatabasesWithRefresh(connectionId: string): Promise<DatabaseListResult> {
-    const result = await this.fetchDatabases(connectionId, 0, 10);
-    this.notifyRefresh(connectionId);
-    return result;
+    this.dataflowLogger.logApiCall(this.page, "listDatabasesWithRefresh", "database_list", {
+      connectionId,
+    });
+    const startTime = performance.now();
+    try {
+      const result = await this.fetchDatabases(connectionId, 0, 10);
+      this.notifyRefresh(connectionId);
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logDataReceive(
+        this.page,
+        "listDatabasesWithRefresh",
+        "database_list",
+        { count: result.databases.length },
+        duration
+      );
+      return result;
+    } catch (err) {
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logError(
+        this.page,
+        "listDatabasesWithRefresh",
+        "database_list",
+        String(err),
+        duration
+      );
+      throw err;
+    }
   }
 
   async saveDatabase(connId: string, name: string, path?: string): Promise<DatabaseMetadata> {
-    const optimistic = this.getDatabases(connId);
-    const tempDb: DatabaseMetadata = {
-      id: Date.now(),
-      connection_id: connId,
+    this.dataflowLogger.logApiCall(this.page, "saveDatabase", "save_database_metadata", {
+      connId,
       name,
-      path: path ?? null,
-      created_at: Date.now(),
-      updated_at: Date.now(),
-      metadata: null,
-    };
-    this.databasesSignal.update((map) => {
-      const newMap = new Map(map);
-      newMap.set(connId, [...optimistic, tempDb]);
-      return newMap;
+      path,
     });
+    const startTime = performance.now();
+    try {
+      const optimistic = this.getDatabases(connId);
+      const tempDb: DatabaseMetadata = {
+        id: Date.now(),
+        connection_id: connId,
+        name,
+        path: path ?? null,
+        created_at: Date.now(),
+        updated_at: Date.now(),
+        metadata: null,
+      };
+      this.databasesSignal.update((map) => {
+        const newMap = new Map(map);
+        newMap.set(connId, [...optimistic, tempDb]);
+        return newMap;
+      });
 
-    const result = await this.tauri.invoke<DatabaseMetadata>("save_database_metadata", {
-      conn_id: connId,
-      name,
-      path: path || null,
-      metadata: null,
-    });
-    await this.fetchDatabases(connId, 0, 10);
-    this.notifyRefresh(connId);
-    return result;
+      const result = await this.tauri.invoke<DatabaseMetadata>("save_database_metadata", {
+        connId: connId,
+        name,
+        path: path || null,
+        metadata: null,
+      });
+      await this.fetchDatabases(connId, 0, 10);
+      this.notifyRefresh(connId);
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logDataReceive(
+        this.page,
+        "saveDatabase",
+        "save_database_metadata",
+        result,
+        duration
+      );
+      return result;
+    } catch (err) {
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logError(
+        this.page,
+        "saveDatabase",
+        "save_database_metadata",
+        String(err),
+        duration
+      );
+      throw err;
+    }
   }
 
   async deleteDatabase(id: number): Promise<void> {
-    let connId = "";
-    this.databasesSignal.update((map) => {
-      for (const [cid, dbs] of map) {
-        const idx = dbs.findIndex((d) => d.id === id);
-        if (idx >= 0) {
-          connId = cid;
-          const updated = [...dbs];
-          updated.splice(idx, 1);
-          const newMap = new Map(map);
-          newMap.set(cid, updated);
-          return newMap;
+    this.dataflowLogger.logApiCall(this.page, "deleteDatabase", "delete_database_metadata", { id });
+    const startTime = performance.now();
+    try {
+      let connId = "";
+      this.databasesSignal.update((map) => {
+        for (const [cid, dbs] of map) {
+          const idx = dbs.findIndex((d) => d.id === id);
+          if (idx >= 0) {
+            connId = cid;
+            const updated = [...dbs];
+            updated.splice(idx, 1);
+            const newMap = new Map(map);
+            newMap.set(cid, updated);
+            return newMap;
+          }
         }
-      }
-      return map;
-    });
+        return map;
+      });
 
-    await this.tauri.invoke<void>("delete_database_metadata", { id });
-    if (connId) {
-      await this.fetchDatabases(connId, 0, 10);
-      this.notifyRefresh(connId);
+      await this.tauri.invoke<void>("delete_database_metadata", { id });
+      if (connId) {
+        await this.fetchDatabases(connId, 0, 10);
+        this.notifyRefresh(connId);
+      }
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logDataReceive(
+        this.page,
+        "deleteDatabase",
+        "delete_database_metadata",
+        { success: true },
+        duration
+      );
+    } catch (err) {
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logError(
+        this.page,
+        "deleteDatabase",
+        "delete_database_metadata",
+        String(err),
+        duration
+      );
+      throw err;
     }
   }
 
   async updateDatabase(id: number, name: string, path?: string): Promise<DatabaseMetadata> {
-    this.databasesSignal.update((map) => {
-      const newMap = new Map(map);
-      for (const [connId, dbs] of newMap) {
-        const idx = dbs.findIndex((d) => d.id === id);
-        if (idx >= 0) {
-          const updated = [...dbs];
-          updated[idx] = { ...updated[idx], name, path: path ?? updated[idx].path };
-          newMap.set(connId, updated);
-          break;
-        }
-      }
-      return newMap;
-    });
-
-    const result = await this.tauri.invoke<DatabaseMetadata>("update_database_metadata", {
+    this.dataflowLogger.logApiCall(this.page, "updateDatabase", "update_database_metadata", {
       id,
       name,
-      path: path || null,
-      metadata: null,
+      path,
     });
-    const connId = result.connection_id;
-    await this.fetchDatabases(connId, 0, 10);
-    this.notifyRefresh(connId);
-    return result;
+    const startTime = performance.now();
+    try {
+      this.databasesSignal.update((map) => {
+        const newMap = new Map(map);
+        for (const [connId, dbs] of newMap) {
+          const idx = dbs.findIndex((d) => d.id === id);
+          if (idx >= 0) {
+            const updated = [...dbs];
+            updated[idx] = { ...updated[idx], name, path: path ?? updated[idx].path };
+            newMap.set(connId, updated);
+            break;
+          }
+        }
+        return newMap;
+      });
+
+      const result = await this.tauri.invoke<DatabaseMetadata>("update_database_metadata", {
+        id,
+        name,
+        path: path || null,
+        metadata: null,
+      });
+      const connId = result.connection_id;
+      await this.fetchDatabases(connId, 0, 10);
+      this.notifyRefresh(connId);
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logDataReceive(
+        this.page,
+        "updateDatabase",
+        "update_database_metadata",
+        result,
+        duration
+      );
+      return result;
+    } catch (err) {
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logError(
+        this.page,
+        "updateDatabase",
+        "update_database_metadata",
+        String(err),
+        duration
+      );
+      throw err;
+    }
   }
 
   onDatabasesRefreshed(connectionId: string, callback: () => void): () => void {
@@ -159,7 +260,7 @@ export class DecentralizationApiService extends CacheService {
         databases: DatabaseMetadata[];
         has_more: boolean;
         total_count: number;
-      }>("database_list", { conn_id: connectionId, offset, limit })
+      }>("database_list", { connId: connectionId, offset, limit })
       .then((result) => {
         this.databasesSignal.update((map) => {
           const newMap = new Map(map);

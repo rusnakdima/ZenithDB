@@ -1,8 +1,10 @@
-import { Injectable, signal } from "@angular/core";
+import { Injectable, signal, inject } from "@angular/core";
+import { AppLoggerService } from "@shared/services/app-logger.service";
 import { ConnectionSummary, ConnectionConfig } from "@shared/models/connection.config";
 
 @Injectable({ providedIn: "root" })
 export class ConnectionStateService {
+  private logger = inject(AppLoggerService);
   activeConnectionId = signal<string | null>(null);
   activeConnectionName = signal<string | null>(null);
   activeProvider = signal<string | null>(null);
@@ -14,6 +16,9 @@ export class ConnectionStateService {
   activeCollectionName = signal<string | null>(null);
 
   setActiveConnection(connOrId: ConnectionSummary | string): void {
+    this.logger.debug("[CONNECTION_STATE]", "setActiveConnection called", {
+      type: typeof connOrId,
+    });
     if (typeof connOrId === "string") {
       this.activeConnectionId.set(connOrId);
     } else {
@@ -25,14 +30,17 @@ export class ConnectionStateService {
   }
 
   setActiveConnectionConfig(config: ConnectionConfig) {
+    this.logger.debug("[CONNECTION_STATE]", "setActiveConnectionConfig called");
     this.activeConnectionConfig.set(config);
   }
 
   setActiveDatabase(dbName: string | null): void {
+    this.logger.debug("[CONNECTION_STATE]", "setActiveDatabase called", { dbName });
     this.activeDatabaseName.set(dbName);
   }
 
   setActiveCollection(collectionName: string | null): void {
+    this.logger.debug("[CONNECTION_STATE]", "setActiveCollection called", { collectionName });
     this.activeCollectionName.set(collectionName);
   }
 }

@@ -23,6 +23,8 @@ import {
   CollectionListResult,
 } from "@shared/services/collections-api.service";
 import { findById } from "@shared/utils/array.utils";
+import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
+import { AppLoggerService } from "@shared/services/app-logger.service";
 
 export interface CacheEntry<T> {
   data: T;
@@ -53,6 +55,9 @@ export class DataStoreService {
   private injector = inject(Injector);
   private decentralizationApi = inject(DecentralizationApiService);
   private collectionsApi = inject(CollectionsApiService);
+  private dataflowLogger = inject(DataflowLoggerService);
+  private logger = inject(AppLoggerService);
+  private readonly page = "DataStoreService";
 
   private get db(): DatabaseService {
     return this.injector.get(DatabaseService);
@@ -179,19 +184,52 @@ export class DataStoreService {
   }
 
   async checkHealth(connectionId: string): Promise<ConnectionHealth> {
-    const cached = this.getHealth(connectionId);
-    if (cached) return cached;
+    this.dataflowLogger.logApiCall(this.page, "checkHealth", "test_connection_by_id", {
+      connectionId,
+    });
+    const startTime = performance.now();
+    try {
+      const cached = this.getHealth(connectionId);
+      if (cached) {
+        this.dataflowLogger.logDataReceive(
+          this.page,
+          "checkHealth",
+          "test_connection_by_id",
+          { cached: true },
+          performance.now() - startTime
+        );
+        return cached;
+      }
 
-    const health = await this.db.testConnectionById(connectionId);
-    const result = health ?? {
-      healthy: false,
-      provider: "unknown",
-      latency_ms: 0,
-      message: "Connection test failed",
-    };
+      const health = await this.db.testConnectionById(connectionId);
+      const result = health ?? {
+        healthy: false,
+        provider: "unknown",
+        latency_ms: 0,
+        message: "Connection test failed",
+      };
 
-    this.updateHealth(connectionId, result);
-    return result;
+      this.updateHealth(connectionId, result);
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logDataReceive(
+        this.page,
+        "checkHealth",
+        "test_connection_by_id",
+        result,
+        duration
+      );
+      return result;
+    } catch (err) {
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logError(
+        this.page,
+        "checkHealth",
+        "test_connection_by_id",
+        String(err),
+        duration
+      );
+      throw err;
+    }
   }
 
   getCached<T>(key: string): T | null {
@@ -330,6 +368,14 @@ export class DataStoreService {
     if (!forceRefresh) {
       const cached = this.collectionDataCacheSignal().get(cacheKey);
       if (cached) {
+        this.dataflowLogger.logQueryData(
+          this.page,
+          "queryData",
+          "query_data",
+          { collection, params },
+          { cached: true },
+          0
+        );
         return {
           data: cached.data,
           total: cached.total,
@@ -341,6 +387,9 @@ export class DataStoreService {
     if (this.inFlightRequests.has(cacheKey)) {
       return this.inFlightRequests.get(cacheKey) as Promise<QueryResult<RowData>>;
     }
+
+    this.dataflowLogger.logApiCall(this.page, "queryData", "query_data", { collection, params });
+    const startTime = performance.now();
 
     const requestPromise = (async () => {
       try {
@@ -354,7 +403,20 @@ export class DataStoreService {
           });
           return newMap;
         });
+        const duration = performance.now() - startTime;
+        this.dataflowLogger.logQueryData(
+          this.page,
+          "queryData",
+          "query_data",
+          { collection, params },
+          result,
+          duration
+        );
         return result as QueryResult<RowData>;
+      } catch (err) {
+        const duration = performance.now() - startTime;
+        this.dataflowLogger.logError(this.page, "queryData", "query_data", String(err), duration);
+        throw err;
       } finally {
         this.inFlightRequests.delete(cacheKey);
       }
@@ -502,24 +564,97 @@ export class DataStoreService {
   }
 
   async refreshConnections(): Promise<ConnectionSummary[]> {
-    const connections = await this.db.listConnections();
-    console.log("[DataStore] refreshConnections got connections:", connections);
-    this.connectionsSignal.set(connections);
-    return connections;
+    this.dataflowLogger.logApiCall(this.page, "refreshConnections", "list_connections", {});
+    const startTime = performance.now();
+    try {
+      const connections = await this.db.listConnections();
+      this.logger.debug("[DATASTORE]", "refreshConnections got connections", {
+        count: connections.length,
+      });
+      this.connectionsSignal.set(connections);
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logDataReceive(
+        this.page,
+        "refreshConnections",
+        "list_connections",
+        { count: connections.length },
+        duration
+      );
+      return connections;
+    } catch (err) {
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logError(
+        this.page,
+        "refreshConnections",
+        "list_connections",
+        String(err),
+        duration
+      );
+      throw err;
+    }
   }
 
   async refreshDatabases(connectionId: string): Promise<DatabaseMetadata[]> {
-    this.invalidateDatabases(connectionId);
-    const result = await this.decentralizationApi.listDatabases(connectionId, 0, 50);
-    this.updateDatabases(connectionId, result.databases);
-    return result.databases;
+    this.dataflowLogger.logApiCall(this.page, "refreshDatabases", "database_list", {
+      connectionId,
+    });
+    const startTime = performance.now();
+    try {
+      this.invalidateDatabases(connectionId);
+      const result = await this.decentralizationApi.listDatabases(connectionId, 0, 50);
+      this.updateDatabases(connectionId, result.databases);
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logDataReceive(
+        this.page,
+        "refreshDatabases",
+        "database_list",
+        { count: result.databases.length },
+        duration
+      );
+      return result.databases;
+    } catch (err) {
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logError(
+        this.page,
+        "refreshDatabases",
+        "database_list",
+        String(err),
+        duration
+      );
+      throw err;
+    }
   }
 
   async refreshCollections(connectionId: string, dbName?: string): Promise<CollectionMeta[]> {
-    this.invalidateCollections(connectionId);
-    const collections = await this.db.listCollections(connectionId, dbName);
-    this.updateCollections(connectionId, collections);
-    return collections;
+    this.dataflowLogger.logApiCall(this.page, "refreshCollections", "collection_list", {
+      connectionId,
+      dbName,
+    });
+    const startTime = performance.now();
+    try {
+      this.invalidateCollections(connectionId);
+      const collections = await this.db.listCollections(connectionId, dbName);
+      this.updateCollections(connectionId, collections);
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logDataReceive(
+        this.page,
+        "refreshCollections",
+        "collection_list",
+        { count: collections.length },
+        duration
+      );
+      return collections;
+    } catch (err) {
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logError(
+        this.page,
+        "refreshCollections",
+        "collection_list",
+        String(err),
+        duration
+      );
+      throw err;
+    }
   }
 
   async refreshHealth(connectionId: string): Promise<ConnectionHealth> {
@@ -553,72 +688,427 @@ export class DataStoreService {
   }
 
   async saveConnection(config: TestConnectionConfig): Promise<string> {
-    const result = await this.db.saveConnection(config);
-    await this.refreshConnections();
-    return result;
+    this.dataflowLogger.logApiCall(this.page, "saveConnection", "save_connection", { config });
+    const startTime = performance.now();
+    try {
+      const result = await this.db.saveConnection(config);
+      await this.refreshConnections();
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logDataReceive(
+        this.page,
+        "saveConnection",
+        "save_connection",
+        { id: result },
+        duration
+      );
+      return result;
+    } catch (err) {
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logError(
+        this.page,
+        "saveConnection",
+        "save_connection",
+        String(err),
+        duration
+      );
+      throw err;
+    }
   }
 
   async deleteConnection(id: string): Promise<void> {
-    await this.db.deleteConnection(id);
-    this.removeConnection(id);
+    this.dataflowLogger.logApiCall(this.page, "deleteConnection", "delete_connection", { id });
+    const startTime = performance.now();
+    try {
+      await this.db.deleteConnection(id);
+      this.removeConnection(id);
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logDataReceive(
+        this.page,
+        "deleteConnection",
+        "delete_connection",
+        { success: true },
+        duration
+      );
+    } catch (err) {
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logError(
+        this.page,
+        "deleteConnection",
+        "delete_connection",
+        String(err),
+        duration
+      );
+      throw err;
+    }
   }
 
   async saveDatabase(connId: string, name: string, path?: string): Promise<DatabaseMetadata> {
-    const result = await this.decentralizationApi.saveDatabase(connId, name, path);
-    await this.refreshDatabases(connId);
-    return result;
+    this.dataflowLogger.logApiCall(this.page, "saveDatabase", "save_database_metadata", {
+      connId,
+      name,
+      path,
+    });
+    const startTime = performance.now();
+    try {
+      const result = await this.decentralizationApi.saveDatabase(connId, name, path);
+      await this.refreshDatabases(connId);
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logDataReceive(
+        this.page,
+        "saveDatabase",
+        "save_database_metadata",
+        result,
+        duration
+      );
+      return result;
+    } catch (err) {
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logError(
+        this.page,
+        "saveDatabase",
+        "save_database_metadata",
+        String(err),
+        duration
+      );
+      throw err;
+    }
   }
 
   async deleteDatabase(id: number): Promise<void> {
-    await this.decentralizationApi.deleteDatabase(id);
+    this.dataflowLogger.logApiCall(this.page, "deleteDatabase", "delete_database_metadata", { id });
+    const startTime = performance.now();
+    try {
+      await this.decentralizationApi.deleteDatabase(id);
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logDataReceive(
+        this.page,
+        "deleteDatabase",
+        "delete_database_metadata",
+        { success: true },
+        duration
+      );
+    } catch (err) {
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logError(
+        this.page,
+        "deleteDatabase",
+        "delete_database_metadata",
+        String(err),
+        duration
+      );
+      throw err;
+    }
   }
 
   async updateDatabase(id: number, name: string, path?: string): Promise<DatabaseMetadata> {
-    const result = await this.decentralizationApi.updateDatabase(id, name, path);
-    return result;
+    this.dataflowLogger.logApiCall(this.page, "updateDatabase", "update_database_metadata", {
+      id,
+      name,
+      path,
+    });
+    const startTime = performance.now();
+    try {
+      const result = await this.decentralizationApi.updateDatabase(id, name, path);
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logDataReceive(
+        this.page,
+        "updateDatabase",
+        "update_database_metadata",
+        result,
+        duration
+      );
+      return result;
+    } catch (err) {
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logError(
+        this.page,
+        "updateDatabase",
+        "update_database_metadata",
+        String(err),
+        duration
+      );
+      throw err;
+    }
   }
 
   async getServerVersion(): Promise<string> {
-    return this.db.getServerVersion();
+    this.dataflowLogger.logApiCall(this.page, "getServerVersion", "get_server_version", {});
+    const startTime = performance.now();
+    try {
+      const result = await this.db.getServerVersion();
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logDataReceive(
+        this.page,
+        "getServerVersion",
+        "get_server_version",
+        { version: result },
+        duration
+      );
+      return result;
+    } catch (err) {
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logError(
+        this.page,
+        "getServerVersion",
+        "get_server_version",
+        String(err),
+        duration
+      );
+      throw err;
+    }
   }
 
   async createCollection(name: string): Promise<void> {
-    return this.db.createCollection(name);
+    this.dataflowLogger.logApiCall(this.page, "createCollection", "create_collection", { name });
+    const startTime = performance.now();
+    try {
+      await this.db.createCollection(name);
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logDataReceive(
+        this.page,
+        "createCollection",
+        "create_collection",
+        { success: true },
+        duration
+      );
+    } catch (err) {
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logError(
+        this.page,
+        "createCollection",
+        "create_collection",
+        String(err),
+        duration
+      );
+      throw err;
+    }
   }
 
   async renameCollection(connId: string, oldName: string, newName: string): Promise<void> {
-    return this.db.renameCollection(connId, oldName, newName);
+    this.dataflowLogger.logApiCall(this.page, "renameCollection", "rename_collection", {
+      connId,
+      oldName,
+      newName,
+    });
+    const startTime = performance.now();
+    try {
+      await this.db.renameCollection(connId, oldName, newName);
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logDataReceive(
+        this.page,
+        "renameCollection",
+        "rename_collection",
+        { success: true },
+        duration
+      );
+    } catch (err) {
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logError(
+        this.page,
+        "renameCollection",
+        "rename_collection",
+        String(err),
+        duration
+      );
+      throw err;
+    }
   }
 
   async dropCollection(name: string): Promise<void> {
-    return this.db.dropCollection(name);
+    this.dataflowLogger.logApiCall(this.page, "dropCollection", "drop_collection", { name });
+    const startTime = performance.now();
+    try {
+      await this.db.dropCollection(name);
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logDataReceive(
+        this.page,
+        "dropCollection",
+        "drop_collection",
+        { success: true },
+        duration
+      );
+    } catch (err) {
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logError(
+        this.page,
+        "dropCollection",
+        "drop_collection",
+        String(err),
+        duration
+      );
+      throw err;
+    }
   }
 
   async getCollectionStats(collection: string): Promise<CollectionStats> {
-    return this.db.getCollectionStats(collection);
+    this.dataflowLogger.logApiCall(this.page, "getCollectionStats", "get_collection_stats", {
+      collection,
+    });
+    const startTime = performance.now();
+    try {
+      const result = await this.db.getCollectionStats(collection);
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logDataReceive(
+        this.page,
+        "getCollectionStats",
+        "get_collection_stats",
+        result,
+        duration
+      );
+      return result;
+    } catch (err) {
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logError(
+        this.page,
+        "getCollectionStats",
+        "get_collection_stats",
+        String(err),
+        duration
+      );
+      throw err;
+    }
   }
 
   async describeCollection(collection: string): Promise<CollectionSchema> {
-    return this.db.describeCollection(collection);
+    this.dataflowLogger.logApiCall(this.page, "describeCollection", "describe_collection", {
+      collection,
+    });
+    const startTime = performance.now();
+    try {
+      const result = await this.db.describeCollection(collection);
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logDataReceive(
+        this.page,
+        "describeCollection",
+        "describe_collection",
+        result,
+        duration
+      );
+      return result;
+    } catch (err) {
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logError(
+        this.page,
+        "describeCollection",
+        "describe_collection",
+        String(err),
+        duration
+      );
+      throw err;
+    }
   }
 
   async saveRow(collection: string, data: Record<string, unknown>): Promise<unknown> {
-    return this.db.saveRow(collection, data);
+    this.dataflowLogger.logApiCall(this.page, "saveRow", "save_row", { collection, data });
+    const startTime = performance.now();
+    try {
+      const result = await this.db.saveRow(collection, data);
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logDataReceive(this.page, "saveRow", "save_row", result, duration);
+      return result;
+    } catch (err) {
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logError(this.page, "saveRow", "save_row", String(err), duration);
+      throw err;
+    }
   }
 
   async deleteRow(collection: string, id: string): Promise<void> {
-    return this.db.deleteRow(collection, id);
+    this.dataflowLogger.logApiCall(this.page, "deleteRow", "delete_row", { collection, id });
+    const startTime = performance.now();
+    try {
+      await this.db.deleteRow(collection, id);
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logDataReceive(
+        this.page,
+        "deleteRow",
+        "delete_row",
+        { success: true },
+        duration
+      );
+    } catch (err) {
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logError(this.page, "deleteRow", "delete_row", String(err), duration);
+      throw err;
+    }
   }
 
   async executeRaw(sql: string): Promise<any> {
-    return this.db.executeRaw(sql);
+    this.dataflowLogger.logApiCall(this.page, "executeRaw", "execute_raw", { sql });
+    const startTime = performance.now();
+    try {
+      const result = await this.db.executeRaw(sql);
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logDataReceive(
+        this.page,
+        "executeRaw",
+        "execute_raw",
+        { affectedRows: result?.affected_rows },
+        duration
+      );
+      return result;
+    } catch (err) {
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logError(this.page, "executeRaw", "execute_raw", String(err), duration);
+      throw err;
+    }
   }
 
   async testConnectionById(connId: string): Promise<ConnectionHealth | null> {
-    return this.db.testConnectionById(connId);
+    this.dataflowLogger.logApiCall(this.page, "testConnectionById", "test_connection_by_id", {
+      connId,
+    });
+    const startTime = performance.now();
+    try {
+      const result = await this.db.testConnectionById(connId);
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logDataReceive(
+        this.page,
+        "testConnectionById",
+        "test_connection_by_id",
+        result,
+        duration
+      );
+      return result;
+    } catch (err) {
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logError(
+        this.page,
+        "testConnectionById",
+        "test_connection_by_id",
+        String(err),
+        duration
+      );
+      throw err;
+    }
   }
 
   async testConnectionStatus(connId: string): Promise<ConnectionSummary | null> {
-    return this.db.testConnectionStatus(connId);
+    this.dataflowLogger.logApiCall(this.page, "testConnectionStatus", "test_connection_status", {
+      connId,
+    });
+    const startTime = performance.now();
+    try {
+      const result = await this.db.testConnectionStatus(connId);
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logDataReceive(
+        this.page,
+        "testConnectionStatus",
+        "test_connection_status",
+        result,
+        duration
+      );
+      return result;
+    } catch (err) {
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logError(
+        this.page,
+        "testConnectionStatus",
+        "test_connection_status",
+        String(err),
+        duration
+      );
+      throw err;
+    }
   }
 }

@@ -26,6 +26,8 @@ import {
 import { ErrorHandlerService } from "@shared/services/error-handler.service";
 import { ToastService } from "@services/toast.service";
 import { ConnectionFormService } from "@shared/services/connection-form.service";
+import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
+import { AppLoggerService } from "@shared/services/app-logger.service";
 
 @Component({
   selector: "app-connection-form",
@@ -47,6 +49,10 @@ export class ConnectionFormComponent implements OnInit {
 
   connectionFormService = inject(ConnectionFormService);
   private cdr = inject(ChangeDetectorRef);
+  private dataflowLogger = inject(DataflowLoggerService);
+  private logger = inject(AppLoggerService);
+
+  private readonly page = "ConnectionForm";
 
   editingId: string | null = null;
   isEditing = signal(false);
@@ -138,6 +144,7 @@ export class ConnectionFormComponent implements OnInit {
   }
 
   private async loadConnection(id: string, forDuplicate: boolean) {
+    this.logger.debug("[CONNECTION_FORM]", "Loading connection", { id, forDuplicate });
     try {
       const conn = await this.store.getFullConnection(id);
       const innerConfig = conn.config.config;
@@ -197,6 +204,10 @@ export class ConnectionFormComponent implements OnInit {
   }
 
   async onBrowseFile(isDirectory: boolean) {
+    this.logger.log("[CONNECTION_FORM]", "User action: browseFile", {
+      isDirectory,
+      provider: this.provider,
+    });
     try {
       const { open } = await import("@tauri-apps/plugin-dialog");
       let filters: { name: string; extensions: string[] }[] = [];
@@ -238,12 +249,16 @@ export class ConnectionFormComponent implements OnInit {
   }
 
   async testConnection() {
+    this.logger.log("[CONNECTION_FORM]", "User action: testConnection", {
+      provider: this.provider,
+    });
     this.testing.set(true);
     this.cdr.markForCheck();
     try {
       const config = this.buildConfig();
       const result = await this.store.testConnection(config);
       this.testResult.set(result);
+      this.logger.debug("[CONNECTION_FORM]", "testConnection result", result);
       this.cdr.markForCheck();
     } catch (e) {
       this.testResult.set({
@@ -252,6 +267,7 @@ export class ConnectionFormComponent implements OnInit {
         server_version: String(e),
         latency_ms: undefined,
       });
+      this.logger.error("[CONNECTION_FORM]", "testConnection error", { error: e });
       this.cdr.markForCheck();
     } finally {
       this.testing.set(false);
@@ -260,6 +276,10 @@ export class ConnectionFormComponent implements OnInit {
   }
 
   async save() {
+    this.logger.log("[CONNECTION_FORM]", "User action: save", {
+      isEditing: this.editingId,
+      provider: this.provider,
+    });
     this.saving.set(true);
     this.cdr.markForCheck();
     try {
@@ -268,8 +288,10 @@ export class ConnectionFormComponent implements OnInit {
         await this.store.deleteConnection(this.editingId);
       }
       await this.store.saveConnection(config);
+      this.logger.debug("[CONNECTION_FORM]", "save completed successfully");
       this.onClose();
     } catch (e) {
+      this.logger.error("[CONNECTION_FORM]", "save error", { error: e });
       this.errorHandler.handleError(e, "Saving connection");
       this.cdr.markForCheck();
     } finally {

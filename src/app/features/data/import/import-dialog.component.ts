@@ -12,6 +12,7 @@ import {
 import { SchemaCompletionService } from "@features/query/services/schema-completion.service";
 import { FieldMappingComponent } from "./field-mapping.component";
 import { ToastService } from "@services/toast.service";
+import { AppLoggerService } from "@shared/services/app-logger.service";
 
 @Component({
   selector: "app-import-dialog",
@@ -23,6 +24,7 @@ export class ImportDialogComponent implements OnInit {
   private importService = inject(ImportService);
   private schemaCompletion = inject(SchemaCompletionService);
   private toast = inject(ToastService);
+  private logger = inject(AppLoggerService);
 
   closed = output<void>();
 
@@ -178,6 +180,10 @@ export class ImportDialogComponent implements OnInit {
     };
 
     try {
+      this.logger.info(
+        "[DATA_IMPORT]",
+        `Starting import to ${collection}: ${data.rows.length} rows`
+      );
       const result = await this.importService.importData(
         collection,
         data.rows,

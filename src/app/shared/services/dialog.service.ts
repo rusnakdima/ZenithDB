@@ -1,4 +1,5 @@
-import { Injectable, signal, computed, Type } from "@angular/core";
+import { Injectable, signal, computed, Type, inject } from "@angular/core";
+import { AppLoggerService } from "@shared/services/app-logger.service";
 
 export interface DialogConfig<T = unknown> {
   id: string;
@@ -11,12 +12,14 @@ export interface DialogConfig<T = unknown> {
 
 @Injectable({ providedIn: "root" })
 export class DialogService {
+  private logger = inject(AppLoggerService);
   private dialogsSignal = signal<DialogConfig<unknown>[]>([]);
   private counter = 0;
 
   readonly dialogs = computed(() => this.dialogsSignal());
 
   open(config: Omit<DialogConfig, "id">): string {
+    this.logger.debug("[DIALOG]", "open called", { componentName: config.component?.name });
     const id = `dialog-${++this.counter}-${Date.now()}`;
     const dialog: DialogConfig = { ...config, id };
     this.dialogsSignal.update((d) => [...d, dialog]);

@@ -1,12 +1,14 @@
-import { Injectable, signal, computed, effect, Inject, PLATFORM_ID } from "@angular/core";
+import { Injectable, signal, computed, effect, Inject, PLATFORM_ID, inject } from "@angular/core";
 import { isPlatformBrowser } from "@angular/common";
 import { SettingsService } from "./settings.service";
+import { AppLoggerService } from "@shared/services/app-logger.service";
 import { ThemePreset, THEME_PRESETS, getAccentShades, getAccentRgb } from "../models/theme.model";
 
 export type ThemeMode = "dark" | "light";
 
 @Injectable({ providedIn: "root" })
 export class ThemeService {
+  private logger = inject(AppLoggerService);
   private _themeMode = signal<ThemeMode>("dark");
   private _preset = signal<ThemePreset>(THEME_PRESETS[4]);
 
@@ -55,17 +57,20 @@ export class ThemeService {
   }
 
   toggle(): void {
+    this.logger.debug("[THEME]", "toggle called");
     const newMode = this._themeMode() === "dark" ? "light" : "dark";
     this._themeMode.set(newMode);
     this.settingsService.updateGeneral({ theme: newMode });
   }
 
   setTheme(mode: ThemeMode): void {
+    this.logger.debug("[THEME]", "setTheme called", { mode });
     this._themeMode.set(mode);
     this.settingsService.updateGeneral({ theme: mode });
   }
 
   initFromSettings(): void {
+    this.logger.debug("[THEME]", "initFromSettings started");
     const theme = this.settingsService.currentSettings.general.theme;
     const accentColor = this.settingsService.currentSettings.general.accentColor;
 
@@ -77,9 +82,11 @@ export class ThemeService {
 
     const preset = THEME_PRESETS.find((p) => p.accentColor === accentColor) || THEME_PRESETS[4];
     this._preset.set(preset);
+    this.logger.debug("[THEME]", "initFromSettings completed");
   }
 
   setPreset(preset: ThemePreset): void {
+    this.logger.debug("[THEME]", "setPreset called", { presetId: preset.id });
     this._preset.set(preset);
     this.settingsService.updateGeneral({ accentColor: preset.accentColor });
   }

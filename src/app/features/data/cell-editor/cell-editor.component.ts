@@ -10,6 +10,7 @@ import {
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { isNullOrUndefined } from "@shared/utils/collection.utils";
+import { AppLoggerService } from "@shared/services/app-logger.service";
 
 @Component({
   selector: "app-cell-editor",
@@ -20,6 +21,7 @@ import { isNullOrUndefined } from "@shared/utils/collection.utils";
 })
 export class CellEditorComponent {
   private cdr = inject(ChangeDetectorRef);
+  private logger = inject(AppLoggerService);
   @Input() value: unknown = null;
   @Input() isEditing = false;
   @Input() editValue = "";
@@ -39,14 +41,17 @@ export class CellEditorComponent {
   }
 
   onStart() {
+    this.logger.debug("[DATA_GRID]", "Cell edit started");
     this.startEdit.emit();
   }
 
   onSave() {
+    this.logger.debug("[DATA_GRID]", "Cell edit saved");
     this.saveEdit.emit(this.editValue);
   }
 
   onCancel() {
+    this.logger.debug("[DATA_GRID]", "Cell edit cancelled");
     this.cancelEdit.emit();
   }
 }

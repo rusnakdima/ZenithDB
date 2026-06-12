@@ -2,10 +2,12 @@ import { Injectable, inject, signal } from "@angular/core";
 import { ConnectionHealth } from "@shared/models/connection.config";
 import { DatabaseService } from "./database.service";
 import { TIME_CONSTANTS } from "@shared/utils/constants";
+import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
 
 @Injectable({ providedIn: "root" })
 export class ConnectionHealthService {
   private db = inject(DatabaseService);
+  private logger = inject(DataflowLoggerService, { optional: true });
   private healthCache = signal<Map<string, { health: ConnectionHealth; timestamp: number }>>(
     new Map()
   );
@@ -18,13 +20,18 @@ export class ConnectionHealthService {
       this.invalidateHealth(connectionId);
       return null;
     }
+    this.logger?.logApiCall("connectionHealth", "getCachedHealth", "health_cache_hit", {
+      connectionId,
+    });
     return cached.health;
   }
 
   async checkHealth(connectionId: string): Promise<ConnectionHealth> {
+    const startTime = performance.now();
     const cached = this.getCachedHealth(connectionId);
     if (cached) return cached;
 
+    this.logger?.logApiCall("connectionHealth", "checkHealth", "health_check", { connectionId });
     const health = await this.db.testConnectionById(connectionId);
     const result = health ?? {
       healthy: false,
@@ -40,14 +47,23 @@ export class ConnectionHealthService {
       return newMap;
     });
 
+    this.logger?.logDataReceive(
+      "connectionHealth",
+      "checkHealth",
+      "health_check",
+      { connectionId, healthy: result.healthy },
+      performance.now() - startTime
+    );
     return result;
   }
 
   invalidateHealth(connectionId: string): void {
+    const startTime = performance.now();
     this.healthCache.update((map) => {
       const newMap = new Map(map);
       newMap.delete(connectionId);
       return newMap;
     });
+    this.logger?.logUserAction("connectionHealth", "invalidateHealth", { connectionId });
   }
 }

@@ -3,6 +3,7 @@ import { save } from "@tauri-apps/plugin-dialog";
 import { writeTextFile } from "@tauri-apps/plugin-fs";
 import { ToastService } from "@services/toast.service";
 import { LoadingService } from "@shared/services/loading.service";
+import { AppLoggerService } from "@shared/services/app-logger.service";
 import { RowData } from "@shared/models/connection.config";
 import { escapeCsvValue, escapeSqlValue } from "@shared/utils/string.utils";
 
@@ -24,6 +25,7 @@ type ExportOptions = {
 export class ExportService {
   private toast = inject(ToastService) as ToastService;
   private loading = inject(LoadingService) as LoadingService;
+  private logger = inject(AppLoggerService);
 
   private validateExportData(data: RowData[]): boolean {
     if (!data || data.length === 0) {
@@ -88,6 +90,11 @@ export class ExportService {
   }
 
   async export(options: ExportOptions, data: RowData[]): Promise<void> {
+    this.logger.debug("[EXPORT]", "export started", {
+      format: options.format,
+      filename: options.filename,
+      rowCount: data.length,
+    });
     const { format, filename, includeHeaders = true, tableName = "data" } = options;
 
     this.loading.show(`Exporting to ${format.toUpperCase()}...`);
@@ -111,8 +118,10 @@ export class ExportService {
           break;
       }
       this.toast.success(`Exported ${data.length} rows to ${format.toUpperCase()}`);
+      this.logger.debug("[EXPORT]", "export completed", { format });
     } catch (error) {
       const err = error as Error;
+      this.logger.error("[EXPORT]", "export failed", { format, error: err.message });
       if (err.message !== "Export cancelled") {
         this.toast.error(`Export failed: ${err.message}`);
       }

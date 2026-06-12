@@ -251,7 +251,7 @@
 
 /* Dark Theme (Default) */
 :root {
-  --bg-deep: #020617;
+  --bg-deep: #090e14;
   --bg-sidebar: rgba(15, 23, 42, 0.85);
   --bg-card: transparent;
   --bg-elevated: rgba(51, 65, 85, 0.6);
@@ -272,7 +272,7 @@
 
 /* Light Theme */
 html.light {
-  --bg-deep: #f8fafc;
+  --bg-deep: #ffffff;
   --bg-sidebar: rgba(255, 255, 255, 0.9);
   --bg-card: transparent;
   --bg-elevated: rgba(241, 245, 249, 0.7);

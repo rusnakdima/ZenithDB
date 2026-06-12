@@ -4,6 +4,7 @@ import { FormsModule } from "@angular/forms";
 import { GroupConfig, GroupAccumulator } from "../pipeline-builder.service";
 import { SchemaCompletionService } from "../../../query/services/schema-completion.service";
 import { FieldInfo } from "../../../query/models";
+import { AppLoggerService } from "@shared/services/app-logger.service";
 
 @Component({
   selector: "app-group-config",
@@ -13,6 +14,7 @@ import { FieldInfo } from "../../../query/models";
 })
 export class GroupConfigComponent implements OnInit {
   private readonly schemaCompletion = inject(SchemaCompletionService);
+  private logger = inject(AppLoggerService);
 
   @Input() config!: GroupConfig;
   @Input() collectionName = "";
@@ -32,6 +34,7 @@ export class GroupConfigComponent implements OnInit {
   }
 
   onGroupByChange(field: string): void {
+    this.logger.debug("[SEARCH_PIPELINE]", "Group config groupBy field changed", { field });
     this.configChange.emit({
       ...this.config,
       groupByField: field,
@@ -45,6 +48,7 @@ export class GroupConfigComponent implements OnInit {
       operator: "sum",
       value: "",
     };
+    this.logger.debug("[SEARCH_PIPELINE]", "Group accumulator added");
     this.configChange.emit({
       ...this.config,
       accumulators: [...this.config.accumulators, newAcc],
@@ -70,6 +74,7 @@ export class GroupConfigComponent implements OnInit {
   }
 
   removeAccumulator(index: number): void {
+    this.logger.debug("[SEARCH_PIPELINE]", "Group accumulator removed", { index });
     this.configChange.emit({
       ...this.config,
       accumulators: this.config.accumulators.filter((_, i) => i !== index),

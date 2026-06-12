@@ -12,11 +12,13 @@ import {
   QueryParams,
   TestConnectionConfig,
 } from "@shared/models/connection.config";
+import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
 
 @Injectable({ providedIn: "root" })
 export class DatabaseService {
   private connectionState = inject(ConnectionStateService);
   private api = inject(ApiProvider);
+  private logger = inject(DataflowLoggerService, { optional: true });
 
   connectionService = inject(ConnectionService);
   queryService = inject(QueryService);
@@ -24,94 +26,238 @@ export class DatabaseService {
   adminService = inject(AdminService);
 
   async listConnections() {
-    return this.connectionService.listConnections();
+    const startTime = performance.now();
+    const result = await this.connectionService.listConnections();
+    this.logger?.logDataReceive(
+      "database",
+      "listConnections",
+      "db_list_connections",
+      { count: result.length },
+      performance.now() - startTime
+    );
+    return result;
   }
 
   async getConnection(id: string) {
-    return this.connectionService.getConnection(id);
+    const startTime = performance.now();
+    const result = await this.connectionService.getConnection(id);
+    this.logger?.logDataReceive(
+      "database",
+      "getConnection",
+      "db_get_connection",
+      { id },
+      performance.now() - startTime
+    );
+    return result;
   }
 
   async saveConnection(config: TestConnectionConfig) {
-    return this.connectionService.saveConnection(config);
+    const startTime = performance.now();
+    const result = await this.connectionService.saveConnection(config);
+    this.logger?.logDataReceive(
+      "database",
+      "saveConnection",
+      "db_save_connection",
+      { name: config.name },
+      performance.now() - startTime
+    );
+    return result;
   }
 
   async deleteConnection(id: string) {
-    return this.connectionService.deleteConnection(id);
+    const startTime = performance.now();
+    await this.connectionService.deleteConnection(id);
+    this.logger?.logUserAction("database", "deleteConnection", { id });
   }
 
   async testConnection(config: TestConnectionConfig) {
-    return this.connectionService.testConnection(config);
+    const startTime = performance.now();
+    const result = await this.connectionService.testConnection(config);
+    this.logger?.logDataReceive(
+      "database",
+      "testConnection",
+      "db_test_connection",
+      { healthy: result.healthy },
+      performance.now() - startTime
+    );
+    return result;
   }
 
   async testConnectionById(connId: string) {
-    return this.connectionService.testConnectionById(connId);
+    const startTime = performance.now();
+    const result = await this.connectionService.testConnectionById(connId);
+    this.logger?.logDataReceive(
+      "database",
+      "testConnectionById",
+      "db_test_connection",
+      { connId, healthy: result?.healthy },
+      performance.now() - startTime
+    );
+    return result;
   }
 
   async testConnectionStatus(connId: string) {
-    return this.connectionService.testConnectionStatus(connId);
+    const startTime = performance.now();
+    const result = await this.connectionService.testConnectionStatus(connId);
+    this.logger?.logDataReceive(
+      "database",
+      "testConnectionStatus",
+      "db_test_status",
+      { connId },
+      performance.now() - startTime
+    );
+    return result;
   }
 
   async updateConnection(id: string, config: ConnectionConfig) {
-    return this.connectionService.updateConnection(id, config);
+    const startTime = performance.now();
+    await this.connectionService.updateConnection(id, config);
+    this.logger?.logUserAction("database", "updateConnection", { id });
   }
 
   async listCollections(connId?: string, dbName?: string) {
-    return this.schemaService.listCollections(connId, dbName);
+    const startTime = performance.now();
+    const result = await this.schemaService.listCollections(connId, dbName);
+    this.logger?.logDataReceive(
+      "database",
+      "listCollections",
+      "db_list_collections",
+      { connId, dbName, count: result.length },
+      performance.now() - startTime
+    );
+    return result;
   }
 
   async createDatabase(name: string) {
-    return this.schemaService.createDatabase(name);
+    const startTime = performance.now();
+    const result = await this.schemaService.createDatabase(name);
+    this.logger?.logUserAction("database", "createDatabase", { name });
+    return result;
   }
 
   async describeCollection(collection: string) {
-    return this.schemaService.describeCollection(collection);
+    const startTime = performance.now();
+    const result = await this.schemaService.describeCollection(collection);
+    this.logger?.logDataReceive(
+      "database",
+      "describeCollection",
+      "db_describe_collection",
+      { collection },
+      performance.now() - startTime
+    );
+    return result;
   }
 
   async getCollectionStats(collection: string) {
-    return this.schemaService.getCollectionStats(collection);
+    const startTime = performance.now();
+    const result = await this.schemaService.getCollectionStats(collection);
+    this.logger?.logDataReceive(
+      "database",
+      "getCollectionStats",
+      "db_collection_stats",
+      { collection },
+      performance.now() - startTime
+    );
+    return result;
   }
 
   async getServerVersion() {
-    return this.schemaService.getServerVersion();
+    const startTime = performance.now();
+    const result = await this.schemaService.getServerVersion();
+    this.logger?.logDataReceive(
+      "database",
+      "getServerVersion",
+      "db_server_version",
+      {},
+      performance.now() - startTime
+    );
+    return result;
   }
 
   async queryData(collection: string, params: QueryParams) {
-    return this.queryService.queryData(collection, params);
+    const startTime = performance.now();
+    const result = await this.queryService.queryData(collection, params);
+    this.logger?.logDataReceive(
+      "database",
+      "queryData",
+      "db_query",
+      { collection, rowCount: result.data.length },
+      performance.now() - startTime
+    );
+    return result;
   }
 
   async saveRow(collection: string, data: Record<string, unknown>) {
-    return this.queryService.saveRow(collection, data);
+    const startTime = performance.now();
+    const result = await this.queryService.saveRow(collection, data);
+    this.logger?.logDataReceive(
+      "database",
+      "saveRow",
+      "db_save_row",
+      { collection },
+      performance.now() - startTime
+    );
+    return result;
   }
 
   async deleteRow(collection: string, id: string) {
-    return this.queryService.deleteRow(collection, id);
+    const startTime = performance.now();
+    await this.queryService.deleteRow(collection, id);
+    this.logger?.logUserAction("database", "deleteRow", { collection, id });
   }
 
   async createCollection(name: string) {
-    return this.adminService.createCollection(name);
+    const startTime = performance.now();
+    const result = await this.adminService.createCollection(name);
+    this.logger?.logUserAction("database", "createCollection", { name });
+    return result;
   }
 
   async dropCollection(name: string) {
-    return this.adminService.dropCollection(name);
+    const startTime = performance.now();
+    const result = await this.adminService.dropCollection(name);
+    this.logger?.logUserAction("database", "dropCollection", { name });
+    return result;
   }
 
   async executeRaw(sql: string) {
-    return this.adminService.executeRaw(sql);
+    const startTime = performance.now();
+    const result = await this.adminService.executeRaw(sql);
+    this.logger?.logUserAction("database", "executeRaw", { sqlLength: sql.length });
+    return result;
   }
 
   async renameCollection(connId: string, oldName: string, newName: string) {
-    return this.adminService.renameCollection(connId, oldName, newName);
+    const startTime = performance.now();
+    const result = await this.adminService.renameCollection(connId, oldName, newName);
+    this.logger?.logUserAction("database", "renameCollection", { connId, oldName, newName });
+    return result;
   }
 
   async renameDatabase(connId: string, oldName: string, newName: string) {
-    return this.adminService.renameDatabase(connId, oldName, newName);
+    const startTime = performance.now();
+    const result = await this.adminService.renameDatabase(connId, oldName, newName);
+    this.logger?.logUserAction("database", "renameDatabase", { connId, oldName, newName });
+    return result;
   }
 
   async deleteDatabase(connId: string, name: string) {
-    return this.adminService.deleteDatabase(connId, name);
+    const startTime = performance.now();
+    const result = await this.adminService.deleteDatabase(connId, name);
+    this.logger?.logUserAction("database", "deleteDatabase", { connId, name });
+    return result;
   }
 
   async getSystemStatus(): Promise<SystemMetrics> {
-    return await this.api.getSystemStatus();
+    const startTime = performance.now();
+    const result = await this.api.getSystemStatus();
+    this.logger?.logDataReceive(
+      "database",
+      "getSystemStatus",
+      "db_system_status",
+      {},
+      performance.now() - startTime
+    );
+    return result;
   }
 }

@@ -1,6 +1,7 @@
 import { Injectable, inject } from "@angular/core";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { LoadingService } from "@shared/services/loading.service";
+import { AppLoggerService } from "@shared/services/app-logger.service";
 import { withConnectionAndLoading } from "@shared/utils/api-wrapper.util";
 import { ApiProvider } from "@providers/api.provider";
 import {
@@ -14,8 +15,10 @@ export class SchemaService {
   private connectionState = inject(ConnectionStateService);
   private loadingService = inject(LoadingService);
   private api = inject(ApiProvider);
+  private logger = inject(AppLoggerService);
 
   async listCollections(connId?: string, dbName?: string): Promise<CollectionMeta[]> {
+    this.logger.debug("[SCHEMA]", "listCollections started", { connId, dbName });
     const id = connId || this.connectionState.activeConnectionId();
     if (!id) {
       return [];
@@ -31,10 +34,17 @@ export class SchemaService {
     offset = 0,
     limit = 10
   ): Promise<{ collections: CollectionMeta[]; hasMore: boolean; totalCount: number }> {
+    this.logger.debug("[SCHEMA]", "listCollectionsPaginated started", {
+      connId,
+      dbName,
+      offset,
+      limit,
+    });
     return this.api.listCollectionsPaginated(connId, dbName, offset, limit);
   }
 
   async createDatabase(name: string): Promise<void> {
+    this.logger.debug("[SCHEMA]", "createDatabase started", { name });
     const connId = this.connectionState.activeConnectionId();
     return withConnectionAndLoading(
       connId,
@@ -45,6 +55,7 @@ export class SchemaService {
   }
 
   async describeCollection(collection: string): Promise<CollectionSchema> {
+    this.logger.debug("[SCHEMA]", "describeCollection started", { collection });
     const connId = this.connectionState.activeConnectionId();
     return withConnectionAndLoading(
       connId,
@@ -55,6 +66,7 @@ export class SchemaService {
   }
 
   async getCollectionStats(collection: string): Promise<CollectionStats> {
+    this.logger.debug("[SCHEMA]", "getCollectionStats started", { collection });
     const connId = this.connectionState.activeConnectionId();
     return withConnectionAndLoading(
       connId,
@@ -65,6 +77,7 @@ export class SchemaService {
   }
 
   async getServerVersion(): Promise<string> {
+    this.logger.debug("[SCHEMA]", "getServerVersion started");
     const connId = this.connectionState.activeConnectionId();
     return withConnectionAndLoading(
       connId,

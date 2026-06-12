@@ -2,6 +2,7 @@ import { Injectable, inject, signal, computed, DestroyRef } from "@angular/core"
 import { HttpErrorResponse } from "@angular/common/http";
 import { ToastService } from "@services/toast.service";
 import { LoadingService } from "@shared/services/loading.service";
+import { LoggerService } from "@shared/services/logger.service";
 import {
   AppError,
   ErrorCode,
@@ -18,6 +19,7 @@ import { generateLogId } from "@shared/utils/id.utils";
 export class ErrorHandlerService {
   private toastService = inject(ToastService);
   private loadingService = inject(LoadingService);
+  private logger = inject(LoggerService);
   private destroyRef = inject(DestroyRef);
 
   private errorsSignal = signal<AppError[]>([]);
@@ -40,6 +42,7 @@ export class ErrorHandlerService {
   }
 
   handleError(error: unknown, context?: string): AppError {
+    this.logger.debug("[ERROR_HANDLER]", "handleError started", { context });
     const appError = this.convertToAppError(error);
     this.logError(appError, context);
 
@@ -47,10 +50,18 @@ export class ErrorHandlerService {
       this.toastService.error(appError.userMessage);
     }
 
+    this.logger.debug("[ERROR_HANDLER]", "handleError completed", {
+      code: appError.code,
+      retryable: appError.retryable,
+    });
     return appError;
   }
 
   handleHttpError(error: HttpErrorResponse, context?: string): AppError {
+    this.logger.debug("[ERROR_HANDLER]", "handleHttpError started", {
+      status: error.status,
+      context,
+    });
     const appError = this.convertHttpError(error);
     this.logError(appError, context);
 
@@ -60,6 +71,7 @@ export class ErrorHandlerService {
       this.toastService.error(appError.userMessage);
     }
 
+    this.logger.debug("[ERROR_HANDLER]", "handleHttpError completed", { code: appError.code });
     return appError;
   }
 
@@ -198,16 +210,23 @@ export class ErrorHandlerService {
     config: Partial<RetryConfig> = {},
     context?: string
   ): Promise<T> {
+    this.logger.debug("[ERROR_HANDLER]", "retry started", {
+      maxAttempts: config.maxAttempts,
+      context,
+    });
     const { maxAttempts, delayMs, backoffMultiplier } = { ...DEFAULT_RETRY_CONFIG, ...config };
 
     let lastError: AppError | null = null;
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
-        return await operation();
+        const result = await operation();
+        this.logger.debug("[ERROR_HANDLER]", "retry completed", { attempt });
+        return result;
       } catch (error) {
         lastError = this.handleError(error, context);
         if (!lastError.retryable || attempt === maxAttempts) {
+          this.logger.error("[ERROR_HANDLER]", "retry failed", { attempt, error: lastError });
           throw lastError;
         }
 
@@ -232,12 +251,11 @@ export class ErrorHandlerService {
     };
     this.logsSignal.update((logs) => [entry, ...logs].slice(0, 100));
 
-    if (typeof console !== "undefined") {
-      console.error(`[ErrorHandler${context ? `[${context}]` : ""}]`, {
-        code: error.code,
-        message: error.message,
-        timestamp: error.timestamp,
-      });
-    }
+    this.logger.error("[ERROR_HANDLER]", "Error logged", {
+      code: error.code,
+      message: error.message,
+      timestamp: error.timestamp,
+      context,
+    });
   }
 }

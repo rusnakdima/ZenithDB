@@ -3,6 +3,7 @@ import { PersistentStorageService } from "@shared/services/persistent-storage.se
 import { QueryTemplate, TemplateCategory, QueryTemplateFilter } from "../models";
 import { FilterOperator } from "@shared/models/connection.config";
 import { findById } from "@shared/utils/array.utils";
+import { AppLoggerService } from "@shared/services/app-logger.service";
 
 const TEMPLATES_STORAGE_KEY = "zenith_query_templates";
 const FAVORITES_STORAGE_KEY = "zenith_template_favorites";
@@ -10,6 +11,7 @@ const FAVORITES_STORAGE_KEY = "zenith_template_favorites";
 @Injectable({ providedIn: "root" })
 export class TemplateService {
   private readonly storage = inject(PersistentStorageService);
+  private readonly logger = inject(AppLoggerService);
 
   private readonly templatesSignal = signal<QueryTemplate[]>([]);
   private readonly favoritesSignal = signal<Set<string>>(new Set());
@@ -101,6 +103,10 @@ export class TemplateService {
       isBuiltIn: false,
     };
 
+    this.logger.debug("[QUERY_TEMPLATE]", "Adding custom template", {
+      id: newTemplate.id,
+      name: newTemplate.name,
+    });
     this.templatesSignal.update((templates) => [...templates, newTemplate]);
     this.saveTemplates();
 
@@ -118,6 +124,7 @@ export class TemplateService {
     const template = this.getTemplateById(id);
     if (template?.isBuiltIn) return;
 
+    this.logger.debug("[QUERY_TEMPLATE]", "Deleting template", { id });
     this.templatesSignal.update((templates) => templates.filter((t) => t.id !== id));
     this.favoritesSignal.update((favs) => {
       const newFavs = new Set(favs);
@@ -130,6 +137,8 @@ export class TemplateService {
   }
 
   toggleFavorite(id: string): void {
+    const isFav = this.favoritesSignal().has(id);
+    this.logger.debug("[QUERY_TEMPLATE]", "Toggling template favorite", { id, isFavorite: !isFav });
     this.favoritesSignal.update((favs) => {
       const newFavs = new Set(favs);
       if (newFavs.has(id)) {
@@ -154,6 +163,11 @@ export class TemplateService {
     sort?: { field: string; direction: "asc" | "desc" }[];
     limit?: number;
   } {
+    this.logger.debug("[QUERY_TEMPLATE]", "Applying template", {
+      templateId: template.id,
+      name: template.name,
+      variables,
+    });
     const filter = this.substituteVariables(template.filterTemplate, variables);
 
     return {

@@ -14,6 +14,7 @@ import { FormsModule } from "@angular/forms";
 import { QueryCacheService, CacheEntry } from "./cache.service";
 import { TIME_CONSTANTS } from "@shared/utils/constants";
 import { formatTimeAgo } from "@shared/utils/time.utils";
+import { AppLoggerService } from "@shared/services/app-logger.service";
 
 @Component({
   selector: "app-cache-settings",
@@ -25,6 +26,7 @@ import { formatTimeAgo } from "@shared/utils/time.utils";
 export class CacheSettingsComponent implements OnInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
   private cacheService = inject(QueryCacheService);
+  private logger = inject(AppLoggerService);
 
   queryKey = input<string>("");
   initialTtl = input<number>(300);
@@ -47,6 +49,9 @@ export class CacheSettingsComponent implements OnInit, OnDestroy {
   private refreshInterval: ReturnType<typeof setInterval> | null = null;
 
   ngOnInit(): void {
+    this.logger.debug("[QUERY_CACHE]", "Cache settings initialized", {
+      initialTtl: this.initialTtl(),
+    });
     this.ttl.set(this.initialTtl());
     this.refreshStatus();
     this.refreshInterval = setInterval(() => this.refreshStatus(), 1000);
@@ -88,6 +93,7 @@ export class CacheSettingsComponent implements OnInit, OnDestroy {
   clearCache(): void {
     const key = this.customKey() || this.queryKey();
     if (key) {
+      this.logger.debug("[QUERY_CACHE]", "Settings clearing cache", { key });
       this.cacheService.clearCache(key);
       this.refreshStatus();
     }

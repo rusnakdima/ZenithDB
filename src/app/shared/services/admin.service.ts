@@ -2,6 +2,7 @@ import { Injectable, inject } from "@angular/core";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { DataProviderService } from "@shared/services/data-provider.service";
 import { LoadingService } from "@shared/services/loading.service";
+import { AppLoggerService } from "@shared/services/app-logger.service";
 import { withConnectionAndLoading } from "@shared/utils/api-wrapper.util";
 import { ApiProvider } from "@providers/api.provider";
 import { RawResult } from "@shared/models/connection.config";
@@ -12,8 +13,10 @@ export class AdminService {
   private dataProvider = inject(DataProviderService);
   private loadingService = inject(LoadingService);
   private api = inject(ApiProvider);
+  private logger = inject(AppLoggerService);
 
   async createCollection(name: string): Promise<void> {
+    this.logger.debug("[ADMIN]", "createCollection started", { name });
     const connId = this.connectionState.activeConnectionId();
     return withConnectionAndLoading(
       connId,
@@ -27,6 +30,7 @@ export class AdminService {
   }
 
   async dropCollection(name: string): Promise<void> {
+    this.logger.debug("[ADMIN]", "dropCollection started", { name });
     const connId = this.connectionState.activeConnectionId();
     return withConnectionAndLoading(
       connId,
@@ -37,6 +41,7 @@ export class AdminService {
   }
 
   async renameCollection(connId: string, oldName: string, newName: string): Promise<void> {
+    this.logger.debug("[ADMIN]", "renameCollection started", { connId, oldName, newName });
     return withConnectionAndLoading(
       connId,
       this.loadingService,
@@ -46,6 +51,7 @@ export class AdminService {
   }
 
   async renameDatabase(connId: string, oldName: string, newName: string): Promise<void> {
+    this.logger.debug("[ADMIN]", "renameDatabase started", { connId, oldName, newName });
     return withConnectionAndLoading(
       connId,
       this.loadingService,
@@ -55,6 +61,7 @@ export class AdminService {
   }
 
   async deleteDatabase(connId: string, name: string): Promise<void> {
+    this.logger.debug("[ADMIN]", "deleteDatabase started", { connId, name });
     return withConnectionAndLoading(
       connId,
       this.loadingService,
@@ -64,6 +71,7 @@ export class AdminService {
   }
 
   async executeRaw(sql: string): Promise<RawResult> {
+    this.logger.debug("[ADMIN]", "executeRaw started", { sqlLength: sql.length });
     const connId = this.connectionState.activeConnectionId();
     return withConnectionAndLoading(connId, this.loadingService, "Executing SQL...", (connId) =>
       this.api.executeRaw(connId, sql)

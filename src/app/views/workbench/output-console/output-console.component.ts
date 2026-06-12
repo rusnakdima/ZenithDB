@@ -1,7 +1,17 @@
-import { Component, Input, Output, EventEmitter, signal, computed, OnDestroy } from "@angular/core";
+import {
+  Component,
+  Input,
+  Output,
+  EventEmitter,
+  signal,
+  computed,
+  OnDestroy,
+  inject,
+} from "@angular/core";
 import { JsonPipe, DatePipe } from "@angular/common";
 import { RawResult } from "@shared/models/connection.config";
 import { trackByIndex } from "@shared/utils/collection.utils";
+import { AppLoggerService } from "@shared/services/app-logger.service";
 
 type LogLevel = "all" | "info" | "warn" | "error";
 type TabType = "results" | "messages" | "plan";
@@ -19,6 +29,8 @@ interface LogEntry {
   templateUrl: "./output-console.component.html",
 })
 export class OutputConsoleComponent implements OnDestroy {
+  private logger = inject(AppLoggerService);
+
   @Input() results: RawResult | null = null;
   @Input() loading = false;
   @Input() error = "";
@@ -53,18 +65,22 @@ export class OutputConsoleComponent implements OnDestroy {
 
   setActiveTab(tab: TabType) {
     this.activeTab.set(tab);
+    this.logger.debug("[OUTPUT_CONSOLE]", "Active tab changed", { tab });
   }
 
   setFilterLevel(level: LogLevel) {
     this.filterLevel.set(level);
+    this.logger.debug("[OUTPUT_CONSOLE]", "Filter level changed", { level });
   }
 
   toggleAutoScroll() {
     this.autoScroll.set(!this.autoScroll());
+    this.logger.debug("[OUTPUT_CONSOLE]", "Auto-scroll toggled", { autoScroll: this.autoScroll() });
   }
 
   clearMessages() {
     this.logs.set([]);
+    this.logger.debug("[OUTPUT_CONSOLE]", "Messages cleared");
   }
 
   addLog(level: "info" | "warn" | "error", message: string) {

@@ -8,10 +8,12 @@ import {
   SimpleChanges,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
+  inject,
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
 import { ProviderType } from "@shared/models/provider.model";
+import { AppLoggerService } from "@shared/services/app-logger.service";
 
 export interface ConnectionFormData {
   name: string;
@@ -32,6 +34,8 @@ export interface ConnectionFormData {
   templateUrl: "./connection-config-form.component.html",
 })
 export class ConnectionConfigFormComponent implements OnInit, OnChanges {
+  private logger = inject(AppLoggerService);
+
   provider = input.required<ProviderType>();
   initialData = input<ConnectionFormData>({
     name: "",
@@ -66,6 +70,7 @@ export class ConnectionConfigFormComponent implements OnInit, OnChanges {
     if (!this.data.host && !this.data.path) {
       this.setDefaultsForProvider();
     }
+    this.logger.debug("[CONNECTION_CONFIG_FORM]", "Initialized", { provider: this.provider() });
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -82,7 +87,13 @@ export class ConnectionConfigFormComponent implements OnInit, OnChanges {
         database: newData.database,
         useSsl: newData.useSsl,
       };
+      this.logger.debug("[CONNECTION_CONFIG_FORM]", "Initial data changed", {
+        provider: this.provider(),
+      });
     } else if (changes["provider"] && !this.isFirstInit) {
+      this.logger.debug("[CONNECTION_CONFIG_FORM]", "Provider changed", {
+        provider: this.provider(),
+      });
       this.resetDataForProvider();
     }
   }

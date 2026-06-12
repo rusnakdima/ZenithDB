@@ -27,6 +27,8 @@ import { ConnectionStatusBadgeComponent } from "@shared/components/connection-st
 import { withErrorHandling } from "@shared/utils/error-handler.utils";
 import { findById } from "@shared/utils/array.utils";
 import { AddDatabasePathComponent } from "../add-database-path/add-database-path.component";
+import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
+import { AppLoggerService } from "@shared/services/app-logger.service";
 import { Subscription } from "rxjs";
 import { distinctUntilChanged, debounceTime } from "rxjs/operators";
 
@@ -50,9 +52,13 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
   private errorHandler = inject(ErrorHandlerService);
   private toast = inject(ToastService);
   private cdr = inject(ChangeDetectorRef);
+  private dataflowLogger = inject(DataflowLoggerService);
+  private logger = inject(AppLoggerService);
   providerUtils = inject(ProviderUtils);
   route = inject(ActivatedRoute);
   router = inject(Router);
+
+  private readonly page = "ConnectionDetail";
 
   connectionId = signal<string | null>(null);
   connectionName = signal<string | null>(null);
@@ -79,6 +85,7 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
   private currentLoadId: string | null = null;
 
   async ngOnInit() {
+    this.logger.debug("[CONNECTION_DETAIL]", "ngOnInit");
     this.routeSub = this.route.paramMap
       .pipe(
         debounceTime(300),
@@ -90,6 +97,7 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
   }
 
   private async handleRouteChange(id: string | null): Promise<void> {
+    this.logger.debug("[CONNECTION_DETAIL]", "handleRouteChange", { id });
     if (!id || id === "new") {
       this.connectionId.set(this.connState.activeConnectionId());
       this.connectionName.set(this.connState.activeConnectionName());
@@ -204,6 +212,7 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
   }
 
   async testConnection() {
+    this.logger.log("[CONNECTION_DETAIL]", "User action: testConnection");
     const fullConfig = this.fullConfig();
     if (!fullConfig) return;
 
@@ -229,10 +238,12 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
   }
 
   async refresh() {
+    this.logger.log("[CONNECTION_DETAIL]", "User action: refresh");
     await this.loadConnectionDetails();
   }
 
   async deleteConnection() {
+    this.logger.log("[CONNECTION_DETAIL]", "User action: deleteConnection");
     if (!this.connectionId()) return;
     if (await this.confirm.confirmDelete(this.connectionName()!)) {
       await this.store.deleteConnection(this.connectionId()!);
@@ -241,6 +252,7 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
   }
 
   editConnection() {
+    this.logger.log("[CONNECTION_DETAIL]", "User action: editConnection");
     const connId = this.connectionId();
     if (connId) {
       this.router.navigate(["/connections", connId, "edit"]);
@@ -248,6 +260,7 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
   }
 
   disconnect() {
+    this.logger.log("[CONNECTION_DETAIL]", "User action: disconnect");
     this.connState.activeConnectionId.set(null);
     this.connState.activeConnectionName.set(null);
     this.connState.activeProvider.set(null);
@@ -259,6 +272,7 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
   }
 
   openDatabase(dbName: string) {
+    this.logger.log("[CONNECTION_DETAIL]", "User action: openDatabase", { dbName });
     const connId = this.connectionId();
     if (connId) {
       this.router.navigate(["/connections", connId, dbName]);
@@ -276,6 +290,7 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
   }
 
   async onAddDbModalAdded(data: { name: string; path: string }) {
+    this.logger.log("[CONNECTION_DETAIL]", "User action: addDatabase", { name: data.name });
     const connId = this.connectionId();
     if (!connId) return;
 
@@ -310,6 +325,7 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
       return;
     }
 
+    this.logger.log("[CONNECTION_DETAIL]", "User action: renameDatabase", { oldName, newName });
     const connId = this.connectionId();
     if (!connId) return;
 
@@ -334,6 +350,7 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
   }
 
   async deleteDatabase(dbName: string) {
+    this.logger.log("[CONNECTION_DETAIL]", "User action: deleteDatabase", { dbName });
     if (!(await this.confirm.confirmDelete(dbName))) return;
 
     const connId = this.connectionId();

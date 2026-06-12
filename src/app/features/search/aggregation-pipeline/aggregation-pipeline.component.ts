@@ -19,6 +19,7 @@ import {
 } from "./pipeline-builder.service";
 import { PipelineStageComponent } from "./pipeline-stage.component";
 import { PipelineJsonEditorComponent } from "./pipeline-json-editor.component";
+import { AppLoggerService } from "@shared/services/app-logger.service";
 
 @Component({
   selector: "app-aggregation-pipeline",
@@ -28,6 +29,7 @@ import { PipelineJsonEditorComponent } from "./pipeline-json-editor.component";
 })
 export class AggregationPipelineComponent implements OnInit {
   readonly pipelineService = inject(PipelineBuilderService);
+  private logger = inject(AppLoggerService);
 
   @Input() collectionName = "";
   @Output() cancel = new EventEmitter<void>();
@@ -57,14 +59,20 @@ export class AggregationPipelineComponent implements OnInit {
     });
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.logger.debug("[SEARCH_PIPELINE]", "Aggregation pipeline component initialized", {
+      collectionName: this.collectionName,
+    });
+  }
 
   addStage(type: StageType): void {
+    this.logger.debug("[SEARCH_PIPELINE]", "Adding stage", { type });
     this.pipelineService.addStage(type);
     this.updateJsonFromStages();
   }
 
   removeStage(id: string): void {
+    this.logger.debug("[SEARCH_PIPELINE]", "Removing stage", { id });
     this.pipelineService.removeStage(id);
     this.updateJsonFromStages();
   }
@@ -85,6 +93,7 @@ export class AggregationPipelineComponent implements OnInit {
   }
 
   clearAll(): void {
+    this.logger.info("[SEARCH_PIPELINE]", "Clearing all pipeline stages");
     this.pipelineService.clearAll();
     this.updateJsonFromStages();
   }
@@ -107,11 +116,13 @@ export class AggregationPipelineComponent implements OnInit {
   }
 
   onCancel(): void {
+    this.logger.debug("[SEARCH_PIPELINE]", "Pipeline execution cancelled");
     this.cancel.emit();
   }
 
   onExecute(): void {
     const pipeline = this.pipelineService.buildPipeline();
+    this.logger.info("[SEARCH_PIPELINE]", "Executing aggregation pipeline", { pipeline });
     this.execute.emit(pipeline);
   }
 

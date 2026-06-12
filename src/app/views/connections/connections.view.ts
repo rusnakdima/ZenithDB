@@ -15,6 +15,8 @@ import { ConnectionSummary } from "@shared/models/connection.config";
 import { ConfirmService } from "@shared/services/confirm.service";
 import { withErrorHandling } from "@shared/utils/error-handler.utils";
 import { ConnectionFormService } from "@shared/services/connection-form.service";
+import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
+import { AppLoggerService } from "@shared/services/app-logger.service";
 
 @Component({
   selector: "app-connections",
@@ -31,14 +33,18 @@ export class ConnectionsComponent implements OnInit {
   private confirm = inject(ConfirmService);
   private connectionFormService = inject(ConnectionFormService);
   private cdr = inject(ChangeDetectorRef);
+  private dataflowLogger = inject(DataflowLoggerService);
+  private logger = inject(AppLoggerService);
 
   connections = this.store.connections;
+  private readonly page = "Connections";
 
   get connectionsEmpty(): boolean {
     return this.connections().length === 0 && !this.loading();
   }
 
   async ngOnInit() {
+    this.logger.debug("[CONNECTIONS]", "Loading connections");
     await withErrorHandling(() => this.store.refreshConnections(), {
       loading: this.loading,
       toast: true,
@@ -47,11 +53,19 @@ export class ConnectionsComponent implements OnInit {
   }
 
   onConnect(connection: ConnectionSummary): void {
+    this.logger.log("[CONNECTIONS]", "User action: connect", {
+      connectionId: connection.id,
+      name: connection.name,
+    });
     this.connState.setActiveConnection(connection);
     this.router.navigate(["/connections", connection.id]);
   }
 
   async onDelete(connection: ConnectionSummary): Promise<void> {
+    this.logger.log("[CONNECTIONS]", "User action: delete", {
+      connectionId: connection.id,
+      name: connection.name,
+    });
     if (await this.confirm.confirmDelete(connection.name)) {
       await withErrorHandling(() => this.store.deleteConnection(connection.id), {
         toast: true,
@@ -61,18 +75,22 @@ export class ConnectionsComponent implements OnInit {
   }
 
   onEdit(connection: ConnectionSummary): void {
+    this.logger.log("[CONNECTIONS]", "User action: edit", { connectionId: connection.id });
     this.connectionFormService.openForEdit(connection.id);
   }
 
   onDuplicate(connection: ConnectionSummary): void {
+    this.logger.log("[CONNECTIONS]", "User action: duplicate", { connectionId: connection.id });
     this.connectionFormService.openForDuplicate(connection.id);
   }
 
   openNewConnection(): void {
+    this.logger.log("[CONNECTIONS]", "User action: openNewConnection");
     this.connectionFormService.openNew();
   }
 
   async onRefresh(): Promise<void> {
+    this.logger.log("[CONNECTIONS]", "User action: refresh");
     await withErrorHandling(() => this.store.refreshConnections(), {
       loading: this.loading,
       toast: true,

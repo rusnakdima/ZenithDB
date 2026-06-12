@@ -1,8 +1,10 @@
-import { Injectable, signal, Signal } from "@angular/core";
+import { Injectable, signal, Signal, inject } from "@angular/core";
+import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
 
 @Injectable({ providedIn: "root" })
 export class CacheService {
   protected inFlightRequests = new Map<string, Promise<unknown>>();
+  protected readonly logger = inject(DataflowLoggerService, { optional: true });
 
   protected getOrFetch<T>(
     cacheKeyOrMap: string | Map<string, T> | Signal<Map<string, T>>,
@@ -15,6 +17,7 @@ export class CacheService {
       const fetchFn = keyOrFetchFn as () => Promise<T>;
       const existing = this.inFlightRequests.get(cacheKey);
       if (existing) {
+        this.logger?.logApiCall("cache", "getOrFetch (in-flight)", "cache", { cacheKey });
         return existing as Promise<T>;
       }
 
@@ -23,6 +26,10 @@ export class CacheService {
       });
 
       this.inFlightRequests.set(cacheKey, promise as Promise<unknown>);
+      this.logger?.logApiCall("cache", "getOrFetch (new)", "cache", {
+        cacheKey,
+        cacheSize: this.inFlightRequests.size,
+      });
       return promise;
     }
 
@@ -33,11 +40,13 @@ export class CacheService {
     const map = cache instanceof Map ? cache : cache();
     const cached = map.get(key);
     if (cached !== undefined) {
+      this.logger?.logDataReceive("cache", "getOrFetch (hit)", "cache", { key, cached: true });
       return Promise.resolve(cached);
     }
 
     const existing = this.inFlightRequests.get(key);
     if (existing) {
+      this.logger?.logApiCall("cache", "getOrFetch (in-flight)", "cache", { key });
       return existing as Promise<T>;
     }
 
@@ -46,6 +55,10 @@ export class CacheService {
     });
 
     this.inFlightRequests.set(key, promise as Promise<unknown>);
+    this.logger?.logApiCall("cache", "getOrFetch (new)", "cache", {
+      key,
+      inFlightSize: this.inFlightRequests.size,
+    });
     return promise;
   }
 
@@ -64,6 +77,10 @@ export class CacheService {
     for (const [evictKey] of toEvict) {
       map.delete(evictKey);
     }
+    this.logger?.logUserAction("cache", "evictLRU", {
+      evictedCount: toEvict.length,
+      remainingSize: map.size,
+    });
   }
 
   protected isStale(timestamp: number, ttlMs: number): boolean {

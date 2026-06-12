@@ -6,6 +6,7 @@ import { ConnectionStateService } from "@shared/services/connection-state.servic
 import { DataStoreService } from "@services/core/data-store.service";
 import { ConnectionSummary } from "@shared/models/connection.config";
 import { ToastService } from "@services/toast.service";
+import { AppLoggerService } from "@shared/services/app-logger.service";
 
 interface ConnectionItem {
   connection: ConnectionSummary;
@@ -24,6 +25,7 @@ export class ConnectionModalComponent {
   private connState = inject(ConnectionStateService);
   private dataStore = inject(DataStoreService);
   private toast = inject(ToastService);
+  private logger = inject(AppLoggerService);
 
   isOpen = signal(false);
   searchQuery = signal("");
@@ -47,6 +49,7 @@ export class ConnectionModalComponent {
   });
 
   open() {
+    this.logger.debug("[CONNECTION_MODAL]", "Opening connection modal");
     this.isOpen.set(true);
     this.searchQuery.set("");
     this.selectedIndex.set(0);
@@ -92,6 +95,10 @@ export class ConnectionModalComponent {
   }
 
   selectItem(item: ConnectionItem) {
+    this.logger.info("[CONNECTION_MODAL]", "Selecting connection", {
+      id: item.connection.id,
+      name: item.connection.name,
+    });
     this.connState.setActiveConnection(item.connection);
     this.router.navigate(["/connections", item.connection.id]);
     this.close();
@@ -99,6 +106,7 @@ export class ConnectionModalComponent {
 
   disconnect(item: ConnectionItem, event: MouseEvent) {
     event.stopPropagation();
+    this.logger.info("[CONNECTION_MODAL]", "Disconnecting", { name: item.connection.name });
     this.connState.activeConnectionId.set(null);
     this.connState.activeConnectionName.set(null);
     this.connState.activeProvider.set(null);
@@ -108,6 +116,9 @@ export class ConnectionModalComponent {
 
   viewDetails(item: ConnectionItem, event: MouseEvent) {
     event.stopPropagation();
+    this.logger.debug("[CONNECTION_MODAL]", "Viewing connection details", {
+      id: item.connection.id,
+    });
     this.router.navigate(["/connections", item.connection.id]);
     this.close();
   }

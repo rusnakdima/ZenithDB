@@ -5,6 +5,7 @@ import { SchemaCompletionService } from "@features/query/services";
 import { FieldInfo } from "@features/query/models";
 import { RowData } from "@shared/models/connection.config";
 import { getRecordId } from "@shared/utils/record.utils";
+import { AppLoggerService } from "@shared/services/app-logger.service";
 
 export interface BulkUpdateRequest {
   collectionName: string;
@@ -30,6 +31,7 @@ export class BulkOperationsService {
   private readonly dataStore = inject(DataStoreService);
   private readonly toast = inject(ToastService);
   private readonly schemaCompletion = inject(SchemaCompletionService);
+  private readonly logger = inject(AppLoggerService);
 
   private readonly operationInProgress = signal(false);
 
@@ -46,6 +48,10 @@ export class BulkOperationsService {
     const result: BulkOperationResult = { success: 0, failed: 0, errors: [] };
 
     try {
+      this.logger.info(
+        "[DATA_BULK]",
+        `Bulk update started: ${request.documentIds.length} records, field=${request.field}`
+      );
       for (const id of request.documentIds) {
         try {
           const document = await this.fetchDocument(request.collectionName, id);
@@ -82,6 +88,10 @@ export class BulkOperationsService {
     const result: BulkOperationResult = { success: 0, failed: 0, errors: [] };
 
     try {
+      this.logger.info(
+        "[DATA_BULK]",
+        `Bulk delete started: ${request.documentIds.length} records, softDelete=${request.softDelete}`
+      );
       for (const id of request.documentIds) {
         try {
           await this.dataStore.deleteRow(request.collectionName, id);
@@ -114,6 +124,7 @@ export class BulkOperationsService {
     const result: BulkOperationResult = { success: 0, failed: 0, errors: [] };
 
     try {
+      this.logger.info("[DATA_BULK]", `Bulk update fields started: ${updates.length} updates`);
       for (const update of updates) {
         try {
           const document = await this.fetchDocument(collectionName, update.id);

@@ -1,4 +1,5 @@
-import { Injectable, signal, computed } from "@angular/core";
+import { Injectable, signal, computed, inject } from "@angular/core";
+import { AppLoggerService } from "@shared/services/app-logger.service";
 
 export interface CacheEntry<T = unknown> {
   key: string;
@@ -24,6 +25,7 @@ export interface CacheOptions {
 
 @Injectable({ providedIn: "root" })
 export class QueryCacheService {
+  private logger = inject(AppLoggerService);
   private cache = new Map<string, CacheEntry>();
   private totalHits = 0;
   private totalMisses = 0;
@@ -52,6 +54,7 @@ export class QueryCacheService {
     if (!entry) {
       this.totalMisses++;
       this.updateStats();
+      this.logger.debug("[QUERY_CACHE]", "Cache miss", { key });
       return null;
     }
 
@@ -59,6 +62,7 @@ export class QueryCacheService {
       this.cache.delete(key);
       this.totalMisses++;
       this.updateStats();
+      this.logger.debug("[QUERY_CACHE]", "Cache expired", { key });
       return null;
     }
 
@@ -66,6 +70,7 @@ export class QueryCacheService {
     entry.lastAccessed = Date.now();
     this.totalHits++;
     this.updateStats();
+    this.logger.debug("[QUERY_CACHE]", "Cache hit", { key, hitCount: entry.hitCount });
     return entry.value as T;
   }
 
@@ -82,12 +87,15 @@ export class QueryCacheService {
 
     this.cache.set(key, entry as CacheEntry);
     this.updateStats();
+    this.logger.debug("[QUERY_CACHE]", "Cached result", { key, ttlSeconds });
   }
 
   clearCache(key?: string): void {
     if (key) {
+      this.logger.debug("[QUERY_CACHE]", "Clearing cache entry", { key });
       this.cache.delete(key);
     } else {
+      this.logger.debug("[QUERY_CACHE]", "Clearing all cache");
       this.cache.clear();
     }
     this.updateStats();

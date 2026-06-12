@@ -2,6 +2,7 @@ import { Injectable, inject } from "@angular/core";
 import { TabService } from "@shared/services/tab.service";
 import { ToastService } from "@services/toast.service";
 import { DataStoreService } from "@services/core/data-store.service";
+import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
 import { QueryResult, RawResult } from "@shared/models/connection.config";
 
 export interface QueryExecutionResult {
@@ -16,8 +17,11 @@ export class QueryExecutionService {
   private readonly tabService = inject(TabService);
   private readonly toast = inject(ToastService);
   private readonly store = inject(DataStoreService);
+  private readonly dataflowLogger = inject(DataflowLoggerService);
+  private readonly page = "QueryExecutionService";
 
   async executeWithTiming(query: string): Promise<QueryExecutionResult> {
+    this.dataflowLogger.logApiCall(this.page, "executeWithTiming", "execute_raw", { query });
     this.tabService.updateActiveTab({ loading: true, error: "" });
 
     const startTime = performance.now();
@@ -34,6 +38,13 @@ export class QueryExecutionService {
       });
 
       this.toast.success(`Query executed (${executionTime.toFixed(0)}ms)`);
+      this.dataflowLogger.logDataReceive(
+        this.page,
+        "executeWithTiming",
+        "execute_raw",
+        { affectedRows: rawResults?.affected_rows },
+        executionTime
+      );
 
       return { results: rawResults, executionTime, success: true };
     } catch (e: unknown) {
@@ -47,6 +58,13 @@ export class QueryExecutionService {
       });
 
       this.toast.error(errorMessage);
+      this.dataflowLogger.logError(
+        this.page,
+        "executeWithTiming",
+        "execute_raw",
+        errorMessage,
+        executionTime
+      );
 
       return { results: null, executionTime, success: false, error: errorMessage };
     }

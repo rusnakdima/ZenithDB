@@ -1,6 +1,7 @@
 import { Injectable, inject, signal } from "@angular/core";
 import { CacheService } from "@shared/services/cache.service";
 import { TauriBridgeService } from "@providers/tauri-bridge.service";
+import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
 import { CollectionMeta } from "@shared/models/connection.config";
 
 export interface CollectionListResult {
@@ -15,6 +16,7 @@ export class CollectionsApiService extends CacheService {
   private refreshCallbacks = new Map<string, Set<() => void>>();
   private inFlightCollections = new Map<string, Promise<CollectionListResult>>();
   private tauriBridge = inject(TauriBridgeService);
+  private readonly page = "CollectionsApiService";
 
   getCollections(connectionId: string): CollectionMeta[] {
     return this.collectionsSignal().get(connectionId) ?? [];
@@ -49,10 +51,35 @@ export class CollectionsApiService extends CacheService {
     connectionId: string,
     dbName?: string
   ): Promise<CollectionListResult> {
-    this.invalidateCollections(connectionId);
-    const result = await this.listCollections(connectionId, dbName, 0, 10);
-    this.notifyRefresh(connectionId);
-    return result;
+    this.logger?.logApiCall(this.page, "listCollectionsWithRefresh", "collection_list", {
+      connectionId,
+      dbName,
+    });
+    const startTime = performance.now();
+    try {
+      this.invalidateCollections(connectionId);
+      const result = await this.listCollections(connectionId, dbName, 0, 10);
+      this.notifyRefresh(connectionId);
+      const duration = performance.now() - startTime;
+      this.logger?.logDataReceive(
+        this.page,
+        "listCollectionsWithRefresh",
+        "collection_list",
+        { count: result.collections.length },
+        duration
+      );
+      return result;
+    } catch (err) {
+      const duration = performance.now() - startTime;
+      this.logger?.logError(
+        this.page,
+        "listCollectionsWithRefresh",
+        "collection_list",
+        String(err),
+        duration
+      );
+      throw err;
+    }
   }
 
   onCollectionsRefreshed(connectionId: string, callback: () => void): () => void {
@@ -75,17 +102,24 @@ export class CollectionsApiService extends CacheService {
 
   private async fetchCollections(
     connectionId: string,
-    dbName: string | undefined,
+    db_name: string | undefined,
     offset: number,
     limit: number
   ): Promise<CollectionListResult> {
+    const startTime = performance.now();
+    this.logger?.logApiCall(this.page, "fetchCollections", "collection_fetch", {
+      connectionId,
+      db_name,
+      offset,
+      limit,
+    });
     const result = await this.tauriBridge.invoke<{
       collections: CollectionMeta[];
       has_more: boolean;
       total_count: number;
     }>("collection_list", {
-      conn_id: connectionId,
-      db_name: dbName,
+      connId: connectionId,
+      db_name,
       offset,
       limit,
     });
@@ -104,6 +138,14 @@ export class CollectionsApiService extends CacheService {
         return newMap;
       });
     }
+
+    this.logger?.logDataReceive(
+      this.page,
+      "fetchCollections",
+      "collection_fetch",
+      { connectionId, count: result.collections.length },
+      performance.now() - startTime
+    );
 
     return {
       collections: result.collections,

@@ -1,9 +1,10 @@
-import { Component, Input, Output, EventEmitter } from "@angular/core";
+import { Component, Input, Output, EventEmitter, inject } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { QueryGroupComponent } from "../../../query/visual-query-builder/query-group/query-group.component";
 import { MatchConfig } from "../pipeline-builder.service";
 import { ConditionGroup } from "../../../query/models";
+import { AppLoggerService } from "@shared/services/app-logger.service";
 
 @Component({
   selector: "app-match-config",
@@ -12,11 +13,14 @@ import { ConditionGroup } from "../../../query/models";
   templateUrl: "./match-config.component.html",
 })
 export class MatchConfigComponent {
+  private logger = inject(AppLoggerService);
+
   @Input() config!: MatchConfig;
   @Input() collectionName = "";
   @Output() configChange = new EventEmitter<MatchConfig>();
 
   onGroupChange(group: ConditionGroup): void {
+    this.logger.debug("[SEARCH_PIPELINE]", "Match config changed", { group });
     this.configChange.emit({
       ...this.config,
       conditionGroup: group,

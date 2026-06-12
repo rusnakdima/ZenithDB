@@ -3,6 +3,7 @@ import { ConnectionStateService } from "@shared/services/connection-state.servic
 import { ApiProvider } from "@providers/api.provider";
 import { LoadingService } from "@shared/services/loading.service";
 import { withConnectionAndLoading } from "@shared/utils/api-wrapper.util";
+import { AppLoggerService } from "@shared/services/app-logger.service";
 
 export type AuditOperation = "Insert" | "Update" | "Delete" | "SoftDelete" | "Restore";
 
@@ -30,6 +31,7 @@ export class AuditService {
   private connectionState = inject(ConnectionStateService);
   private api = inject(ApiProvider);
   private loadingService = inject(LoadingService);
+  private logger = inject(AppLoggerService);
 
   private auditLogSignal = signal<AuditEntry[]>([]);
   readonly auditLog = this.auditLogSignal.asReadonly();
@@ -40,6 +42,7 @@ export class AuditService {
       throw new Error("No active connection");
     }
 
+    this.logger.debug("[AUDIT]", "Fetching audit log", { filter });
     return withConnectionAndLoading(
       connId,
       this.loadingService,
@@ -62,6 +65,7 @@ export class AuditService {
     format: "csv" | "json",
     filter?: AuditFilter
   ): Promise<{ filename: string; content: string }> {
+    this.logger.info("[AUDIT]", "Exporting audit log", { format });
     const entries = filter ? await this.fetchAuditLog(filter) : this.auditLog();
 
     if (format === "json") {

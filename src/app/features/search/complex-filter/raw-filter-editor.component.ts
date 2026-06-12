@@ -1,6 +1,7 @@
-import { Component, Input, Output, EventEmitter, signal, effect } from "@angular/core";
+import { Component, Input, Output, EventEmitter, signal, effect, inject } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
+import { AppLoggerService } from "@shared/services/app-logger.service";
 
 @Component({
   selector: "app-raw-filter-editor",
@@ -9,6 +10,8 @@ import { FormsModule } from "@angular/forms";
   templateUrl: "./raw-filter-editor.component.html",
 })
 export class RawFilterEditorComponent {
+  private logger = inject(AppLoggerService);
+
   @Input() initialJson = "";
   @Output() jsonChange = new EventEmitter<string>();
   @Output() jsonApply = new EventEmitter<string>();
@@ -52,11 +55,13 @@ export class RawFilterEditorComponent {
 
   onApply(): void {
     if (this.isValid()) {
+      this.logger.debug("[SEARCH_FILTER]", "Raw filter JSON applied");
       this.jsonApply.emit(this.jsonInput());
     }
   }
 
   onToggleToVisual(): void {
+    this.logger.debug("[SEARCH_FILTER]", "Toggled to visual filter editor");
     this.jsonChange.emit(this.jsonInput());
   }
 }

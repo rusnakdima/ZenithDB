@@ -2,12 +2,14 @@ import { Injectable, inject } from "@angular/core";
 import { Router } from "@angular/router";
 import { Command } from "./command.model";
 import { ThemeService } from "@shared/services/theme.service";
+import { AppLoggerService } from "@shared/services/app-logger.service";
 import { findById } from "@shared/utils/array.utils";
 
 @Injectable({ providedIn: "root" })
 export class CommandPaletteService {
   private router = inject(Router);
   private themeService = inject(ThemeService);
+  private logger = inject(AppLoggerService);
 
   private readonly recentCommandsKey = "command_palette_recent";
   private readonly maxRecent = 5;
@@ -154,7 +156,8 @@ export class CommandPaletteService {
           .filter((c): c is Command => c !== undefined);
       }
     } catch (e) {
-      console.warn("Failed to load recent commands:", e);
+      const error = e instanceof Error ? e.message : String(e);
+      this.logger.warn("[COMMAND_PALETTE]", "Failed to load recent commands", { error });
     }
     return [];
   }

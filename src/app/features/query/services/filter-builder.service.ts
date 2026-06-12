@@ -8,9 +8,11 @@ import {
   ProjectionConfig,
   FieldType,
 } from "../models";
+import { AppLoggerService } from "@shared/services/app-logger.service";
 
 @Injectable({ providedIn: "root" })
 export class FilterBuilderService {
+  private readonly logger = inject(AppLoggerService);
   buildFilter(groups: ConditionGroup[]): FilterExpression | null {
     if (!groups || groups.length === 0) return null;
 
@@ -210,6 +212,10 @@ export class FilterBuilderService {
     const warnings: string[] = [];
 
     this.validateExpression(expr, errors, warnings);
+    this.logger.debug("[QUERY]", "Filter validation", {
+      isValid: errors.length === 0,
+      errorCount: errors.length,
+    });
 
     return {
       isValid: errors.length === 0,

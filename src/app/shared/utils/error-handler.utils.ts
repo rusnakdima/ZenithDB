@@ -1,6 +1,7 @@
 import { ErrorHandlerService } from "@shared/services/error-handler.service";
 import { ToastService } from "@services/toast.service";
 import { AppError, ErrorCode } from "@shared/models/error.model";
+import { AppLoggerService } from "@shared/services/app-logger.service";
 
 interface Result<T> {
   success: boolean;
@@ -52,16 +53,18 @@ export function withErrorHandling<T>(
   services?: {
     errorHandler?: ErrorHandlerService;
     toastService?: ToastService;
+    logger?: AppLoggerService;
   }
 ): Promise<Result<T>> {
   const errorHandler = services?.errorHandler;
   const toastService = services?.toastService;
+  const logger = services?.logger;
 
   const setLoading = resolveLoadingSetter(options.loading);
-  console.log("[ErrorHandler] setLoading function:", setLoading ? "found" : "not found");
+  logger?.debug("[ERROR_HANDLER_UTILS]", "setLoading function", { found: !!setLoading });
 
   if (setLoading) {
-    console.log("[ErrorHandler] Setting loading to true");
+    logger?.debug("[ERROR_HANDLER_UTILS]", "Setting loading to true");
     setLoading(true);
   }
 
@@ -105,7 +108,7 @@ export function withErrorHandling<T>(
     })
     .finally(() => {
       if (setLoading) {
-        console.log("[ErrorHandler] Setting loading to false");
+        logger?.debug("[ERROR_HANDLER_UTILS]", "Setting loading to false");
         setLoading(false);
       }
     });

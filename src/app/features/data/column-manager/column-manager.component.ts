@@ -24,6 +24,7 @@ import { isNullOrUndefined } from "@shared/utils/collection.utils";
 import { SortableHeaderComponent } from "@shared/components/sortable-header/sortable-header.component";
 import { DataTypeBadgeComponent } from "@shared/components/data-type-badge/data-type-badge.component";
 import { CheckboxComponent } from "@shared/components/checkbox/checkbox.component";
+import { AppLoggerService } from "@shared/services/app-logger.service";
 
 @Component({
   selector: "app-column-manager",
@@ -43,6 +44,7 @@ import { CheckboxComponent } from "@shared/components/checkbox/checkbox.componen
 })
 export class ColumnManagerComponent {
   private cdr = inject(ChangeDetectorRef);
+  private logger = inject(AppLoggerService);
   @Input() columns: ColumnInfo[] = [];
   @Input() visibleColumnsList: string[] = [];
   @Input() columnOrder: string[] = [];
@@ -95,6 +97,7 @@ export class ColumnManagerComponent {
   }
 
   onToggleColumnVisibility(col: string) {
+    this.logger.debug("[DATA]", `Column visibility toggled: ${col}`);
     this.toggleColumnVisibility.emit(col);
   }
 

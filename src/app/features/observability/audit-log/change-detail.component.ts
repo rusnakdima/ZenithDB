@@ -9,6 +9,7 @@ import {
 } from "@angular/core";
 import { MatIconModule } from "@angular/material/icon";
 import { AuditService } from "./audit.service";
+import { AppLoggerService } from "@shared/services/app-logger.service";
 
 @Component({
   selector: "app-change-detail",
@@ -19,17 +20,27 @@ import { AuditService } from "./audit.service";
 })
 export class ChangeDetailComponent {
   private auditService = inject(AuditService);
+  private logger = inject(AppLoggerService);
 
   @Input() before: Record<string, unknown> | undefined;
   @Input() after: Record<string, unknown> | undefined;
   @Output() close = new EventEmitter<void>();
+  @Output() exportChange = new EventEmitter<void>();
 
   diffs = computed(() => {
-    return this.auditService.computeDiff(this.before, this.after);
+    const result = this.auditService.computeDiff(this.before, this.after);
+    this.logger.debug("[ChangeDetail]", "Change diff computed", { diffCount: result.length });
+    return result;
   });
 
   onClose(): void {
+    this.logger.debug("[ChangeDetail]", "Change detail closed");
     this.close.emit();
+  }
+
+  onExport(): void {
+    this.logger.info("[ChangeDetail]", "Change details exported");
+    this.exportChange.emit();
   }
 
   formatValue(value: unknown): string {

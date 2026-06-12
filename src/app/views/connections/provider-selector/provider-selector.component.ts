@@ -1,6 +1,7 @@
-import { Component, input, output, signal } from "@angular/core";
+import { Component, input, output, signal, inject } from "@angular/core";
 import { MatIconModule } from "@angular/material/icon";
 import { ProviderType } from "@shared/models/provider.model";
+import { AppLoggerService } from "@shared/services/app-logger.service";
 
 interface ProviderOption {
   type: ProviderType;
@@ -16,6 +17,8 @@ interface ProviderOption {
   templateUrl: "./provider-selector.component.html",
 })
 export class ProviderSelectorComponent {
+  private logger = inject(AppLoggerService);
+
   selected = input<ProviderType | null>(null);
 
   next = output<void>();
@@ -42,6 +45,7 @@ export class ProviderSelectorComponent {
   ];
 
   selectProvider(type: ProviderType) {
+    this.logger.info("[PROVIDER_SELECTOR]", "Provider selected", { type });
     this.providerSelected.emit(type);
   }
 }

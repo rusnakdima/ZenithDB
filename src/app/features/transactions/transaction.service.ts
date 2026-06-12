@@ -6,6 +6,7 @@ import { ToastService } from "@services/toast.service";
 import { RowData } from "@shared/models/connection.config";
 import { withConnectionAndLoading } from "@shared/utils/api-wrapper.util";
 import { generateId, generateTransactionId } from "@shared/utils/id.utils";
+import { AppLoggerService } from "@shared/services/app-logger.service";
 
 export type IsolationLevel = "Read Committed" | "Read Uncommitted" | "Repeatable Read";
 
@@ -43,6 +44,7 @@ export class TransactionService {
   private api = inject(ApiProvider);
   private loadingService = inject(LoadingService);
   private toast = inject(ToastService);
+  private logger = inject(AppLoggerService);
 
   private transactionSignal = signal<Transaction | null>(null);
   private operationLogSignal = signal<TransactionOperation[]>([]);
@@ -61,6 +63,7 @@ export class TransactionService {
     }
 
     try {
+      this.logger.info("[TRANSACTION]", "Beginning transaction", { isolationLevel });
       const result = await (this.api as any).beginTransaction(connId, isolationLevel);
       this.transactionSignal.set({
         isolationLevel,
@@ -95,6 +98,10 @@ export class TransactionService {
     }
 
     try {
+      this.logger.info("[TRANSACTION]", "Committing transaction", {
+        id: tx.id,
+        operations: tx.operations.length,
+      });
       await (this.api as any).commitTransaction(tx.id!);
       this.toast.success(`Transaction committed with ${tx.operations.length} operations`);
     } catch {
@@ -112,6 +119,7 @@ export class TransactionService {
     }
 
     try {
+      this.logger.info("[TRANSACTION]", "Rolling back transaction", { id: tx.id });
       await (this.api as any).rollbackTransaction(tx.id!);
       this.toast.success("Transaction rolled back");
     } catch {
@@ -126,6 +134,7 @@ export class TransactionService {
       throw new Error("No active transaction");
     }
 
+    this.logger.debug("[TRANSACTION]", "Creating savepoint", { name });
     const savepoint: Savepoint = {
       name,
       timestamp: new Date().toISOString(),
@@ -154,6 +163,7 @@ export class TransactionService {
       throw new Error(`Savepoint "${name}" not found`);
     }
 
+    this.logger.debug("[TRANSACTION]", "Rolling back to savepoint", { name });
     this.operationLogSignal.set([...savepoint.operations]);
     this.toast.success(`Rolled back to savepoint "${name}"`);
   }
@@ -168,6 +178,7 @@ export class TransactionService {
       throw new Error("No active transaction");
     }
 
+    this.logger.debug("[TRANSACTION]", "Queueing operation", { type, collection, documentId });
     const operation: TransactionOperation = {
       id: generateId("op_"),
       type,
@@ -207,6 +218,9 @@ export class TransactionService {
     this.loadingService.show(`Executing ${operations.length} operations...`);
 
     try {
+      this.logger.debug("[TRANSACTION]", "Executing queued operations", {
+        count: operations.length,
+      });
       for (const op of operations) {
         switch (op.type) {
           case "insert":

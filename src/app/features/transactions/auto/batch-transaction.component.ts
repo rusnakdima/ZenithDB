@@ -4,6 +4,7 @@ import { MatIconModule } from "@angular/material/icon";
 import { AutoTransactionService, PendingOperation } from "./auto-transaction.service";
 import { ConfirmService } from "@shared/services/confirm.service";
 import { ToastService } from "@services/toast.service";
+import { AppLoggerService } from "@shared/services/app-logger.service";
 
 @Component({
   selector: "app-batch-transaction",
@@ -16,6 +17,7 @@ export class BatchTransactionComponent {
   private autoTransactionService = inject(AutoTransactionService);
   private confirmService = inject(ConfirmService);
   private toast = inject(ToastService);
+  private logger = inject(AppLoggerService);
 
   queue = this.autoTransactionService.queue;
   queueCount = this.autoTransactionService.queueCount;
@@ -40,9 +42,10 @@ export class BatchTransactionComponent {
 
     this.isCommitting.set(true);
     try {
+      this.logger.info("[TRANSACTION]", "Committing batch", { count: this.queueCount() });
       const success = await this.autoTransactionService.commitAll();
       if (success) {
-        // Success handled in service
+        this.logger.info("[TRANSACTION]", "Batch committed successfully");
       }
     } finally {
       this.isCommitting.set(false);
@@ -60,6 +63,7 @@ export class BatchTransactionComponent {
 
     if (!confirmed) return;
 
+    this.logger.info("[TRANSACTION]", "Clearing batch queue", { count: this.queueCount() });
     this.autoTransactionService.clearQueue();
     this.toast.info("Queue cleared");
   }

@@ -13,6 +13,7 @@ import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
 import { ColumnInfo, RowData } from "@shared/models/connection.config";
 import { isNullOrUndefined } from "@shared/utils/collection.utils";
+import { AppLoggerService } from "@shared/services/app-logger.service";
 
 @Component({
   selector: "app-record-form",
@@ -23,6 +24,7 @@ import { isNullOrUndefined } from "@shared/utils/collection.utils";
 })
 export class RecordFormComponent {
   private cdr = inject(ChangeDetectorRef);
+  private logger = inject(AppLoggerService);
   mode = input<"add" | "edit">("add");
   columns = input<ColumnInfo[]>([]);
   data = input<RowData | null>(null);
@@ -186,6 +188,7 @@ export class RecordFormComponent {
       }
     }
 
+    this.logger.debug("[DATA]", `Form submitted: ${this.isEditMode() ? "edit" : "create"}`);
     this.saved.emit(result);
   }
 
@@ -198,6 +201,7 @@ export class RecordFormComponent {
   }
 
   onDeleteConfirm() {
+    this.logger.info("[DATA]", "Delete confirmed in form");
     this.saved.emit({ ...this.formData(), __delete: true } as RowData);
     this.showDeleteConfirm.set(false);
   }

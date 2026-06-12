@@ -37,6 +37,7 @@ import {
   TemplateService,
   HintAnalyzerService,
 } from "../services";
+import { AppLoggerService } from "@shared/services/app-logger.service";
 
 import { VisualQueryBuilderComponent } from "../visual-query-builder/visual-query-builder.component";
 import { QueryTemplatesComponent } from "../query-templates/query-templates.component";
@@ -292,6 +293,7 @@ export class UniversalQueryEditorComponent implements OnInit, OnChanges {
   private readonly filterBuilder = inject(FilterBuilderService);
   private readonly templateService = inject(TemplateService);
   private readonly hintAnalyzer = inject(HintAnalyzerService);
+  private readonly logger = inject(AppLoggerService);
   private readonly cdr = inject(ChangeDetectorRef);
 
   @Input() collectionName = "";
@@ -313,6 +315,7 @@ export class UniversalQueryEditorComponent implements OnInit, OnChanges {
   ngOnInit(): void {
     this.loadHistory();
     this.updateProviderFromConnection();
+    this.logger.debug("[QUERY]", "Universal query editor initialized");
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -361,6 +364,10 @@ export class UniversalQueryEditorComponent implements OnInit, OnChanges {
   }
 
   onSelectTemplate(template: QueryTemplate): void {
+    this.logger.debug("[QUERY_TEMPLATE]", "Applying template in editor", {
+      id: template.id,
+      name: template.name,
+    });
     this.activePanel.set("none");
 
     const variables: Record<string, unknown> = {};
@@ -423,6 +430,7 @@ export class UniversalQueryEditorComponent implements OnInit, OnChanges {
     const currentQuery = this.query();
     if (!currentQuery.trim()) return;
 
+    this.logger.debug("[QUERY]", "Executing query", { queryLength: currentQuery.length });
     this.isLoading.set(true);
     const startTime = performance.now();
 
@@ -431,13 +439,18 @@ export class UniversalQueryEditorComponent implements OnInit, OnChanges {
       this.executionTime.set(performance.now() - startTime);
 
       if (result.success) {
+        this.logger.debug("[QUERY]", "Query execution successful", {
+          executionTime: this.executionTime(),
+        });
         this.addToHistory(currentQuery, true);
       } else {
+        this.logger.debug("[QUERY]", "Query execution failed", { error: result.error });
         this.addToHistory(currentQuery, false, result.error);
       }
 
       this.queryExecuted.emit();
     } catch (e) {
+      this.logger.error("[QUERY]", "Query execution error", { error: (e as Error).message });
       this.toast.error((e as Error).message);
       this.addToHistory(currentQuery, false, (e as Error).message);
     } finally {

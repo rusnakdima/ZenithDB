@@ -9,6 +9,7 @@ import {
   FieldInfo,
 } from "../../models";
 import { SchemaCompletionService } from "../../services";
+import { AppLoggerService } from "@shared/services/app-logger.service";
 
 @Component({
   selector: "app-query-group",
@@ -18,6 +19,7 @@ import { SchemaCompletionService } from "../../services";
 })
 export class QueryGroupComponent implements OnInit {
   private readonly schemaCompletion = inject(SchemaCompletionService);
+  private readonly logger = inject(AppLoggerService);
 
   @Input() group!: ConditionGroup;
   @Input() collectionName = "";
@@ -57,6 +59,7 @@ export class QueryGroupComponent implements OnInit {
   }
 
   addCondition(): void {
+    this.logger.debug("[QUERY]", "Adding condition to group");
     const conditions = [...this.group.conditions, createEmptyCondition()];
     this.groupChange.emit({
       ...this.group,
@@ -81,6 +84,7 @@ export class QueryGroupComponent implements OnInit {
   }
 
   addNestedGroup(): void {
+    this.logger.debug("[QUERY]", "Adding nested group");
     const groups = [
       ...(this.group.groups ?? []),
       createEmptyGroup(this.group.operator === "or" ? "or" : "and"),

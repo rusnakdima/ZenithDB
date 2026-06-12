@@ -1,6 +1,7 @@
-import { Component, Input, Output, EventEmitter } from "@angular/core";
+import { Component, Input, Output, EventEmitter, inject } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { QueryTemplate, TEMPLATE_CATEGORIES } from "../../models";
+import { AppLoggerService } from "@shared/services/app-logger.service";
 
 @Component({
   selector: "app-template-card",
@@ -9,6 +10,8 @@ import { QueryTemplate, TEMPLATE_CATEGORIES } from "../../models";
   templateUrl: "./template-card.component.html",
 })
 export class TemplateCardComponent {
+  private readonly logger = inject(AppLoggerService);
+
   @Input() template!: QueryTemplate;
   @Input() isFavorite = false;
 
@@ -25,6 +28,7 @@ export class TemplateCardComponent {
   }
 
   onFavoriteClick(event: MouseEvent): void {
+    this.logger.debug("[QUERY_TEMPLATE]", "Toggle favorite from card", { id: this.template.id });
     event.stopPropagation();
     this.toggleFavorite.emit(this.template.id);
   }

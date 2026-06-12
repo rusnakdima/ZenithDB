@@ -20,6 +20,7 @@ import {
   QueryValidatorService,
 } from "../services";
 import { SyntaxMode } from "../models";
+import { AppLoggerService } from "@shared/services/app-logger.service";
 
 @Component({
   selector: "app-provider-aware-editor",
@@ -164,6 +165,7 @@ export class ProviderAwareEditorComponent implements OnInit, OnChanges {
   private readonly providerDetector = inject(ProviderDetectorService);
   private readonly translationService = inject(QueryTranslationService);
   private readonly validator = inject(QueryValidatorService);
+  private readonly logger = inject(AppLoggerService);
 
   @Input() initialQuery = "";
   @Input() collectionName = "";
@@ -199,6 +201,7 @@ export class ProviderAwareEditorComponent implements OnInit, OnChanges {
   }
 
   setSyntaxMode(mode: SyntaxMode): void {
+    this.logger.debug("[QUERY]", "Syntax mode changed", { mode });
     const currentQuery = this.query();
     const translated = this.translationService.translateToProvider(
       this.validator.parseQueryToFilter(currentQuery) ?? {},

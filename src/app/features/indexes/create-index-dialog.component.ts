@@ -9,6 +9,7 @@ import { IndexService, IndexDefinition, IndexField, IndexOptions } from "./index
 import { SchemaCompletionService } from "@features/query/services";
 import { FieldInfo } from "@features/query/models";
 import { ToastService } from "@services/toast.service";
+import { AppLoggerService } from "@shared/services/app-logger.service";
 
 export type IndexType = "single" | "compound" | "text" | "geospatial" | "ttl" | "hashed";
 
@@ -29,6 +30,7 @@ export class CreateIndexDialogComponent implements OnInit {
   private readonly indexService = inject(IndexService);
   private readonly schemaCompletion = inject(SchemaCompletionService);
   private readonly toast = inject(ToastService);
+  private readonly logger = inject(AppLoggerService);
 
   @Input() collectionName = "";
 
@@ -51,10 +53,12 @@ export class CreateIndexDialogComponent implements OnInit {
   }
 
   onIndexTypeChange(type: IndexType): void {
+    this.logger.debug("[INDEX]", "Index type changing", { type });
     this.indexType.set(type);
   }
 
   onFieldsChange(fields: IndexField[]): void {
+    this.logger.debug("[INDEX]", "Fields changing for index", { count: fields.length });
     this.selectedFields.set(fields);
     this.updateIndexName();
   }
@@ -88,6 +92,7 @@ export class CreateIndexDialogComponent implements OnInit {
   }
 
   onCancel(): void {
+    this.logger.debug("[INDEX]", "Create index dialog cancelled");
     this.closed.emit();
   }
 
@@ -104,6 +109,11 @@ export class CreateIndexDialogComponent implements OnInit {
       return;
     }
 
+    this.logger.info("[INDEX]", "Creating index", {
+      name,
+      type: this.indexType(),
+      collection: this.collectionName,
+    });
     const indexDef: IndexDefinition = {
       name,
       type: this.indexType(),

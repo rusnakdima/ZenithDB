@@ -3,6 +3,7 @@ import { DataStoreService } from "@services/core/data-store.service";
 import { ToastService } from "@services/toast.service";
 import { RowData } from "@shared/models/connection.config";
 import { getRecordId } from "@shared/utils/record.utils";
+import { AppLoggerService } from "@shared/services/app-logger.service";
 
 export interface DeletedRecord extends RowData {
   _deletedAt: string;
@@ -13,6 +14,7 @@ export interface DeletedRecord extends RowData {
 export class SoftDeleteService {
   private dataStore = inject(DataStoreService);
   private toast = inject(ToastService);
+  private logger = inject(AppLoggerService);
 
   private showDeletedSignal = signal(false);
 
@@ -32,6 +34,7 @@ export class SoftDeleteService {
       throw new Error("Record has no ID");
     }
 
+    this.logger.info("[DATA]", `Soft deleting record ${id} from ${collection}`);
     const deletedRecord: RowData = {
       ...record,
       _deletedAt: new Date().toISOString(),
@@ -47,6 +50,7 @@ export class SoftDeleteService {
       throw new Error("Record has no ID");
     }
 
+    this.logger.info("[DATA]", `Restoring record ${id} to ${collection}`);
     const restoredRecord: RowData = { ...record };
     delete restoredRecord["_deletedAt"];
     delete restoredRecord["_originalValues"];
@@ -61,6 +65,7 @@ export class SoftDeleteService {
       throw new Error("Record has no ID");
     }
 
+    this.logger.info("[DATA]", `Permanently deleting record ${id} from ${collection}`);
     await this.dataStore.deleteRow(collection, String(id));
     this.toast.success("Record permanently deleted");
   }
@@ -72,6 +77,7 @@ export class SoftDeleteService {
     let restored = 0;
     let failed = 0;
 
+    this.logger.info("[DATA]", `Bulk restoring ${records.length} records from ${collection}`);
     for (const record of records) {
       try {
         await this.restore(collection, record);
@@ -91,6 +97,10 @@ export class SoftDeleteService {
     let deleted = 0;
     let failed = 0;
 
+    this.logger.info(
+      "[DATA]",
+      `Bulk permanently deleting ${records.length} records from ${collection}`
+    );
     for (const record of records) {
       try {
         await this.permanentDelete(collection, record);

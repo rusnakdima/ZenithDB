@@ -21,6 +21,8 @@ import { ExportService } from "@shared/services/export.service";
 import { PersistentStorageService } from "@shared/services/persistent-storage.service";
 import { DiagnosticLoggerService } from "@shared/services/diagnostic-logger.service";
 import { ErrorHandlerService } from "@shared/services/error-handler.service";
+import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
+import { AppLoggerService } from "@shared/services/app-logger.service";
 import {
   CollectionMeta,
   CollectionStats,
@@ -84,6 +86,11 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
   private diagLogger = inject(DiagnosticLoggerService);
   private errorHandler = inject(ErrorHandlerService);
+  private dataflowLogger = inject(DataflowLoggerService);
+  private logger = inject(AppLoggerService);
+
+  private readonly pageName = "Explorer";
+
   private queryParamsSub: Subscription | null = null;
   private routeSub: Subscription | null = null;
   private routeParamSub: Subscription | null = null;
@@ -551,6 +558,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   }
 
   onFilterApply() {
+    this.logger.log("[EXPLORER]", "User action: filterApply", { filter: this.filterText() });
     this.reloadCounter.update((c) => c + 1);
     this.page.set(0);
     if (this.viewTab() === "json") {
@@ -559,11 +567,13 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   }
 
   onFilterClear() {
+    this.logger.log("[EXPLORER]", "User action: filterClear");
     this.filterText.set("");
     this.page.set(0);
   }
 
   onRefresh() {
+    this.logger.log("[EXPLORER]", "User action: refresh", { collection: this.activeCollection() });
     this.reloadCounter.update((c) => c + 1);
     this.page.set(0);
     this.loadStats();
@@ -573,12 +583,19 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   }
 
   onCreateDocument() {
+    this.logger.log("[EXPLORER]", "User action: createDocument", {
+      collection: this.activeCollection(),
+    });
     this.isCreatingDocument.set(true);
     this.inspectorDocument.set({} as RowData);
     this.showInspector.set(true);
   }
 
   async onExport(format: ExportFormat) {
+    this.logger.log("[EXPLORER]", "User action: export", {
+      format,
+      collection: this.activeCollection(),
+    });
     try {
       let filterObj: FilterExpression | undefined;
       if (this.filterText()) {
@@ -614,6 +631,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   }
 
   async onImport() {
+    this.logger.log("[EXPLORER]", "User action: import", { collection: this.activeCollection() });
     try {
       const { open } = await import("@tauri-apps/plugin-dialog");
       const { readTextFile } = await import("@tauri-apps/plugin-fs");
@@ -715,6 +733,9 @@ export class ExplorerComponent implements OnInit, OnDestroy {
 
   async saveDocument(doc: RowData) {
     if (!doc || !this.activeCollection()) return;
+    this.logger.log("[EXPLORER]", "User action: saveDocument", {
+      collection: this.activeCollection(),
+    });
     try {
       await this.store.saveRow(this.activeCollection(), doc);
       this.toast.success("Document saved");
@@ -727,6 +748,10 @@ export class ExplorerComponent implements OnInit, OnDestroy {
 
   async deleteDocument(doc: RowData) {
     const id = getRecordId(doc);
+    this.logger.log("[EXPLORER]", "User action: deleteDocument", {
+      collection: this.activeCollection(),
+      id,
+    });
     if (!id) {
       this.toast.error("Cannot delete: document has no ID");
       return;

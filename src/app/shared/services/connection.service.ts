@@ -8,63 +8,127 @@ import {
   TestConnectionConfig,
   ConnectionHealth,
 } from "@shared/models/connection.config";
+import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
+import { AppLoggerService } from "@shared/services/app-logger.service";
 
 @Injectable({ providedIn: "root" })
 export class ConnectionService {
   private loadingService = inject(LoadingService);
   private api = inject(ApiProvider);
+  private logger = inject(DataflowLoggerService, { optional: true });
+  private appLogger = inject(AppLoggerService, { optional: true });
 
   async listConnections(): Promise<ConnectionSummary[]> {
-    return this.api.listConnections();
+    const startTime = performance.now();
+    const result = await this.api.listConnections();
+    this.logger?.logApiCall("connection", "listConnections", "connection_list", {
+      count: result.length,
+    });
+    return result;
   }
 
   async getConnection(id: string) {
-    return withLoading(this.loadingService, "Loading connection...", () =>
+    const startTime = performance.now();
+    const result = await withLoading(this.loadingService, "Loading connection...", () =>
       this.api.getConnection(id)
     );
+    this.logger?.logDataReceive(
+      "connection",
+      "getConnection",
+      "connection_get",
+      { id },
+      performance.now() - startTime
+    );
+    return result;
   }
 
   async saveConnection(config: TestConnectionConfig): Promise<string> {
-    return withLoading(this.loadingService, "Saving connection...", () =>
+    const startTime = performance.now();
+    const result = await withLoading(this.loadingService, "Saving connection...", () =>
       this.api.saveConnection(config)
     );
+    this.logger?.logDataReceive(
+      "connection",
+      "saveConnection",
+      "connection_save",
+      { name: config.name },
+      performance.now() - startTime
+    );
+    return result;
   }
 
   async deleteConnection(id: string): Promise<void> {
-    return withLoading(this.loadingService, "Deleting connection...", () =>
+    const startTime = performance.now();
+    await withLoading(this.loadingService, "Deleting connection...", () =>
       this.api.deleteConnection(id)
     );
+    this.logger?.logUserAction("connection", "deleteConnection", { id });
   }
 
   async testConnection(config: TestConnectionConfig): Promise<ConnectionHealth> {
-    return withLoading(this.loadingService, "Testing connection...", () =>
+    const startTime = performance.now();
+    const result = await withLoading(this.loadingService, "Testing connection...", () =>
       this.api.testConnection(config)
     );
+    this.logger?.logDataReceive(
+      "connection",
+      "testConnection",
+      "connection_test",
+      { healthy: result.healthy },
+      performance.now() - startTime
+    );
+    return result;
   }
 
   async testConnectionById(connId: string): Promise<ConnectionHealth | null> {
+    const startTime = performance.now();
     try {
       const fullConn = await this.getConnection(connId);
       const config = {
         name: fullConn.config.name,
         config: fullConn.config.config,
       };
-      return await this.api.testConnection(config);
+      const result = await this.api.testConnection(config);
+      this.logger?.logDataReceive(
+        "connection",
+        "testConnectionById",
+        "connection_test",
+        { connId, healthy: result.healthy },
+        performance.now() - startTime
+      );
+      return result;
     } catch (e) {
-      console.warn("Failed to test connection:", e);
+      const error = e instanceof Error ? e.message : String(e);
+      this.appLogger?.warn("[CONNECTION]", "Failed to test connection", { error });
+      this.logger?.logUserAction("connection", "testConnectionById", { connId, error: String(e) });
       return null;
     }
   }
 
   async testConnectionStatus(connId: string): Promise<ConnectionSummary | null> {
+    const startTime = performance.now();
     try {
-      return await this.api.testConnectionStatus(connId);
+      const result = await this.api.testConnectionStatus(connId);
+      this.logger?.logDataReceive(
+        "connection",
+        "testConnectionStatus",
+        "connection_status",
+        { connId },
+        performance.now() - startTime
+      );
+      return result;
     } catch (e) {
+      this.logger?.logUserAction("connection", "testConnectionStatus", {
+        connId,
+        error: String(e),
+      });
       return null;
     }
   }
 
   async updateConnection(id: string, config: ConnectionConfig): Promise<void> {
-    return await this.api.updateConnection(id, config);
+    const startTime = performance.now();
+    await this.api.updateConnection(id, config);
+    this.logger?.logUserAction("connection", "updateConnection", { id });
   }
 }

@@ -19,6 +19,7 @@ import {
   createEmptyCondition,
 } from "../../models";
 import { SchemaCompletionService } from "../../services";
+import { AppLoggerService } from "@shared/services/app-logger.service";
 
 @Component({
   selector: "app-query-condition",
@@ -28,6 +29,7 @@ import { SchemaCompletionService } from "../../services";
 })
 export class QueryConditionComponent implements OnInit {
   private readonly schemaCompletion = inject(SchemaCompletionService);
+  private readonly logger = inject(AppLoggerService);
 
   @Input() condition!: Condition;
   @Input() collectionName = "";
@@ -68,6 +70,7 @@ export class QueryConditionComponent implements OnInit {
   }
 
   onFieldChange(field: string): void {
+    this.logger.debug("[QUERY]", "Condition field changed", { field });
     const fieldInfo = this.fields().find((f) => f.name === field);
     const newType = fieldInfo?.type ?? "string";
     const operators = FIELD_OPERATORS[newType] || FIELD_OPERATORS["string"];

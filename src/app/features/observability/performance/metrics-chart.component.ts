@@ -8,8 +8,10 @@ import {
   ViewChild,
   OnChanges,
   SimpleChanges,
+  inject,
 } from "@angular/core";
 import { CommonModule } from "@angular/common";
+import { AppLoggerService } from "@shared/services/app-logger.service";
 
 export interface ChartDataPoint {
   timestamp: number;
@@ -34,16 +36,39 @@ export class MetricsChartComponent implements AfterViewInit, OnDestroy, OnChange
 
   private ctx: CanvasRenderingContext2D | null = null;
   private animationFrame: number | null = null;
+  private logger = inject(AppLoggerService);
 
   ngAfterViewInit(): void {
     this.initCanvas();
     this.drawChart();
+    this.logger.debug("[MetricsChart]", "Chart rendered", {
+      type: this.type(),
+      label: this.label(),
+      dataPoints: this.data().length,
+    });
   }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes["data"] && !changes["data"].firstChange) {
       this.drawChart();
+      this.logger.debug("[MetricsChart]", "Chart data updated", { dataPoints: this.data().length });
     }
+    if (changes["data"] && changes["data"].currentValue !== changes["data"].previousValue) {
+      const prevTimeRange = this.getTimeRange(changes["data"]?.previousValue);
+      const currTimeRange = this.getTimeRange(changes["data"]?.currentValue);
+      if (prevTimeRange !== currTimeRange) {
+        this.logger.info("[MetricsChart]", "Time range changed", {
+          from: prevTimeRange,
+          to: currTimeRange,
+        });
+      }
+    }
+  }
+
+  private getTimeRange(data: ChartDataPoint[] | undefined): { min: number; max: number } | null {
+    if (!data || data.length === 0) return null;
+    const timestamps = data.map((d) => d.timestamp);
+    return { min: Math.min(...timestamps), max: Math.max(...timestamps) };
   }
 
   ngOnDestroy(): void {

@@ -17,6 +17,7 @@ import {
   GroupedSearchResults,
   QuickSearchResult,
 } from "./quick-search.service";
+import { AppLoggerService } from "@shared/services/app-logger.service";
 
 type SelectResult = {
   collection: string;
@@ -35,6 +36,7 @@ type FlatSearchResult = QuickSearchResult & {
 })
 export class QuickSearchComponent implements OnInit, OnDestroy {
   private readonly searchService = inject(QuickSearchService);
+  private logger = inject(AppLoggerService);
 
   @Input() isOpen = false;
   @Output() close = new EventEmitter<void>();
@@ -69,6 +71,7 @@ export class QuickSearchComponent implements OnInit, OnDestroy {
   readonly totalResults = computed(() => this.flatResults().length);
 
   ngOnInit(): void {
+    this.logger.debug("[SEARCH_QUICK]", "Quick search component initialized");
     this.boundGlobalFocusHandler = this.handleGlobalFocus.bind(this);
     this.refreshCallbacks.add(this.handleKeyNavigation.bind(this));
     document.addEventListener("zenith:focus-search", this.boundGlobalFocusHandler);
@@ -83,6 +86,7 @@ export class QuickSearchComponent implements OnInit, OnDestroy {
 
   private handleGlobalFocus(): void {
     if (!this.isOpen) {
+      this.logger.debug("[SEARCH_QUICK]", "Quick search opened via global focus");
       this.open();
     }
   }
@@ -112,6 +116,7 @@ export class QuickSearchComponent implements OnInit, OnDestroy {
   }
 
   open(): void {
+    this.logger.debug("[SEARCH_QUICK]", "Quick search opened");
     this.isOpen = true;
     this.searchQuery.set("");
     this.selectedIndex.set(-1);
@@ -119,6 +124,7 @@ export class QuickSearchComponent implements OnInit, OnDestroy {
   }
 
   onClose(): void {
+    this.logger.debug("[SEARCH_QUICK]", "Quick search closed");
     this.isOpen = false;
     this.searchService.cancelSearch();
     this.close.emit();
@@ -128,8 +134,10 @@ export class QuickSearchComponent implements OnInit, OnDestroy {
     this.searchQuery.set(value);
     this.selectedIndex.set(-1);
     if (value.trim()) {
+      this.logger.debug("[SEARCH_QUICK]", "Quick search input", { query: value });
       this.searchService.search(value);
     } else {
+      this.logger.debug("[SEARCH_QUICK]", "Quick search cleared");
       this.searchService.clearResults();
     }
   }
@@ -167,6 +175,7 @@ export class QuickSearchComponent implements OnInit, OnDestroy {
   }
 
   selectResult(collection: string, document: Record<string, unknown>): void {
+    this.logger.info("[SEARCH_QUICK]", "Quick search result selected", { collection });
     this.navigateToRecord.emit({ collection, document });
     this.onClose();
   }
