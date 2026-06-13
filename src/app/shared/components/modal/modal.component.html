@@ -1,6 +1,6 @@
 @if (isVisible()) {
   <div
-    class="modal-backdrop fixed inset-0 z-50 flex justify-center bg-black/75 backdrop-blur-sm transition-opacity duration-200"
+    class="modal-backdrop fixed inset-0 z-50 flex justify-center bg-[var(--bg-backdrop)] backdrop-blur-sm transition-opacity duration-200"
     [class.opacity-0]="isAnimating()"
     [class.opacity-100]="!isAnimating()"
     [class]="contentPositionClasses"

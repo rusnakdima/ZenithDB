@@ -1,10 +1,10 @@
 @if (isOpen()) {
   <div
-    class="connection-modal-backdrop fixed inset-0 z-[9999] flex items-start justify-center bg-black/50 pt-[15vh]"
+    class="connection-modal-backdrop fixed inset-0 z-[9999] flex items-start justify-center bg-[var(--bg-backdrop-light)] pt-[15vh]"
     (click)="onBackdropClick($event)"
   >
     <div
-      class="w-full max-w-3xl overflow-hidden rounded-xl border border-[var(--accent)] bg-[var(--bg-elevated)] shadow-2xl"
+      class="w-full max-w-3xl overflow-hidden rounded-xl border border-[var(--accent)] bg-[var(--bg-modal)] shadow-2xl"
     >
       <div class="flex items-center gap-3 border-b border-[var(--border-subtle)] px-4 py-3">
         <mat-icon class="h-5! w-5! min-w-5 text-2xl! text-[var(--text-dim)]">share</mat-icon>

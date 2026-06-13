@@ -1,5 +1,5 @@
 <app-modal
-  [open]="isOpen"
+  [open]="isOpen()"
   title="Keyboard Shortcuts"
   size="lg"
   [closeOnBackdrop]="true"
@@ -10,7 +10,7 @@
     <div>
       <h3 class="mb-3 text-sm font-semibold text-[var(--text-muted)] uppercase">Navigation</h3>
       <div class="space-y-2">
-        @for (shortcut of navigationShortcuts; track shortcut.desc) {
+        @for (shortcut of navigationShortcuts(); track shortcut.desc) {
           <div class="flex items-center justify-between text-sm">
             <span class="text-[var(--text-main)]">{{ shortcut.desc }}</span>
             <app-kbd-badge [shortcut]="shortcut.key"></app-kbd-badge>
@@ -22,7 +22,7 @@
     <div>
       <h3 class="mb-3 text-sm font-semibold text-[var(--text-muted)] uppercase">Editor</h3>
       <div class="space-y-2">
-        @for (shortcut of editorShortcuts; track shortcut.desc) {
+        @for (shortcut of editorShortcuts(); track shortcut.desc) {
           <div class="flex items-center justify-between text-sm">
             <span class="text-[var(--text-main)]">{{ shortcut.desc }}</span>
             <app-kbd-badge [shortcut]="shortcut.key"></app-kbd-badge>

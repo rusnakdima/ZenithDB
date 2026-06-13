@@ -33,8 +33,8 @@
         [value]="searchQuery()"
         (input)="onSearchInput($event)"
         (keydown)="onSearchKeydown($event)"
-        (blur)="isSearching.set(false)"
-        (focus)="searchQuery() && isSearching.set(true)"
+        (blur)="onSearchBlur()"
+        (focus)="onSearchFocus()"
         class="w-64 rounded-lg border border-[var(--accent)] bg-transparent py-1.5 pr-4 pl-9 text-[11px] transition-all outline-none focus:shadow-[0_0_0_3px_var(--accent-100)]"
       />
       @if (isSearching() && searchResults().length > 0) {
