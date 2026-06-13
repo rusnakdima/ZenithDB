@@ -3,7 +3,7 @@ import { TransactionService, TransactionOperationType } from "../transaction.ser
 import { ToastService } from "@services/toast.service";
 import { RowData } from "@shared/models/connection.config";
 import { generateBatchId } from "@shared/utils/id.utils";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 export type PendingOperationType = "insert" | "update" | "delete";
 
@@ -25,7 +25,7 @@ export interface BatchError {
 export class AutoTransactionService {
   private transactionService = inject(TransactionService);
   private toast = inject(ToastService);
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
 
   private queueSignal = signal<PendingOperation[]>([]);
   private errorSignal = signal<BatchError | null>(null);

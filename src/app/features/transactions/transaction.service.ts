@@ -6,7 +6,7 @@ import { ToastService } from "@services/toast.service";
 import { RowData } from "@shared/models/connection.config";
 import { withConnectionAndLoading } from "@shared/utils/api-wrapper.util";
 import { generateId, generateTransactionId } from "@shared/utils/id.utils";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 export type IsolationLevel = "Read Committed" | "Read Uncommitted" | "Repeatable Read";
 
@@ -44,7 +44,7 @@ export class TransactionService {
   private api = inject(ApiProvider);
   private loadingService = inject(LoadingService);
   private toast = inject(ToastService);
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
 
   private transactionSignal = signal<Transaction | null>(null);
   private operationLogSignal = signal<TransactionOperation[]>([]);
@@ -64,7 +64,7 @@ export class TransactionService {
 
     try {
       this.logger.info("[TRANSACTION]", "Beginning transaction", { isolationLevel });
-      const result = await (this.api as any).beginTransaction(connId, isolationLevel);
+      const result = await this.api.beginTransaction(connId, isolationLevel);
       this.transactionSignal.set({
         isolationLevel,
         collections: new Set(),
@@ -102,7 +102,7 @@ export class TransactionService {
         id: tx.id,
         operations: tx.operations.length,
       });
-      await (this.api as any).commitTransaction(tx.id!);
+      await this.api.commitTransaction(tx.id!);
       this.toast.success(`Transaction committed with ${tx.operations.length} operations`);
     } catch {
       this.toast.success(
@@ -120,7 +120,7 @@ export class TransactionService {
 
     try {
       this.logger.info("[TRANSACTION]", "Rolling back transaction", { id: tx.id });
-      await (this.api as any).rollbackTransaction(tx.id!);
+      await this.api.rollbackTransaction(tx.id!);
       this.toast.success("Transaction rolled back");
     } catch {
       this.toast.success("Transaction rolled back (local mode)");
@@ -224,16 +224,16 @@ export class TransactionService {
       for (const op of operations) {
         switch (op.type) {
           case "insert":
-            await (this.api as any).insertDocument(connId, op.collection, op.data);
+            await this.api.insertDocument(connId, op.collection, op.data);
             break;
           case "update":
-            await (this.api as any).updateDocument(connId, op.collection, op.documentId, op.data);
+            await this.api.updateDocument(connId, op.collection, op.documentId, op.data);
             break;
           case "delete":
-            await (this.api as any).deleteDocument(connId, op.collection, op.documentId);
+            await this.api.deleteDocument(connId, op.collection, op.documentId);
             break;
           case "soft_delete":
-            await (this.api as any).softDeleteDocument(connId, op.collection, op.documentId);
+            await this.api.softDeleteDocument(connId, op.collection, op.documentId);
             break;
         }
       }

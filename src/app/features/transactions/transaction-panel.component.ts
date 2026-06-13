@@ -5,7 +5,7 @@ import { TransactionService, IsolationLevel } from "./transaction.service";
 import { ToastService } from "@services/toast.service";
 import { ConfirmService } from "@shared/services/confirm.service";
 import { TransactionLogComponent } from "./transaction-log.component";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 @Component({
   selector: "app-transaction-panel",
@@ -18,7 +18,7 @@ export class TransactionPanelComponent {
   transactionService = inject(TransactionService);
   private toast = inject(ToastService);
   private confirmService = inject(ConfirmService);
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
 
   isActive = this.transactionService.isActive;
   activeCollections = this.transactionService.activeCollections;

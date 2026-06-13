@@ -4,7 +4,7 @@ import { MatIconModule } from "@angular/material/icon";
 import { AutoTransactionService, PendingOperation } from "./auto-transaction.service";
 import { ConfirmService } from "@shared/services/confirm.service";
 import { ToastService } from "@services/toast.service";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 @Component({
   selector: "app-batch-transaction",
@@ -17,7 +17,7 @@ export class BatchTransactionComponent {
   private autoTransactionService = inject(AutoTransactionService);
   private confirmService = inject(ConfirmService);
   private toast = inject(ToastService);
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
 
   queue = this.autoTransactionService.queue;
   queueCount = this.autoTransactionService.queueCount;
