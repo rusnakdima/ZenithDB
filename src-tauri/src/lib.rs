@@ -1,4 +1,5 @@
 mod commands;
+mod constants;
 mod helpers;
 mod infrastructure;
 mod logger;
@@ -18,6 +19,9 @@ use commands::decentralization::{
   delete_connection_databases_metadata, delete_database_metadata, get_database_metadata,
   init_decentralized_storage, list_databases_metadata, save_database_metadata,
   update_database_metadata,
+};
+use commands::schema::{
+  create_database, delete_database, describe_collection, get_collection_stats, rename_database,
 };
 use commands::system::get_system_status;
 
@@ -67,6 +71,11 @@ pub fn run() -> Result<(), String> {
       query_routes::query_delete,
       query_routes::query_raw,
       query_routes::query_server_version,
+      create_database,
+      rename_database,
+      delete_database,
+      describe_collection,
+      get_collection_stats,
       init_decentralized_storage,
       save_database_metadata,
       list_databases_metadata,

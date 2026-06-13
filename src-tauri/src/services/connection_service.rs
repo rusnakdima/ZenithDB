@@ -7,6 +7,7 @@ use crate::commands::provider::{
   create_mongo_provider, create_mysql_provider, create_postgres_provider, create_redis_provider,
   create_sqlite_provider,
 };
+use crate::constants::CONNECTION_TIMEOUT_SECS;
 use crate::models::response::ResponseModel;
 use nosql_orm::provider::{AdminCommands, DatabaseProvider, SchemaIntrospection};
 use std::sync::Arc;
@@ -204,83 +205,105 @@ impl ConnectionService {
     }
   }
 
-  pub async fn check_provider_health(config: &ConnectionConfig) -> ConnectionHealth {
+  pub async fn check_provider_health(&self, config: &ConnectionConfig) -> ConnectionHealth {
     match &config.config {
-      ConnectionConfigEnum::Json { path, .. } => {
-        let path = path.clone();
-        let path_obj = std::path::Path::new(&path);
-        if !path_obj.exists() {
-          return ConnectionHealth::err("json: path does not exist");
-        }
-        if !path_obj.is_dir() {
-          return ConnectionHealth::err("json: path is not a directory");
-        }
-        match tokio::time::timeout(std::time::Duration::from_secs(5), async {
-          tokio::task::spawn_blocking(move || {
-            std::fs::read_dir(&path).map_err(|e| std::io::Error::from(e))
-          })
-          .await
-        })
-        .await
-        {
-          Ok(Ok(Ok(_))) => ConnectionHealth::ok("json"),
-          Ok(Ok(Err(e))) => ConnectionHealth::err(&format!("json: {}", e)),
-          Ok(Err(join_err)) => ConnectionHealth::err(&format!("json: task error: {}", join_err)),
-          Err(_) => ConnectionHealth::err("json: health check timed out"),
-        }
-      }
+      ConnectionConfigEnum::Json { path, .. } => self.check_json_health(path).await,
       ConnectionConfigEnum::Mongo { uri, database, .. } => {
-        match create_mongo_provider(uri, database).await {
-          Ok(p) => {
-            let healthy =
-              match tokio::time::timeout(std::time::Duration::from_secs(5), p.health_check()).await
-              {
-                Ok(Ok(h)) => h,
-                Ok(Err(_)) => matches!(
-                  tokio::time::timeout(std::time::Duration::from_secs(5), p.list_collections())
-                    .await,
-                  Ok(Ok(_))
-                ),
-                Err(_) => false,
-              };
-            if healthy {
-              ConnectionHealth::ok("mongo")
-            } else {
-              ConnectionHealth::err("mongo: health check failed")
+        self.check_mongo_health(uri, database).await
+      }
+      ConnectionConfigEnum::Redis { uri, .. } => self.check_redis_health(uri).await,
+      ConnectionConfigEnum::Postgres { uri, .. } => self.check_postgres_health(uri).await,
+      ConnectionConfigEnum::Sqlite { path, .. } => self.check_sqlite_health(path).await,
+      ConnectionConfigEnum::MySql { uri, .. } => self.check_mysql_health(uri).await,
+    }
+  }
+
+  async fn check_json_health(&self, path: &str) -> ConnectionHealth {
+    let path_obj = std::path::Path::new(path);
+    if !path_obj.exists() {
+      return ConnectionHealth::err("json: path does not exist");
+    }
+    if !path_obj.is_dir() {
+      return ConnectionHealth::err("json: path is not a directory");
+    }
+    let path_owned = path.to_string();
+    match tokio::time::timeout(std::time::Duration::from_secs(5), async {
+      tokio::task::spawn_blocking(move || {
+        std::fs::read_dir(&path_owned).map_err(std::io::Error::from)
+      })
+      .await
+    })
+    .await
+    {
+      Ok(Ok(Ok(_))) => ConnectionHealth::ok("json"),
+      Ok(Ok(Err(e))) => ConnectionHealth::err(&format!("json: {}", e)),
+      Ok(Err(join_err)) => ConnectionHealth::err(&format!("json: task error: {}", join_err)),
+      Err(_) => ConnectionHealth::err("json: health check timed out"),
+    }
+  }
+
+  async fn check_mongo_health(&self, uri: &str, database: &str) -> ConnectionHealth {
+    match create_mongo_provider(uri, database).await {
+      Ok(p) => {
+        let healthy =
+          match tokio::time::timeout(std::time::Duration::from_secs(5), p.health_check()).await {
+            Ok(Ok(h)) => h,
+            Ok(Err(_)) => {
+              matches!(
+                tokio::time::timeout(std::time::Duration::from_secs(5), p.list_collections()).await,
+                Ok(Ok(_))
+              )
             }
-          }
-          Err(e) => ConnectionHealth::err(&e),
+            Err(_) => false,
+          };
+        if healthy {
+          ConnectionHealth::ok("mongo")
+        } else {
+          ConnectionHealth::err("mongo: health check failed")
         }
       }
-      ConnectionConfigEnum::Redis { uri, .. } => match create_redis_provider(uri).await {
-        Ok(p) => match p.health_check().await {
-          Ok(true) => ConnectionHealth::ok("redis"),
-          Ok(false) => ConnectionHealth::err("redis: health check failed"),
-          Err(e) => ConnectionHealth::err(&format!("redis: health check failed: {}", e)),
-        },
-        Err(e) => ConnectionHealth::err(&e),
+      Err(e) => ConnectionHealth::err(&e),
+    }
+  }
+
+  async fn check_redis_health(&self, uri: &str) -> ConnectionHealth {
+    match create_redis_provider(uri).await {
+      Ok(p) => match p.health_check().await {
+        Ok(true) => ConnectionHealth::ok("redis"),
+        Ok(false) => ConnectionHealth::err("redis: health check failed"),
+        Err(e) => ConnectionHealth::err(&format!("redis: health check failed: {}", e)),
       },
-      ConnectionConfigEnum::Postgres { uri, .. } => match create_postgres_provider(uri).await {
-        Ok(p) => match p.execute_raw("SELECT 1", vec![]).await {
-          Ok(_) => ConnectionHealth::ok("postgres"),
-          Err(e) => ConnectionHealth::err(&format!("postgres: {}", e)),
-        },
+      Err(e) => ConnectionHealth::err(&e),
+    }
+  }
+
+  async fn check_postgres_health(&self, uri: &str) -> ConnectionHealth {
+    match create_postgres_provider(uri).await {
+      Ok(p) => match p.execute_raw("SELECT 1", vec![]).await {
+        Ok(_) => ConnectionHealth::ok("postgres"),
         Err(e) => ConnectionHealth::err(&format!("postgres: {}", e)),
       },
-      ConnectionConfigEnum::Sqlite { path, .. } => match create_sqlite_provider(path).await {
-        Ok(p) => match p.execute_raw("SELECT 1", vec![]).await {
-          Ok(_) => ConnectionHealth::ok("sqlite"),
-          Err(e) => ConnectionHealth::err(&format!("sqlite: {}", e)),
-        },
+      Err(e) => ConnectionHealth::err(&format!("postgres: {}", e)),
+    }
+  }
+
+  async fn check_sqlite_health(&self, path: &str) -> ConnectionHealth {
+    match create_sqlite_provider(path).await {
+      Ok(p) => match p.execute_raw("SELECT 1", vec![]).await {
+        Ok(_) => ConnectionHealth::ok("sqlite"),
         Err(e) => ConnectionHealth::err(&format!("sqlite: {}", e)),
       },
-      ConnectionConfigEnum::MySql { uri, .. } => match create_mysql_provider(uri).await {
-        Ok(p) => match p.execute_raw("SELECT 1", vec![]).await {
-          Ok(_) => ConnectionHealth::ok("mysql"),
-          Err(e) => ConnectionHealth::err(&format!("mysql: {}", e)),
-        },
+      Err(e) => ConnectionHealth::err(&format!("sqlite: {}", e)),
+    }
+  }
+
+  async fn check_mysql_health(&self, uri: &str) -> ConnectionHealth {
+    match create_mysql_provider(uri).await {
+      Ok(p) => match p.execute_raw("SELECT 1", vec![]).await {
+        Ok(_) => ConnectionHealth::ok("mysql"),
         Err(e) => ConnectionHealth::err(&format!("mysql: {}", e)),
       },
+      Err(e) => ConnectionHealth::err(&format!("mysql: {}", e)),
     }
   }
 
@@ -309,7 +332,7 @@ impl ConnectionService {
 
     let mut summaries = Vec::new();
     for e in entities {
-      let health = Self::check_provider_health(&e.config).await;
+      let health = self.check_provider_health(&e.config).await;
       let status = if health.healthy {
         "connected".to_string()
       } else {
@@ -335,7 +358,7 @@ impl ConnectionService {
     drop(db);
 
     let config = &entity.config;
-    let health = Self::check_provider_health(config).await;
+    let health = self.check_provider_health(config).await;
     let status = if health.healthy {
       "connected".to_string()
     } else {
@@ -361,9 +384,10 @@ impl ConnectionService {
     drop(db);
 
     let config = entity.config;
-    let health_result = tokio::time::timeout(std::time::Duration::from_secs(10), async {
-      Self::check_provider_health(&config).await
-    })
+    let health_result = tokio::time::timeout(
+      std::time::Duration::from_secs(CONNECTION_TIMEOUT_SECS),
+      async { self.check_provider_health(&config).await },
+    )
     .await
     .map_err(|_| ResponseModel::error("Health check timed out"))?;
 
@@ -447,7 +471,7 @@ impl ConnectionService {
     &self,
     config: ConnectionConfig,
   ) -> Result<ResponseModel, ResponseModel> {
-    let health = Self::check_provider_health(&config).await;
+    let health = self.check_provider_health(&config).await;
     Ok(ResponseModel::success(health))
   }
 
