@@ -1,4 +1,4 @@
-import { Component, inject, HostListener } from "@angular/core";
+import { Component, inject, HostListener, computed, signal } from "@angular/core";
 import { ModalComponent } from "@shared/components/modal/modal.component";
 import { KeyboardShortcutsService } from "@shared/services/keyboard-shortcuts.service";
 import { KbdBadgeComponent } from "@shared/components/kbd-badge/kbd-badge.component";
@@ -12,26 +12,18 @@ import { KbdBadgeComponent } from "@shared/components/kbd-badge/kbd-badge.compon
 export class ShortcutsHelpDialogComponent {
   private shortcutsService = inject(KeyboardShortcutsService);
 
-  isOpen = false;
+  isOpen = signal(false);
+
+  shortcutsByCategory = computed(() => this.shortcutsService.getShortcutsByCategory());
+  navigationShortcuts = computed(() => this.shortcutsByCategory().navigation);
+  editorShortcuts = computed(() => this.shortcutsByCategory().editor);
 
   @HostListener("document:zenith:show-shortcuts")
   show(): void {
-    this.isOpen = true;
+    this.isOpen.set(true);
   }
 
   onClose(): void {
-    this.isOpen = false;
-  }
-
-  get shortcutsByCategory() {
-    return this.shortcutsService.getShortcutsByCategory();
-  }
-
-  get navigationShortcuts() {
-    return this.shortcutsByCategory.navigation;
-  }
-
-  get editorShortcuts() {
-    return this.shortcutsByCategory.editor;
+    this.isOpen.set(false);
   }
 }

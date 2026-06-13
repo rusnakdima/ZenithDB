@@ -106,7 +106,7 @@ export class DecentralizationApiService extends CacheService {
       });
 
       const result = await this.tauri.invoke<DatabaseMetadata>("save_database_metadata", {
-        connId: connId,
+        connectionId: connId,
         name,
         path: path || null,
         metadata: null,

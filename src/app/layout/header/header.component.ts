@@ -120,6 +120,16 @@ export class AppHeaderComponent implements OnDestroy {
     this.router.navigate(["/connections"]);
   }
 
+  onSearchBlur(): void {
+    this.isSearching.set(false);
+  }
+
+  onSearchFocus(): void {
+    if (this.searchQuery()) {
+      this.isSearching.set(true);
+    }
+  }
+
   async onSearchInput(event: Event): Promise<void> {
     const query = (event.target as HTMLInputElement).value.trim().toLowerCase();
     this.searchQuery.set(query);
