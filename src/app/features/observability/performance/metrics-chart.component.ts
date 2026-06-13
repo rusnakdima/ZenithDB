@@ -11,7 +11,7 @@ import {
   inject,
 } from "@angular/core";
 import { CommonModule } from "@angular/common";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 export interface ChartDataPoint {
   timestamp: number;
@@ -36,7 +36,7 @@ export class MetricsChartComponent implements AfterViewInit, OnDestroy, OnChange
 
   private ctx: CanvasRenderingContext2D | null = null;
   private animationFrame: number | null = null;
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
 
   ngAfterViewInit(): void {
     this.initCanvas();

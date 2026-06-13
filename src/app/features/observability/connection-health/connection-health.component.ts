@@ -3,7 +3,7 @@ import { CommonModule } from "@angular/common";
 import { MetricsApiService } from "@shared/services/metrics-api.service";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { TIME_CONSTANTS } from "@shared/utils/constants";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 @Component({
   selector: "app-connection-health",
@@ -14,7 +14,7 @@ import { AppLoggerService } from "@shared/services/app-logger.service";
 export class ConnectionHealthComponent implements OnInit, OnDestroy {
   private readonly metricsService = inject(MetricsApiService);
   private readonly connectionState = inject(ConnectionStateService);
-  private readonly logger = inject(AppLoggerService);
+  private readonly logger = inject(LoggingService);
 
   private refreshIntervalId: ReturnType<typeof setInterval> | null = null;
   private readonly REFRESH_INTERVAL_MS = TIME_CONSTANTS.THIRTY_SECONDS_MS;

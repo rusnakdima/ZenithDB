@@ -9,7 +9,7 @@ import {
 } from "@angular/core";
 import { MatIconModule } from "@angular/material/icon";
 import { AuditService } from "./audit.service";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 @Component({
   selector: "app-change-detail",
@@ -20,7 +20,7 @@ import { AppLoggerService } from "@shared/services/app-logger.service";
 })
 export class ChangeDetailComponent {
   private auditService = inject(AuditService);
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
 
   @Input() before: Record<string, unknown> | undefined;
   @Input() after: Record<string, unknown> | undefined;

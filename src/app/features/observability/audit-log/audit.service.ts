@@ -3,7 +3,8 @@ import { ConnectionStateService } from "@shared/services/connection-state.servic
 import { ApiProvider } from "@providers/api.provider";
 import { LoadingService } from "@shared/services/loading.service";
 import { withConnectionAndLoading } from "@shared/utils/api-wrapper.util";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
+import { AuditFilter as TauriAuditFilter } from "./audit.service";
 
 export type AuditOperation = "Insert" | "Update" | "Delete" | "SoftDelete" | "Restore";
 
@@ -31,7 +32,7 @@ export class AuditService {
   private connectionState = inject(ConnectionStateService);
   private api = inject(ApiProvider);
   private loadingService = inject(LoadingService);
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
 
   private auditLogSignal = signal<AuditEntry[]>([]);
   readonly auditLog = this.auditLogSignal.asReadonly();
@@ -49,7 +50,7 @@ export class AuditService {
       "Loading audit log...",
       async (connId) => {
         try {
-          const result = await (this.api as any).getAuditLog(connId, filter);
+          const result = await this.api.getAuditLog(connId, filter);
           this.auditLogSignal.set(result);
           return result;
         } catch {
