@@ -8,7 +8,6 @@ use crate::models::response::ResponseModel;
 use nosql_orm::prelude::*;
 
 const MAX_DIRS_PER_LEVEL: usize = 10;
-const MAX_FILES_PER_DIR: usize = 10_000;
 const SCAN_TIMEOUT_SECS: u64 = 30;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -20,18 +19,19 @@ pub struct DatabaseListResult {
 
 #[tauri::command]
 pub async fn database_list(
-  connId: String,
+  connection_id: String,
   offset: Option<usize>,
   limit: Option<usize>,
 ) -> Result<ResponseModel, ResponseModel> {
   let timer = DataflowTimer::new("database_list");
-  let params = serde_json::json!({ "connId": &connId, "offset": offset, "limit": limit });
+  let params =
+    serde_json::json!({ "connection_id": &connection_id, "offset": offset, "limit": limit });
   tracing::debug!(command = "database_list", params = %redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default()), "[COMMAND_ENTRY]");
-  if let Err(e) = validate_conn_id(&connId) {
+  if let Err(e) = validate_conn_id(&connection_id) {
     timer.clone().finish_error(&e);
     return Err(ResponseModel::error(e));
   }
-  let entry = match get_connection_entry(&connId).await {
+  let entry = match get_connection_entry(&connection_id).await {
     Ok(e) => e,
     Err(e) => {
       timer.clone().finish_error(&e);
@@ -76,7 +76,9 @@ pub async fn database_list(
       total_count: 1,
     }),
     ConnectionConfigEnum::Mongo { uri, .. } => {
-      match crate::commands::provider::get_or_create_mongo_provider(&connId, uri, "admin").await {
+      match crate::commands::provider::get_or_create_mongo_provider(&connection_id, uri, "admin")
+        .await
+      {
         Ok(provider) => match provider.list_databases().await.map_err_string() {
           Ok(db_names) => {
             let total_count = db_names.len();
@@ -109,7 +111,7 @@ pub async fn database_list(
       }
     }
     ConnectionConfigEnum::Postgres { uri, .. } => {
-      match crate::commands::provider::get_or_create_postgres_provider(&connId, uri).await {
+      match crate::commands::provider::get_or_create_postgres_provider(&connection_id, uri).await {
         Ok(provider) => match provider.list_databases().await.map_err_string() {
           Ok(db_names) => {
             let total_count = db_names.len();
@@ -142,7 +144,7 @@ pub async fn database_list(
       }
     }
     ConnectionConfigEnum::MySql { uri, .. } => {
-      match crate::commands::provider::get_or_create_mysql_provider(&connId, uri).await {
+      match crate::commands::provider::get_or_create_mysql_provider(&connection_id, uri).await {
         Ok(provider) => match provider.list_databases().await.map_err_string() {
           Ok(db_names) => {
             let total_count = db_names.len();

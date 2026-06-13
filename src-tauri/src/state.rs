@@ -7,7 +7,7 @@ pub struct AppState {
 
 impl AppState {
   pub fn new() -> Result<Self, String> {
-    let connection_service = Arc::new(ConnectionService::new()?);
+    let connection_service = ConnectionService::get_instance();
     Ok(Self { connection_service })
   }
 }

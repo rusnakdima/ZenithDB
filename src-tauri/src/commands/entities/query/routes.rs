@@ -45,15 +45,14 @@ fn validate_sql(sql: &str) -> Result<(), String> {
 
 #[tauri::command]
 pub async fn query_execute(
-  connId: String,
+  connection_id: String,
   collection: String,
   params: QueryParams,
 ) -> Result<QueryResult<Value>, String> {
   let timer = DataflowTimer::new("query_execute");
-  let params_log =
-    serde_json::json!({ "connId": &connId, "collection": &collection, "params": &params });
+  let params_log = serde_json::json!({ "connection_id": &connection_id, "collection": &collection, "params": &params });
   tracing::debug!(command = "query_execute", params = %redact_sensitive_data(&serde_json::to_string(&params_log).unwrap_or_default()), "[COMMAND_ENTRY]");
-  if let Err(e) = validate_conn_id(&connId) {
+  if let Err(e) = validate_conn_id(&connection_id) {
     timer.clone().finish_error(&e);
     return Err(e);
   }
@@ -61,7 +60,7 @@ pub async fn query_execute(
     timer.clone().finish_error(&e);
     return Err(e);
   }
-  let entry = match get_connection_entry(&connId).await {
+  let entry = match get_connection_entry(&connection_id).await {
     Ok(e) => e,
     Err(e) => {
       timer.clone().finish_error(&e);
@@ -112,15 +111,14 @@ pub async fn query_execute(
 
 #[tauri::command]
 pub async fn query_save(
-  connId: String,
+  connection_id: String,
   collection: String,
   data: Value,
 ) -> Result<ResponseModel, ResponseModel> {
   let timer = DataflowTimer::new("query_save");
-  let params_log =
-    serde_json::json!({ "connId": &connId, "collection": &collection, "data": &data });
+  let params_log = serde_json::json!({ "connection_id": &connection_id, "collection": &collection, "data": &data });
   tracing::debug!(command = "query_save", params = %redact_sensitive_data(&serde_json::to_string(&params_log).unwrap_or_default()), "[COMMAND_ENTRY]");
-  if let Err(e) = validate_conn_id(&connId) {
+  if let Err(e) = validate_conn_id(&connection_id) {
     timer.clone().finish_error(&e);
     return Err(ResponseModel::error(e));
   }
@@ -128,7 +126,7 @@ pub async fn query_save(
     timer.clone().finish_error(&e);
     return Err(ResponseModel::error(e));
   }
-  let entry = match get_connection_entry(&connId).await {
+  let entry = match get_connection_entry(&connection_id).await {
     Ok(e) => e,
     Err(e) => {
       timer.clone().finish_error(&e);
@@ -158,11 +156,16 @@ pub async fn query_save(
 }
 
 #[tauri::command]
-pub async fn query_delete(connId: String, collection: String, id: String) -> Result<(), String> {
+pub async fn query_delete(
+  connection_id: String,
+  collection: String,
+  id: String,
+) -> Result<(), String> {
   let timer = DataflowTimer::new("query_delete");
-  let params_log = serde_json::json!({ "connId": &connId, "collection": &collection, "id": &id });
+  let params_log =
+    serde_json::json!({ "connection_id": &connection_id, "collection": &collection, "id": &id });
   tracing::debug!(command = "query_delete", params = %redact_sensitive_data(&serde_json::to_string(&params_log).unwrap_or_default()), "[COMMAND_ENTRY]");
-  if let Err(e) = validate_conn_id(&connId) {
+  if let Err(e) = validate_conn_id(&connection_id) {
     timer.clone().finish_error(&e);
     return Err(e);
   }
@@ -170,7 +173,7 @@ pub async fn query_delete(connId: String, collection: String, id: String) -> Res
     timer.clone().finish_error(&e);
     return Err(e);
   }
-  let entry = match get_connection_entry(&connId).await {
+  let entry = match get_connection_entry(&connection_id).await {
     Ok(e) => e,
     Err(e) => {
       timer.clone().finish_error(&e);
@@ -191,11 +194,11 @@ pub async fn query_delete(connId: String, collection: String, id: String) -> Res
 }
 
 #[tauri::command]
-pub async fn query_raw(connId: String, sql: String) -> Result<RawResult, String> {
+pub async fn query_raw(connection_id: String, sql: String) -> Result<RawResult, String> {
   let timer = DataflowTimer::new("query_raw");
-  let params_log = serde_json::json!({ "connId": &connId, "sql": &sql });
+  let params_log = serde_json::json!({ "connection_id": &connection_id, "sql": &sql });
   tracing::debug!(command = "query_raw", params = %redact_sensitive_data(&serde_json::to_string(&params_log).unwrap_or_default()), "[COMMAND_ENTRY]");
-  if let Err(e) = validate_conn_id(&connId) {
+  if let Err(e) = validate_conn_id(&connection_id) {
     timer.clone().finish_error(&e);
     return Err(e);
   }
@@ -203,7 +206,7 @@ pub async fn query_raw(connId: String, sql: String) -> Result<RawResult, String>
     timer.clone().finish_error(&e);
     return Err(e);
   }
-  let entry = match get_connection_entry(&connId).await {
+  let entry = match get_connection_entry(&connection_id).await {
     Ok(e) => e,
     Err(e) => {
       timer.clone().finish_error(&e);
@@ -229,15 +232,15 @@ pub async fn query_raw(connId: String, sql: String) -> Result<RawResult, String>
 }
 
 #[tauri::command]
-pub async fn query_server_version(connId: String) -> Result<String, String> {
+pub async fn query_server_version(connection_id: String) -> Result<String, String> {
   let timer = DataflowTimer::new("query_server_version");
-  let params_log = serde_json::json!({ "connId": &connId });
+  let params_log = serde_json::json!({ "connection_id": &connection_id });
   tracing::debug!(command = "query_server_version", params = %redact_sensitive_data(&serde_json::to_string(&params_log).unwrap_or_default()), "[COMMAND_ENTRY]");
-  if let Err(e) = validate_conn_id(&connId) {
+  if let Err(e) = validate_conn_id(&connection_id) {
     timer.clone().finish_error(&e);
     return Err(e);
   }
-  let entry = match get_connection_entry(&connId).await {
+  let entry = match get_connection_entry(&connection_id).await {
     Ok(e) => e,
     Err(e) => {
       timer.clone().finish_error(&e);

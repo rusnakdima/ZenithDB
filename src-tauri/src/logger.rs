@@ -1,6 +1,5 @@
 use crate::models::response::ResponseModel;
 use std::time::Instant;
-use tracing::Level;
 use tracing_subscriber::{
   fmt::{self, format::FmtSpan},
   layer::SubscriberExt,
@@ -64,19 +63,6 @@ pub fn init_logger() -> Result<(), String> {
     .with(console_layer)
     .init();
   return Ok(());
-}
-
-pub fn set_log_level(level: Level) {
-  tracing::subscriber::set_global_default(
-    tracing_subscriber::registry()
-      .with(EnvFilter::new(level.to_string()))
-      .with(
-        fmt::layer()
-          .with_span_events(FmtSpan::CLOSE)
-          .with_target(true),
-      ),
-  )
-  .unwrap();
 }
 
 pub fn redact_sensitive_data(value: &str) -> String {

@@ -1,7 +1,5 @@
 use crate::commands::connection::ConnectionConfigEnum;
 use crate::commands::error_utils::ToStringError;
-use crate::commands::types::DatabaseMeta as LocalDatabaseMeta;
-use nosql_orm::prelude::*;
 use nosql_orm::providers::sql::MySqlProvider;
 use nosql_orm::providers::sql::PostgresProvider;
 use nosql_orm::providers::sql::SqliteProvider;
@@ -19,70 +17,6 @@ pub enum DbProvider {
   Postgres(PostgresProvider),
   Sqlite(SqliteProvider),
   MySql(MySqlProvider),
-}
-
-impl DbProvider {
-  pub async fn list_databases(&self) -> Result<Vec<LocalDatabaseMeta>, String> {
-    match self {
-      DbProvider::Json(provider) => {
-        let collections = provider.list_collections().await.map_err_string()?;
-        Ok(vec![LocalDatabaseMeta {
-          name: provider.get_database_name().await.map_err_string()?,
-          size_bytes: None,
-          table_count: Some(collections.len() as u64),
-        }])
-      }
-      DbProvider::Mongo(provider) => {
-        let db_names = provider.list_databases().await.map_err_string()?;
-        Ok(
-          db_names
-            .into_iter()
-            .map(|name| LocalDatabaseMeta {
-              name,
-              size_bytes: None,
-              table_count: None,
-            })
-            .collect(),
-        )
-      }
-      DbProvider::Postgres(provider) => {
-        let db_names = provider.list_databases().await.map_err_string()?;
-        Ok(
-          db_names
-            .into_iter()
-            .map(|name| LocalDatabaseMeta {
-              name,
-              size_bytes: None,
-              table_count: None,
-            })
-            .collect(),
-        )
-      }
-      DbProvider::MySql(provider) => {
-        let db_names = provider.list_databases().await.map_err_string()?;
-        Ok(
-          db_names
-            .into_iter()
-            .map(|name| LocalDatabaseMeta {
-              name,
-              size_bytes: None,
-              table_count: None,
-            })
-            .collect(),
-        )
-      }
-      DbProvider::Redis(_) => Ok(vec![LocalDatabaseMeta {
-        name: "default".to_string(),
-        size_bytes: None,
-        table_count: None,
-      }]),
-      DbProvider::Sqlite(_) => Ok(vec![LocalDatabaseMeta {
-        name: "default".to_string(),
-        size_bytes: None,
-        table_count: None,
-      }]),
-    }
-  }
 }
 
 pub struct NosqlOrmAdapter;

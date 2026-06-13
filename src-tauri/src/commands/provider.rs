@@ -1,67 +1,11 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
-use tokio::sync::{Mutex, RwLock};
+use tokio::sync::RwLock;
 use tokio::time;
 
 fn timeout_err(provider: &str, original: String) -> String {
   format!("{} connection timed out after 10s: {}", provider, original)
-}
-
-struct CacheEntry {
-  config_json: String,
-  created_at: Instant,
-}
-
-pub struct ProviderCache {
-  cache: Mutex<HashMap<String, CacheEntry>>,
-}
-
-impl ProviderCache {
-  fn new() -> Self {
-    Self {
-      cache: Mutex::new(HashMap::new()),
-    }
-  }
-
-  async fn is_cached(&self, conn_id: &str) -> bool {
-    let cache = self.cache.lock().await;
-    if let Some(entry) = cache.get(conn_id) {
-      if Instant::now().duration_since(entry.created_at) < Duration::from_secs(300) {
-        return true;
-      }
-    }
-    false
-  }
-
-  async fn mark_cached(&self, conn_id: String, config_json: String) {
-    let mut cache = self.cache.lock().await;
-    cache.insert(
-      conn_id,
-      CacheEntry {
-        config_json,
-        created_at: Instant::now(),
-      },
-    );
-  }
-
-  async fn remove(&self, conn_id: &str) {
-    let mut cache = self.cache.lock().await;
-    cache.remove(conn_id);
-  }
-
-  async fn clear(&self) {
-    let mut cache = self.cache.lock().await;
-    cache.clear();
-  }
-}
-
-static PROVIDER_CACHE: std::sync::OnceLock<Arc<ProviderCache>> = std::sync::OnceLock::new();
-
-fn get_provider_cache() -> Arc<ProviderCache> {
-  PROVIDER_CACHE
-    .get_or_init(|| Arc::new(ProviderCache::new()))
-    .clone()
 }
 
 struct ProviderInstance<T> {
@@ -106,11 +50,6 @@ impl<T: Clone> TypedProviderCache<T> {
         created_at: Instant::now(),
       },
     );
-  }
-
-  async fn remove(&self, conn_id: &str) {
-    let mut cache = self.cache.write().await;
-    cache.remove(conn_id);
   }
 }
 

@@ -12,6 +12,8 @@ use nosql_orm::provider::{AdminCommands, DatabaseProvider, SchemaIntrospection};
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
+static CONNECTION_SERVICE: std::sync::OnceLock<Arc<ConnectionService>> = std::sync::OnceLock::new();
+
 pub struct ConnectionService {
   connections_db: Arc<Mutex<ConnectionsDb>>,
 }
@@ -185,6 +187,12 @@ impl ConnectionService {
     })
   }
 
+  pub fn get_instance() -> Arc<ConnectionService> {
+    CONNECTION_SERVICE
+      .get_or_init(|| Arc::new(Self::new().expect("Failed to create ConnectionService")))
+      .clone()
+  }
+
   fn get_type_string(config: &ConnectionConfig) -> String {
     match config.config {
       ConnectionConfigEnum::Json { .. } => "Json".to_string(),
@@ -193,17 +201,6 @@ impl ConnectionService {
       ConnectionConfigEnum::Postgres { .. } => "Postgres".to_string(),
       ConnectionConfigEnum::Sqlite { .. } => "Sqlite".to_string(),
       ConnectionConfigEnum::MySql { .. } => "MySql".to_string(),
-    }
-  }
-
-  pub fn get_connection_type(config: &ConnectionConfig) -> &'static str {
-    match config.config {
-      ConnectionConfigEnum::Json { .. } => "json",
-      ConnectionConfigEnum::Mongo { .. } => "mongodb",
-      ConnectionConfigEnum::Redis { .. } => "redis",
-      ConnectionConfigEnum::Postgres { .. } => "postgresql",
-      ConnectionConfigEnum::Sqlite { .. } => "sqlite",
-      ConnectionConfigEnum::MySql { .. } => "mysql",
     }
   }
 
@@ -452,5 +449,10 @@ impl ConnectionService {
   ) -> Result<ResponseModel, ResponseModel> {
     let health = Self::check_provider_health(&config).await;
     Ok(ResponseModel::success(health))
+  }
+
+  pub async fn find_entity_by_id(&self, id: &str) -> Result<Option<ConnectionEntity>, String> {
+    let db = self.connections_db.lock().await;
+    db.find_by_id(id)
   }
 }

@@ -9,7 +9,6 @@ use nosql_orm::prelude::*;
 use serde::{Deserialize, Serialize};
 use tokio::io::{AsyncBufReadExt, BufReader};
 
-const MAX_FILES_PER_DIR: usize = 10_000;
 const MAX_COLLECTIONS_TOTAL: usize = 50_000;
 const MAX_DEPTH: usize = 5;
 const SCAN_TIMEOUT_SECS: u64 = 30;
@@ -23,21 +22,21 @@ pub struct CollectionListResult {
 
 #[tauri::command]
 pub async fn collection_list(
-  connId: String,
+  connection_id: String,
   _db_name: Option<String>,
   offset: Option<usize>,
   limit: Option<usize>,
 ) -> Result<CollectionListResult, String> {
   let timer = DataflowTimer::new("collection_list");
-  let params = serde_json::json!({ "connId": &connId, "_db_name": _db_name, "offset": offset, "limit": limit });
+  let params = serde_json::json!({ "connection_id": &connection_id, "_db_name": _db_name, "offset": offset, "limit": limit });
   tracing::debug!(command = "collection_list", params = %redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default()), "[COMMAND_ENTRY]");
 
-  if let Err(e) = validate_conn_id(&connId) {
+  if let Err(e) = validate_conn_id(&connection_id) {
     timer.finish_error(&e);
     return Err(e);
   }
 
-  let entry = match get_connection_entry(&connId).await {
+  let entry = match get_connection_entry(&connection_id).await {
     Ok(e) => e,
     Err(e) => {
       timer.finish_error(&e);
@@ -199,12 +198,15 @@ pub async fn collection_list(
 }
 
 #[tauri::command]
-pub async fn collection_describe(connId: String, name: String) -> Result<CollectionSchema, String> {
+pub async fn collection_describe(
+  connection_id: String,
+  name: String,
+) -> Result<CollectionSchema, String> {
   let timer = DataflowTimer::new("collection_describe");
-  let params = serde_json::json!({ "connId": &connId, "name": &name });
+  let params = serde_json::json!({ "connection_id": &connection_id, "name": &name });
   tracing::debug!(command = "collection_describe", params = %redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default()), "[COMMAND_ENTRY]");
 
-  if let Err(e) = validate_conn_id(&connId) {
+  if let Err(e) = validate_conn_id(&connection_id) {
     timer.finish_error(&e);
     return Err(e);
   }
@@ -213,7 +215,7 @@ pub async fn collection_describe(connId: String, name: String) -> Result<Collect
     return Err(e);
   }
 
-  let entry = match get_connection_entry(&connId).await {
+  let entry = match get_connection_entry(&connection_id).await {
     Ok(e) => e,
     Err(e) => {
       timer.finish_error(&e);
@@ -421,17 +423,20 @@ pub async fn collection_describe(connId: String, name: String) -> Result<Collect
 }
 
 #[tauri::command]
-pub async fn collection_stats(connId: String, name: String) -> Result<CollectionStats, String> {
+pub async fn collection_stats(
+  connection_id: String,
+  name: String,
+) -> Result<CollectionStats, String> {
   let timer = DataflowTimer::new("collection_stats");
-  let params = serde_json::json!({ "connId": &connId, "name": &name });
+  let params = serde_json::json!({ "connection_id": &connection_id, "name": &name });
   tracing::debug!(command = "collection_stats", params = %redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default()), "[COMMAND_ENTRY]");
 
-  if let Err(e) = validate_conn_id(&connId) {
+  if let Err(e) = validate_conn_id(&connection_id) {
     timer.finish_error(&e);
     return Err(e);
   }
 
-  let entry = match get_connection_entry(&connId).await {
+  let entry = match get_connection_entry(&connection_id).await {
     Ok(e) => e,
     Err(e) => {
       timer.finish_error(&e);
@@ -507,17 +512,17 @@ pub async fn collection_stats(connId: String, name: String) -> Result<Collection
 }
 
 #[tauri::command]
-pub async fn collection_create(connId: String, name: String) -> Result<(), String> {
+pub async fn collection_create(connection_id: String, name: String) -> Result<(), String> {
   let timer = DataflowTimer::new("collection_create");
-  let params = serde_json::json!({ "connId": &connId, "name": &name });
+  let params = serde_json::json!({ "connection_id": &connection_id, "name": &name });
   tracing::debug!(command = "collection_create", params = %redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default()), "[COMMAND_ENTRY]");
 
-  if let Err(e) = validate_conn_id(&connId) {
+  if let Err(e) = validate_conn_id(&connection_id) {
     timer.finish_error(&e);
     return Err(e);
   }
 
-  let entry = match get_connection_entry(&connId).await {
+  let entry = match get_connection_entry(&connection_id).await {
     Ok(e) => e,
     Err(e) => {
       timer.finish_error(&e);
@@ -587,17 +592,17 @@ pub async fn collection_create(connId: String, name: String) -> Result<(), Strin
 }
 
 #[tauri::command]
-pub async fn collection_drop(connId: String, name: String) -> Result<(), String> {
+pub async fn collection_drop(connection_id: String, name: String) -> Result<(), String> {
   let timer = DataflowTimer::new("collection_drop");
-  let params = serde_json::json!({ "connId": &connId, "name": &name });
+  let params = serde_json::json!({ "connection_id": &connection_id, "name": &name });
   tracing::debug!(command = "collection_drop", params = %redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default()), "[COMMAND_ENTRY]");
 
-  if let Err(e) = validate_conn_id(&connId) {
+  if let Err(e) = validate_conn_id(&connection_id) {
     timer.finish_error(&e);
     return Err(e);
   }
 
-  let entry = match get_connection_entry(&connId).await {
+  let entry = match get_connection_entry(&connection_id).await {
     Ok(e) => e,
     Err(e) => {
       timer.finish_error(&e);
@@ -650,16 +655,15 @@ pub async fn collection_drop(connId: String, name: String) -> Result<(), String>
 
 #[tauri::command]
 pub async fn collection_rename(
-  connId: String,
+  connection_id: String,
   old_name: String,
   new_name: String,
 ) -> Result<(), String> {
   let timer = DataflowTimer::new("collection_rename");
-  let params =
-    serde_json::json!({ "connId": &connId, "old_name": &old_name, "new_name": &new_name });
+  let params = serde_json::json!({ "connection_id": &connection_id, "old_name": &old_name, "new_name": &new_name });
   tracing::debug!(command = "collection_rename", params = %redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default()), "[COMMAND_ENTRY]");
 
-  if let Err(e) = validate_conn_id(&connId) {
+  if let Err(e) = validate_conn_id(&connection_id) {
     timer.finish_error(&e);
     return Err(e);
   }
@@ -672,7 +676,7 @@ pub async fn collection_rename(
     return Err(e);
   }
 
-  let entry = match get_connection_entry(&connId).await {
+  let entry = match get_connection_entry(&connection_id).await {
     Ok(e) => e,
     Err(e) => {
       timer.finish_error(&e);

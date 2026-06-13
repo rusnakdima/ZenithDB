@@ -1,4 +1,3 @@
-use crate::commands::get_auth_context;
 use crate::commands::validate_conn_id;
 use crate::logger::{redact_sensitive_data, DataflowTimer};
 use crate::models::response::ResponseModel;
@@ -84,12 +83,6 @@ pub async fn save_connection(
   config: ConnectionConfig,
 ) -> Result<ResponseModel, ResponseModel> {
   let timer = DataflowTimer::new("save_connection");
-  let auth = get_auth_context();
-  if !auth.can_access_connection("*") {
-    let err = ResponseModel::error("Access denied");
-    timer.finish_error("Access denied");
-    return Err(err);
-  }
   let params = serde_json::json!({ "config": &config });
   tracing::debug!(command = "save_connection", params = %redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default()), "[COMMAND_ENTRY]");
   let result = state.connection_service.save_connection(config).await;
@@ -103,12 +96,6 @@ pub async fn save_connection(
 #[tauri::command]
 pub async fn list_connections(state: State<'_, AppState>) -> Result<ResponseModel, ResponseModel> {
   let timer = DataflowTimer::new("list_connections");
-  let auth = get_auth_context();
-  if !auth.can_access_connection("*") {
-    let err = ResponseModel::error("Access denied");
-    timer.finish_error("Access denied");
-    return Err(err);
-  }
   tracing::debug!(command = "list_connections", "[COMMAND_ENTRY]");
   let result = state.connection_service.list_connections().await;
   match &result {
@@ -124,12 +111,6 @@ pub async fn test_connection_status(
   id: &str,
 ) -> Result<ResponseModel, ResponseModel> {
   let timer = DataflowTimer::new("test_connection_status");
-  let auth = get_auth_context();
-  if !auth.can_access_connection(id) {
-    let err = ResponseModel::error("Access denied to connection");
-    timer.finish_error("Access denied");
-    return Err(err);
-  }
   if let Err(e) = validate_conn_id(id) {
     let err = ResponseModel::error(&e);
     timer.finish_error(&e);
@@ -148,23 +129,17 @@ pub async fn test_connection_status(
 #[tauri::command]
 pub async fn check_health(
   state: State<'_, AppState>,
-  connId: &str,
+  connection_id: &str,
 ) -> Result<ResponseModel, ResponseModel> {
   let timer = DataflowTimer::new("check_health");
-  let auth = get_auth_context();
-  if !auth.can_access_connection(connId) {
-    let err = ResponseModel::error("Access denied to connection");
-    timer.finish_error("Access denied");
-    return Err(err);
-  }
-  if let Err(e) = validate_conn_id(connId) {
+  if let Err(e) = validate_conn_id(connection_id) {
     let err = ResponseModel::error(&e);
     timer.finish_error(&e);
     return Err(err);
   }
-  let params = serde_json::json!({ "connId": connId });
+  let params = serde_json::json!({ "connection_id": connection_id });
   tracing::debug!(command = "check_health", params = %redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default()), "[COMMAND_ENTRY]");
-  let result = state.connection_service.check_health(connId).await;
+  let result = state.connection_service.check_health(connection_id).await;
   match &result {
     Ok(r) => timer.finish(r),
     Err(e) => timer.finish_error(&e.message),
@@ -178,12 +153,6 @@ pub async fn delete_connection(
   id: &str,
 ) -> Result<ResponseModel, ResponseModel> {
   let timer = DataflowTimer::new("delete_connection");
-  let auth = get_auth_context();
-  if !auth.can_access_connection(id) {
-    let err = ResponseModel::error("Access denied");
-    timer.finish_error("Access denied");
-    return Err(err);
-  }
   if let Err(e) = validate_conn_id(id) {
     let err = ResponseModel::error(&e);
     timer.finish_error(&e);
@@ -206,12 +175,6 @@ pub async fn update_connection(
   config: ConnectionConfig,
 ) -> Result<ResponseModel, ResponseModel> {
   let timer = DataflowTimer::new("update_connection");
-  let auth = get_auth_context();
-  if !auth.can_access_connection(id) {
-    let err = ResponseModel::error("Access denied");
-    timer.finish_error("Access denied");
-    return Err(err);
-  }
   if let Err(e) = validate_conn_id(id) {
     let err = ResponseModel::error(&e);
     timer.finish_error(&e);
@@ -233,12 +196,6 @@ pub async fn get_connection(
   id: &str,
 ) -> Result<ResponseModel, ResponseModel> {
   let timer = DataflowTimer::new("get_connection");
-  let auth = get_auth_context();
-  if !auth.can_access_connection(id) {
-    let err = ResponseModel::error("Access denied");
-    timer.finish_error("Access denied");
-    return Err(err);
-  }
   if let Err(e) = validate_conn_id(id) {
     let err = ResponseModel::error(&e);
     timer.finish_error(&e);

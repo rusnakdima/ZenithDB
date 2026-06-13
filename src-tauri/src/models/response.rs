@@ -73,22 +73,6 @@ impl ResponseModel {
       data: None,
     }
   }
-
-  pub fn info(message: impl Into<String>) -> Self {
-    Self {
-      status: Status::Info,
-      message: message.into(),
-      data: None,
-    }
-  }
-
-  pub fn warning(message: impl Into<String>) -> Self {
-    Self {
-      status: Status::Warning,
-      message: message.into(),
-      data: None,
-    }
-  }
 }
 
 impl From<String> for ResponseModel {
