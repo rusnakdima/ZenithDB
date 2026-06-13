@@ -1,4 +1,5 @@
 mod commands;
+mod helpers;
 mod infrastructure;
 mod logger;
 mod models;
@@ -37,7 +38,7 @@ pub fn run() -> Result<(), String> {
     .plugin(tauri_plugin_dialog::init())
     .plugin(tauri_plugin_mcp_bridge::init())
     .setup(|app| {
-      let app_state = AppState::new().map_err(|e| {
+      let app_state = AppState::new(app.handle().clone()).map_err(|e| {
         tracing::error!("Failed to create AppState: {}", e);
         e
       })?;
