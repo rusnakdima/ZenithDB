@@ -50,7 +50,10 @@ pub async fn collection_list(
 
   let result = match &entry.config.config {
     crate::commands::connection::ConnectionConfigEnum::Json { path, .. } => {
-      let path_obj = std::path::Path::new(path).to_path_buf();
+      let mut path_obj = std::path::Path::new(path).to_path_buf();
+      if let Some(db_name) = _db_name {
+        path_obj = path_obj.join(&db_name);
+      }
       if !path_obj.is_dir() {
         let result = CollectionListResult {
           collections: Vec::new(),

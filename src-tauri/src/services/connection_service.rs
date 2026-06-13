@@ -210,7 +210,8 @@ impl ConnectionService {
   pub async fn check_provider_health(config: &ConnectionConfig) -> ConnectionHealth {
     match &config.config {
       ConnectionConfigEnum::Json { path, .. } => {
-        let path_obj = std::path::Path::new(path);
+        let path = path.clone();
+        let path_obj = std::path::Path::new(&path);
         if !path_obj.exists() {
           return ConnectionHealth::err("json: path does not exist");
         }
@@ -218,12 +219,16 @@ impl ConnectionService {
           return ConnectionHealth::err("json: path is not a directory");
         }
         match tokio::time::timeout(std::time::Duration::from_secs(5), async {
-          tokio::fs::read_dir(path_obj).await
+          tokio::task::spawn_blocking(move || {
+            std::fs::read_dir(&path).map_err(|e| std::io::Error::from(e))
+          })
+          .await
         })
         .await
         {
-          Ok(Ok(_)) => ConnectionHealth::ok("json"),
-          Ok(Err(e)) => ConnectionHealth::err(&format!("json: {}", e)),
+          Ok(Ok(Ok(_))) => ConnectionHealth::ok("json"),
+          Ok(Ok(Err(e))) => ConnectionHealth::err(&format!("json: {}", e)),
+          Ok(Err(join_err)) => ConnectionHealth::err(&format!("json: task error: {}", join_err)),
           Err(_) => ConnectionHealth::err("json: health check timed out"),
         }
       }

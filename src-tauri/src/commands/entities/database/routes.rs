@@ -200,6 +200,7 @@ async fn list_json_databases(
       };
 
       let mut total_count = 0usize;
+      let mut has_json_files = false;
       while let Some(entry) = entries.next_entry().await.map_err_string()? {
         let entry_path = entry.path();
         if entry_path.is_dir() {
@@ -210,6 +211,17 @@ async fn list_json_databases(
               databases.push(DatabaseMeta::from_name(&name));
             }
           }
+        } else if let Some(ext) = entry_path.extension() {
+          if ext == "json" {
+            has_json_files = true;
+          }
+        }
+      }
+
+      if databases.is_empty() && has_json_files {
+        if let Some(folder_name) = path_obj.file_name().and_then(|n| n.to_str()) {
+          databases.push(DatabaseMeta::from_name(folder_name));
+          total_count = 1;
         }
       }
 
