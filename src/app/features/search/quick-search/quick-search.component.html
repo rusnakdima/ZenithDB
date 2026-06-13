@@ -3,10 +3,10 @@
   class="fixed inset-0 z-50 flex items-start justify-center pt-[15vh]"
   (click)="onClose()"
 >
-  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+  <div class="absolute inset-0 bg-[var(--bg-backdrop-light)] backdrop-blur-sm"></div>
 
   <div
-    class="relative w-full max-w-2xl rounded-xl border border-[var(--accent)] bg-transparent shadow-2xl"
+    class="relative w-full max-w-2xl rounded-xl border border-[var(--accent)] bg-[var(--bg-modal)] shadow-2xl"
     (click)="$event.stopPropagation()"
   >
     <div class="flex items-center gap-3 border-b border-[var(--border-subtle)] px-4 py-3">

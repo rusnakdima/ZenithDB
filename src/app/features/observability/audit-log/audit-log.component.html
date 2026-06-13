@@ -155,7 +155,7 @@
 
   @if (selectedEntry()) {
     <app-change-detail
-      class="fixed inset-0 z-50 bg-black/50"
+      class="fixed inset-0 z-50 bg-[var(--bg-backdrop-light)]"
       [before]="selectedEntry()!.before"
       [after]="selectedEntry()!.after"
       (close)="onCloseDetail()"
@@ -163,9 +163,9 @@
   }
 
   @if (showExportDialog()) {
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-[var(--bg-backdrop-light)]">
       <div
-        class="min-w-[300px] rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] p-6"
+        class="min-w-[300px] rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-modal)] p-6"
       >
         <h4 class="mb-4 text-sm font-bold text-[var(--text-main)]">Export Audit Log</h4>
         <div class="flex gap-3">

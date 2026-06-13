@@ -1,10 +1,10 @@
 @if (isOpen()) {
   <div
-    class="command-palette-backdrop fixed inset-0 z-[9999] flex items-start justify-center bg-black/60 pt-[15vh] backdrop-blur-sm"
+    class="command-palette-backdrop fixed inset-0 z-[9999] flex items-start justify-center bg-[var(--bg-backdrop-light)] pt-[15vh] backdrop-blur-sm"
     (click)="onBackdropClick($event)"
   >
     <div
-      class="w-full max-w-xl overflow-hidden rounded-2xl border border-[var(--accent)] bg-transparent shadow-2xl backdrop-blur-md"
+      class="w-full max-w-xl overflow-hidden rounded-2xl border border-[var(--accent)] bg-[var(--bg-modal)] shadow-2xl backdrop-blur-md"
       style="max-height: 60vh; display: flex; flex-direction: column"
     >
       <div class="flex items-center gap-3 border-b border-[var(--accent)] px-4 py-3">

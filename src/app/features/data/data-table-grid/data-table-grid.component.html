@@ -199,9 +199,11 @@
 ></app-bulk-action-bar>
 
 @if (showBulkDeleteConfirm()) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center bg-[var(--bg-backdrop-light)] backdrop-blur-sm"
+  >
     <div
-      class="w-full max-w-md rounded-2xl border border-[var(--accent)] bg-transparent p-6 shadow-2xl"
+      class="w-full max-w-md rounded-2xl border border-[var(--accent)] bg-[var(--bg-modal)] p-6 shadow-2xl"
     >
       <div class="mb-4 flex items-center gap-3">
         <div class="flex h-10 w-10 items-center justify-center rounded-full bg-red-600/20">
