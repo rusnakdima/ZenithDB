@@ -1,12 +1,7 @@
-use crate::commands::connection_entity::ConnectionEntity;
-use crate::commands::connections_db::get_connections_db;
+use crate::services::connection_service::ConnectionService;
 
-pub mod admin;
-pub mod auth;
 pub mod connection;
 pub mod connection_entity;
-pub mod connections_db;
-pub mod data;
 pub mod dataflow;
 pub mod decentralization;
 pub mod entities;
@@ -18,19 +13,17 @@ pub mod types;
 
 #[derive(Debug, Clone)]
 pub struct ConnectionEntry {
-  pub id: String,
   pub config: crate::commands::connection::ConnectionConfig,
 }
 
 pub async fn get_connection_entry(conn_id: &str) -> Result<ConnectionEntry, String> {
-  let db = get_connections_db().await?;
-  let db = db.clone();
-  let guard = db.lock().await;
-  let result: Option<ConnectionEntity> = guard.find_by_id(conn_id).map_err(|e| e.to_string())?;
-  drop(guard);
-  let entity = result.ok_or_else(|| format!("Connection {} not found", conn_id))?;
+  let service = ConnectionService::get_instance();
+  let entity = service
+    .find_entity_by_id(conn_id)
+    .await
+    .map_err(|e| e.to_string())?
+    .ok_or_else(|| format!("Connection {} not found", conn_id))?;
   Ok(ConnectionEntry {
-    id: entity.id,
     config: entity.config,
   })
 }
@@ -82,10 +75,6 @@ pub fn validate_name(name: &str) -> Result<(), String> {
     return Err("Name contains invalid patterns".to_string());
   }
   Ok(())
-}
-
-pub fn get_auth_context() -> crate::commands::auth::AuthContext {
-  crate::commands::auth::AuthContext::new()
 }
 
 #[macro_export]

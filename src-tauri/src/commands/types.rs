@@ -60,13 +60,3 @@ impl DatabaseMeta {
     }
   }
 }
-
-pub fn parse_database_rows(rows: &[Vec<Value>]) -> Vec<DatabaseMeta> {
-  let mut dbs = Vec::new();
-  for row in rows {
-    if let Some(name) = row.first().and_then(|v| v.as_str()) {
-      dbs.push(DatabaseMeta::from_name(name));
-    }
-  }
-  dbs
-}
