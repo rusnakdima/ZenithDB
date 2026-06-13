@@ -80,20 +80,7 @@ export class ConnectionFormComponent implements OnInit {
   saving = signal(false);
 
   constructor() {
-    const isOpen = this.connectionFormService.isOpen();
-    const editId = this.connectionFormService.editingId();
-    const isDup = this.connectionFormService.isDuplicate();
-
-    if (isOpen) {
-      this.isFormOpen.set(true);
-      if (editId) {
-        this.editingId = editId;
-        this.loadConnection(editId, isDup);
-      } else {
-        this.editingId = null;
-        this.resetForm();
-      }
-    }
+    this.checkFormState();
   }
 
   ngOnInit() {
@@ -105,6 +92,24 @@ export class ConnectionFormComponent implements OnInit {
     const duplicateId = this.route.snapshot.queryParamMap.get("duplicate");
     if (duplicateId) {
       this.connectionFormService.openForDuplicate(duplicateId);
+    }
+
+    setTimeout(() => this.checkFormState(), 0);
+  }
+
+  private checkFormState() {
+    if (this.connectionFormService.isOpen() && !this.isFormOpen()) {
+      this.isFormOpen.set(true);
+      const editId = this.connectionFormService.editingId();
+      const isDup = this.connectionFormService.isDuplicate();
+
+      if (editId) {
+        this.editingId = editId;
+        this.loadConnection(editId, isDup);
+      } else {
+        this.editingId = null;
+        this.resetForm();
+      }
     }
   }
 

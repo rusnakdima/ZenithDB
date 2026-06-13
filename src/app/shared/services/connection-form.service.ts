@@ -1,38 +1,38 @@
-import { Injectable, signal, inject } from "@angular/core";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { Injectable, signal } from "@angular/core";
 
 @Injectable({ providedIn: "root" })
 export class ConnectionFormService {
-  private logger = inject(AppLoggerService);
-  isOpen = signal(false);
-  editingId = signal<string | null>(null);
-  isDuplicate = signal(false);
+  private openSignal = signal(false);
+  private editIdSignal = signal<string | null>(null);
+  private duplicateSignal = signal(false);
 
-  openNew() {
-    this.logger.debug("[CONNECTION_FORM]", "openNew called");
-    this.editingId.set(null);
-    this.isDuplicate.set(false);
-    this.isOpen.set(true);
+  openNew(): void {
+    this.openSignal.set(true);
+    this.editIdSignal.set(null);
+    this.duplicateSignal.set(false);
   }
 
-  openForEdit(id: string) {
-    this.logger.debug("[CONNECTION_FORM]", "openForEdit called", { id });
-    this.editingId.set(id);
-    this.isDuplicate.set(false);
-    this.isOpen.set(true);
+  openForEdit(id: string): void {
+    this.openSignal.set(true);
+    this.editIdSignal.set(id);
+    this.duplicateSignal.set(false);
   }
 
-  openForDuplicate(id: string) {
-    this.logger.debug("[CONNECTION_FORM]", "openForDuplicate called", { id });
-    this.editingId.set(id);
-    this.isDuplicate.set(true);
-    this.isOpen.set(true);
+  openForDuplicate(id: string): void {
+    this.openSignal.set(true);
+    this.editIdSignal.set(id);
+    this.duplicateSignal.set(true);
   }
 
-  close() {
-    this.logger.debug("[CONNECTION_FORM]", "close called");
-    this.isOpen.set(false);
-    this.editingId.set(null);
-    this.isDuplicate.set(false);
+  close(): void {
+    this.openSignal.set(false);
+    this.editIdSignal.set(null);
+    this.duplicateSignal.set(false);
   }
+
+  isOpen = (): boolean => this.openSignal();
+
+  editingId = (): string | null => this.editIdSignal();
+
+  isDuplicate = (): boolean => this.duplicateSignal();
 }
