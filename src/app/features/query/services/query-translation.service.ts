@@ -4,7 +4,7 @@ import { ProviderDetectorService } from "./provider-detector.service";
 import { SyntaxMode } from "../models";
 import { MONGO_OPERATOR_MAP } from "@shared/utils/operator.utils";
 import { escapeSqlValue } from "@shared/utils/string.utils";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 export interface TranslationResult {
   query: string;
@@ -15,7 +15,7 @@ export interface TranslationResult {
 @Injectable({ providedIn: "root" })
 export class QueryTranslationService {
   private readonly providerDetector = inject(ProviderDetectorService);
-  private readonly logger = inject(AppLoggerService);
+  private readonly logger = inject(LoggingService);
 
   translateToProvider(filter: FilterExpression, mode?: SyntaxMode): TranslationResult {
     const syntaxMode = mode ?? this.providerDetector.currentSyntaxMode();

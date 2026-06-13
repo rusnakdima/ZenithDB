@@ -3,7 +3,7 @@ import { FilterExpression, FilterOperator } from "@shared/models/connection.conf
 import { FilterBuilderService } from "./filter-builder.service";
 import { ProviderDetectorService } from "./provider-detector.service";
 import { MONGO_OPERATOR_MAP } from "@shared/utils/operator.utils";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 export interface ValidationError {
   line: number;
@@ -22,7 +22,7 @@ export interface ValidationResult {
 export class QueryValidatorService {
   private readonly filterBuilder = inject(FilterBuilderService);
   private readonly providerDetector = inject(ProviderDetectorService);
-  private readonly logger = inject(AppLoggerService);
+  private readonly logger = inject(LoggingService);
 
   validateQuery(query: string): ValidationResult {
     const errors: ValidationError[] = [];

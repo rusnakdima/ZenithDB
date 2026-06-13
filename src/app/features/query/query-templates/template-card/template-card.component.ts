@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter, inject } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { QueryTemplate, TEMPLATE_CATEGORIES } from "../../models";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 @Component({
   selector: "app-template-card",
@@ -10,7 +10,7 @@ import { AppLoggerService } from "@shared/services/app-logger.service";
   templateUrl: "./template-card.component.html",
 })
 export class TemplateCardComponent {
-  private readonly logger = inject(AppLoggerService);
+  private readonly logger = inject(LoggingService);
 
   @Input() template!: QueryTemplate;
   @Input() isFavorite = false;

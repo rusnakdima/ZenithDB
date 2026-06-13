@@ -37,7 +37,7 @@ import {
   TemplateService,
   HintAnalyzerService,
 } from "../services";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 import { VisualQueryBuilderComponent } from "../visual-query-builder/visual-query-builder.component";
 import { QueryTemplatesComponent } from "../query-templates/query-templates.component";
@@ -293,7 +293,7 @@ export class UniversalQueryEditorComponent implements OnInit, OnChanges {
   private readonly filterBuilder = inject(FilterBuilderService);
   private readonly templateService = inject(TemplateService);
   private readonly hintAnalyzer = inject(HintAnalyzerService);
-  private readonly logger = inject(AppLoggerService);
+  private readonly logger = inject(LoggingService);
   private readonly cdr = inject(ChangeDetectorRef);
 
   @Input() collectionName = "";

@@ -1,6 +1,6 @@
 import { Injectable, signal, computed, inject } from "@angular/core";
 import { PersistentStorageService } from "@shared/services/persistent-storage.service";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 export interface HistoryItem {
   id: string;
@@ -12,7 +12,7 @@ export interface HistoryItem {
 @Injectable()
 export class QueryEditorStore {
   private storage = inject(PersistentStorageService);
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
 
   readonly showHistory = signal(false);
   readonly history = signal<HistoryItem[]>([]);

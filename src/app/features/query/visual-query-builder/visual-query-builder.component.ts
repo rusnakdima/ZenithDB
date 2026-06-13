@@ -16,7 +16,7 @@ import { QueryGroupComponent } from "./query-group/query-group.component";
 import { ConditionGroup, SortConfig, createEmptyGroup } from "../models";
 import { FilterBuilderService, SchemaCompletionService } from "../services";
 import { FilterExpression } from "@shared/models/connection.config";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 @Component({
   selector: "app-visual-query-builder",
@@ -27,7 +27,7 @@ import { AppLoggerService } from "@shared/services/app-logger.service";
 export class VisualQueryBuilderComponent implements OnInit, OnChanges {
   private readonly filterBuilder = inject(FilterBuilderService);
   private readonly schemaCompletion = inject(SchemaCompletionService);
-  private readonly logger = inject(AppLoggerService);
+  private readonly logger = inject(LoggingService);
 
   @Input() collectionName = "";
   @Input() initialFilter: FilterExpression | null = null;

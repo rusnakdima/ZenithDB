@@ -14,7 +14,7 @@ import { FormsModule } from "@angular/forms";
 import { QueryCacheService, CacheEntry } from "./cache.service";
 import { TIME_CONSTANTS } from "@shared/utils/constants";
 import { formatTimeAgo } from "@shared/utils/time.utils";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 @Component({
   selector: "app-cache-settings",
@@ -26,7 +26,7 @@ import { AppLoggerService } from "@shared/services/app-logger.service";
 export class CacheSettingsComponent implements OnInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
   private cacheService = inject(QueryCacheService);
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
 
   queryKey = input<string>("");
   initialTtl = input<number>(300);

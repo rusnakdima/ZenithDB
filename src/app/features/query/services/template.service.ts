@@ -3,7 +3,7 @@ import { PersistentStorageService } from "@shared/services/persistent-storage.se
 import { QueryTemplate, TemplateCategory, QueryTemplateFilter } from "../models";
 import { FilterOperator } from "@shared/models/connection.config";
 import { findById } from "@shared/utils/array.utils";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 const TEMPLATES_STORAGE_KEY = "zenith_query_templates";
 const FAVORITES_STORAGE_KEY = "zenith_template_favorites";
@@ -11,7 +11,7 @@ const FAVORITES_STORAGE_KEY = "zenith_template_favorites";
 @Injectable({ providedIn: "root" })
 export class TemplateService {
   private readonly storage = inject(PersistentStorageService);
-  private readonly logger = inject(AppLoggerService);
+  private readonly logger = inject(LoggingService);
 
   private readonly templatesSignal = signal<QueryTemplate[]>([]);
   private readonly favoritesSignal = signal<Set<string>>(new Set());

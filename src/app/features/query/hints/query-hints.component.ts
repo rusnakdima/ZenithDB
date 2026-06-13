@@ -10,7 +10,7 @@ import {
 } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { HintAnalyzerService, QueryHint } from "../services";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 @Component({
   selector: "app-query-hints",
@@ -20,7 +20,7 @@ import { AppLoggerService } from "@shared/services/app-logger.service";
 })
 export class QueryHintsComponent implements OnInit {
   private readonly hintAnalyzer = inject(HintAnalyzerService);
-  private readonly logger = inject(AppLoggerService);
+  private readonly logger = inject(LoggingService);
 
   @Input() collectionName = "";
   @Input() filterText = "";

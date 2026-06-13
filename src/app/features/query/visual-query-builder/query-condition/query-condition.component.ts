@@ -19,7 +19,7 @@ import {
   createEmptyCondition,
 } from "../../models";
 import { SchemaCompletionService } from "../../services";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 @Component({
   selector: "app-query-condition",
@@ -29,7 +29,7 @@ import { AppLoggerService } from "@shared/services/app-logger.service";
 })
 export class QueryConditionComponent implements OnInit {
   private readonly schemaCompletion = inject(SchemaCompletionService);
-  private readonly logger = inject(AppLoggerService);
+  private readonly logger = inject(LoggingService);
 
   @Input() condition!: Condition;
   @Input() collectionName = "";

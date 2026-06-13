@@ -13,7 +13,7 @@ import { FormsModule } from "@angular/forms";
 import { QueryTemplate, TEMPLATE_CATEGORIES, TemplateCategory } from "../models";
 import { TemplateService } from "../services";
 import { TemplateCardComponent } from "./template-card/template-card.component";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 @Component({
   selector: "app-query-templates",
@@ -23,7 +23,7 @@ import { AppLoggerService } from "@shared/services/app-logger.service";
 })
 export class QueryTemplatesComponent implements OnInit {
   private readonly templateService = inject(TemplateService);
-  private readonly logger = inject(AppLoggerService);
+  private readonly logger = inject(LoggingService);
 
   @Output() selectTemplate = new EventEmitter<QueryTemplate>();
   @Output() close = new EventEmitter<void>();

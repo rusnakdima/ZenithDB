@@ -8,11 +8,11 @@ import {
   ProjectionConfig,
   FieldType,
 } from "../models";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 @Injectable({ providedIn: "root" })
 export class FilterBuilderService {
-  private readonly logger = inject(AppLoggerService);
+  private readonly logger = inject(LoggingService);
   buildFilter(groups: ConditionGroup[]): FilterExpression | null {
     if (!groups || groups.length === 0) return null;
 

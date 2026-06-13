@@ -9,7 +9,7 @@ import {
   FieldInfo,
 } from "../../models";
 import { SchemaCompletionService } from "../../services";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 @Component({
   selector: "app-query-group",
@@ -19,7 +19,7 @@ import { AppLoggerService } from "@shared/services/app-logger.service";
 })
 export class QueryGroupComponent implements OnInit {
   private readonly schemaCompletion = inject(SchemaCompletionService);
-  private readonly logger = inject(AppLoggerService);
+  private readonly logger = inject(LoggingService);
 
   @Input() group!: ConditionGroup;
   @Input() collectionName = "";

@@ -2,7 +2,7 @@ import { Injectable, inject } from "@angular/core";
 import { FilterExpression } from "@shared/models/connection.config";
 import { SchemaCompletionService } from "./schema-completion.service";
 import { ProviderDetectorService } from "./provider-detector.service";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 export interface QueryHint {
   type: "info" | "warning" | "error";
@@ -25,7 +25,7 @@ export interface IndexRecommendation {
 export class HintAnalyzerService {
   private readonly schemaCompletion = inject(SchemaCompletionService);
   private readonly providerDetector = inject(ProviderDetectorService);
-  private readonly logger = inject(AppLoggerService);
+  private readonly logger = inject(LoggingService);
 
   async analyzeQuery(filter: FilterExpression, collectionName: string): Promise<QueryHint[]> {
     const hints: QueryHint[] = [];

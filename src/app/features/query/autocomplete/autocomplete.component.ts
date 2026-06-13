@@ -13,7 +13,7 @@ import {
 } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { AutocompleteService, CompletionItem } from "../services";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 @Component({
   selector: "app-autocomplete",
@@ -23,7 +23,7 @@ import { AppLoggerService } from "@shared/services/app-logger.service";
 })
 export class AutocompleteComponent implements OnInit, OnDestroy {
   private readonly autocompleteService = inject(AutocompleteService);
-  private readonly logger = inject(AppLoggerService);
+  private readonly logger = inject(LoggingService);
 
   @Input() minWidth = 280;
   @Input() position = signal({ top: 0, left: 0 });
