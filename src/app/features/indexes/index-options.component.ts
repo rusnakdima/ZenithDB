@@ -3,7 +3,7 @@ import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { IndexOptions } from "./index.service";
 import { IndexType } from "./create-index-dialog.component";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 @Component({
   selector: "app-index-options",
@@ -16,7 +16,7 @@ export class IndexOptionsComponent {
   @Input() options: IndexOptions = {};
   @Output() optionsChange = new EventEmitter<IndexOptions>();
 
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
 
   onUniqueChange(unique: boolean): void {
     this.logger.debug("[INDEX]", "Index unique option changed", { unique });

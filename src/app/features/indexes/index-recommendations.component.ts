@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter, inject } from "@angular/core";
 import { CommonModule } from "@angular/common";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 @Component({
   selector: "app-index-recommendations",
@@ -21,7 +21,7 @@ export class IndexRecommendationsComponent {
   @Output() acceptRecommendation = new EventEmitter<unknown>();
   @Output() dismissRecommendation = new EventEmitter<unknown>();
 
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
   private _recommendations: unknown[] = [];
 
   onAcceptRecommendation(recommendation: unknown): void {

@@ -7,7 +7,7 @@ import { CreateIndexDialogComponent } from "./create-index-dialog.component";
 import { DropIndexDialogComponent } from "./drop-index-dialog.component";
 import { IndexRecommendationsComponent } from "./index-recommendations.component";
 import { ToastService } from "@services/toast.service";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 type SortColumn = "name" | "type" | "fields" | "unique" | "sparse";
 type SortDirection = "asc" | "desc";
@@ -27,7 +27,7 @@ type SortDirection = "asc" | "desc";
 export class IndexBrowserComponent implements OnInit {
   private readonly indexService = inject(IndexService);
   private readonly toast = inject(ToastService);
-  private readonly logger = inject(AppLoggerService);
+  private readonly logger = inject(LoggingService);
 
   @Input() collectionName = "";
 

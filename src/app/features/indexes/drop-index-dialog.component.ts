@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter, inject } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { ModalComponent } from "@shared/components/modal/modal.component";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 @Component({
   selector: "app-drop-index-dialog",
@@ -15,7 +15,7 @@ export class DropIndexDialogComponent {
   @Output() closed = new EventEmitter<void>();
   @Output() confirm = new EventEmitter<void>();
 
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
 
   onCancel(): void {
     this.logger.debug("[INDEX]", "Drop index dialog cancelled", { indexName: this.indexName });

@@ -9,7 +9,7 @@ import { IndexService, IndexDefinition, IndexField, IndexOptions } from "./index
 import { SchemaCompletionService } from "@features/query/services";
 import { FieldInfo } from "@features/query/models";
 import { ToastService } from "@services/toast.service";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 export type IndexType = "single" | "compound" | "text" | "geospatial" | "ttl" | "hashed";
 
@@ -30,7 +30,7 @@ export class CreateIndexDialogComponent implements OnInit {
   private readonly indexService = inject(IndexService);
   private readonly schemaCompletion = inject(SchemaCompletionService);
   private readonly toast = inject(ToastService);
-  private readonly logger = inject(AppLoggerService);
+  private readonly logger = inject(LoggingService);
 
   @Input() collectionName = "";
 

@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter, inject } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { IndexType } from "./create-index-dialog.component";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 interface IndexTypeOption {
   type: IndexType;
@@ -59,7 +59,7 @@ export class IndexTypeSelectorComponent {
   @Input() selectedType: IndexType = "single";
   @Output() typeChange = new EventEmitter<IndexType>();
 
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
 
   indexTypes = INDEX_TYPES;
 
