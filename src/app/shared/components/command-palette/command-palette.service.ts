@@ -2,14 +2,14 @@ import { Injectable, inject } from "@angular/core";
 import { Router } from "@angular/router";
 import { Command } from "./command.model";
 import { ThemeService } from "@shared/services/theme.service";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 import { findById } from "@shared/utils/array.utils";
 
 @Injectable({ providedIn: "root" })
 export class CommandPaletteService {
   private router = inject(Router);
   private themeService = inject(ThemeService);
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
 
   private readonly recentCommandsKey = "command_palette_recent";
   private readonly maxRecent = 5;

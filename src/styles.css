@@ -1280,6 +1280,10 @@ html.light .json-key {
     @apply bg-[var(--bg-elevated)] text-[var(--accent)];
   }
 
+  .menu-panel-bg {
+    --mat-menu-container-color: var(--bg-card) !important;
+  }
+
   .menu-btn .icon {
     @apply h-[18px] w-[18px] text-lg;
   }

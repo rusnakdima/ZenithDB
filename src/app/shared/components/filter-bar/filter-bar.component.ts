@@ -22,7 +22,7 @@ import { MatIconModule } from "@angular/material/icon";
 import { ToastService } from "@services/toast.service";
 import { CheckboxComponent } from "@shared/components/checkbox/checkbox.component";
 import { PersistentStorageService } from "@shared/services/persistent-storage.service";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 import { safeJsonParse } from "@shared/utils/json.utils";
 
 @Component({
@@ -35,7 +35,7 @@ import { safeJsonParse } from "@shared/utils/json.utils";
 export class FilterBarComponent implements OnInit, OnChanges, OnDestroy {
   private localStorage = new PersistentStorageService();
   private cdr = inject(ChangeDetectorRef);
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
   @Input() filter = "";
   @Input() viewMode: "grid" | "json" = "grid";
   @Input() availableColumns: { name: string; data_type: string }[] = [];
