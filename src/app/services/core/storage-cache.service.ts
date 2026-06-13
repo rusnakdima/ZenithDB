@@ -1,8 +1,9 @@
 import { Injectable, signal, computed, Injector } from "@angular/core";
 import { StorageEntityService } from "./storage-entity.service";
+import { CACHE_CONSTANTS } from "@shared/utils/constants";
 
-const DEFAULT_CACHE_TTL_MS = 5 * 60 * 1000;
-const MAX_CACHE_SIZE = 100;
+const DEFAULT_CACHE_TTL_MS = CACHE_CONSTANTS.DEFAULT_TTL_MS;
+const MAX_CACHE_SIZE = CACHE_CONSTANTS.MAX_CONNECTIONS_CACHE;
 
 interface CacheEntry<T> {
   data: T;
@@ -84,8 +85,9 @@ export class StorageCacheService {
     fetchFn: () => Promise<T>,
     ttl: number = DEFAULT_CACHE_TTL_MS
   ): Promise<T> {
-    if (this.inFlightRequests.has(key)) {
-      return this.inFlightRequests.get(key) as Promise<T>;
+    const existing = this.inFlightRequests.get(key);
+    if (existing) {
+      return existing as Promise<T>;
     }
 
     const requestPromise = (async () => {
@@ -98,7 +100,7 @@ export class StorageCacheService {
       }
     })();
 
-    this.inFlightRequests.set(key, requestPromise as unknown as Promise<unknown>);
+    this.inFlightRequests.set(key, requestPromise);
     return requestPromise;
   }
 
