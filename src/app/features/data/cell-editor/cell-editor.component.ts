@@ -10,7 +10,7 @@ import {
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { isNullOrUndefined } from "@shared/utils/collection.utils";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 @Component({
   selector: "app-cell-editor",
@@ -21,7 +21,7 @@ import { AppLoggerService } from "@shared/services/app-logger.service";
 })
 export class CellEditorComponent {
   private cdr = inject(ChangeDetectorRef);
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
   @Input() value: unknown = null;
   @Input() isEditing = false;
   @Input() editValue = "";

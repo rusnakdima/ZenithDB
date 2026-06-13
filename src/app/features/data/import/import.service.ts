@@ -2,7 +2,7 @@ import { Injectable, inject, signal } from "@angular/core";
 import { ToastService } from "@services/toast.service";
 import { ApiProvider } from "@providers/api.provider";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 export interface ParsedData {
   headers: string[];
@@ -41,7 +41,7 @@ export class ImportService {
   private toast = inject(ToastService);
   private api = inject(ApiProvider);
   private connectionState = inject(ConnectionStateService);
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
 
   private progressSignal = signal<ImportProgress | null>(null);
   readonly progress = this.progressSignal.asReadonly();
@@ -222,7 +222,11 @@ export class ImportService {
 
       for (const row of mappedBatch) {
         try {
-          const result = await this.api.saveRow(connId, collection, row as any);
+          const result = await this.api.saveRow(
+            connId,
+            collection,
+            row as import("@shared/models/connection.config").RowData
+          );
           if (result) {
             imported++;
           } else {

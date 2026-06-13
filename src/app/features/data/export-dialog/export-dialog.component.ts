@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter, signal, inject } from "@angular/core";
 import { MatIconModule } from "@angular/material/icon";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 export type ExportFormat = "csv" | "json" | "jsonl" | "sql" | "markdown";
 
@@ -11,7 +11,7 @@ export type ExportFormat = "csv" | "json" | "jsonl" | "sql" | "markdown";
   templateUrl: "./export-dialog.component.html",
 })
 export class ExportDialogComponent {
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
 
   @Input() visible = false;
   @Input() selectedCount = 0;

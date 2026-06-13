@@ -13,7 +13,7 @@ import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
 import { ColumnInfo, RowData } from "@shared/models/connection.config";
 import { isNullOrUndefined } from "@shared/utils/collection.utils";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 @Component({
   selector: "app-record-form",
@@ -24,7 +24,7 @@ import { AppLoggerService } from "@shared/services/app-logger.service";
 })
 export class RecordFormComponent {
   private cdr = inject(ChangeDetectorRef);
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
   mode = input<"add" | "edit">("add");
   columns = input<ColumnInfo[]>([]);
   data = input<RowData | null>(null);

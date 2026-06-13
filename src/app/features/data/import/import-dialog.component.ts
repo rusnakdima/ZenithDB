@@ -12,7 +12,7 @@ import {
 import { SchemaCompletionService } from "@features/query/services/schema-completion.service";
 import { FieldMappingComponent } from "./field-mapping.component";
 import { ToastService } from "@services/toast.service";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 @Component({
   selector: "app-import-dialog",
@@ -24,7 +24,7 @@ export class ImportDialogComponent implements OnInit {
   private importService = inject(ImportService);
   private schemaCompletion = inject(SchemaCompletionService);
   private toast = inject(ToastService);
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
 
   closed = output<void>();
 

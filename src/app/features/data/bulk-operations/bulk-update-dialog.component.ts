@@ -14,7 +14,7 @@ import { ModalComponent } from "@shared/components/modal/modal.component";
 import { BulkOperationsService, BulkUpdateRequest } from "./bulk-operations.service";
 import { FieldInfo } from "@features/query/models";
 import { ToastService } from "@services/toast.service";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 @Component({
   selector: "app-bulk-update-dialog",
@@ -25,7 +25,7 @@ import { AppLoggerService } from "@shared/services/app-logger.service";
 export class BulkUpdateDialogComponent implements OnInit {
   private readonly bulkOps = inject(BulkOperationsService);
   private readonly toast = inject(ToastService);
-  private readonly logger = inject(AppLoggerService);
+  private readonly logger = inject(LoggingService);
 
   @Input() collectionName = "";
   @Input() documentIds: string[] = [];

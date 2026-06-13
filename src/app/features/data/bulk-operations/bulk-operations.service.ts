@@ -5,7 +5,7 @@ import { SchemaCompletionService } from "@features/query/services";
 import { FieldInfo } from "@features/query/models";
 import { RowData } from "@shared/models/connection.config";
 import { getRecordId } from "@shared/utils/record.utils";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 export interface BulkUpdateRequest {
   collectionName: string;
@@ -31,7 +31,7 @@ export class BulkOperationsService {
   private readonly dataStore = inject(DataStoreService);
   private readonly toast = inject(ToastService);
   private readonly schemaCompletion = inject(SchemaCompletionService);
-  private readonly logger = inject(AppLoggerService);
+  private readonly logger = inject(LoggingService);
 
   private readonly operationInProgress = signal(false);
 
@@ -160,7 +160,7 @@ export class BulkOperationsService {
     const result = await this.dataStore.queryData(
       collectionName,
       {
-        filter: { field: "_id", operator: "eq", value: id } as any,
+        filter: { field: "_id", operator: "eq" as const, value: id },
         limit: 1,
       },
       true

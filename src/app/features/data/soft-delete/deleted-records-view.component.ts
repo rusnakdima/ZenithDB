@@ -13,7 +13,7 @@ import { SoftDeleteService, DeletedRecord } from "./soft-delete.service";
 import { ConfirmService } from "@shared/services/confirm.service";
 import { ToastService } from "@services/toast.service";
 import { RowData } from "@shared/models/connection.config";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 @Component({
   selector: "app-deleted-records-view",
@@ -26,7 +26,7 @@ export class DeletedRecordsViewComponent {
   private softDeleteService = inject(SoftDeleteService);
   private confirmService = inject(ConfirmService);
   private toast = inject(ToastService);
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
 
   @Input() collectionName = "";
   @Input() columns: { name: string; dataType: string }[] = [];

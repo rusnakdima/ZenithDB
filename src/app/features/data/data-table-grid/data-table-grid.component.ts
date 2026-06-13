@@ -37,7 +37,7 @@ import { RecordFormComponent } from "@features/data/record-form/record-form.comp
 import { BulkActionBarComponent } from "@features/data/bulk-action-bar/bulk-action-bar.component";
 import { DataTableGridStore } from "./store/data-table-grid.store";
 import { DataTableGridService } from "./services/data-table-grid.service";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 @Component({
   selector: "app-data-table-grid",
@@ -61,7 +61,7 @@ import { AppLoggerService } from "@shared/services/app-logger.service";
 export class DataTableGridComponent implements OnInit, OnChanges, OnDestroy, AfterViewInit {
   private store = inject(DataTableGridStore);
   private service = inject(DataTableGridService);
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
 
   @ViewChild("headerScroll") headerScrollRef!: ElementRef<HTMLDivElement>;
   @ViewChild("bodyScroll") bodyScrollRef!: ElementRef<HTMLDivElement>;

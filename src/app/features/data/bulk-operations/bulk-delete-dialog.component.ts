@@ -4,7 +4,7 @@ import { FormsModule } from "@angular/forms";
 import { ModalComponent } from "@shared/components/modal/modal.component";
 import { BulkOperationsService, BulkDeleteRequest } from "./bulk-operations.service";
 import { ToastService } from "@services/toast.service";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 @Component({
   selector: "app-bulk-delete-dialog",
@@ -15,7 +15,7 @@ import { AppLoggerService } from "@shared/services/app-logger.service";
 export class BulkDeleteDialogComponent {
   private readonly bulkOps = inject(BulkOperationsService);
   private readonly toast = inject(ToastService);
-  private readonly logger = inject(AppLoggerService);
+  private readonly logger = inject(LoggingService);
 
   @Input() collectionName = "";
   @Input() documentIds: string[] = [];

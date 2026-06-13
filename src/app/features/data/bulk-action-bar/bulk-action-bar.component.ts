@@ -1,6 +1,6 @@
 import { Component, input, output, inject } from "@angular/core";
 import { MatIconModule } from "@angular/material/icon";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 @Component({
   selector: "app-bulk-action-bar",
