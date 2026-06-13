@@ -1,14 +1,14 @@
 import { Injectable, inject, signal } from "@angular/core";
 import { CacheService } from "@shared/services/cache.service";
 import { TauriBridgeService } from "@providers/tauri-bridge.service";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 import { TIME_CONSTANTS, QUERY_CONSTANTS } from "@shared/utils/constants";
 import { ConnectionHealth } from "@shared/models/connection.config";
 
 @Injectable({ providedIn: "root" })
 export class HealthApiService extends CacheService {
   private tauriBridge = inject(TauriBridgeService);
-  private appLogger = inject(AppLoggerService);
+  private appLogger = inject(LoggingService);
   private healthSignal = signal<Map<string, ConnectionHealth>>(new Map());
   private healthTimestamps = signal<Map<string, number>>(new Map());
   private refreshCallbacks = new Map<string, Set<() => void>>();

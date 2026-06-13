@@ -1,7 +1,7 @@
 import { Injectable, inject } from "@angular/core";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { LoadingService } from "@shared/services/loading.service";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 import { withConnectionAndLoading } from "@shared/utils/api-wrapper.util";
 import { ApiProvider } from "@providers/api.provider";
 import {
@@ -15,7 +15,7 @@ export class SchemaService {
   private connectionState = inject(ConnectionStateService);
   private loadingService = inject(LoadingService);
   private api = inject(ApiProvider);
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
 
   async listCollections(connId?: string, dbName?: string): Promise<CollectionMeta[]> {
     this.logger.debug("[SCHEMA]", "listCollections started", { connId, dbName });

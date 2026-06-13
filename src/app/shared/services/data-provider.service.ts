@@ -1,7 +1,7 @@
 import { Injectable, signal, inject } from "@angular/core";
 import { ApiProvider } from "@providers/api.provider";
 import { ConnectionStateService } from "./connection-state.service";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 import {
   ColumnInfo,
   RowData,
@@ -38,7 +38,7 @@ interface ColumnsCacheEntry {
 export class DataProviderService {
   private api = inject(ApiProvider);
   private connectionState = inject(ConnectionStateService);
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
 
   private readonly MAX_ENTRIES_PER_COLLECTION = 50;
   private readonly COLUMNS_CACHE_TTL = 5 * 60 * 1000;

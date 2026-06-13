@@ -9,6 +9,7 @@ export * from "./export.service";
 export * from "./health-api.service";
 export * from "./keyboard-shortcuts.service";
 export * from "./loading.service";
+export * from "./logging.service";
 export * from "./metrics-api.service";
 export * from "./persistent-storage.service";
 export * from "./settings.service";

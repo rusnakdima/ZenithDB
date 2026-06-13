@@ -2,7 +2,7 @@ import { Injectable, inject } from "@angular/core";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { DataProviderService } from "@shared/services/data-provider.service";
 import { LoadingService } from "@shared/services/loading.service";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 import { withConnectionAndLoading } from "@shared/utils/api-wrapper.util";
 import { ApiProvider } from "@providers/api.provider";
 import { RawResult } from "@shared/models/connection.config";
@@ -13,7 +13,7 @@ export class AdminService {
   private dataProvider = inject(DataProviderService);
   private loadingService = inject(LoadingService);
   private api = inject(ApiProvider);
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
 
   async createCollection(name: string): Promise<void> {
     this.logger.debug("[ADMIN]", "createCollection started", { name });

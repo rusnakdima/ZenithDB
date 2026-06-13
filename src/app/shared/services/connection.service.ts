@@ -9,14 +9,14 @@ import {
   ConnectionHealth,
 } from "@shared/models/connection.config";
 import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 @Injectable({ providedIn: "root" })
 export class ConnectionService {
   private loadingService = inject(LoadingService);
   private api = inject(ApiProvider);
   private logger = inject(DataflowLoggerService, { optional: true });
-  private appLogger = inject(AppLoggerService, { optional: true });
+  private appLogger = inject(LoggingService, { optional: true });
 
   async listConnections(): Promise<ConnectionSummary[]> {
     const startTime = performance.now();

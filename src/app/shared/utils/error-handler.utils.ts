@@ -1,7 +1,7 @@
 import { ErrorHandlerService } from "@shared/services/error-handler.service";
 import { ToastService } from "@services/toast.service";
 import { AppError, ErrorCode } from "@shared/models/error.model";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 interface Result<T> {
   success: boolean;
@@ -53,7 +53,7 @@ export function withErrorHandling<T>(
   services?: {
     errorHandler?: ErrorHandlerService;
     toastService?: ToastService;
-    logger?: AppLoggerService;
+    logger?: LoggingService;
   }
 ): Promise<Result<T>> {
   const errorHandler = services?.errorHandler;

@@ -1,14 +1,14 @@
 import { Injectable, signal, computed, effect, Inject, PLATFORM_ID, inject } from "@angular/core";
 import { isPlatformBrowser } from "@angular/common";
 import { SettingsService } from "./settings.service";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 import { ThemePreset, THEME_PRESETS, getAccentShades, getAccentRgb } from "../models/theme.model";
 
 export type ThemeMode = "dark" | "light";
 
 @Injectable({ providedIn: "root" })
 export class ThemeService {
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
   private _themeMode = signal<ThemeMode>("dark");
   private _preset = signal<ThemePreset>(THEME_PRESETS[4]);
 

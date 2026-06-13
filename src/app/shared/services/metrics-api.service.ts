@@ -1,13 +1,13 @@
 import { Injectable, inject, signal } from "@angular/core";
 import { CacheService } from "@shared/services/cache.service";
 import { TauriBridgeService } from "@providers/tauri-bridge.service";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 import { SystemMetrics } from "@shared/models/connection.config";
 
 @Injectable({ providedIn: "root" })
 export class MetricsApiService extends CacheService {
   private tauriBridge = inject(TauriBridgeService);
-  private appLogger = inject(AppLoggerService);
+  private appLogger = inject(LoggingService);
   private metricsSignal = signal<SystemMetrics | null>(null);
   private metricsTimestamp = signal<number>(0);
   private refreshCallbacks: Set<() => void> = new Set();

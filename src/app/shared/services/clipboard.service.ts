@@ -1,11 +1,11 @@
 import { Injectable, inject } from "@angular/core";
 import { ToastService } from "@services/toast.service";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 @Injectable({ providedIn: "root" })
 export class ClipboardService {
   private toast = inject(ToastService);
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
 
   async copyToClipboard(text: string, successMessage = "Copied to clipboard"): Promise<boolean> {
     this.logger.debug("[CLIPBOARD]", "copyToClipboard started", { textLength: text.length });

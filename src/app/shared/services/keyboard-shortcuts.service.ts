@@ -1,6 +1,6 @@
 import { Injectable, signal, inject, DestroyRef } from "@angular/core";
 import { Router } from "@angular/router";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 import {
   SHORTCUT_CONFIG,
   formatShortcut,
@@ -15,7 +15,7 @@ export class KeyboardShortcutsService {
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
   private connectionFormService = inject(ConnectionFormService);
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
 
   private enabled = signal(true);
 

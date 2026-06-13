@@ -1,5 +1,7 @@
 import { Injectable, signal, computed, inject } from "@angular/core";
 import { TauriBridgeService } from "@providers/tauri-bridge.service";
+import { LoggingService } from "@shared/services/logging.service";
+import { TauriApiService } from "@app/api/tauri-api.service";
 
 export type DataFlowDirection = "in" | "out" | "user_action";
 export type ProblemSeverity = "low" | "medium" | "high" | "critical";
@@ -45,6 +47,8 @@ export class DataflowLoggerService {
   private callCounter = new Map<string, number>();
   private sampleRate = 10;
   private tauriBridge = inject(TauriBridgeService, { optional: true });
+  private tauriApi = inject(TauriApiService);
+  private loggingService = inject(LoggingService);
   private pendingPersistCount = 0;
   private readonly persistThreshold = 100;
   private readonly logDir = ".zenithdb/logs";
@@ -129,7 +133,7 @@ export class DataflowLoggerService {
       console.log(`${prefix}`, entry.params || "");
     }
     if (entry.error) {
-      console.error(`${prefix} ERROR:`, entry.error);
+      this.loggingService.error(`${prefix} ERROR:`, entry.page, entry.error);
     }
     if (entry.durationMs !== undefined) {
       console.log(`${prefix} [${entry.durationMs}ms]`);
@@ -228,7 +232,7 @@ export class DataflowLoggerService {
   async captureScreenshot(): Promise<string | undefined> {
     try {
       if (this.tauriBridge) {
-        const screenshot = await this.tauriBridge.invoke<string>("capture_screenshot", {});
+        const screenshot = await this.tauriApi.invokeRaw<string>("capture_screenshot", {});
         return screenshot;
       }
     } catch {}
@@ -269,7 +273,7 @@ export class DataflowLoggerService {
     const data = JSON.stringify(this.entries(), null, 2);
     if (this.tauriBridge) {
       try {
-        const path = await this.tauriBridge.invoke<string>("save_log_file", {
+        const path = await this.tauriApi.invokeRaw<string>("save_log_file", {
           filename: `dataflow-${new Date().toISOString().split("T")[0]}.json`,
           content: data,
         });
@@ -307,7 +311,7 @@ export class DataflowLoggerService {
     if (!this.tauriBridge) return;
     try {
       const entryLine = JSON.stringify(entry) + "\n";
-      await this.tauriBridge.invoke("append_log_file", {
+      await this.tauriApi.invokeRaw("append_log_file", {
         filename: this.getLogPath(entry.timestamp),
         content: entryLine,
       });
@@ -322,7 +326,7 @@ export class DataflowLoggerService {
         entries[0].timestamp instanceof Date
           ? entries[0].timestamp
           : new Date(entries[0].timestamp);
-      await this.tauriBridge.invoke("append_log_file", {
+      await this.tauriApi.invokeRaw("append_log_file", {
         filename: this.getLogPath(date),
         content,
       });
@@ -333,7 +337,7 @@ export class DataflowLoggerService {
     if (!this.tauriBridge) return [];
     try {
       const targetDate = date || new Date();
-      const entries = await this.tauriBridge.invoke<string[]>("read_log_file", {
+      const entries = await this.tauriApi.invokeRaw<string[]>("read_log_file", {
         filename: this.getLogPath(targetDate),
       });
       return entries
@@ -369,7 +373,7 @@ export class DataflowLoggerService {
       try {
         for (const [dateStr, dateEntries] of byDate) {
           const content = dateEntries.map((e) => JSON.stringify(e)).join("\n") + "\n";
-          await this.tauriBridge.invoke("append_log_file", {
+          await this.tauriApi.invokeRaw("append_log_file", {
             filename: this.getLogPath(new Date(dateStr)),
             content,
           });

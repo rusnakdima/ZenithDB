@@ -1,5 +1,5 @@
 import { Injectable, signal, inject } from "@angular/core";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 export interface ConfirmOptions {
   title?: string;
@@ -12,7 +12,7 @@ export interface ConfirmOptions {
 
 @Injectable({ providedIn: "root" })
 export class ConfirmService {
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
   private resolvePromise: ((value: boolean) => void) | null = null;
   isOpen = signal(false);
   options = signal<ConfirmOptions>({ message: "" });

@@ -1,9 +1,9 @@
 import { Injectable, signal, computed, inject } from "@angular/core";
-import { LoggerService } from "@shared/services/logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 @Injectable({ providedIn: "root" })
 export class LoadingService {
-  private logger = inject(LoggerService);
+  private logger = inject(LoggingService);
   private _loadingCount = signal(0);
   isLoading = computed(() => this._loadingCount() > 0);
   loadingMessage = signal<string | null>(null);

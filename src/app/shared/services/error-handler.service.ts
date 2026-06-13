@@ -2,7 +2,7 @@ import { Injectable, inject, signal, computed, DestroyRef } from "@angular/core"
 import { HttpErrorResponse } from "@angular/common/http";
 import { ToastService } from "@services/toast.service";
 import { LoadingService } from "@shared/services/loading.service";
-import { LoggerService } from "@shared/services/logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 import {
   AppError,
   ErrorCode,
@@ -19,7 +19,7 @@ import { generateLogId } from "@shared/utils/id.utils";
 export class ErrorHandlerService {
   private toastService = inject(ToastService);
   private loadingService = inject(LoadingService);
-  private logger = inject(LoggerService);
+  private logger = inject(LoggingService);
   private destroyRef = inject(DestroyRef);
 
   private errorsSignal = signal<AppError[]>([]);

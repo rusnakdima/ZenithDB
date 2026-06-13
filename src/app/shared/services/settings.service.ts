@@ -1,5 +1,6 @@
 import { Injectable, signal, effect, inject } from "@angular/core";
 import { PersistentStorageService } from "./persistent-storage.service";
+import { LoggingService } from "./logging.service";
 
 type ThemeSetting = "dark" | "light" | "system";
 type TabSize = 2 | 4 | 8;
@@ -67,6 +68,7 @@ const DEFAULT_SETTINGS: AppSettings = {
 @Injectable({ providedIn: "root" })
 export class SettingsService {
   private storage = inject(PersistentStorageService);
+  private logger = inject(LoggingService);
   private settingsSignal = signal<AppSettings>(this.loadSettings());
 
   readonly settings = this.settingsSignal;
@@ -130,7 +132,9 @@ export class SettingsService {
         return this.mergeWithDefaults(stored);
       }
     } catch (e) {
-      console.warn("Failed to load settings from storage, using defaults", e);
+      this.logger.warn("[SETTINGS]", "Failed to load settings from storage, using defaults", {
+        error: e,
+      });
     }
     return structuredClone(DEFAULT_SETTINGS);
   }
