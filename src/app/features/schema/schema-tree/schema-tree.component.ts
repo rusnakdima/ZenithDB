@@ -15,7 +15,7 @@ import { ToastService } from "@services/toast.service";
 import { ConfirmService } from "@shared/services/confirm.service";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { ErrorHandlerService } from "@shared/services/error-handler.service";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 import { MatIconModule } from "@angular/material/icon";
 import { SkeletonLoaderComponent } from "@shared/components/loading/skeleton-loader.component";
 import { CollectionMeta, ColumnInfo } from "@shared/models/connection.config";
@@ -59,7 +59,7 @@ export class SchemaTreeComponent implements OnInit, OnDestroy {
   private connectionState = inject(ConnectionStateService);
   private confirm = inject(ConfirmService);
   private errorHandler = inject(ErrorHandlerService);
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
   private boundCloseContextMenu: (() => void) | null = null;
 
   ngOnInit() {
