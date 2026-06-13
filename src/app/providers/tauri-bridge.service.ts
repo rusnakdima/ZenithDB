@@ -54,10 +54,11 @@ export class TauriBridgeService {
     this.logger.debug("[TAURI_BRIDGE]", "Invoking command", { command, args });
 
     try {
+      const tauriOptions = signal ? { signal: signal as unknown as AbortSignal } : {};
       const response = await Promise.race([
-        invoke<ResponseModel>(command, args, { signal } as unknown as TauriInvokeOptions),
+        invoke<ResponseModel>(command, args, tauriOptions as TauriInvokeOptions),
         new Promise<never>((_, reject) => {
-          const timeoutId = setTimeout(() => {
+          const timeoutId = window.setTimeout(() => {
             this.logger.warn("[TAURI_BRIDGE]", "Command timed out", { command, timeoutMs });
             reject(new Error(`Command "${command}" timed out after ${timeoutMs}ms`));
           }, timeoutMs);
