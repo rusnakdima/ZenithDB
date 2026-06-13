@@ -17,7 +17,7 @@ import { FieldInfo } from "../../query/models";
 import { TextIndexDialogComponent } from "./text-index-dialog.component";
 import { DialogService } from "@shared/services/dialog.service";
 import { TIME_CONSTANTS } from "@shared/utils/constants";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 export interface SearchResult {
   document: Record<string, unknown>;
@@ -44,7 +44,7 @@ export class FulltextSearchComponent implements OnInit, OnDestroy {
   private readonly schemaCompletionService = inject(SchemaCompletionService);
   private readonly providerDetectorService = inject(ProviderDetectorService);
   private readonly dialogService = inject(DialogService);
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
 
   @Input() collectionName: string = "";
 

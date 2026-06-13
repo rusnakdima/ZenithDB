@@ -10,7 +10,7 @@ import { FilterBuilderService } from "@features/query/services/filter-builder.se
 import { PersistentStorageService } from "@shared/services/persistent-storage.service";
 import { ToastService } from "@services/toast.service";
 import { FilterExpression } from "@shared/models/connection.config";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 export interface NamedFilter {
   id: string;
@@ -39,7 +39,7 @@ export class ComplexFilterComponent implements OnInit {
   private readonly filterBuilder = inject(FilterBuilderService);
   private readonly storage = inject(PersistentStorageService);
   private readonly toast = inject(ToastService);
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
 
   @Input() collectionName = "";
   @Input() initialFilter: FilterExpression | null = null;

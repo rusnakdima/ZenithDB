@@ -19,7 +19,7 @@ import {
 } from "./pipeline-builder.service";
 import { PipelineStageComponent } from "./pipeline-stage.component";
 import { PipelineJsonEditorComponent } from "./pipeline-json-editor.component";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 @Component({
   selector: "app-aggregation-pipeline",
@@ -29,7 +29,7 @@ import { AppLoggerService } from "@shared/services/app-logger.service";
 })
 export class AggregationPipelineComponent implements OnInit {
   readonly pipelineService = inject(PipelineBuilderService);
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
 
   @Input() collectionName = "";
   @Output() cancel = new EventEmitter<void>();

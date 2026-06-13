@@ -4,7 +4,7 @@ import { FormsModule } from "@angular/forms";
 import { SortStageConfig } from "../pipeline-builder.service";
 import { SchemaCompletionService } from "../../../query/services/schema-completion.service";
 import { FieldInfo, SortConfig } from "../../../query/models";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 @Component({
   selector: "app-sort-config",
@@ -14,7 +14,7 @@ import { AppLoggerService } from "@shared/services/app-logger.service";
 })
 export class SortConfigComponent implements OnInit {
   private readonly schemaCompletion = inject(SchemaCompletionService);
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
 
   @Input() config!: SortStageConfig;
   @Input() collectionName = "";

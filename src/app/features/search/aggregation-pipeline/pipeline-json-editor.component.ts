@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter, signal, computed, inject } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 @Component({
   selector: "app-pipeline-json-editor",
@@ -74,7 +74,7 @@ import { AppLoggerService } from "@shared/services/app-logger.service";
   ` */
 })
 export class PipelineJsonEditorComponent {
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
 
   @Input() set json(value: string) {
     this.jsonContent.set(value);

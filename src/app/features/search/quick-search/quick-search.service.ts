@@ -3,7 +3,7 @@ import { SchemaService } from "@shared/services/schema.service";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { ApiProvider } from "@providers/api.provider";
 import { CollectionMeta, FilterExpression, RowData } from "@shared/models/connection.config";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 export interface QuickSearchResult {
   collection: string;
@@ -23,7 +23,7 @@ export class QuickSearchService {
   private readonly schemaService = inject(SchemaService);
   private readonly connectionState = inject(ConnectionStateService);
   private readonly api = inject(ApiProvider);
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
 
   private readonly searchResultsSignal = signal<GroupedSearchResults[]>([]);
   private readonly isSearchingSignal = signal(false);

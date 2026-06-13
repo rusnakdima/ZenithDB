@@ -7,7 +7,7 @@ import {
   FieldType,
 } from "../../query/models";
 import { FilterOperator } from "@shared/models/connection.config";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 export type StageType =
   | "$match"
@@ -77,7 +77,7 @@ export interface AggregationPipeline {
 
 @Injectable({ providedIn: "root" })
 export class PipelineBuilderService {
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
   private readonly _stages = signal<PipelineStage[]>([]);
 
   readonly stages = this._stages.asReadonly();

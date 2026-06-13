@@ -17,7 +17,7 @@ import {
   GroupedSearchResults,
   QuickSearchResult,
 } from "./quick-search.service";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 type SelectResult = {
   collection: string;
@@ -36,7 +36,7 @@ type FlatSearchResult = QuickSearchResult & {
 })
 export class QuickSearchComponent implements OnInit, OnDestroy {
   private readonly searchService = inject(QuickSearchService);
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
 
   @Input() isOpen = false;
   @Output() close = new EventEmitter<void>();

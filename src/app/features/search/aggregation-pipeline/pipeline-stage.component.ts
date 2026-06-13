@@ -7,7 +7,7 @@ import { GroupConfigComponent } from "./stage-config/group-config.component";
 import { SortConfigComponent } from "./stage-config/sort-config.component";
 import { ProjectConfigComponent } from "./stage-config/project-config.component";
 import { LimitConfigComponent } from "./stage-config/limit-config.component";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 @Component({
   selector: "app-pipeline-stage",
@@ -146,7 +146,7 @@ import { AppLoggerService } from "@shared/services/app-logger.service";
   ` */
 })
 export class PipelineStageComponent {
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
 
   @Input() stage!: PipelineStage;
   @Input() collectionName = "";
@@ -187,27 +187,27 @@ export class PipelineStageComponent {
     this.configChange.emit({ expression });
   }
 
-  asMatchConfig() {
-    return this.stage.config as any;
+  asMatchConfig(): import("./pipeline-builder.service").MatchConfig {
+    return this.stage.config as import("./pipeline-builder.service").MatchConfig;
   }
 
-  asGroupConfig() {
-    return this.stage.config as any;
+  asGroupConfig(): import("./pipeline-builder.service").GroupConfig {
+    return this.stage.config as import("./pipeline-builder.service").GroupConfig;
   }
 
-  asSortConfig() {
-    return this.stage.config as any;
+  asSortConfig(): import("./pipeline-builder.service").SortStageConfig {
+    return this.stage.config as import("./pipeline-builder.service").SortStageConfig;
   }
 
-  asSkipLimitConfig() {
-    return this.stage.config as any;
+  asSkipLimitConfig(): import("./pipeline-builder.service").SkipLimitConfig {
+    return this.stage.config as import("./pipeline-builder.service").SkipLimitConfig;
   }
 
-  asProjectConfig() {
-    return this.stage.config as any;
+  asProjectConfig(): import("./pipeline-builder.service").ProjectConfig {
+    return this.stage.config as import("./pipeline-builder.service").ProjectConfig;
   }
 
-  asReplaceRootConfig() {
-    return this.stage.config as any;
+  asReplaceRootConfig(): import("./pipeline-builder.service").ReplaceRootConfig {
+    return this.stage.config as import("./pipeline-builder.service").ReplaceRootConfig;
   }
 }
