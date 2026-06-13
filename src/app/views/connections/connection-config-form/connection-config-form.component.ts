@@ -13,7 +13,7 @@ import {
 import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
 import { ProviderType } from "@shared/models/provider.model";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 export interface ConnectionFormData {
   name: string;
@@ -34,7 +34,7 @@ export interface ConnectionFormData {
   templateUrl: "./connection-config-form.component.html",
 })
 export class ConnectionConfigFormComponent implements OnInit, OnChanges {
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
 
   provider = input.required<ProviderType>();
   initialData = input<ConnectionFormData>({

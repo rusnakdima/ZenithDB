@@ -11,7 +11,7 @@ import {
 import { JsonPipe, DatePipe } from "@angular/common";
 import { RawResult } from "@shared/models/connection.config";
 import { trackByIndex } from "@shared/utils/collection.utils";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 type LogLevel = "all" | "info" | "warn" | "error";
 type TabType = "results" | "messages" | "plan";
@@ -29,7 +29,7 @@ interface LogEntry {
   templateUrl: "./output-console.component.html",
 })
 export class OutputConsoleComponent implements OnDestroy {
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
 
   @Input() results: RawResult | null = null;
   @Input() loading = false;

@@ -13,7 +13,7 @@ interface CacheEntry<T> {
 @Injectable({ providedIn: "root" })
 export class StorageCacheService {
   private readonly entityService: StorageEntityService;
-  private readonly reactiveCache = new Map<string, ReturnType<typeof computed<any>>>();
+  private readonly reactiveCache = new Map<string, ReturnType<typeof computed<unknown>>>();
   private readonly cacheTimestamps = new Map<string, number>();
   private readonly inFlightRequests = new Map<string, Promise<unknown>>();
 

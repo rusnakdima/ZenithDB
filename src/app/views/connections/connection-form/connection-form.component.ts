@@ -27,7 +27,7 @@ import { ErrorHandlerService } from "@shared/services/error-handler.service";
 import { ToastService } from "@services/toast.service";
 import { ConnectionFormService } from "@shared/services/connection-form.service";
 import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 @Component({
   selector: "app-connection-form",
@@ -50,7 +50,7 @@ export class ConnectionFormComponent implements OnInit {
   connectionFormService = inject(ConnectionFormService);
   private cdr = inject(ChangeDetectorRef);
   private dataflowLogger = inject(DataflowLoggerService);
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
 
   private readonly page = "ConnectionForm";
 

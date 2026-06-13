@@ -3,7 +3,7 @@ import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
 import { CheckboxComponent } from "@shared/components/checkbox/checkbox.component";
 import { ToastService } from "@services/toast.service";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 @Component({
   selector: "app-database-selector",
@@ -13,7 +13,7 @@ import { AppLoggerService } from "@shared/services/app-logger.service";
 })
 export class DatabaseSelectorComponent {
   private toast = inject(ToastService);
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
 
   provider = input.required<string>();
   uri = input.required<string>();

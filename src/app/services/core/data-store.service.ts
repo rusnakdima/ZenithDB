@@ -12,6 +12,7 @@ import {
   CollectionStats,
   TestConnectionConfig,
   CollectionSchema,
+  RawResult,
 } from "@shared/models/connection.config";
 import { DatabaseService } from "@shared/services/database.service";
 import {
@@ -24,7 +25,7 @@ import {
 } from "@shared/services/collections-api.service";
 import { findById } from "@shared/utils/array.utils";
 import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 export interface CacheEntry<T> {
   data: T;
@@ -56,7 +57,7 @@ export class DataStoreService {
   private decentralizationApi = inject(DecentralizationApiService);
   private collectionsApi = inject(CollectionsApiService);
   private dataflowLogger = inject(DataflowLoggerService);
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
   private readonly page = "DataStoreService";
 
   private get db(): DatabaseService {
@@ -679,7 +680,9 @@ export class DataStoreService {
     return this.collectionsApi.listCollections(connectionId, dbName, offset, limit);
   }
 
-  async getFullConnection(id: string): Promise<any> {
+  async getFullConnection(
+    id: string
+  ): Promise<import("@shared/models/connection.config").ConnectionConfigResult> {
     return this.db.getConnection(id);
   }
 
@@ -1033,7 +1036,7 @@ export class DataStoreService {
     }
   }
 
-  async executeRaw(sql: string): Promise<any> {
+  async executeRaw(sql: string): Promise<RawResult> {
     this.dataflowLogger.logApiCall(this.page, "executeRaw", "execute_raw", { sql });
     const startTime = performance.now();
     try {

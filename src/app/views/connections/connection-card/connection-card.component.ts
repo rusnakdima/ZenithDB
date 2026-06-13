@@ -3,7 +3,7 @@ import { MatIconModule } from "@angular/material/icon";
 import { ConnectionSummary } from "@shared/models/connection.config";
 import { ProviderUtils } from "@shared/utils/provider.utils";
 import { ConnectionStatusBadgeComponent } from "@shared/components/connection-status-badge/connection-status-badge.component";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 @Component({
   selector: "app-connection-card",
@@ -12,7 +12,7 @@ import { AppLoggerService } from "@shared/services/app-logger.service";
   templateUrl: "./connection-card.component.html",
 })
 export class ConnectionCardComponent implements OnInit {
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
 
   connection = input.required<ConnectionSummary>();
   viewMode = input<"grid" | "list">("grid");

@@ -23,7 +23,7 @@ import { QUERY_CONSTANTS } from "@shared/utils/constants";
 import { AddDatabasePathComponent } from "../add-database-path/add-database-path.component";
 import { DiagnosticLoggerService } from "@shared/services/diagnostic-logger.service";
 import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 import { Subscription } from "rxjs";
 import { filter, distinctUntilChanged } from "rxjs/operators";
 
@@ -43,7 +43,7 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy {
   private diagLogger = inject(DiagnosticLoggerService);
   private cdr = inject(ChangeDetectorRef);
   private dataflowLogger = inject(DataflowLoggerService);
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
   providerUtils = inject(ProviderUtils);
   route = inject(ActivatedRoute);
   router = inject(Router);

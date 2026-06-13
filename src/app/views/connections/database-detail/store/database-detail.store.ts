@@ -1,9 +1,9 @@
 import { Injectable, signal, inject } from "@angular/core";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 @Injectable()
 export class DatabaseDetailStore {
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
 
   readonly loading = signal(false);
   readonly totalDocuments = signal(0);

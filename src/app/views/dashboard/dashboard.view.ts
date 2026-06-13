@@ -1,7 +1,7 @@
 import { Component, inject } from "@angular/core";
 import { MatIconModule } from "@angular/material/icon";
 import { CommonModule } from "@angular/common";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 @Component({
   selector: "app-dashboard",
@@ -10,7 +10,7 @@ import { AppLoggerService } from "@shared/services/app-logger.service";
   templateUrl: "./dashboard.view.html",
 })
 export class DashboardComponent {
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
 
   constructor() {
     this.logger.debug("[DASHBOARD]", "Dashboard view initialized");

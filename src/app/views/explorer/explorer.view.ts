@@ -22,7 +22,7 @@ import { PersistentStorageService } from "@shared/services/persistent-storage.se
 import { DiagnosticLoggerService } from "@shared/services/diagnostic-logger.service";
 import { ErrorHandlerService } from "@shared/services/error-handler.service";
 import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 import {
   CollectionMeta,
   CollectionStats,
@@ -87,7 +87,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   private diagLogger = inject(DiagnosticLoggerService);
   private errorHandler = inject(ErrorHandlerService);
   private dataflowLogger = inject(DataflowLoggerService);
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
 
   private readonly pageName = "Explorer";
 

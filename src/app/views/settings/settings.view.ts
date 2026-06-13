@@ -6,7 +6,7 @@ import { SettingsService } from "../../shared/services/settings.service";
 import { ThemeService } from "@shared/services/theme.service";
 import { ThemePreset, THEME_PRESETS } from "@shared/models/theme.model";
 import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 interface ThemeOption {
   value: "dark" | "light" | "system";
@@ -25,7 +25,7 @@ export class SettingsComponent {
   private settingsService = inject(SettingsService);
   private themeService = inject(ThemeService);
   private dataflowLogger = inject(DataflowLoggerService);
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
 
   private readonly page = "Settings";
 
@@ -43,27 +43,46 @@ export class SettingsComponent {
     this.themeService.setPreset(preset);
   }
 
-  updateGeneral(partial: Record<string, unknown>): void {
+  updateGeneral(
+    partial: Partial<{
+      theme: "dark" | "light" | "system";
+      accentColor: string;
+      language: string;
+      startMinimized: boolean;
+      checkUpdates: boolean;
+    }>
+  ): void {
     this.logger.log("[SETTINGS]", "User action: updateGeneral", partial);
-    this.settingsService.updateGeneral(partial as any);
-    if (partial["theme"]) {
-      this.themeService.setTheme(partial["theme"] as "dark" | "light");
+    this.settingsService.updateGeneral(partial);
+    if (partial.theme) {
+      this.themeService.setTheme(partial.theme as "dark" | "light");
     }
   }
 
-  updateEditor(partial: Record<string, unknown>): void {
+  updateEditor(
+    partial: Partial<{
+      fontSize: number;
+      tabSize: 2 | 4 | 8;
+      autoSave: boolean;
+      lineNumbers: boolean;
+    }>
+  ): void {
     this.logger.log("[SETTINGS]", "User action: updateEditor", partial);
-    this.settingsService.updateEditor(partial as any);
+    this.settingsService.updateEditor(partial);
   }
 
-  updateData(partial: Record<string, unknown>): void {
+  updateData(
+    partial: Partial<{ defaultPageSize: number; confirmBeforeDelete: boolean; maxRows: number }>
+  ): void {
     this.logger.log("[SETTINGS]", "User action: updateData", partial);
-    this.settingsService.updateData(partial as any);
+    this.settingsService.updateData(partial);
   }
 
-  updateConnections(partial: Record<string, unknown>): void {
+  updateConnections(
+    partial: Partial<{ connectionTimeout: number; maxConcurrent: number; autoReconnect: boolean }>
+  ): void {
     this.logger.log("[SETTINGS]", "User action: updateConnections", partial);
-    this.settingsService.updateConnections(partial as any);
+    this.settingsService.updateConnections(partial);
   }
 
   resetToDefaults(): void {

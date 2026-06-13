@@ -21,6 +21,7 @@ import {
   DatabaseMetadata,
   ConnectionHealth,
   ConnectionSummary,
+  ConnectionConfig,
 } from "@shared/models/connection.config";
 import { StatusBadgeComponent } from "@shared/components/status-badge/status-badge.component";
 import { ConnectionStatusBadgeComponent } from "@shared/components/connection-status-badge/connection-status-badge.component";
@@ -28,7 +29,7 @@ import { withErrorHandling } from "@shared/utils/error-handler.utils";
 import { findById } from "@shared/utils/array.utils";
 import { AddDatabasePathComponent } from "../add-database-path/add-database-path.component";
 import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 import { Subscription } from "rxjs";
 import { distinctUntilChanged, debounceTime } from "rxjs/operators";
 
@@ -53,7 +54,7 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
   private toast = inject(ToastService);
   private cdr = inject(ChangeDetectorRef);
   private dataflowLogger = inject(DataflowLoggerService);
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
   providerUtils = inject(ProviderUtils);
   route = inject(ActivatedRoute);
   router = inject(Router);
@@ -68,7 +69,7 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
   databases = signal<DbNode[]>([]);
   loading = signal(true);
   testing = signal(false);
-  fullConfig = signal<any>(null);
+  fullConfig = signal<ConnectionConfig | null>(null);
   showAddDbModal = signal(false);
   creatingDb = signal(false);
   editingDb = signal<string | null>(null);

@@ -1,7 +1,7 @@
 import { Component, input, output, signal, inject } from "@angular/core";
 import { MatIconModule } from "@angular/material/icon";
 import { ProviderType } from "@shared/models/provider.model";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 interface ProviderOption {
   type: ProviderType;
@@ -17,7 +17,7 @@ interface ProviderOption {
   templateUrl: "./provider-selector.component.html",
 })
 export class ProviderSelectorComponent {
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
 
   selected = input<ProviderType | null>(null);
 
