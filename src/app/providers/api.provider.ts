@@ -6,7 +6,7 @@ import { ConnectionsApiService } from "@shared/services/connections-api.service"
 import { ToastService } from "@services/toast.service";
 import { ErrorHandlerService } from "@shared/services/error-handler.service";
 import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 import {
   ConnectionSummary,
   ConnectionConfig,
@@ -32,7 +32,7 @@ export class ApiProvider {
   private toastService: ToastService | null = null;
   private errorHandler = inject(ErrorHandlerService);
   private dataflowLogger = inject(DataflowLoggerService);
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
 
   private readonly page = "ApiProvider";
 

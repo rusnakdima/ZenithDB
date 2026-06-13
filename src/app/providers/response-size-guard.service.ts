@@ -1,12 +1,12 @@
 import { Injectable, inject } from "@angular/core";
 import { ToastService } from "@services/toast.service";
-import { AppLoggerService } from "@shared/services/app-logger.service";
+import { LoggingService } from "@shared/services/logging.service";
 
 @Injectable({ providedIn: "root" })
 export class ResponseSizeGuardService {
   private readonly MAX_RESPONSE_SIZE_MB = 10;
   private readonly MAX_RESPONSE_SIZE_BYTES = this.MAX_RESPONSE_SIZE_MB * 1024 * 1024;
-  private logger = inject(AppLoggerService);
+  private logger = inject(LoggingService);
 
   checkResponseSize(data: unknown): { truncated: boolean; message?: string } {
     try {

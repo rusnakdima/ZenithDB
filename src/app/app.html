@@ -1,9 +1,8 @@
 <div class="theme sticky min-h-screen">
   <app-header class="flex-shrink-0"></app-header>
   <main
-    class="page-content flex-1 px-4 sm:px-6"
+    class="page-content h-[calc(100vh-56px-16px)] min-h-0 flex-1 overflow-y-auto px-4 sm:px-6"
     [class.page-explorer]="isExplorerRoute()"
-    style="height: calc(100vh - 56px - 16px); min-height: 0; overflow-y: auto"
   >
     <router-outlet></router-outlet>
   </main>

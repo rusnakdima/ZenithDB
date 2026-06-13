@@ -1,4 +1,5 @@
 import { Component, input, output } from "@angular/core";
+import { ToastConfig } from "@services/toast.service";
 
 @Component({
   selector: "app-toast",
@@ -6,7 +7,7 @@ import { Component, input, output } from "@angular/core";
   templateUrl: "./toast.component.html",
 })
 export class ToastComponent {
-  toast = input.required<any>();
+  toast = input.required<ToastConfig>();
   dismiss = output<string>();
 
   onDismiss(): void {
