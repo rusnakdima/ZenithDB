@@ -51,8 +51,12 @@ export class AuditService {
       async (connId) => {
         try {
           const result = await this.api.getAuditLog(connId, filter);
-          this.auditLogSignal.set(result);
-          return result;
+          const typedResult = result.map((entry) => ({
+            ...entry,
+            operation: entry.operation as AuditOperation,
+          }));
+          this.auditLogSignal.set(typedResult);
+          return typedResult;
         } catch {
           const mockLog: AuditEntry[] = [];
           this.auditLogSignal.set(mockLog);

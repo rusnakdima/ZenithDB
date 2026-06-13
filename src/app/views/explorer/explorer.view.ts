@@ -39,7 +39,6 @@ import { FormatBytesPipe } from "@shared/pipes/format-bytes.pipe";
 import { InspectorDrawerComponent } from "@shared/components/inspector-drawer/inspector-drawer.component";
 import { CollectionTabsComponent } from "@shared/components/collection-tabs/collection-tabs.component";
 import { CompareTablesDialogComponent } from "@shared/components/compare-tables-dialog/compare-tables-dialog.component";
-import { withErrorHandling } from "@shared/utils/error-handler.utils";
 import { ExplorerToolbarComponent } from "@shared/components/explorer-toolbar/explorer-toolbar.component";
 import { JsonViewComponent } from "@shared/components/json-view/json-view.component";
 import { TableViewComponent } from "@shared/components/table-view/table-view.component";

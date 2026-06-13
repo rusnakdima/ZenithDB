@@ -59,14 +59,12 @@ export class SettingsComponent {
     }
   }
 
-  updateEditor(
-    partial: Partial<{
-      fontSize: number;
-      tabSize: 2 | 4 | 8;
-      autoSave: boolean;
-      lineNumbers: boolean;
-    }>
-  ): void {
+  updateEditor(partial: {
+    fontSize?: number;
+    tabSize?: 2 | 4 | 8;
+    autoSave?: boolean;
+    lineNumbers?: boolean;
+  }): void {
     this.logger.log("[SETTINGS]", "User action: updateEditor", partial);
     this.settingsService.updateEditor(partial);
   }
@@ -88,5 +86,10 @@ export class SettingsComponent {
   resetToDefaults(): void {
     this.logger.log("[SETTINGS]", "User action: resetToDefaults");
     this.settingsService.resetToDefaults();
+  }
+
+  onTabSizeChange(value: number): void {
+    const tabSize = value as 2 | 4 | 8;
+    this.updateEditor({ tabSize });
   }
 }

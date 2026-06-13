@@ -224,16 +224,24 @@ export class TransactionService {
       for (const op of operations) {
         switch (op.type) {
           case "insert":
-            await this.api.insertDocument(connId, op.collection, op.data);
+            if (op.data) {
+              await this.api.insertDocument(connId, op.collection, op.data);
+            }
             break;
           case "update":
-            await this.api.updateDocument(connId, op.collection, op.documentId, op.data);
+            if (op.documentId && op.data) {
+              await this.api.updateDocument(connId, op.collection, op.documentId, op.data);
+            }
             break;
           case "delete":
-            await this.api.deleteDocument(connId, op.collection, op.documentId);
+            if (op.documentId) {
+              await this.api.deleteDocument(connId, op.collection, op.documentId);
+            }
             break;
           case "soft_delete":
-            await this.api.softDeleteDocument(connId, op.collection, op.documentId);
+            if (op.documentId) {
+              await this.api.softDeleteDocument(connId, op.collection, op.documentId);
+            }
             break;
         }
       }

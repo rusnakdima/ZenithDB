@@ -112,7 +112,7 @@
         </div>
         <select
           [value]="settings().editor.tabSize"
-          (change)="updateEditor({ tabSize: +$any($event.target).value })"
+          (change)="onTabSizeChange(+$any($event.target).value)"
           class="rounded-lg border border-[var(--accent)] bg-[var(--bg-elevated)] px-3 py-2 text-sm"
         >
           <option value="2">2 spaces</option>
