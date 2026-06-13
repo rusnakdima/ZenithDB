@@ -10,6 +10,7 @@ import {
   FilterExpression,
 } from "@shared/models/connection.config";
 import { evictLRU } from "@shared/utils/cache.utils";
+import { CACHE_CONSTANTS } from "@shared/utils/constants";
 
 export interface DataProviderParams {
   collection: string;
@@ -40,9 +41,9 @@ export class DataProviderService {
   private connectionState = inject(ConnectionStateService);
   private logger = inject(LoggingService);
 
-  private readonly MAX_ENTRIES_PER_COLLECTION = 50;
-  private readonly COLUMNS_CACHE_TTL = 5 * 60 * 1000;
-  private readonly MAX_COLUMNS_CACHE_SIZE = 100;
+  private readonly MAX_ENTRIES_PER_COLLECTION = CACHE_CONSTANTS.MAX_ENTRIES_PER_COLLECTION;
+  private readonly COLUMNS_CACHE_TTL = CACHE_CONSTANTS.DEFAULT_TTL_MS;
+  private readonly MAX_COLUMNS_CACHE_SIZE = CACHE_CONSTANTS.MAX_COLUMNS_CACHE_SIZE;
 
   private collectionDataCache = signal<Map<string, CacheEntry>>(new Map());
   private columnsCache = signal<Map<string, ColumnsCacheEntry>>(new Map());

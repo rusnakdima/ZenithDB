@@ -60,7 +60,7 @@ export class DataflowLoggerService {
   constructor() {
     const rate =
       typeof window !== "undefined"
-        ? (window as unknown as { ZENITH_LOG_SAMPLE_RATE?: string }).ZENITH_LOG_SAMPLE_RATE
+        ? (window as { ZENITH_LOG_SAMPLE_RATE?: string }).ZENITH_LOG_SAMPLE_RATE
         : undefined;
     if (rate) {
       this.sampleRate = parseInt(rate, 10) || 10;

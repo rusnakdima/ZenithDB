@@ -21,7 +21,7 @@ import {
   DatabaseMetadata,
   ConnectionHealth,
   ConnectionSummary,
-  ConnectionConfig,
+  ConnectionConfigResult,
 } from "@shared/models/connection.config";
 import { StatusBadgeComponent } from "@shared/components/status-badge/status-badge.component";
 import { ConnectionStatusBadgeComponent } from "@shared/components/connection-status-badge/connection-status-badge.component";
@@ -69,7 +69,7 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
   databases = signal<DbNode[]>([]);
   loading = signal(true);
   testing = signal(false);
-  fullConfig = signal<ConnectionConfig | null>(null);
+  fullConfig = signal<ConnectionConfigResult | null>(null);
   showAddDbModal = signal(false);
   creatingDb = signal(false);
   editingDb = signal<string | null>(null);
@@ -103,7 +103,6 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
       this.connectionId.set(this.connState.activeConnectionId());
       this.connectionName.set(this.connState.activeConnectionName());
       this.provider.set(this.connState.activeProvider());
-      this.fullConfig.set(this.connState.activeConnectionConfig());
       return;
     }
 
@@ -151,7 +150,14 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
     try {
       this.loading.set(true);
 
-      const databasesResult = await this.store.ensureDatabasesLoaded(connId);
+      const [databasesResult, fullConfigResult] = await Promise.all([
+        this.store.ensureDatabasesLoaded(connId),
+        this.store.getFullConnection(connId).catch(() => null),
+      ]);
+
+      if (fullConfigResult) {
+        this.fullConfig.set(fullConfigResult);
+      }
 
       this.databaseOffset.set(0);
       this.databaseHasMore.set(false);
