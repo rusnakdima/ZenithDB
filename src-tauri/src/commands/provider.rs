@@ -4,8 +4,13 @@ use std::time::{Duration, Instant};
 use tokio::sync::RwLock;
 use tokio::time;
 
+use crate::constants::{CACHE_TTL_SECONDS, CONNECTION_TIMEOUT_SECS};
+
 fn timeout_err(provider: &str, original: String) -> String {
-  format!("{} connection timed out after 10s: {}", provider, original)
+  format!(
+    "{} connection timed out after {}s: {}",
+    provider, CONNECTION_TIMEOUT_SECS, original
+  )
 }
 
 struct ProviderInstance<T> {
@@ -29,7 +34,8 @@ impl<T: Clone> TypedProviderCache<T> {
   async fn get(&self, conn_id: &str) -> Option<T> {
     let cache = self.cache.read().await;
     if let Some(instance) = cache.get(conn_id) {
-      if Instant::now().duration_since(instance.created_at) < Duration::from_secs(300) {
+      if Instant::now().duration_since(instance.created_at) < Duration::from_secs(CACHE_TTL_SECONDS)
+      {
         tracing::debug!(
           "Reusing cached {} provider for connection: {}",
           self.provider_name,
@@ -64,23 +70,34 @@ static POSTGRES_PROVIDER_CACHE: std::sync::OnceLock<Arc<PostgresProviderCache>> 
 static MYSQL_PROVIDER_CACHE: std::sync::OnceLock<Arc<MysqlProviderCache>> =
   std::sync::OnceLock::new();
 
-fn get_mongo_provider_cache() -> Arc<MongoProviderCache> {
-  MONGO_PROVIDER_CACHE
-    .get_or_init(|| Arc::new(TypedProviderCache::new("MongoDB")))
-    .clone()
+macro_rules! define_provider_cache_getter {
+  ($fn_name:ident, $static_var:ident, $cache_type:ty, $name:literal) => {
+    fn $fn_name() -> Arc<$cache_type> {
+      $static_var
+        .get_or_init(|| Arc::new(TypedProviderCache::new($name)))
+        .clone()
+    }
+  };
 }
 
-fn get_postgres_provider_cache() -> Arc<PostgresProviderCache> {
-  POSTGRES_PROVIDER_CACHE
-    .get_or_init(|| Arc::new(TypedProviderCache::new("PostgreSQL")))
-    .clone()
-}
-
-fn get_mysql_provider_cache() -> Arc<MysqlProviderCache> {
-  MYSQL_PROVIDER_CACHE
-    .get_or_init(|| Arc::new(TypedProviderCache::new("MySQL")))
-    .clone()
-}
+define_provider_cache_getter!(
+  get_mongo_provider_cache,
+  MONGO_PROVIDER_CACHE,
+  MongoProviderCache,
+  "MongoDB"
+);
+define_provider_cache_getter!(
+  get_postgres_provider_cache,
+  POSTGRES_PROVIDER_CACHE,
+  PostgresProviderCache,
+  "PostgreSQL"
+);
+define_provider_cache_getter!(
+  get_mysql_provider_cache,
+  MYSQL_PROVIDER_CACHE,
+  MysqlProviderCache,
+  "MySQL"
+);
 
 pub async fn get_or_create_mongo_provider(
   conn_id: &str,
@@ -126,7 +143,7 @@ pub async fn create_json_provider(
   path: &str,
 ) -> Result<nosql_orm::providers::JsonProvider, String> {
   time::timeout(
-    Duration::from_secs(10),
+    Duration::from_secs(CONNECTION_TIMEOUT_SECS),
     nosql_orm::providers::JsonProvider::new(path),
   )
   .await
@@ -139,7 +156,7 @@ pub async fn create_mongo_provider(
   database: &str,
 ) -> Result<nosql_orm::providers::MongoProvider, String> {
   time::timeout(
-    Duration::from_secs(10),
+    Duration::from_secs(CONNECTION_TIMEOUT_SECS),
     nosql_orm::providers::MongoProvider::connect(uri, database),
   )
   .await
@@ -151,7 +168,7 @@ pub async fn create_redis_provider(
   uri: &str,
 ) -> Result<nosql_orm::providers::RedisProvider, String> {
   time::timeout(
-    Duration::from_secs(10),
+    Duration::from_secs(CONNECTION_TIMEOUT_SECS),
     nosql_orm::providers::RedisProvider::new(uri),
   )
   .await
@@ -163,7 +180,7 @@ pub async fn create_postgres_provider(
   uri: &str,
 ) -> Result<nosql_orm::providers::sql::PostgresProvider, String> {
   time::timeout(
-    Duration::from_secs(10),
+    Duration::from_secs(CONNECTION_TIMEOUT_SECS),
     nosql_orm::providers::sql::PostgresProvider::connect(uri),
   )
   .await
@@ -175,7 +192,7 @@ pub async fn create_sqlite_provider(
   path: &str,
 ) -> Result<nosql_orm::providers::sql::SqliteProvider, String> {
   time::timeout(
-    Duration::from_secs(10),
+    Duration::from_secs(CONNECTION_TIMEOUT_SECS),
     nosql_orm::providers::sql::SqliteProvider::connect(path),
   )
   .await
@@ -187,7 +204,7 @@ pub async fn create_mysql_provider(
   uri: &str,
 ) -> Result<nosql_orm::providers::sql::MySqlProvider, String> {
   time::timeout(
-    Duration::from_secs(10),
+    Duration::from_secs(CONNECTION_TIMEOUT_SECS),
     nosql_orm::providers::sql::MySqlProvider::connect(uri),
   )
   .await

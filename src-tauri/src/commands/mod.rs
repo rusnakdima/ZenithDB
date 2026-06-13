@@ -1,3 +1,6 @@
+use crate::constants::UUID_LENGTH;
+use crate::logger::DataflowTimer;
+use crate::models::response::ResponseModel;
 use crate::services::connection_service::ConnectionService;
 
 pub mod connection;
@@ -28,8 +31,18 @@ pub async fn get_connection_entry(conn_id: &str) -> Result<ConnectionEntry, Stri
   })
 }
 
+pub async fn get_connection_entry_with_timer(
+  conn_id: &str,
+  timer: &DataflowTimer,
+) -> Result<ConnectionEntry, ResponseModel> {
+  get_connection_entry(conn_id).await.map_err(|e| {
+    timer.clone().finish_error(&e);
+    ResponseModel::error(e)
+  })
+}
+
 pub fn validate_conn_id(id: &str) -> Result<(), String> {
-  if id.len() != 36 {
+  if id.len() != UUID_LENGTH {
     return Err("Connection ID must be 36 characters".to_string());
   }
   let parts: Vec<&str> = id.split('-').collect();
@@ -82,62 +95,27 @@ macro_rules! dispatch_provider {
   ($entry:expr, $provider:ident => $body:block) => {
     match &$entry.config.config {
       crate::commands::connection::ConnectionConfigEnum::Json { path, .. } => {
-        let $provider = $crate::commands::provider::create_json_provider(path).await?;
+        let $provider = $crate::commands::provider::create_json_provider(&path).await?;
         $body
       }
       crate::commands::connection::ConnectionConfigEnum::Mongo { uri, database, .. } => {
-        let $provider = $crate::commands::provider::create_mongo_provider(uri, database).await?;
+        let $provider = $crate::commands::provider::create_mongo_provider(&uri, &database).await?;
         $body
       }
       crate::commands::connection::ConnectionConfigEnum::Redis { uri, .. } => {
-        let $provider = $crate::commands::provider::create_redis_provider(uri).await?;
+        let $provider = $crate::commands::provider::create_redis_provider(&uri).await?;
         $body
       }
       crate::commands::connection::ConnectionConfigEnum::Postgres { uri, .. } => {
-        let $provider = $crate::commands::provider::create_postgres_provider(uri).await?;
+        let $provider = $crate::commands::provider::create_postgres_provider(&uri).await?;
         $body
       }
       crate::commands::connection::ConnectionConfigEnum::Sqlite { path, .. } => {
-        let $provider = $crate::commands::provider::create_sqlite_provider(path).await?;
+        let $provider = $crate::commands::provider::create_sqlite_provider(&path).await?;
         $body
       }
       crate::commands::connection::ConnectionConfigEnum::MySql { uri, .. } => {
-        let $provider = $crate::commands::provider::create_mysql_provider(uri).await?;
-        $body
-      }
-    }
-  };
-}
-
-#[macro_export]
-macro_rules! dispatch_provider_cached {
-  ($entry:expr, $conn_id:expr, $provider:ident => $body:block) => {
-    match &$entry.config.config {
-      crate::commands::connection::ConnectionConfigEnum::Json { path, .. } => {
-        let $provider = $crate::commands::provider::create_json_provider(path).await?;
-        $body
-      }
-      crate::commands::connection::ConnectionConfigEnum::Mongo { uri, database, .. } => {
-        let $provider =
-          $crate::commands::provider::get_or_create_mongo_provider($conn_id, uri, database).await?;
-        $body
-      }
-      crate::commands::connection::ConnectionConfigEnum::Redis { uri, .. } => {
-        let $provider = $crate::commands::provider::create_redis_provider(uri).await?;
-        $body
-      }
-      crate::commands::connection::ConnectionConfigEnum::Postgres { uri, .. } => {
-        let $provider =
-          $crate::commands::provider::get_or_create_postgres_provider($conn_id, uri).await?;
-        $body
-      }
-      crate::commands::connection::ConnectionConfigEnum::Sqlite { path, .. } => {
-        let $provider = $crate::commands::provider::create_sqlite_provider(path).await?;
-        $body
-      }
-      crate::commands::connection::ConnectionConfigEnum::MySql { uri, .. } => {
-        let $provider =
-          $crate::commands::provider::get_or_create_mysql_provider($conn_id, uri).await?;
+        let $provider = $crate::commands::provider::create_mysql_provider(&uri).await?;
         $body
       }
     }

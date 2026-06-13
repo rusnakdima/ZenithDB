@@ -1,3 +1,4 @@
+use crate::constants::LIST_TIMEOUT_SECS;
 use crate::logger::{redact_sensitive_data, DataflowTimer};
 use crate::models::response::ResponseModel;
 use rusqlite::{params, Connection, OptionalExtension};
@@ -322,7 +323,7 @@ pub async fn list_databases_metadata(
   let params = serde_json::json!({ "connection_id": &connection_id });
   tracing::debug!(command = "list_databases_metadata", params = %redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default()), "[COMMAND_ENTRY]");
   match tokio::time::timeout(
-    std::time::Duration::from_secs(10),
+    std::time::Duration::from_secs(LIST_TIMEOUT_SECS),
     DecentralizedStorage::list_databases(&connection_id),
   )
   .await

@@ -1,5 +1,5 @@
 use crate::commands::error_utils::ToStringError;
-use crate::commands::get_connection_entry;
+use crate::commands::get_connection_entry_with_timer;
 use crate::commands::types::{CollectionMeta, CollectionSchema, CollectionStats};
 use crate::commands::validate_conn_id;
 use crate::commands::validate_name;
@@ -31,12 +31,9 @@ pub async fn collection_list(
     return Err(ResponseModel::error(e));
   }
 
-  let entry = match get_connection_entry(&connection_id).await {
+  let entry = match get_connection_entry_with_timer(&connection_id, &timer).await {
     Ok(e) => e,
-    Err(e) => {
-      timer.clone().finish_error(&e);
-      return Err(ResponseModel::error(e));
-    }
+    Err(e) => return Err(e),
   };
 
   let result = match dispatch_provider!(entry, provider => {
@@ -86,12 +83,9 @@ pub async fn collection_describe(
     return Err(ResponseModel::error(e));
   }
 
-  let entry = match get_connection_entry(&connection_id).await {
+  let entry = match get_connection_entry_with_timer(&connection_id, &timer).await {
     Ok(e) => e,
-    Err(e) => {
-      timer.clone().finish_error(&e);
-      return Err(ResponseModel::error(e));
-    }
+    Err(e) => return Err(e),
   };
 
   let result = match dispatch_provider!(entry, provider => {
@@ -137,12 +131,9 @@ pub async fn collection_stats(
     return Err(ResponseModel::error(e));
   }
 
-  let entry = match get_connection_entry(&connection_id).await {
+  let entry = match get_connection_entry_with_timer(&connection_id, &timer).await {
     Ok(e) => e,
-    Err(e) => {
-      timer.clone().finish_error(&e);
-      return Err(ResponseModel::error(e));
-    }
+    Err(e) => return Err(e),
   };
 
   let result = match dispatch_provider!(entry, provider => {
@@ -183,12 +174,9 @@ pub async fn collection_create(
     return Err(ResponseModel::error(e));
   }
 
-  let entry = match get_connection_entry(&connection_id).await {
+  let entry = match get_connection_entry_with_timer(&connection_id, &timer).await {
     Ok(e) => e,
-    Err(e) => {
-      timer.clone().finish_error(&e);
-      return Err(ResponseModel::error(e));
-    }
+    Err(e) => return Err(e),
   };
 
   let result = match dispatch_provider!(entry, provider => {
@@ -223,12 +211,9 @@ pub async fn collection_drop(
     return Err(ResponseModel::error(e));
   }
 
-  let entry = match get_connection_entry(&connection_id).await {
+  let entry = match get_connection_entry_with_timer(&connection_id, &timer).await {
     Ok(e) => e,
-    Err(e) => {
-      timer.clone().finish_error(&e);
-      return Err(ResponseModel::error(e));
-    }
+    Err(e) => return Err(e),
   };
 
   let result = match dispatch_provider!(entry, provider => {
@@ -268,12 +253,9 @@ pub async fn collection_rename(
     return Err(ResponseModel::error(e));
   }
 
-  let entry = match get_connection_entry(&connection_id).await {
+  let entry = match get_connection_entry_with_timer(&connection_id, &timer).await {
     Ok(e) => e,
-    Err(e) => {
-      timer.clone().finish_error(&e);
-      return Err(ResponseModel::error(e));
-    }
+    Err(e) => return Err(e),
   };
 
   let result = match dispatch_provider!(entry, provider => {
