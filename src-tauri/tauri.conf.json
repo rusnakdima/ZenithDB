@@ -12,6 +12,7 @@
   "app": {
     "windows": [
       {
+        "label": "main",
         "title": "ZenithDB - Professional Database Manager",
         "width": 1400,
         "height": 900,

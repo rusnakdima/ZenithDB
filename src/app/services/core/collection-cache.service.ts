@@ -189,7 +189,9 @@ export class CollectionCacheService {
     }
   }
 
-  async getCollectionStats(collection: string): Promise<import("@shared/models/connection.config").CollectionStats> {
+  async getCollectionStats(
+    collection: string
+  ): Promise<import("@shared/models/connection.config").CollectionStats> {
     this.dataflowLogger.logApiCall(this.page, "getCollectionStats", "get_collection_stats", {
       collection,
     });

@@ -42,11 +42,7 @@ export class TauriApiService {
       }
     } catch (error: unknown) {
       if (!options.suppressError) {
-        this.loggingService.error(
-          `Error invoking command "${command}"`,
-          "TauriApi",
-          { error }
-        );
+        this.loggingService.error(`Error invoking command "${command}"`, "TauriApi", { error });
       }
       throw error;
     }
@@ -70,11 +66,7 @@ export class TauriApiService {
       ]);
     } catch (error: unknown) {
       if (!options.suppressError) {
-        this.loggingService.error(
-          `Error invoking command "${command}"`,
-          "TauriApi",
-          { error }
-        );
+        this.loggingService.error(`Error invoking command "${command}"`, "TauriApi", { error });
       }
       throw error;
     }
