@@ -1,9 +1,7 @@
-use crate::constants::UUID_LENGTH;
 use crate::logger::DataflowTimer;
 use crate::models::response::ResponseModel;
 use crate::services::connection_service::ConnectionService;
 
-pub mod connection;
 pub mod connection_command;
 pub mod connection_entity;
 pub mod database_command;
@@ -14,13 +12,15 @@ pub mod schema_command;
 pub mod settings_command;
 pub mod types;
 
+pub use connection_command::ConnectionConfig;
+
 #[derive(Debug, Clone)]
 pub struct ConnectionEntry {
-  pub config: crate::commands::connection::ConnectionConfig,
+  pub config: ConnectionConfig,
 }
 
 pub async fn get_connection_entry(conn_id: &str) -> Result<ConnectionEntry, String> {
-  let service = ConnectionService::get_instance();
+  let service = ConnectionService::get_instance().await;
   let entity = service
     .find_entity_by_id(conn_id)
     .await
@@ -42,28 +42,9 @@ pub async fn get_connection_entry_with_timer(
 }
 
 pub fn validate_conn_id(id: &str) -> Result<(), String> {
-  if id.len() != UUID_LENGTH {
-    return Err("Connection ID must be 36 characters".to_string());
-  }
-  let parts: Vec<&str> = id.split('-').collect();
-  if parts.len() != 5 {
-    return Err("Invalid UUID format".to_string());
-  }
-  if parts[0].len() != 8
-    || parts[1].len() != 4
-    || parts[2].len() != 4
-    || parts[3].len() != 4
-    || parts[4].len() != 12
-  {
-    return Err("Invalid UUID segment lengths".to_string());
-  }
-  if !parts
-    .iter()
-    .all(|p| p.chars().all(|c| c.is_ascii_hexdigit()))
-  {
-    return Err("Connection ID contains invalid characters".to_string());
-  }
-  Ok(())
+  uuid::Uuid::parse_str(id)
+    .map(|_| ())
+    .map_err(|e| format!("Invalid connection ID: {}", e))
 }
 
 pub fn validate_name(name: &str) -> Result<(), String> {
@@ -94,27 +75,27 @@ pub fn validate_name(name: &str) -> Result<(), String> {
 macro_rules! dispatch_provider {
   ($entry:expr, $provider:ident => $body:block) => {
     match &$entry.config.config {
-      crate::commands::connection::ConnectionConfigEnum::Json { path, .. } => {
+      $crate::commands::connection_command::ConnectionConfigEnum::Json { path, .. } => {
         let $provider = $crate::commands::provider::create_json_provider(&path).await?;
         $body
       }
-      crate::commands::connection::ConnectionConfigEnum::Mongo { uri, database, .. } => {
+      $crate::commands::connection_command::ConnectionConfigEnum::Mongo { uri, database, .. } => {
         let $provider = $crate::commands::provider::create_mongo_provider(&uri, &database).await?;
         $body
       }
-      crate::commands::connection::ConnectionConfigEnum::Redis { uri, .. } => {
+      $crate::commands::connection_command::ConnectionConfigEnum::Redis { uri, .. } => {
         let $provider = $crate::commands::provider::create_redis_provider(&uri).await?;
         $body
       }
-      crate::commands::connection::ConnectionConfigEnum::Postgres { uri, .. } => {
+      $crate::commands::connection_command::ConnectionConfigEnum::Postgres { uri, .. } => {
         let $provider = $crate::commands::provider::create_postgres_provider(&uri).await?;
         $body
       }
-      crate::commands::connection::ConnectionConfigEnum::Sqlite { path, .. } => {
+      $crate::commands::connection_command::ConnectionConfigEnum::Sqlite { path, .. } => {
         let $provider = $crate::commands::provider::create_sqlite_provider(&path).await?;
         $body
       }
-      crate::commands::connection::ConnectionConfigEnum::MySql { uri, .. } => {
+      $crate::commands::connection_command::ConnectionConfigEnum::MySql { uri, .. } => {
         let $provider = $crate::commands::provider::create_mysql_provider(&uri).await?;
         $body
       }

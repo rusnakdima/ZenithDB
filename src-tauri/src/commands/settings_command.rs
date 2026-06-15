@@ -2,14 +2,17 @@ use crate::constants::LIST_TIMEOUT_SECS;
 use crate::logger::{redact_sensitive_data, DataflowTimer};
 use crate::models::response::ResponseModel;
 use base64::{engine::general_purpose::STANDARD, Engine};
-use chrono::Local;
-use rusqlite::{params, Connection, OptionalExtension};
+use chrono::{DateTime, Local, Utc};
+use nosql_orm::prelude::*;
+use nosql_orm::providers::sql::SqliteProvider;
 use serde::{Deserialize, Serialize};
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::PathBuf;
+use std::sync::Arc;
 use sysinfo::{Disks, Networks, System};
 use tauri::AppHandle;
+use tokio::sync::Mutex;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DatabaseMetadata {
@@ -22,56 +25,206 @@ pub struct DatabaseMetadata {
   pub metadata: Option<String>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, Validate)]
+pub struct DatabaseMetadataEntity {
+  pub id: Option<String>,
+  pub connection_id: String,
+  pub name: String,
+  pub path: Option<String>,
+  pub created_at: Option<DateTime<Utc>>,
+  pub updated_at: Option<DateTime<Utc>>,
+  pub metadata: Option<String>,
+}
+
+impl Entity for DatabaseMetadataEntity {
+  fn meta() -> EntityMeta {
+    EntityMeta::new("database_metadata")
+  }
+  fn get_id(&self) -> Option<String> {
+    self.id.clone()
+  }
+  fn set_id(&mut self, id: String) {
+    self.id = Some(id);
+  }
+}
+
+impl WithRelations for DatabaseMetadataEntity {
+  fn relations() -> Vec<RelationDef> {
+    vec![]
+  }
+}
+
+impl Timestamps for DatabaseMetadataEntity {
+  fn created_at(&self) -> Option<DateTime<Utc>> {
+    self.created_at
+  }
+  fn updated_at(&self) -> Option<DateTime<Utc>> {
+    self.updated_at
+  }
+  fn set_created_at(&mut self, t: DateTime<Utc>) {
+    self.created_at = Some(t);
+  }
+  fn set_updated_at(&mut self, t: DateTime<Utc>) {
+    self.updated_at = Some(t);
+  }
+  fn apply_timestamps_for_insert(&mut self) {
+    let now = Utc::now();
+    if self.created_at.is_none() {
+      self.created_at = Some(now);
+    }
+    if self.updated_at.is_none() {
+      self.updated_at = Some(now);
+    }
+  }
+  fn apply_timestamps_for_update(&mut self) {
+    self.updated_at = Some(Utc::now());
+  }
+}
+
+impl SoftDeletable for DatabaseMetadataEntity {
+  fn deleted_at(&self) -> Option<DateTime<Utc>> {
+    None
+  }
+  fn set_deleted_at(&mut self, _t: Option<DateTime<Utc>>) {}
+}
+
+impl From<DatabaseMetadataEntity> for DatabaseMetadata {
+  fn from(entity: DatabaseMetadataEntity) -> Self {
+    let created_at = entity
+      .created_at
+      .map(|dt| dt.timestamp())
+      .unwrap_or_else(|| Utc::now().timestamp());
+    let updated_at = entity
+      .updated_at
+      .map(|dt| dt.timestamp())
+      .unwrap_or_else(|| Utc::now().timestamp());
+    DatabaseMetadata {
+      id: entity.id.and_then(|s| s.parse().ok()).unwrap_or(0),
+      connection_id: entity.connection_id,
+      name: entity.name,
+      path: entity.path,
+      created_at,
+      updated_at,
+      metadata: entity.metadata,
+    }
+  }
+}
+
+struct MetadataDb {
+  repo: Repository<DatabaseMetadataEntity, SqliteProvider>,
+  provider: SqliteProvider,
+}
+
+impl MetadataDb {
+  async fn new() -> Result<Self, String> {
+    let db_path = Self::path()?;
+    if let Some(parent) = db_path.parent() {
+      std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+    }
+    let provider = SqliteProvider::connect(db_path.to_string_lossy().as_ref())
+      .await
+      .map_err(|e| format!("Failed to open metadata db: {}", e))?;
+    let repo = Repository::new(provider.clone());
+    let db = Self { repo, provider };
+    db.init().await?;
+    Ok(db)
+  }
+
+  fn path() -> Result<PathBuf, String> {
+    let path = dirs::home_dir()
+      .ok_or("Failed to get home dir")?
+      .join(".zenithdb")
+      .join("metadata.db");
+    Ok(path)
+  }
+
+  async fn init(&self) -> Result<(), String> {
+    self
+      .provider
+      .create_collection("database_metadata", None)
+      .await
+      .map_err(|e| e.to_string())?;
+    log::trace!("Database metadata table ready");
+    Ok(())
+  }
+
+  async fn save(&self, entity: &DatabaseMetadataEntity) -> Result<DatabaseMetadataEntity, String> {
+    self.repo.save(entity.clone()).await.map_err(|e| e.to_string())
+  }
+
+  async fn find_by_id(&self, id: &str) -> Result<Option<DatabaseMetadataEntity>, String> {
+    self.repo.find_by_id(id).await.map_err(|e| e.to_string())
+  }
+
+  async fn find_by_connection_id(
+    &self,
+    connection_id: &str,
+  ) -> Result<Vec<DatabaseMetadataEntity>, String> {
+    let all = self.repo.find_all().await.map_err(|e| e.to_string())?;
+    Ok(all
+      .into_iter()
+      .filter(|e| e.connection_id == connection_id)
+      .collect())
+  }
+
+  async fn update(
+    &self,
+    id: &str,
+    name: &str,
+    path: Option<&str>,
+    metadata: Option<&str>,
+  ) -> Result<DatabaseMetadataEntity, String> {
+    let mut entity = self
+      .repo
+      .find_by_id(id)
+      .await
+      .map_err(|e| e.to_string())?
+      .ok_or_else(|| format!("Database {} not found", id))?;
+    entity.name = name.to_string();
+    entity.path = path.map(|p| p.to_string());
+    entity.metadata = metadata.map(|m| m.to_string());
+    entity.apply_timestamps_for_update();
+    self.repo.save(entity).await.map_err(|e| e.to_string())
+  }
+
+  async fn delete(&self, id: &str) -> Result<(), String> {
+    self.repo.delete(id).await.map_err(|e| e.to_string())?;
+    Ok(())
+  }
+
+  async fn delete_by_connection_id(connection_id: &str) -> Result<(), String> {
+    let db = Self::get_instance().await?;
+    let guard = db.lock().await;
+    let entities = guard.find_by_connection_id(connection_id).await?;
+    for entity in entities {
+      if let Some(id) = entity.id.clone() {
+        guard.delete(&id).await?;
+      }
+    }
+    Ok(())
+  }
+
+  async fn get_instance() -> Result<Arc<Mutex<MetadataDb>>, String> {
+    static SERVICE: tokio::sync::OnceCell<Arc<Mutex<MetadataDb>>> =
+      tokio::sync::OnceCell::const_new();
+    SERVICE
+      .get_or_try_init(|| async {
+        Self::new()
+          .await
+          .map(|db| Arc::new(Mutex::new(db)))
+      })
+      .await
+      .map_err(|e| format!("Failed to create MetadataDb: {}", e))
+      .map(|arc| arc.clone())
+  }
+}
+
 pub struct DecentralizedStorage;
 
 impl DecentralizedStorage {
-  pub fn path() -> PathBuf {
-    dirs::home_dir()
-      .unwrap_or_else(|| PathBuf::from("."))
-      .join(".zenithdb")
-      .join("metadata.db")
-  }
-
   pub async fn init() -> Result<(), String> {
-    let path = Self::path();
-
-    if let Some(parent) = path.parent() {
-      tokio::fs::create_dir_all(parent)
-        .await
-        .map_err(|e| format!("Failed to create directory: {}", e))?;
-    }
-
-    let path_clone = path.clone();
-    tokio::task::spawn_blocking(move || {
-      let conn =
-        Connection::open(&path_clone).map_err(|e| format!("Failed to open database: {}", e))?;
-
-      conn
-        .execute(
-          "CREATE TABLE IF NOT EXISTS database_metadata (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    connection_id TEXT NOT NULL,
-                    name TEXT NOT NULL,
-                    path TEXT,
-                    created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
-                    updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
-                    metadata TEXT
-                )",
-          [],
-        )
-        .map_err(|e| format!("Failed to create table: {}", e))?;
-
-      conn
-        .execute(
-          "CREATE INDEX IF NOT EXISTS idx_connection_id ON database_metadata(connection_id)",
-          [],
-        )
-        .map_err(|e| format!("Failed to create index: {}", e))?;
-
-      Ok::<(), String>(())
-    })
-    .await
-    .map_err(|e| format!("Init task failed: {:?}", e))?
+    MetadataDb::new().await?;
+    Ok(())
   }
 
   pub async fn save_database(
@@ -80,114 +233,34 @@ impl DecentralizedStorage {
     path: Option<&str>,
     metadata: Option<&str>,
   ) -> Result<DatabaseMetadata, String> {
-    let db_path = Self::path();
-    let conn_id = connection_id.to_string();
-    let db_name = name.to_string();
-    let db_path_owned = path.map(|p| p.to_string());
-    let db_metadata_owned = metadata.map(|m| m.to_string());
-    let now = std::time::SystemTime::now()
-      .duration_since(std::time::UNIX_EPOCH)
-      .map_err(|e| format!("Time error: {}", e))?
-      .as_secs() as i64;
-
-    let result_conn_id = conn_id.clone();
-    let result_db_name = db_name.clone();
-    let result_path = db_path_owned.clone();
-    let result_metadata = db_metadata_owned.clone();
-
-    tokio::task::spawn_blocking(move || {
-            let conn = Connection::open(&db_path)
-                .map_err(|e| format!("Failed to open database: {}", e))?;
-
-            conn.execute(
-                "INSERT INTO database_metadata (connection_id, name, path, created_at, updated_at, metadata) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
-                params![conn_id, db_name, db_path_owned, now, now, db_metadata_owned],
-            )
-            .map_err(|e| format!("Failed to insert database: {}", e))?;
-
-            let id = conn.last_insert_rowid();
-
-            Ok::<DatabaseMetadata, String>(DatabaseMetadata {
-                id,
-                connection_id: result_conn_id,
-                name: result_db_name,
-                path: result_path,
-                created_at: now,
-                updated_at: now,
-                metadata: result_metadata,
-            })
-        })
-        .await
-        .map_err(|e| format!("save_database task failed: {:?}", e))?
+    let db = MetadataDb::get_instance().await?;
+    let guard = db.lock().await;
+    let id = uuid::Uuid::new_v4().to_string();
+    let entity = DatabaseMetadataEntity {
+      id: Some(id),
+      connection_id: connection_id.to_string(),
+      name: name.to_string(),
+      path: path.map(|p| p.to_string()),
+      created_at: None,
+      updated_at: None,
+      metadata: metadata.map(|m| m.to_string()),
+    };
+    let saved = guard.save(&entity).await?;
+    Ok(saved.into())
   }
 
   pub async fn list_databases(connection_id: &str) -> Result<Vec<DatabaseMetadata>, String> {
-    let db_path = Self::path();
-    let conn_id = connection_id.to_string();
-
-    tokio::task::spawn_blocking(move || {
-            let conn = Connection::open(&db_path)
-                .map_err(|e| format!("Failed to open database: {}", e))?;
-
-            let mut stmt = conn
-                .prepare("SELECT id, connection_id, name, path, created_at, updated_at, metadata FROM database_metadata WHERE connection_id = ?1 ORDER BY created_at DESC")
-                .map_err(|e| format!("Failed to prepare statement: {}", e))?;
-
-            let rows = stmt
-                .query_map(params![conn_id], |row| {
-                    Ok(DatabaseMetadata {
-                        id: row.get(0)?,
-                        connection_id: row.get(1)?,
-                        name: row.get(2)?,
-                        path: row.get(3)?,
-                        created_at: row.get(4)?,
-                        updated_at: row.get(5)?,
-                        metadata: row.get(6)?,
-                    })
-                })
-                .map_err(|e| format!("Failed to query: {}", e))?;
-
-            let mut databases = Vec::new();
-            for row in rows {
-                databases.push(row.map_err(|e| format!("Failed to read row: {}", e))?);
-            }
-
-            Ok(databases)
-        })
-        .await
-        .map_err(|e| format!("list_databases task failed: {:?}", e))?
+    let db = MetadataDb::get_instance().await?;
+    let guard = db.lock().await;
+    let entities = guard.find_by_connection_id(connection_id).await?;
+    Ok(entities.into_iter().map(|e| e.into()).collect())
   }
 
   pub async fn get_database(id: i64) -> Result<Option<DatabaseMetadata>, String> {
-    let db_path = Self::path();
-
-    tokio::task::spawn_blocking(move || {
-            let conn = Connection::open(&db_path)
-                .map_err(|e| format!("Failed to open database: {}", e))?;
-
-            let mut stmt = conn
-                .prepare("SELECT id, connection_id, name, path, created_at, updated_at, metadata FROM database_metadata WHERE id = ?1")
-                .map_err(|e| format!("Failed to prepare statement: {}", e))?;
-
-            let result = stmt
-                .query_row(params![id], |row| {
-                    Ok(DatabaseMetadata {
-                        id: row.get(0)?,
-                        connection_id: row.get(1)?,
-                        name: row.get(2)?,
-                        path: row.get(3)?,
-                        created_at: row.get(4)?,
-                        updated_at: row.get(5)?,
-                        metadata: row.get(6)?,
-                    })
-                })
-                .optional()
-                .map_err(|e| format!("Failed to query: {}", e))?;
-
-            Ok(result)
-        })
-        .await
-        .map_err(|e| format!("get_database task failed: {:?}", e))?
+    let db = MetadataDb::get_instance().await?;
+    let guard = db.lock().await;
+    let entity = guard.find_by_id(&id.to_string()).await?;
+    Ok(entity.map(|e| e.into()))
   }
 
   pub async fn update_database(
@@ -196,83 +269,22 @@ impl DecentralizedStorage {
     path: Option<&str>,
     metadata: Option<&str>,
   ) -> Result<DatabaseMetadata, String> {
-    let db_path = Self::path();
-    let now = std::time::SystemTime::now()
-      .duration_since(std::time::UNIX_EPOCH)
-      .map_err(|e| format!("Time error: {}", e))?
-      .as_secs() as i64;
-
-    let name_owned = name.to_string();
-    let path_owned = path.map(|p| p.to_string());
-    let metadata_owned = metadata.map(|m| m.to_string());
-
-    tokio::task::spawn_blocking(move || {
-            let conn = Connection::open(&db_path)
-                .map_err(|e| format!("Failed to open database: {}", e))?;
-
-            conn.execute(
-                "UPDATE database_metadata SET name = ?1, path = ?2, updated_at = ?3, metadata = ?4 WHERE id = ?5",
-                params![name_owned, path_owned, now, metadata_owned, id],
-            )
-            .map_err(|e| format!("Failed to update database: {}", e))?;
-
-            let mut stmt = conn
-                .prepare("SELECT id, connection_id, name, path, created_at, updated_at, metadata FROM database_metadata WHERE id = ?1")
-                .map_err(|e| format!("Failed to prepare statement: {}", e))?;
-
-            stmt.query_row(params![id], |row| {
-                Ok(DatabaseMetadata {
-                    id: row.get(0)?,
-                    connection_id: row.get(1)?,
-                    name: row.get(2)?,
-                    path: row.get(3)?,
-                    created_at: row.get(4)?,
-                    updated_at: row.get(5)?,
-                    metadata: row.get(6)?,
-                })
-            })
-            .map_err(|e| format!("Database not found after update: {}", e))
-        })
-        .await
-        .map_err(|e| format!("update_database task failed: {:?}", e))?
+    let db = MetadataDb::get_instance().await?;
+    let guard = db.lock().await;
+    let updated = guard
+      .update(&id.to_string(), name, path, metadata)
+      .await?;
+    Ok(updated.into())
   }
 
   pub async fn delete_database(id: i64) -> Result<(), String> {
-    let db_path = Self::path();
-
-    tokio::task::spawn_blocking(move || {
-      let conn =
-        Connection::open(&db_path).map_err(|e| format!("Failed to open database: {}", e))?;
-
-      conn
-        .execute("DELETE FROM database_metadata WHERE id = ?1", params![id])
-        .map_err(|e| format!("Failed to delete database: {}", e))?;
-
-      Ok(())
-    })
-    .await
-    .map_err(|e| format!("delete_database task failed: {:?}", e))?
+    let db = MetadataDb::get_instance().await?;
+    let guard = db.lock().await;
+    guard.delete(&id.to_string()).await
   }
 
   pub async fn delete_connection_databases(connection_id: &str) -> Result<(), String> {
-    let db_path = Self::path();
-    let conn_id = connection_id.to_string();
-
-    tokio::task::spawn_blocking(move || {
-      let conn =
-        Connection::open(&db_path).map_err(|e| format!("Failed to open database: {}", e))?;
-
-      conn
-        .execute(
-          "DELETE FROM database_metadata WHERE connection_id = ?1",
-          params![conn_id],
-        )
-        .map_err(|e| format!("Failed to delete connection databases: {}", e))?;
-
-      Ok(())
-    })
-    .await
-    .map_err(|e| format!("delete_connection_databases task failed: {:?}", e))?
+    MetadataDb::delete_by_connection_id(connection_id).await
   }
 }
 

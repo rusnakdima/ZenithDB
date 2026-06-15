@@ -1,4 +1,4 @@
-use crate::commands::connection::ConnectionConfigEnum;
+use crate::commands::connection_command::ConnectionConfigEnum;
 use crate::commands::error_utils::ToStringError;
 use crate::commands::get_connection_entry;
 use crate::commands::types::RawResult;

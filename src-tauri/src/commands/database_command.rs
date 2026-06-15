@@ -1,4 +1,4 @@
-use crate::commands::connection::ConnectionConfigEnum;
+use crate::commands::connection_command::ConnectionConfigEnum;
 use crate::commands::error_utils::ToStringError;
 use crate::commands::get_connection_entry;
 use crate::commands::types::DatabaseMeta;
@@ -12,6 +12,30 @@ use std::path::PathBuf;
 
 fn validate_safe_path(base: &str, user_input: &str) -> Result<PathBuf, String> {
   crate::infrastructure::nosql_orm_adapter::validate_safe_path(base, user_input)
+}
+
+fn list_databases_with_pagination(
+  db_names: Vec<String>,
+  offset: usize,
+  limit: usize,
+) -> DatabaseListResult {
+  let total_count = db_names.len();
+  let has_more = offset + limit < total_count;
+  let dbs: Vec<DatabaseMeta> = db_names
+    .into_iter()
+    .skip(offset)
+    .take(limit)
+    .map(|name| DatabaseMeta {
+      name,
+      size_bytes: None,
+      table_count: None,
+    })
+    .collect();
+  DatabaseListResult {
+    databases: dbs,
+    has_more,
+    total_count,
+  }
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -274,25 +298,7 @@ pub async fn database_list(
         .await
       {
         Ok(provider) => match provider.list_databases().await.map_err_string() {
-          Ok(db_names) => {
-            let total_count = db_names.len();
-            let has_more = offset + limit < total_count;
-            let dbs: Vec<DatabaseMeta> = db_names
-              .into_iter()
-              .skip(offset)
-              .take(limit)
-              .map(|name| DatabaseMeta {
-                name,
-                size_bytes: None,
-                table_count: None,
-              })
-              .collect();
-            ResponseModel::success(DatabaseListResult {
-              databases: dbs,
-              has_more,
-              total_count,
-            })
-          }
+          Ok(db_names) => ResponseModel::success(list_databases_with_pagination(db_names, offset, limit)),
           Err(e) => {
             timer.clone().finish_error(&e);
             ResponseModel::error(e.to_string())
@@ -307,25 +313,7 @@ pub async fn database_list(
     ConnectionConfigEnum::Postgres { uri, .. } => {
       match crate::commands::provider::get_or_create_postgres_provider(&connection_id, uri).await {
         Ok(provider) => match provider.list_databases().await.map_err_string() {
-          Ok(db_names) => {
-            let total_count = db_names.len();
-            let has_more = offset + limit < total_count;
-            let dbs: Vec<DatabaseMeta> = db_names
-              .into_iter()
-              .skip(offset)
-              .take(limit)
-              .map(|name| DatabaseMeta {
-                name,
-                size_bytes: None,
-                table_count: None,
-              })
-              .collect();
-            ResponseModel::success(DatabaseListResult {
-              databases: dbs,
-              has_more,
-              total_count,
-            })
-          }
+          Ok(db_names) => ResponseModel::success(list_databases_with_pagination(db_names, offset, limit)),
           Err(e) => {
             timer.clone().finish_error(&e);
             ResponseModel::error(e)
@@ -340,25 +328,7 @@ pub async fn database_list(
     ConnectionConfigEnum::MySql { uri, .. } => {
       match crate::commands::provider::get_or_create_mysql_provider(&connection_id, uri).await {
         Ok(provider) => match provider.list_databases().await.map_err_string() {
-          Ok(db_names) => {
-            let total_count = db_names.len();
-            let has_more = offset + limit < total_count;
-            let dbs: Vec<DatabaseMeta> = db_names
-              .into_iter()
-              .skip(offset)
-              .take(limit)
-              .map(|name| DatabaseMeta {
-                name,
-                size_bytes: None,
-                table_count: None,
-              })
-              .collect();
-            ResponseModel::success(DatabaseListResult {
-              databases: dbs,
-              has_more,
-              total_count,
-            })
-          }
+          Ok(db_names) => ResponseModel::success(list_databases_with_pagination(db_names, offset, limit)),
           Err(e) => {
             timer.clone().finish_error(&e);
             ResponseModel::error(e)

@@ -1,4 +1,4 @@
-use crate::commands::connection::{
+use crate::commands::connection_command::{
   ConnectionConfig, ConnectionConfigEnum, ConnectionHealth, ConnectionSummary,
 };
 use crate::commands::connection_entity::ConnectionEntity;
@@ -9,30 +9,33 @@ use crate::commands::provider::{
 use crate::commands::settings_command::delete_connection_databases_metadata;
 use crate::constants::CONNECTION_TIMEOUT_SECS;
 use crate::models::response::ResponseModel;
-use nosql_orm::provider::{AdminCommands, DatabaseProvider, SchemaIntrospection};
+use nosql_orm::prelude::*;
+use nosql_orm::providers::sql::SqliteProvider;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
-static CONNECTION_SERVICE: std::sync::OnceLock<Arc<ConnectionService>> = std::sync::OnceLock::new();
 
 pub struct ConnectionService {
   connections_db: Arc<Mutex<ConnectionsDb>>,
 }
 
 struct ConnectionsDb {
-  conn: rusqlite::Connection,
+  repo: Repository<ConnectionEntity, SqliteProvider>,
+  provider: SqliteProvider,
 }
 
 impl ConnectionsDb {
-  fn new() -> Result<Self, String> {
+  async fn new() -> Result<Self, String> {
     let db_path = Self::path()?;
     if let Some(parent) = db_path.parent() {
       std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
     }
-    let conn = rusqlite::Connection::open(&db_path)
+    let provider = SqliteProvider::connect(db_path.to_string_lossy().as_ref())
+      .await
       .map_err(|e| format!("Failed to open connections db: {}", e))?;
-    let db = Self { conn };
-    db.init()?;
+    let repo = Repository::new(provider.clone());
+    let db = Self { repo, provider };
+    db.init().await?;
     Ok(db)
   }
 
@@ -44,153 +47,55 @@ impl ConnectionsDb {
     Ok(path)
   }
 
-  fn init(&self) -> Result<(), String> {
+  async fn init(&self) -> Result<(), String> {
     self
-      .conn
-      .execute(
-        "CREATE TABLE IF NOT EXISTS connections (
-                id TEXT PRIMARY KEY,
-                type_ TEXT NOT NULL,
-                name TEXT NOT NULL,
-                config TEXT NOT NULL,
-                created_at INTEGER NOT NULL,
-                updated_at INTEGER NOT NULL
-            )",
-        [],
-      )
+      .provider
+      .create_collection("connections", None)
+      .await
       .map_err(|e| e.to_string())?;
     log::trace!("Connections table ready");
     Ok(())
   }
 
-  fn save(&self, entity: &ConnectionEntity) -> Result<(), String> {
-    let config_json = serde_json::to_string(&entity.config).map_err(|e| e.to_string())?;
-
-    self
-      .conn
-      .execute(
-        "INSERT OR REPLACE INTO connections (id, type_, name, config, created_at, updated_at)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
-        rusqlite::params![
-          entity.id,
-          entity.type_,
-          entity.name,
-          config_json,
-          entity.created_at,
-          entity.updated_at
-        ],
-      )
-      .map_err(|e| e.to_string())?;
-    log::info!("Saved connection: {}", entity.id);
+  async fn save(&self, entity: &ConnectionEntity) -> Result<(), String> {
+    self.repo.save(entity.clone()).await.map_err(|e| e.to_string())?;
+    log::info!("Saved connection: {}", entity.get_id().unwrap_or_default());
     Ok(())
   }
 
-  fn find_by_id(&self, id: &str) -> Result<Option<ConnectionEntity>, String> {
-    let mut stmt = self
-      .conn
-      .prepare(
-        "SELECT id, type_, name, config, created_at, updated_at FROM connections WHERE id = ?1",
-      )
-      .map_err(|e| e.to_string())?;
-
-    let result = stmt.query_row(rusqlite::params![id], |row| {
-      let config_json: String = row.get(3)?;
-      let config: ConnectionConfig = serde_json::from_str(&config_json).map_err(|e| {
-        rusqlite::Error::ToSqlConversionFailure(Box::new(std::io::Error::new(
-          std::io::ErrorKind::InvalidData,
-          e,
-        )))
-      })?;
-
-      Ok(ConnectionEntity {
-        id: row.get(0)?,
-        type_: row.get(1)?,
-        name: row.get(2)?,
-        config,
-        created_at: row.get(4)?,
-        updated_at: row.get(5)?,
-      })
-    });
-
-    match result {
-      Ok(entity) => Ok(Some(entity)),
-      Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
-      Err(e) => Err(e.to_string()),
-    }
+  async fn find_by_id(&self, id: &str) -> Result<Option<ConnectionEntity>, String> {
+    self.repo.find_by_id(id).await.map_err(|e| e.to_string())
   }
 
-  fn find_all(&self) -> Result<Vec<ConnectionEntity>, String> {
-    let mut stmt = self
-      .conn
-      .prepare("SELECT id, type_, name, config, created_at, updated_at FROM connections")
-      .map_err(|e| e.to_string())?;
-
-    let entities = stmt
-      .query_map([], |row| {
-        let config_json: String = row.get(3)?;
-        let config: ConnectionConfig = serde_json::from_str(&config_json).map_err(|e| {
-          rusqlite::Error::ToSqlConversionFailure(Box::new(std::io::Error::new(
-            std::io::ErrorKind::InvalidData,
-            e,
-          )))
-        })?;
-
-        Ok(ConnectionEntity {
-          id: row.get(0)?,
-          type_: row.get(1)?,
-          name: row.get(2)?,
-          config,
-          created_at: row.get(4)?,
-          updated_at: row.get(5)?,
-        })
-      })
-      .map_err(|e| e.to_string())?;
-
-    let mut result = Vec::new();
-    for entity in entities {
-      match entity {
-        Ok(e) => result.push(e),
-        Err(e) => return Err(e.to_string()),
-      }
-    }
-    Ok(result)
+  async fn find_all(&self) -> Result<Vec<ConnectionEntity>, String> {
+    self.repo.find_all().await.map_err(|e| e.to_string())
   }
 
-  fn delete(&self, id: &str) -> Result<(), String> {
-    self
-      .conn
-      .execute(
-        "DELETE FROM connections WHERE id = ?1",
-        rusqlite::params![id],
-      )
-      .map_err(|e| e.to_string())?;
+  async fn delete(&self, id: &str) -> Result<(), String> {
+    self.repo.delete(id).await.map_err(|e| e.to_string())?;
     log::info!("Deleted connection: {}", id);
     Ok(())
   }
 
-  fn exists(&self, id: &str) -> Result<bool, String> {
-    let mut stmt = self
-      .conn
-      .prepare("SELECT 1 FROM connections WHERE id = ?1")
-      .map_err(|e| e.to_string())?;
-    let exists = stmt
-      .exists(rusqlite::params![id])
-      .map_err(|e| e.to_string())?;
-    Ok(exists)
+  async fn exists(&self, id: &str) -> Result<bool, String> {
+    self.repo.exists(id).await.map_err(|e| e.to_string())
   }
 }
 
 impl ConnectionService {
-  pub fn new() -> Result<Self, String> {
-    let db = ConnectionsDb::new()?;
+  pub async fn new() -> Result<Self, String> {
+    let db = ConnectionsDb::new().await?;
     Ok(Self {
       connections_db: Arc::new(Mutex::new(db)),
     })
   }
 
-  pub fn get_instance() -> Arc<ConnectionService> {
-    CONNECTION_SERVICE
-      .get_or_init(|| Arc::new(Self::new().expect("Failed to create ConnectionService")))
+  pub async fn get_instance() -> Arc<ConnectionService> {
+    static SERVICE: tokio::sync::OnceCell<Arc<ConnectionService>> = tokio::sync::OnceCell::const_new();
+    SERVICE
+      .get_or_try_init(|| async { Self::new().await.map(Arc::new) })
+      .await
+      .expect("Failed to create ConnectionService")
       .clone()
   }
 
@@ -283,7 +188,7 @@ impl ConnectionService {
         Ok(_) => ConnectionHealth::ok("postgres"),
         Err(e) => ConnectionHealth::err(&format!("postgres: {}", e)),
       },
-      Err(e) => ConnectionHealth::err(&format!("postgres: {}", e)),
+      Err(e) => ConnectionHealth::err(&e),
     }
   }
 
@@ -293,7 +198,7 @@ impl ConnectionService {
         Ok(_) => ConnectionHealth::ok("sqlite"),
         Err(e) => ConnectionHealth::err(&format!("sqlite: {}", e)),
       },
-      Err(e) => ConnectionHealth::err(&format!("sqlite: {}", e)),
+      Err(e) => ConnectionHealth::err(&e),
     }
   }
 
@@ -303,7 +208,7 @@ impl ConnectionService {
         Ok(_) => ConnectionHealth::ok("mysql"),
         Err(e) => ConnectionHealth::err(&format!("mysql: {}", e)),
       },
-      Err(e) => ConnectionHealth::err(&format!("mysql: {}", e)),
+      Err(e) => ConnectionHealth::err(&e),
     }
   }
 
@@ -316,7 +221,7 @@ impl ConnectionService {
 
     let entity = ConnectionEntity::new(id.clone(), type_str, config.name.clone(), config);
     let db = self.connections_db.lock().await;
-    db.save(&entity).map_err(|e| ResponseModel::error(e))?;
+    db.save(&entity).await.map_err(|e| ResponseModel::error(e))?;
 
     log::info!("Saved connection: {} ({})", id, entity.name);
     Ok(ResponseModel::success_message(format!(
@@ -327,7 +232,7 @@ impl ConnectionService {
 
   pub async fn list_connections(&self) -> Result<ResponseModel, ResponseModel> {
     let db = self.connections_db.lock().await;
-    let entities = db.find_all().map_err(|e| ResponseModel::error(e))?;
+    let entities = db.find_all().await.map_err(|e| ResponseModel::error(e))?;
     drop(db);
 
     let mut summaries = Vec::new();
@@ -339,7 +244,7 @@ impl ConnectionService {
         "disconnected".to_string()
       };
       summaries.push(ConnectionSummary {
-        id: e.id,
+        id: e.id.unwrap_or_default(),
         name: e.name,
         provider: e.type_.to_lowercase(),
         status,
@@ -353,6 +258,7 @@ impl ConnectionService {
     let db = self.connections_db.lock().await;
     let entity = db
       .find_by_id(id)
+      .await
       .map_err(|e| ResponseModel::error(e))?
       .ok_or_else(|| ResponseModel::error(format!("Connection {} not found", id)))?;
     drop(db);
@@ -366,7 +272,7 @@ impl ConnectionService {
     };
 
     let summary = ConnectionSummary {
-      id: entity.id,
+      id: entity.id.unwrap_or_default(),
       name: entity.name,
       provider: entity.type_.to_lowercase(),
       status,
@@ -379,6 +285,7 @@ impl ConnectionService {
     let db = self.connections_db.lock().await;
     let entity = db
       .find_by_id(conn_id)
+      .await
       .map_err(|e| ResponseModel::error(e))?
       .ok_or_else(|| ResponseModel::error(format!("Connection {} not found", conn_id)))?;
     drop(db);
@@ -397,11 +304,11 @@ impl ConnectionService {
   pub async fn delete_connection(&self, id: &str) -> Result<ResponseModel, ResponseModel> {
     let db = self.connections_db.lock().await;
 
-    if !db.exists(id).map_err(|e| ResponseModel::error(e))? {
+    if !db.exists(id).await.map_err(|e| ResponseModel::error(e))? {
       return Err(ResponseModel::error(format!("Connection {} not found", id)));
     }
 
-    db.delete(id).map_err(|e| ResponseModel::error(e))?;
+    db.delete(id).await.map_err(|e| ResponseModel::error(e))?;
     drop(db);
 
     if let Err(e) = delete_connection_databases_metadata(id.to_string()).await {
@@ -424,21 +331,22 @@ impl ConnectionService {
 
     let existing = db
       .find_by_id(id)
+      .await
       .map_err(|e| ResponseModel::error(e))?
       .ok_or_else(|| ResponseModel::error(format!("Connection {} not found", id)))?;
 
     let type_str = Self::get_type_string(&config);
 
     let entity = ConnectionEntity {
-      id: id.to_string(),
+      id: Some(id.to_string()),
       type_: type_str,
       name: config.name.clone(),
       config,
       created_at: existing.created_at,
-      updated_at: chrono::Utc::now().timestamp_millis(),
+      updated_at: Some(chrono::Utc::now()),
     };
 
-    db.save(&entity).map_err(|e| ResponseModel::error(e))?;
+    db.save(&entity).await.map_err(|e| ResponseModel::error(e))?;
     drop(db);
     log::info!("Updated connection: {}", id);
     Ok(ResponseModel::success_message(format!(
@@ -451,6 +359,7 @@ impl ConnectionService {
     let db = self.connections_db.lock().await;
     let entity = db
       .find_by_id(id)
+      .await
       .map_err(|e| ResponseModel::error(e))?
       .ok_or_else(|| ResponseModel::error(format!("Connection {} not found", id)))?;
     drop(db);
@@ -462,7 +371,7 @@ impl ConnectionService {
     }
 
     Ok(ResponseModel::success(ConnectionConfigResult {
-      id: entity.id,
+      id: entity.id.unwrap_or_default(),
       config: entity.config,
     }))
   }
@@ -477,6 +386,6 @@ impl ConnectionService {
 
   pub async fn find_entity_by_id(&self, id: &str) -> Result<Option<ConnectionEntity>, String> {
     let db = self.connections_db.lock().await;
-    db.find_by_id(id)
+    db.find_by_id(id).await
   }
 }

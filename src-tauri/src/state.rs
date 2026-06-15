@@ -10,8 +10,8 @@ pub struct AppState {
 }
 
 impl AppState {
-  pub fn new(app_handle: AppHandle) -> Result<Self, String> {
-    let connection_service = ConnectionService::get_instance();
+  pub async fn new(app_handle: AppHandle) -> Result<Self, String> {
+    let connection_service = ConnectionService::get_instance().await;
     Ok(Self {
       connection_service,
       app_handle: Arc::new(Mutex::new(app_handle)),
