@@ -291,5 +291,3 @@ pub async fn describe_collection(
   }
   result
 }
-
-

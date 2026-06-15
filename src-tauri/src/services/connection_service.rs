@@ -14,7 +14,6 @@ use nosql_orm::providers::sql::SqliteProvider;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
-
 pub struct ConnectionService {
   connections_db: Arc<Mutex<ConnectionsDb>>,
 }
@@ -58,7 +57,11 @@ impl ConnectionsDb {
   }
 
   async fn save(&self, entity: &ConnectionEntity) -> Result<(), String> {
-    self.repo.save(entity.clone()).await.map_err(|e| e.to_string())?;
+    self
+      .repo
+      .save(entity.clone())
+      .await
+      .map_err(|e| e.to_string())?;
     log::info!("Saved connection: {}", entity.get_id().unwrap_or_default());
     Ok(())
   }
@@ -91,7 +94,8 @@ impl ConnectionService {
   }
 
   pub async fn get_instance() -> Arc<ConnectionService> {
-    static SERVICE: tokio::sync::OnceCell<Arc<ConnectionService>> = tokio::sync::OnceCell::const_new();
+    static SERVICE: tokio::sync::OnceCell<Arc<ConnectionService>> =
+      tokio::sync::OnceCell::const_new();
     SERVICE
       .get_or_try_init(|| async { Self::new().await.map(Arc::new) })
       .await
@@ -221,7 +225,9 @@ impl ConnectionService {
 
     let entity = ConnectionEntity::new(id.clone(), type_str, config.name.clone(), config);
     let db = self.connections_db.lock().await;
-    db.save(&entity).await.map_err(|e| ResponseModel::error(e))?;
+    db.save(&entity)
+      .await
+      .map_err(|e| ResponseModel::error(e))?;
 
     log::info!("Saved connection: {} ({})", id, entity.name);
     Ok(ResponseModel::success_message(format!(
@@ -346,7 +352,9 @@ impl ConnectionService {
       updated_at: Some(chrono::Utc::now()),
     };
 
-    db.save(&entity).await.map_err(|e| ResponseModel::error(e))?;
+    db.save(&entity)
+      .await
+      .map_err(|e| ResponseModel::error(e))?;
     drop(db);
     log::info!("Updated connection: {}", id);
     Ok(ResponseModel::success_message(format!(

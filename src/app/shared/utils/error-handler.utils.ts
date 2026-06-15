@@ -53,7 +53,7 @@ export function withErrorHandling<T>(
   services?: {
     errorHandler?: ErrorHandlerService;
     toastService?: ToastService;
-    logger?: LoggingService;
+    logger?: ReturnType<typeof getLoggingService>;
   }
 ): Promise<Result<T>> {
   const errorHandler = services?.errorHandler;

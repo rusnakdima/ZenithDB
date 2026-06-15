@@ -16,7 +16,7 @@ export class ConnectionService {
   private loadingService = inject(LoadingService);
   private api = inject(ApiProvider);
   private logger = inject(DataflowLoggerService, { optional: true });
-  private appLogger = inject(LoggingService, { optional: true });
+  private appLogger = getLoggingService();
 
   async listConnections(): Promise<ConnectionSummary[]> {
     const startTime = performance.now();

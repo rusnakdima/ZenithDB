@@ -149,7 +149,11 @@ impl MetadataDb {
   }
 
   async fn save(&self, entity: &DatabaseMetadataEntity) -> Result<DatabaseMetadataEntity, String> {
-    self.repo.save(entity.clone()).await.map_err(|e| e.to_string())
+    self
+      .repo
+      .save(entity.clone())
+      .await
+      .map_err(|e| e.to_string())
   }
 
   async fn find_by_id(&self, id: &str) -> Result<Option<DatabaseMetadataEntity>, String> {
@@ -161,10 +165,12 @@ impl MetadataDb {
     connection_id: &str,
   ) -> Result<Vec<DatabaseMetadataEntity>, String> {
     let all = self.repo.find_all().await.map_err(|e| e.to_string())?;
-    Ok(all
-      .into_iter()
-      .filter(|e| e.connection_id == connection_id)
-      .collect())
+    Ok(
+      all
+        .into_iter()
+        .filter(|e| e.connection_id == connection_id)
+        .collect(),
+    )
   }
 
   async fn update(
@@ -208,11 +214,7 @@ impl MetadataDb {
     static SERVICE: tokio::sync::OnceCell<Arc<Mutex<MetadataDb>>> =
       tokio::sync::OnceCell::const_new();
     SERVICE
-      .get_or_try_init(|| async {
-        Self::new()
-          .await
-          .map(|db| Arc::new(Mutex::new(db)))
-      })
+      .get_or_try_init(|| async { Self::new().await.map(|db| Arc::new(Mutex::new(db))) })
       .await
       .map_err(|e| format!("Failed to create MetadataDb: {}", e))
       .map(|arc| arc.clone())
@@ -271,9 +273,7 @@ impl DecentralizedStorage {
   ) -> Result<DatabaseMetadata, String> {
     let db = MetadataDb::get_instance().await?;
     let guard = db.lock().await;
-    let updated = guard
-      .update(&id.to_string(), name, path, metadata)
-      .await?;
+    let updated = guard.update(&id.to_string(), name, path, metadata).await?;
     Ok(updated.into())
   }
 

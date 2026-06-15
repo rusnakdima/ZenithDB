@@ -260,7 +260,11 @@ export class ConnectionFormComponent implements OnInit {
       const config = this.buildConfig();
       const result = await this.store.testConnection(config);
       this.testResult.set(result);
-      this.logger.debug("[CONNECTION_FORM]", "testConnection result", result);
+      this.logger.debug(
+        "[CONNECTION_FORM]",
+        "testConnection result",
+        result as unknown as Record<string, unknown>
+      );
       this.cdr.markForCheck();
     } catch (e) {
       this.testResult.set({

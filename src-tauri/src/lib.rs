@@ -20,8 +20,8 @@ use commands::query_command::{
   query_delete, query_execute, query_raw, query_save, query_server_version,
 };
 use commands::schema_command::{
-  collection_create, collection_drop, collection_list, collection_rename,
-  collection_stats, describe_collection,
+  collection_create, collection_drop, collection_list, collection_rename, collection_stats,
+  describe_collection,
 };
 use commands::settings_command::{
   append_log_file, capture_screenshot, delete_connection_databases_metadata,
@@ -42,10 +42,11 @@ pub fn run() -> Result<(), String> {
     .plugin(tauri_plugin_dialog::init())
     .plugin(tauri_plugin_mcp_bridge::init())
     .setup(|app| {
-      let app_state = tauri::async_runtime::block_on(AppState::new(app.handle().clone())).map_err(|e| {
-        log::error!("Failed to create AppState: {}", e);
-        e
-      })?;
+      let app_state =
+        tauri::async_runtime::block_on(AppState::new(app.handle().clone())).map_err(|e| {
+          log::error!("Failed to create AppState: {}", e);
+          e
+        })?;
       app.manage(app_state);
       log::info!("AppState initialized");
       Ok(())

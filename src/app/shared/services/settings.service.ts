@@ -1,5 +1,6 @@
 import { Injectable, signal, effect, inject } from "@angular/core";
 import { PersistentStorageService } from "./persistent-storage.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 type ThemeSetting = "dark" | "light" | "system";
 type TabSize = 2 | 4 | 8;

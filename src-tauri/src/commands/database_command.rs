@@ -298,7 +298,9 @@ pub async fn database_list(
         .await
       {
         Ok(provider) => match provider.list_databases().await.map_err_string() {
-          Ok(db_names) => ResponseModel::success(list_databases_with_pagination(db_names, offset, limit)),
+          Ok(db_names) => {
+            ResponseModel::success(list_databases_with_pagination(db_names, offset, limit))
+          }
           Err(e) => {
             timer.clone().finish_error(&e);
             ResponseModel::error(e.to_string())
@@ -313,7 +315,9 @@ pub async fn database_list(
     ConnectionConfigEnum::Postgres { uri, .. } => {
       match crate::commands::provider::get_or_create_postgres_provider(&connection_id, uri).await {
         Ok(provider) => match provider.list_databases().await.map_err_string() {
-          Ok(db_names) => ResponseModel::success(list_databases_with_pagination(db_names, offset, limit)),
+          Ok(db_names) => {
+            ResponseModel::success(list_databases_with_pagination(db_names, offset, limit))
+          }
           Err(e) => {
             timer.clone().finish_error(&e);
             ResponseModel::error(e)
@@ -328,7 +332,9 @@ pub async fn database_list(
     ConnectionConfigEnum::MySql { uri, .. } => {
       match crate::commands::provider::get_or_create_mysql_provider(&connection_id, uri).await {
         Ok(provider) => match provider.list_databases().await.map_err_string() {
-          Ok(db_names) => ResponseModel::success(list_databases_with_pagination(db_names, offset, limit)),
+          Ok(db_names) => {
+            ResponseModel::success(list_databases_with_pagination(db_names, offset, limit))
+          }
           Err(e) => {
             timer.clone().finish_error(&e);
             ResponseModel::error(e)

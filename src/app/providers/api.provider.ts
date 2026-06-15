@@ -761,6 +761,62 @@ export class ApiProvider {
     }
   }
 
+  async createIndex(connId: string, collection: string, indexDef: unknown): Promise<void> {
+    const startTime = performance.now();
+    this.dataflowLogger.logApiCall(this.page, "createIndex", "create_index", {
+      connId,
+      collection,
+      indexDef,
+    });
+    try {
+      await this.tauriBridge.invoke<void>(
+        "create_index",
+        { connId: connId, collection, index_definition: indexDef },
+        { signal: this.createAbortSignal(), suppressError: true }
+      );
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logDataReceive(
+        this.page,
+        "createIndex",
+        "create_index",
+        { success: true },
+        duration
+      );
+    } catch (err) {
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logError(this.page, "createIndex", "create_index", String(err), duration);
+      throw err;
+    }
+  }
+
+  async dropIndex(connId: string, collection: string, indexName: string): Promise<void> {
+    const startTime = performance.now();
+    this.dataflowLogger.logApiCall(this.page, "dropIndex", "drop_index", {
+      connId,
+      collection,
+      indexName,
+    });
+    try {
+      await this.tauriBridge.invoke<void>(
+        "drop_index",
+        { connId: connId, collection, indexName },
+        { signal: this.createAbortSignal(), suppressError: true }
+      );
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logDataReceive(
+        this.page,
+        "dropIndex",
+        "drop_index",
+        { success: true },
+        duration
+      );
+    } catch (err) {
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logError(this.page, "dropIndex", "drop_index", String(err), duration);
+      throw err;
+    }
+  }
+
   async createDatabase(connId: string, name: string): Promise<void> {
     const startTime = performance.now();
     this.dataflowLogger.logApiCall(this.page, "createDatabase", "create_database", {

@@ -75,12 +75,7 @@ impl SoftDeletable for ConnectionEntity {
 }
 
 impl ConnectionEntity {
-  pub fn new(
-    id: String,
-    type_: String,
-    name: String,
-    config: ConnectionConfig,
-  ) -> Self {
+  pub fn new(id: String, type_: String, name: String, config: ConnectionConfig) -> Self {
     Self {
       id: Some(id),
       type_,

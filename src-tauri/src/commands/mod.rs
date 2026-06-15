@@ -79,7 +79,9 @@ macro_rules! dispatch_provider {
         let $provider = $crate::commands::provider::create_json_provider(&path).await?;
         $body
       }
-      $crate::commands::connection_command::ConnectionConfigEnum::Mongo { uri, database, .. } => {
+      $crate::commands::connection_command::ConnectionConfigEnum::Mongo {
+        uri, database, ..
+      } => {
         let $provider = $crate::commands::provider::create_mongo_provider(&uri, &database).await?;
         $body
       }
