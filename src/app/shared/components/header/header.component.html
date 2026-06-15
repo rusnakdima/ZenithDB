@@ -1,0 +1,66 @@
+<header class="app-header">
+  <div class="flex items-center gap-3">
+    @for (crumb of getBreadcrumbs(); track crumb.label; let last = $last) {
+      @if (crumb.route && !last) {
+        <button
+          type="button"
+          (click)="navigateToBreadcrumb(crumb.route)"
+          class="text-xs font-black tracking-widest text-[var(--accent)] uppercase transition-colors hover:text-[var(--accent)]/80"
+        >
+          {{ crumb.label }}
+        </button>
+      } @else {
+        <span class="text-xs font-black tracking-widest text-[var(--text-main)] uppercase">{{
+          crumb.label
+        }}</span>
+      }
+      @if (!last) {
+        <mat-icon fontIcon="chevron_right" class="h-5! w-5! text-xl! !text-[var(--text-muted)]" />
+      }
+    }
+  </div>
+
+  <div class="flex items-center gap-6">
+    <div class="group relative">
+      <mat-icon
+        fontIcon="search"
+        class="absolute top-1/2 left-3 h-5! w-5! -translate-y-1/2 text-xl! !text-[var(--text-dim)]"
+      />
+      <input
+        #searchInput
+        type="text"
+        placeholder="Search data, collections..."
+        [value]="searchQuery()"
+        (input)="onSearchInput($event)"
+        (keydown)="onSearchKeydown($event)"
+        (blur)="onSearchBlur()"
+        (focus)="onSearchFocus()"
+        class="w-64 rounded-lg border border-[var(--accent)] bg-transparent py-1.5 pr-4 pl-9 text-[11px] transition-all outline-none focus:shadow-[0_0_0_3px_var(--accent-100)]"
+      />
+      @if (isSearching() && searchResults().length > 0) {
+        <div
+          class="absolute top-full right-0 left-0 z-50 mt-1 max-h-64 overflow-auto rounded-lg border border-[var(--accent)] bg-transparent shadow-lg backdrop-blur-md"
+        >
+          @for (result of searchResults(); track result.name; let i = $index) {
+            <button
+              type="button"
+              (mousedown)="navigateToCollection(result.name)"
+              class="w-full px-3 py-2 text-left text-xs hover:bg-[var(--accent)]/10"
+              [class.bg-[var(--accent)]/10]="selectedIndex() === i"
+            >
+              <span class="font-medium text-[var(--text-main)]">{{ result.name }}</span>
+              <span class="ml-2 text-[var(--text-dim)]">{{ result.count }} docs</span>
+            </button>
+          }
+        </div>
+      }
+      @if (isSearching() && searchQuery() && searchResults().length === 0) {
+        <div
+          class="absolute top-full right-0 left-0 z-50 mt-1 rounded-lg border border-[var(--accent)] bg-transparent px-3 py-2 text-xs text-[var(--text-dim)] shadow-lg backdrop-blur-md"
+        >
+          No collections found
+        </div>
+      }
+    </div>
+  </div>
+</header>

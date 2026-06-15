@@ -5850,18 +5850,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "tauri-logger"
-version = "0.2.0"
-dependencies = [
- "chrono",
- "log",
- "parking_lot",
- "serde",
- "serde_json",
- "uuid",
-]
-
-[[package]]
 name = "tauri-macros"
 version = "2.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8050,7 +8038,6 @@ dependencies = [
  "sysinfo",
  "tauri",
  "tauri-build",
- "tauri-logger",
  "tauri-plugin-dialog",
  "tauri-plugin-mcp-bridge",
  "tauri-plugin-opener",

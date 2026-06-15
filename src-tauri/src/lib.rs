@@ -1,5 +1,6 @@
 mod commands;
 mod constants;
+mod errors;
 mod infrastructure;
 mod logger;
 mod models;
@@ -32,7 +33,7 @@ use commands::settings_command::{
 use state::AppState;
 
 pub fn run() -> Result<(), String> {
-  logger::init_logger()?;
+  logger::init_logger();
 
   std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
   std::env::set_var("__NV_DISABLE_EXPLICIT_SYNC", "1");
