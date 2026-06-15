@@ -2,7 +2,7 @@ import { Injectable, inject, signal } from "@angular/core";
 import { ToastService } from "@services/toast.service";
 import { ApiProvider } from "@providers/api.provider";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 export interface ParsedData {
   headers: string[];
@@ -41,7 +41,7 @@ export class ImportService {
   private toast = inject(ToastService);
   private api = inject(ApiProvider);
   private connectionState = inject(ConnectionStateService);
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
 
   private progressSignal = signal<ImportProgress | null>(null);
   readonly progress = this.progressSignal.asReadonly();

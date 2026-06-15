@@ -9,7 +9,7 @@ import {
   ConnectionHealth,
 } from "@shared/models/connection.config";
 import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 @Injectable({ providedIn: "root" })
 export class ConnectionService {

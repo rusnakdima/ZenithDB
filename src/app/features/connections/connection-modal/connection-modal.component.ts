@@ -6,7 +6,7 @@ import { ConnectionStateService } from "@shared/services/connection-state.servic
 import { DataStoreService } from "@services/core/data-store.service";
 import { ConnectionSummary } from "@shared/models/connection.config";
 import { ToastService } from "@services/toast.service";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 interface ConnectionItem {
   connection: ConnectionSummary;
@@ -25,7 +25,7 @@ export class ConnectionModalComponent {
   private connState = inject(ConnectionStateService);
   private dataStore = inject(DataStoreService);
   private toast = inject(ToastService);
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
 
   isOpen = signal(false);
   searchQuery = signal("");

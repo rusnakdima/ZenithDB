@@ -2,7 +2,7 @@ import { Component, Output, EventEmitter, inject, ChangeDetectionStrategy } from
 import { TitleCasePipe } from "@angular/common";
 import { MatIconModule } from "@angular/material/icon";
 import { TransactionService, TransactionOperation } from "./transaction.service";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 @Component({
   selector: "app-transaction-log",
@@ -13,7 +13,7 @@ import { LoggingService } from "@shared/services/logging.service";
 })
 export class TransactionLogComponent {
   private transactionService = inject(TransactionService);
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
 
   @Output() close = new EventEmitter<void>();
 

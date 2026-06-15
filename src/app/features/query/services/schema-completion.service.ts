@@ -2,7 +2,7 @@ import { Injectable, inject, signal } from "@angular/core";
 import { FieldInfo, FieldType } from "../models";
 import { SchemaService } from "@shared/services/schema.service";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 export interface CompletionItem {
   label: string;
@@ -25,7 +25,7 @@ export interface CompletionContext {
 export class SchemaCompletionService {
   private readonly schemaService = inject(SchemaService);
   private readonly connectionState = inject(ConnectionStateService);
-  private readonly logger = inject(LoggingService);
+  private readonly logger = getLoggingService();
 
   private readonly schemaCacheSignal = signal<Map<string, FieldInfo[]>>(new Map());
 

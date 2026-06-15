@@ -1,10 +1,10 @@
 import { Injectable, signal, inject } from "@angular/core";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 import { ConnectionSummary, ConnectionConfig } from "@shared/models/connection.config";
 
 @Injectable({ providedIn: "root" })
 export class ConnectionStateService {
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
   activeConnectionId = signal<string | null>(null);
   activeConnectionName = signal<string | null>(null);
   activeProvider = signal<string | null>(null);

@@ -7,7 +7,7 @@ import { GroupConfigComponent } from "./stage-config/group-config.component";
 import { SortConfigComponent } from "./stage-config/sort-config.component";
 import { ProjectConfigComponent } from "./stage-config/project-config.component";
 import { LimitConfigComponent } from "./stage-config/limit-config.component";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 @Component({
   selector: "app-pipeline-stage",
@@ -146,7 +146,7 @@ import { LoggingService } from "@shared/services/logging.service";
   ` */
 })
 export class PipelineStageComponent {
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
 
   @Input() stage!: PipelineStage;
   @Input() collectionName = "";

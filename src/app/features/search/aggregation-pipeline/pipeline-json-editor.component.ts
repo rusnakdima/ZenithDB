@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter, signal, computed, inject } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 @Component({
   selector: "app-pipeline-json-editor",
@@ -10,7 +10,7 @@ import { LoggingService } from "@shared/services/logging.service";
   templateUrl: "./pipeline-json-editor.component.html",
 })
 export class PipelineJsonEditorComponent {
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
 
   @Input() set json(value: string) {
     this.jsonContent.set(value);

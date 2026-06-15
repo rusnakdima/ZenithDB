@@ -13,7 +13,7 @@ import { ToastService } from "@services/toast.service";
 import { TIME_CONSTANTS } from "@shared/utils/constants";
 import { formatTimeAgo } from "@shared/utils/time.utils";
 import { formatBytes } from "@shared/utils/number.utils";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 @Component({
   selector: "app-cache-manager",
@@ -26,7 +26,7 @@ export class CacheManagerComponent {
   private cdr = inject(ChangeDetectorRef);
   private cacheService = inject(QueryCacheService);
   private toast = inject(ToastService);
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
 
   expandedKeys = signal<Set<string>>(new Set());
   filterText = signal("");

@@ -4,7 +4,7 @@ import { FormsModule } from "@angular/forms";
 import { SortStageConfig } from "../pipeline-builder.service";
 import { SchemaCompletionService } from "../../../query/services/schema-completion.service";
 import { FieldInfo, SortConfig } from "../../../query/models";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 @Component({
   selector: "app-sort-config",
@@ -14,7 +14,7 @@ import { LoggingService } from "@shared/services/logging.service";
 })
 export class SortConfigComponent implements OnInit {
   private readonly schemaCompletion = inject(SchemaCompletionService);
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
 
   @Input() config!: SortStageConfig;
   @Input() collectionName = "";

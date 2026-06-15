@@ -1,7 +1,7 @@
 import { Component, inject } from "@angular/core";
 import { MatIconModule } from "@angular/material/icon";
 import { CommonModule } from "@angular/common";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 @Component({
   selector: "app-dashboard",
@@ -10,7 +10,7 @@ import { LoggingService } from "@shared/services/logging.service";
   templateUrl: "./dashboard.view.html",
 })
 export class DashboardComponent {
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
 
   constructor() {
     this.logger.debug("[DASHBOARD]", "Dashboard view initialized");

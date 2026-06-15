@@ -36,6 +36,7 @@
     "@angular/platform-browser": "^20.1.4",
     "@angular/router": "^20.1.4",
     "@tauri-apps/api": "^2",
+    "@tauri-apps/logger": "git+https://github.com/rusnakdima/tauri-apps-logger.git#main",
     "@tauri-apps/plugin-dialog": "^2.7.1",
     "@tauri-apps/plugin-fs": "^2",
     "@tauri-apps/plugin-opener": "^2",

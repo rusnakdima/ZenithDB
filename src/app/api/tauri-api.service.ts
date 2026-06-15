@@ -1,6 +1,6 @@
 import { Injectable, inject } from "@angular/core";
 import { invoke } from "@tauri-apps/api/core";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 interface Response<T> {
   status: "success" | "error";
@@ -17,7 +17,7 @@ export interface InvokeOptions {
 
 @Injectable({ providedIn: "root" })
 export class TauriApiService {
-  private readonly loggingService = inject(LoggingService);
+  private readonly loggingService = getLoggingService();
 
   async invoke<T>(
     command: string,

@@ -2,10 +2,6 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct QueryParams {
-  pub provider: Option<String>,
-  pub connection: Option<String>,
-  pub database: Option<String>,
-  pub collection: Option<String>,
   pub filter: Option<String>,
   pub sort: Option<String>,
   pub limit: Option<i64>,

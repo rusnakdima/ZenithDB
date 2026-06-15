@@ -1,7 +1,7 @@
 import { ErrorHandlerService } from "@shared/services/error-handler.service";
 import { ToastService } from "@services/toast.service";
 import { AppError, ErrorCode } from "@shared/models/error.model";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 interface Result<T> {
   success: boolean;

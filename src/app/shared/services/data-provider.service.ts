@@ -1,7 +1,7 @@
 import { Injectable, signal, inject } from "@angular/core";
 import { ApiProvider } from "@providers/api.provider";
 import { ConnectionStateService } from "./connection-state.service";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 import {
   ColumnInfo,
   RowData,
@@ -39,7 +39,7 @@ interface ColumnsCacheEntry {
 export class DataProviderService {
   private api = inject(ApiProvider);
   private connectionState = inject(ConnectionStateService);
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
 
   private readonly MAX_ENTRIES_PER_COLLECTION = CACHE_CONSTANTS.MAX_ENTRIES_PER_COLLECTION;
   private readonly COLUMNS_CACHE_TTL = CACHE_CONSTANTS.DEFAULT_TTL_MS;

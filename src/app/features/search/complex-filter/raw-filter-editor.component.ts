@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter, signal, inject, OnInit } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 @Component({
   selector: "app-raw-filter-editor",
@@ -10,7 +10,7 @@ import { LoggingService } from "@shared/services/logging.service";
   templateUrl: "./raw-filter-editor.component.html",
 })
 export class RawFilterEditorComponent implements OnInit {
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
 
   @Input() initialJson = "";
   @Output() jsonChange = new EventEmitter<string>();

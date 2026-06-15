@@ -11,7 +11,7 @@ import {
 import { JsonPipe, DatePipe } from "@angular/common";
 import { RawResult } from "@shared/models/connection.config";
 import { trackByIndex } from "@shared/utils/collection.utils";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 type LogLevel = "all" | "info" | "warn" | "error";
 type TabType = "results" | "messages" | "plan";
@@ -29,7 +29,7 @@ interface LogEntry {
   templateUrl: "./output-console.component.html",
 })
 export class OutputConsoleComponent implements OnDestroy {
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
 
   @Input() results: RawResult | null = null;
   @Input() loading = false;

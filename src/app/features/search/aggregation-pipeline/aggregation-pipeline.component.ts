@@ -19,7 +19,7 @@ import {
 } from "./pipeline-builder.service";
 import { PipelineStageComponent } from "./pipeline-stage.component";
 import { PipelineJsonEditorComponent } from "./pipeline-json-editor.component";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 @Component({
   selector: "app-aggregation-pipeline",
@@ -29,7 +29,7 @@ import { LoggingService } from "@shared/services/logging.service";
 })
 export class AggregationPipelineComponent implements OnInit {
   readonly pipelineService = inject(PipelineBuilderService);
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
 
   @Input() collectionName = "";
   @Output() cancel = new EventEmitter<void>();

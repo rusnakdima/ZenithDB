@@ -4,14 +4,14 @@ use crate::models::response::ResponseModel;
 use crate::services::connection_service::ConnectionService;
 
 pub mod connection;
+pub mod connection_command;
 pub mod connection_entity;
-pub mod dataflow;
-pub mod decentralization;
-pub mod entities;
+pub mod database_command;
 pub mod error_utils;
 pub mod provider;
-pub mod schema;
-pub mod system;
+pub mod query_command;
+pub mod schema_command;
+pub mod settings_command;
 pub mod types;
 
 #[derive(Debug, Clone)]

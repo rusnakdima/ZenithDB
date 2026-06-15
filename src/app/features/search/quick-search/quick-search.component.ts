@@ -17,7 +17,7 @@ import {
   GroupedSearchResults,
   QuickSearchResult,
 } from "./quick-search.service";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 type SelectResult = {
   collection: string;
@@ -36,7 +36,7 @@ type FlatSearchResult = QuickSearchResult & {
 })
 export class QuickSearchComponent implements OnInit, OnDestroy {
   private readonly searchService = inject(QuickSearchService);
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
 
   @Input() isOpen = false;
   @Output() close = new EventEmitter<void>();

@@ -51,7 +51,10 @@ pub async fn query_execute(
 ) -> Result<QueryResult<Value>, String> {
   let timer = DataflowTimer::new("query_execute");
   let params_log = serde_json::json!({ "connection_id": &connection_id, "collection": &collection, "params": &params });
-  tracing::debug!(command = "query_execute", params = %redact_sensitive_data(&serde_json::to_string(&params_log).unwrap_or_default()), "[COMMAND_ENTRY]");
+  log::debug!(
+    "command = query_execute, params = {} [COMMAND_ENTRY]",
+    redact_sensitive_data(&serde_json::to_string(&params_log).unwrap_or_default())
+  );
   if let Err(e) = validate_conn_id(&connection_id) {
     timer.clone().finish_error(&e);
     return Err(e);
@@ -117,7 +120,10 @@ pub async fn query_save(
 ) -> Result<ResponseModel, ResponseModel> {
   let timer = DataflowTimer::new("query_save");
   let params_log = serde_json::json!({ "connection_id": &connection_id, "collection": &collection, "data": &data });
-  tracing::debug!(command = "query_save", params = %redact_sensitive_data(&serde_json::to_string(&params_log).unwrap_or_default()), "[COMMAND_ENTRY]");
+  log::debug!(
+    "command = query_save, params = {} [COMMAND_ENTRY]",
+    redact_sensitive_data(&serde_json::to_string(&params_log).unwrap_or_default())
+  );
   if let Err(e) = validate_conn_id(&connection_id) {
     timer.clone().finish_error(&e);
     return Err(ResponseModel::error(e));
@@ -164,7 +170,10 @@ pub async fn query_delete(
   let timer = DataflowTimer::new("query_delete");
   let params_log =
     serde_json::json!({ "connection_id": &connection_id, "collection": &collection, "id": &id });
-  tracing::debug!(command = "query_delete", params = %redact_sensitive_data(&serde_json::to_string(&params_log).unwrap_or_default()), "[COMMAND_ENTRY]");
+  log::debug!(
+    "command = query_delete, params = {} [COMMAND_ENTRY]",
+    redact_sensitive_data(&serde_json::to_string(&params_log).unwrap_or_default())
+  );
   if let Err(e) = validate_conn_id(&connection_id) {
     timer.clone().finish_error(&e);
     return Err(e);
@@ -197,7 +206,10 @@ pub async fn query_delete(
 pub async fn query_raw(connection_id: String, sql: String) -> Result<RawResult, String> {
   let timer = DataflowTimer::new("query_raw");
   let params_log = serde_json::json!({ "connection_id": &connection_id, "sql": &sql });
-  tracing::debug!(command = "query_raw", params = %redact_sensitive_data(&serde_json::to_string(&params_log).unwrap_or_default()), "[COMMAND_ENTRY]");
+  log::debug!(
+    "command = query_raw, params = {} [COMMAND_ENTRY]",
+    redact_sensitive_data(&serde_json::to_string(&params_log).unwrap_or_default())
+  );
   if let Err(e) = validate_conn_id(&connection_id) {
     timer.clone().finish_error(&e);
     return Err(e);
@@ -235,7 +247,10 @@ pub async fn query_raw(connection_id: String, sql: String) -> Result<RawResult, 
 pub async fn query_server_version(connection_id: String) -> Result<String, String> {
   let timer = DataflowTimer::new("query_server_version");
   let params_log = serde_json::json!({ "connection_id": &connection_id });
-  tracing::debug!(command = "query_server_version", params = %redact_sensitive_data(&serde_json::to_string(&params_log).unwrap_or_default()), "[COMMAND_ENTRY]");
+  log::debug!(
+    "command = query_server_version, params = {} [COMMAND_ENTRY]",
+    redact_sensitive_data(&serde_json::to_string(&params_log).unwrap_or_default())
+  );
   if let Err(e) = validate_conn_id(&connection_id) {
     timer.clone().finish_error(&e);
     return Err(e);

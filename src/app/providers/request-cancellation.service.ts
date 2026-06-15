@@ -1,14 +1,14 @@
 import { Injectable, inject } from "@angular/core";
 import { invoke, InvokeOptions } from "@tauri-apps/api/core";
 import { TauriBridgeService } from "./tauri-bridge.service";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 @Injectable({ providedIn: "root" })
 export class RequestCancellationService {
   private abortController: AbortController | null = null;
   private abortTimeoutId: number | undefined;
   private tauriBridge = inject(TauriBridgeService);
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
 
   private getTimeoutMs(): number {
     return this.tauriBridge.getConnectionTimeoutMs();

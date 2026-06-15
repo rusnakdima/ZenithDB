@@ -12,7 +12,7 @@ import { AuditService, AuditEntry, AuditOperation, AuditFilter } from "./audit.s
 import { ExportService } from "@shared/services/export.service";
 import { ToastService } from "@services/toast.service";
 import { ChangeDetailComponent } from "./change-detail.component";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 @Component({
   selector: "app-audit-log",
@@ -25,7 +25,7 @@ export class AuditLogComponent implements OnInit {
   private auditService = inject(AuditService);
   private exportService = inject(ExportService);
   private toast = inject(ToastService);
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
 
   auditLog = signal<AuditEntry[]>([]);
   loading = signal(false);

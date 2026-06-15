@@ -16,7 +16,7 @@ import { QueryAnalyzerService, QueryAnalysisResult } from "./query-analyzer.serv
 import { QueryHint, IndexRecommendation } from "../services/hint-analyzer.service";
 import { FilterExpression } from "@shared/models/connection.config";
 import { ErrorHandlerService } from "@shared/services/error-handler.service";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 @Component({
   selector: "app-performance-hints",
@@ -29,7 +29,7 @@ export class PerformanceHintsComponent implements OnInit, OnChanges {
   private cdr = inject(ChangeDetectorRef);
   private readonly queryAnalyzer = inject(QueryAnalyzerService);
   private readonly errorHandler = inject(ErrorHandlerService);
-  private readonly logger = inject(LoggingService);
+  private readonly logger = getLoggingService();
 
   @Input() collectionName = "";
   @Input() filterText = "";

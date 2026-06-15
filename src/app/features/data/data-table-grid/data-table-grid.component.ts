@@ -37,7 +37,7 @@ import { RecordFormComponent } from "@features/data/record-form/record-form.comp
 import { BulkActionBarComponent } from "@features/data/bulk-action-bar/bulk-action-bar.component";
 import { DataTableGridStore } from "./store/data-table-grid.store";
 import { DataTableGridService } from "./services/data-table-grid.service";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 @Component({
   selector: "app-data-table-grid",
@@ -61,7 +61,7 @@ import { LoggingService } from "@shared/services/logging.service";
 export class DataTableGridComponent implements OnInit, OnChanges, OnDestroy, AfterViewInit {
   private store = inject(DataTableGridStore);
   private service = inject(DataTableGridService);
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
 
   @ViewChild("headerScroll") headerScrollRef!: ElementRef<HTMLDivElement>;
   @ViewChild("bodyScroll") bodyScrollRef!: ElementRef<HTMLDivElement>;

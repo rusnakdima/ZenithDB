@@ -1,6 +1,6 @@
 import { Injectable, signal, computed, inject } from "@angular/core";
 import { TauriBridgeService } from "@providers/tauri-bridge.service";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 import { TauriApiService } from "@app/api/tauri-api.service";
 
 export type DataFlowDirection = "in" | "out" | "user_action";
@@ -48,7 +48,7 @@ export class DataflowLoggerService {
   private sampleRate = 10;
   private tauriBridge = inject(TauriBridgeService, { optional: true });
   private tauriApi = inject(TauriApiService);
-  private loggingService = inject(LoggingService);
+  private loggingService = getLoggingService();
   private pendingPersistCount = 0;
   private readonly persistThreshold = 100;
   private readonly logDir = ".zenithdb/logs";

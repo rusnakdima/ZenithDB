@@ -3,7 +3,7 @@ import { ConnectionStateService } from "@shared/services/connection-state.servic
 import { ApiProvider } from "@providers/api.provider";
 import { LoadingService } from "@shared/services/loading.service";
 import { withConnectionAndLoading } from "@shared/utils/api-wrapper.util";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 import { AuditFilter as TauriAuditFilter } from "./audit.service";
 
 export type AuditOperation = "Insert" | "Update" | "Delete" | "SoftDelete" | "Restore";
@@ -32,7 +32,7 @@ export class AuditService {
   private connectionState = inject(ConnectionStateService);
   private api = inject(ApiProvider);
   private loadingService = inject(LoadingService);
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
 
   private auditLogSignal = signal<AuditEntry[]>([]);
   readonly auditLog = this.auditLogSignal.asReadonly();

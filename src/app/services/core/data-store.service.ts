@@ -23,7 +23,7 @@ import {
   CollectionListResult,
 } from "@shared/services/collections-api.service";
 import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 import { CACHE_CONSTANTS } from "@shared/utils/constants";
 import { evictLRUInPlace } from "@shared/utils/cache.utils";
 import { ConnectionCacheService } from "./connection-cache.service";
@@ -43,7 +43,7 @@ export class DataStoreService {
   private decentralizationApi = inject(DecentralizationApiService);
   private collectionsApi = inject(CollectionsApiService);
   private dataflowLogger = inject(DataflowLoggerService);
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
   private readonly page = "DataStoreService";
 
   connectionCache = inject(ConnectionCacheService);

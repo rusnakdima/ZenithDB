@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter, inject } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { ModalComponent } from "@shared/components/modal/modal.component";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 @Component({
   selector: "app-drop-index-dialog",
@@ -15,7 +15,7 @@ export class DropIndexDialogComponent {
   @Output() closed = new EventEmitter<void>();
   @Output() confirm = new EventEmitter<void>();
 
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
 
   onCancel(): void {
     this.logger.debug("[INDEX]", "Drop index dialog cancelled", { indexName: this.indexName });

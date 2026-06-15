@@ -5,6 +5,7 @@ use tokio::sync::Mutex;
 
 pub struct AppState {
   pub connection_service: Arc<ConnectionService>,
+  #[allow(dead_code)]
   pub app_handle: Arc<Mutex<AppHandle>>,
 }
 

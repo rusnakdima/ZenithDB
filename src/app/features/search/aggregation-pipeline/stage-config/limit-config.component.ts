@@ -2,7 +2,7 @@ import { Component, Input, Output, EventEmitter, inject } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { SkipLimitConfig } from "../pipeline-builder.service";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 @Component({
   selector: "app-limit-config",
@@ -11,7 +11,7 @@ import { LoggingService } from "@shared/services/logging.service";
   templateUrl: "./limit-config.component.html",
 })
 export class LimitConfigComponent {
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
 
   @Input() config!: SkipLimitConfig;
   @Output() configChange = new EventEmitter<SkipLimitConfig>();

@@ -1,12 +1,12 @@
 import { Injectable, inject } from "@angular/core";
 import { ToastService } from "@services/toast.service";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 @Injectable({ providedIn: "root" })
 export class ResponseSizeGuardService {
   private readonly MAX_RESPONSE_SIZE_MB = 10;
   private readonly MAX_RESPONSE_SIZE_BYTES = this.MAX_RESPONSE_SIZE_MB * 1024 * 1024;
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
 
   checkResponseSize(data: unknown): { truncated: boolean; message?: string } {
     try {

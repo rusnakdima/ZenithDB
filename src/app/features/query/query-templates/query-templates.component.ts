@@ -13,7 +13,7 @@ import { FormsModule } from "@angular/forms";
 import { QueryTemplate, TEMPLATE_CATEGORIES, TemplateCategory } from "../models";
 import { TemplateService } from "../services";
 import { TemplateCardComponent } from "./template-card/template-card.component";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 @Component({
   selector: "app-query-templates",
@@ -23,7 +23,7 @@ import { LoggingService } from "@shared/services/logging.service";
 })
 export class QueryTemplatesComponent implements OnInit {
   private readonly templateService = inject(TemplateService);
-  private readonly logger = inject(LoggingService);
+  private readonly logger = getLoggingService();
 
   @Output() selectTemplate = new EventEmitter<QueryTemplate>();
   @Output() close = new EventEmitter<void>();

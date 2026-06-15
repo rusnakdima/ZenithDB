@@ -10,7 +10,7 @@ import {
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { isNullOrUndefined } from "@shared/utils/collection.utils";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 @Component({
   selector: "app-cell-editor",
@@ -21,7 +21,7 @@ import { LoggingService } from "@shared/services/logging.service";
 })
 export class CellEditorComponent {
   private cdr = inject(ChangeDetectorRef);
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
   @Input() value: unknown = null;
   @Input() isEditing = false;
   @Input() editValue = "";

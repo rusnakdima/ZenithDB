@@ -2,7 +2,7 @@ import { Component, input, output, signal, computed, inject } from "@angular/cor
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { FieldMapping } from "./import.service";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 interface MappingOption {
   sourceField: string;
@@ -16,7 +16,7 @@ interface MappingOption {
   templateUrl: "./field-mapping.component.html",
 })
 export class FieldMappingComponent {
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
 
   sourceHeaders = input<string[]>([]);
   targetFields = input<string[]>([]);

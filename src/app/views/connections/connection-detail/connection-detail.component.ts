@@ -29,7 +29,7 @@ import { withErrorHandling } from "@shared/utils/error-handler.utils";
 import { findById } from "@shared/utils/array.utils";
 import { AddDatabasePathComponent } from "../add-database-path/add-database-path.component";
 import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 import { Subscription } from "rxjs";
 import { distinctUntilChanged, debounceTime } from "rxjs/operators";
 
@@ -54,7 +54,7 @@ export class ConnectionDetailComponent implements OnInit, OnDestroy {
   private toast = inject(ToastService);
   private cdr = inject(ChangeDetectorRef);
   private dataflowLogger = inject(DataflowLoggerService);
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
   providerUtils = inject(ProviderUtils);
   route = inject(ActivatedRoute);
   router = inject(Router);

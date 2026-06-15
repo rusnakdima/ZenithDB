@@ -16,7 +16,7 @@ import { QueryGroupComponent } from "./query-group/query-group.component";
 import { ConditionGroup, SortConfig, createEmptyGroup } from "../models";
 import { FilterBuilderService, SchemaCompletionService } from "../services";
 import { FilterExpression } from "@shared/models/connection.config";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 @Component({
   selector: "app-visual-query-builder",
@@ -27,7 +27,7 @@ import { LoggingService } from "@shared/services/logging.service";
 export class VisualQueryBuilderComponent implements OnInit, OnChanges {
   private readonly filterBuilder = inject(FilterBuilderService);
   private readonly schemaCompletion = inject(SchemaCompletionService);
-  private readonly logger = inject(LoggingService);
+  private readonly logger = getLoggingService();
 
   @Input() collectionName = "";
   @Input() initialFilter: FilterExpression | null = null;

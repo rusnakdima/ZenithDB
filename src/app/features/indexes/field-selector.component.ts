@@ -4,7 +4,7 @@ import { FormsModule } from "@angular/forms";
 import { FieldInfo } from "@features/query/models";
 import { IndexField } from "./index.service";
 import { IndexType } from "./create-index-dialog.component";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 @Component({
   selector: "app-field-selector",
@@ -17,7 +17,7 @@ export class FieldSelectorComponent {
   @Input() indexType: IndexType = "single";
   @Output() fieldsChange = new EventEmitter<IndexField[]>();
 
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
 
   selectedFields = signal<IndexField[]>([]);
 

@@ -7,7 +7,7 @@ import {
 import { ProviderDetectorService } from "./provider-detector.service";
 import { FilterOperator } from "@shared/models/connection.config";
 import { FieldType, FIELD_OPERATORS } from "../models";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 const KEYWORDS_SQL = [
   "SELECT",
@@ -129,7 +129,7 @@ const OPERATORS_BY_TYPE: Record<FieldType, { operator: FilterOperator; label: st
 export class AutocompleteService {
   private readonly schemaCompletion = inject(SchemaCompletionService);
   private readonly providerDetector = inject(ProviderDetectorService);
-  private readonly logger = inject(LoggingService);
+  private readonly logger = getLoggingService();
 
   private readonly isActiveSignal = signal(false);
   private readonly itemsSignal = signal<CompletionItem[]>([]);

@@ -4,7 +4,7 @@ import { FormsModule } from "@angular/forms";
 import { QueryGroupComponent } from "../../../query/visual-query-builder/query-group/query-group.component";
 import { MatchConfig } from "../pipeline-builder.service";
 import { ConditionGroup } from "../../../query/models";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 @Component({
   selector: "app-match-config",
@@ -13,7 +13,7 @@ import { LoggingService } from "@shared/services/logging.service";
   templateUrl: "./match-config.component.html",
 })
 export class MatchConfigComponent {
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
 
   @Input() config!: MatchConfig;
   @Input() collectionName = "";

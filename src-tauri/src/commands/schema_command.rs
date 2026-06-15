@@ -1,6 +1,7 @@
 use crate::commands::error_utils::ToStringError;
+use crate::commands::get_connection_entry;
 use crate::commands::get_connection_entry_with_timer;
-use crate::commands::types::{CollectionMeta, CollectionSchema, CollectionStats};
+use crate::commands::types::{CollectionMeta, CollectionSchema, CollectionStats, ColumnInfo};
 use crate::commands::validate_conn_id;
 use crate::commands::validate_name;
 use crate::dispatch_provider;
@@ -24,7 +25,10 @@ pub async fn collection_list(
 ) -> Result<ResponseModel, ResponseModel> {
   let timer = DataflowTimer::new("collection_list");
   let params = serde_json::json!({ "connection_id": &connection_id, "_db_name": _db_name, "offset": offset, "limit": limit });
-  tracing::debug!(command = "collection_list", params = %redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default()), "[COMMAND_ENTRY]");
+  log::debug!(
+    "command = collection_list, params = {} [COMMAND_ENTRY]",
+    redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default())
+  );
 
   if let Err(e) = validate_conn_id(&connection_id) {
     timer.clone().finish_error(&e);
@@ -72,7 +76,10 @@ pub async fn collection_describe(
 ) -> Result<ResponseModel, ResponseModel> {
   let timer = DataflowTimer::new("collection_describe");
   let params = serde_json::json!({ "connection_id": &connection_id, "name": &name });
-  tracing::debug!(command = "collection_describe", params = %redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default()), "[COMMAND_ENTRY]");
+  log::debug!(
+    "command = collection_describe, params = {} [COMMAND_ENTRY]",
+    redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default())
+  );
 
   if let Err(e) = validate_conn_id(&connection_id) {
     timer.clone().finish_error(&e);
@@ -90,10 +97,10 @@ pub async fn collection_describe(
 
   let result = match dispatch_provider!(entry, provider => {
       let schema = provider.describe_collection(&name).await.map_err_string()?;
-      let columns: Vec<crate::commands::types::ColumnInfo> = schema
+      let columns: Vec<ColumnInfo> = schema
           .fields
           .iter()
-          .map(|(name, field)| crate::commands::types::ColumnInfo {
+          .map(|(name, field)| ColumnInfo {
               name: name.clone(),
               data_type: field.field_type.clone(),
               nullable: field.nullable,
@@ -124,7 +131,10 @@ pub async fn collection_stats(
 ) -> Result<ResponseModel, ResponseModel> {
   let timer = DataflowTimer::new("collection_stats");
   let params = serde_json::json!({ "connection_id": &connection_id, "name": &name });
-  tracing::debug!(command = "collection_stats", params = %redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default()), "[COMMAND_ENTRY]");
+  log::debug!(
+    "command = collection_stats, params = {} [COMMAND_ENTRY]",
+    redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default())
+  );
 
   if let Err(e) = validate_conn_id(&connection_id) {
     timer.clone().finish_error(&e);
@@ -163,7 +173,10 @@ pub async fn collection_create(
 ) -> Result<ResponseModel, ResponseModel> {
   let timer = DataflowTimer::new("collection_create");
   let params = serde_json::json!({ "connection_id": &connection_id, "name": &name });
-  tracing::debug!(command = "collection_create", params = %redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default()), "[COMMAND_ENTRY]");
+  log::debug!(
+    "command = collection_create, params = {} [COMMAND_ENTRY]",
+    redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default())
+  );
 
   if let Err(e) = validate_conn_id(&connection_id) {
     timer.clone().finish_error(&e);
@@ -200,7 +213,10 @@ pub async fn collection_drop(
 ) -> Result<ResponseModel, ResponseModel> {
   let timer = DataflowTimer::new("collection_drop");
   let params = serde_json::json!({ "connection_id": &connection_id, "name": &name });
-  tracing::debug!(command = "collection_drop", params = %redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default()), "[COMMAND_ENTRY]");
+  log::debug!(
+    "command = collection_drop, params = {} [COMMAND_ENTRY]",
+    redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default())
+  );
 
   if let Err(e) = validate_conn_id(&connection_id) {
     timer.clone().finish_error(&e);
@@ -238,7 +254,10 @@ pub async fn collection_rename(
 ) -> Result<ResponseModel, ResponseModel> {
   let timer = DataflowTimer::new("collection_rename");
   let params = serde_json::json!({ "connection_id": &connection_id, "old_name": &old_name, "new_name": &new_name });
-  tracing::debug!(command = "collection_rename", params = %redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default()), "[COMMAND_ENTRY]");
+  log::debug!(
+    "command = collection_rename, params = {} [COMMAND_ENTRY]",
+    redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default())
+  );
 
   if let Err(e) = validate_conn_id(&connection_id) {
     timer.clone().finish_error(&e);
@@ -270,4 +289,93 @@ pub async fn collection_rename(
 
   timer.finish(&result);
   Ok(result)
+}
+
+#[tauri::command]
+pub async fn describe_collection(
+  connection_id: &str,
+  collection: &str,
+) -> Result<ResponseModel, ResponseModel> {
+  let timer = DataflowTimer::new("describe_collection");
+  let result: Result<ResponseModel, ResponseModel> = (|| async {
+    validate_conn_id(connection_id).map_err(|e| ResponseModel::error(e))?;
+    validate_name(collection).map_err(|e| ResponseModel::error(e))?;
+    let entry = get_connection_entry(connection_id)
+      .await
+      .map_err(|e| ResponseModel::error(e))?;
+
+    let (schema, indexes) = dispatch_provider!(entry, provider => {
+        let schema = provider.describe_collection(collection).await.map_err_string()?;
+        let indexes = nosql_orm::provider::SchemaIntrospection::list_indexes(&provider, collection)
+            .await
+            .map_err_string()?;
+        Ok::<_, String>((schema, indexes))
+    })
+    .map_err(|e| ResponseModel::error(e))?;
+
+    let columns: Vec<ColumnInfo> = schema
+      .fields
+      .iter()
+      .map(|(name, field)| ColumnInfo {
+        name: name.clone(),
+        data_type: field.field_type.clone(),
+        nullable: field.nullable,
+        is_primary_key: false,
+      })
+      .collect();
+
+    let index_infos: Vec<crate::commands::types::IndexInfo> = indexes
+      .into_iter()
+      .map(|idx| crate::commands::types::IndexInfo {
+        name: idx.name,
+        columns: idx.fields,
+        is_unique: idx.unique,
+      })
+      .collect();
+
+    Ok(ResponseModel::success(CollectionSchema {
+      name: collection.to_string(),
+      columns,
+      indexes: index_infos,
+    }))
+  })()
+  .await;
+  match &result {
+    Ok(resp) => timer.finish(resp),
+    Err(err) => timer.finish_error(&err.message),
+  }
+  result
+}
+
+#[tauri::command]
+pub async fn get_collection_stats(
+  connection_id: &str,
+  collection: &str,
+) -> Result<ResponseModel, ResponseModel> {
+  let timer = DataflowTimer::new("get_collection_stats");
+  let result: Result<ResponseModel, ResponseModel> = (|| async {
+    validate_conn_id(connection_id).map_err(|e| ResponseModel::error(e))?;
+    validate_name(collection).map_err(|e| ResponseModel::error(e))?;
+    let entry = get_connection_entry(connection_id)
+      .await
+      .map_err(|e| ResponseModel::error(e))?;
+
+    let stats = dispatch_provider!(entry, provider => {
+        provider.get_collection_stats(collection).await.map_err_string()
+    })
+    .map_err(|e| ResponseModel::error(e))?;
+
+    Ok(ResponseModel::success(CollectionStats {
+      name: collection.to_string(),
+      document_count: stats.document_count,
+      size_bytes: stats.size_bytes,
+      index_count: stats.index_count,
+    }))
+  })()
+  .await;
+  match &result {
+    Ok(resp) => timer.finish(resp),
+    Err(err) => timer.finish_error(&err.message),
+  }
+  result
 }

@@ -1,5 +1,5 @@
 import { Injectable, signal, computed, Type, inject } from "@angular/core";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 export interface DialogConfig<T = unknown> {
   id: string;
@@ -12,7 +12,7 @@ export interface DialogConfig<T = unknown> {
 
 @Injectable({ providedIn: "root" })
 export class DialogService {
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
   private dialogsSignal = signal<DialogConfig<unknown>[]>([]);
   private counter = 0;
 

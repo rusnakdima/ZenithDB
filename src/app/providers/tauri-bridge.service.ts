@@ -2,7 +2,7 @@ import { Injectable, inject } from "@angular/core";
 import { invoke, InvokeOptions as TauriInvokeOptions } from "@tauri-apps/api/core";
 import { ErrorHandlerService } from "@shared/services/error-handler.service";
 import { SettingsService } from "@shared/services/settings.service";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 const DEFAULT_TIMEOUT_MS = 30000;
 
@@ -33,7 +33,7 @@ interface ResponseModel {
 export class TauriBridgeService {
   private errorHandler = inject(ErrorHandlerService);
   private settingsService = inject(SettingsService);
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
 
   getConnectionTimeoutMs(): number {
     return this.settingsService.currentSettings.connections.connectionTimeout * 1000;

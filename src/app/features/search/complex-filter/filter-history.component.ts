@@ -3,7 +3,7 @@ import { CommonModule } from "@angular/common";
 import { PersistentStorageService } from "@shared/services/persistent-storage.service";
 import { FilterExpression } from "@shared/models/connection.config";
 import { NamedFilter } from "./complex-filter.component";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 @Component({
   selector: "app-filter-history",
@@ -13,7 +13,7 @@ import { LoggingService } from "@shared/services/logging.service";
 })
 export class FilterHistoryComponent implements OnInit {
   private readonly storage = inject(PersistentStorageService);
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
 
   @Input() namedFilters: NamedFilter[] = [];
   @Output() historySelect = new EventEmitter<FilterExpression>();

@@ -24,7 +24,7 @@ import { QueryExecutionService } from "@shared/services/query-execution.service"
 import { formatSQL } from "@shared/utils/sql-formatter.utils";
 import { findById } from "@shared/utils/array.utils";
 import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 @Component({
   selector: "app-workbench",
@@ -41,7 +41,7 @@ export class WorkbenchComponent implements OnDestroy {
   private readonly queryExecution = inject(QueryExecutionService);
   private cdr = inject(ChangeDetectorRef);
   private dataflowLogger = inject(DataflowLoggerService);
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
 
   private readonly page = "Workbench";
 

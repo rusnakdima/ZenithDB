@@ -3,7 +3,7 @@ import { DataStoreService } from "@services/core/data-store.service";
 import { ToastService } from "@services/toast.service";
 import { RowData } from "@shared/models/connection.config";
 import { getRecordId } from "@shared/utils/record.utils";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 export interface DeletedRecord extends RowData {
   _deletedAt: string;
@@ -14,7 +14,7 @@ export interface DeletedRecord extends RowData {
 export class SoftDeleteService {
   private dataStore = inject(DataStoreService);
   private toast = inject(ToastService);
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
 
   private showDeletedSignal = signal(false);
 

@@ -1,5 +1,5 @@
 import { Injectable, signal, inject } from "@angular/core";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 export interface ConfirmOptions {
   title?: string;
@@ -12,7 +12,7 @@ export interface ConfirmOptions {
 
 @Injectable({ providedIn: "root" })
 export class ConfirmService {
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
   private resolvePromise: ((value: boolean) => void) | null = null;
   isOpen = signal(false);
   options = signal<ConfirmOptions>({ message: "" });

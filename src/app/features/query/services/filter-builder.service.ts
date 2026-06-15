@@ -8,11 +8,11 @@ import {
   ProjectionConfig,
   FieldType,
 } from "../models";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 @Injectable({ providedIn: "root" })
 export class FilterBuilderService {
-  private readonly logger = inject(LoggingService);
+  private readonly logger = getLoggingService();
   buildFilter(groups: ConditionGroup[]): FilterExpression | null {
     if (!groups || groups.length === 0) return null;
 

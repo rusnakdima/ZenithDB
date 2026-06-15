@@ -1,6 +1,6 @@
 import { Injectable, signal, inject, DestroyRef } from "@angular/core";
 import { Router } from "@angular/router";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 import {
   SHORTCUT_CONFIG,
   formatShortcut,
@@ -15,7 +15,7 @@ export class KeyboardShortcutsService {
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
   private connectionFormService = inject(ConnectionFormService);
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
 
   private enabled = signal(true);
 

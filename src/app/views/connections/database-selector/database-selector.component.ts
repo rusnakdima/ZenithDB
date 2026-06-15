@@ -3,7 +3,7 @@ import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
 import { CheckboxComponent } from "@shared/components/checkbox/checkbox.component";
 import { ToastService } from "@services/toast.service";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 @Component({
   selector: "app-database-selector",
@@ -13,7 +13,7 @@ import { LoggingService } from "@shared/services/logging.service";
 })
 export class DatabaseSelectorComponent {
   private toast = inject(ToastService);
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
 
   provider = input.required<string>();
   uri = input.required<string>();

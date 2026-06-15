@@ -4,7 +4,7 @@ import { FormsModule } from "@angular/forms";
 import { GroupConfig, GroupAccumulator } from "../pipeline-builder.service";
 import { SchemaCompletionService } from "../../../query/services/schema-completion.service";
 import { FieldInfo } from "../../../query/models";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 @Component({
   selector: "app-group-config",
@@ -14,7 +14,7 @@ import { LoggingService } from "@shared/services/logging.service";
 })
 export class GroupConfigComponent implements OnInit {
   private readonly schemaCompletion = inject(SchemaCompletionService);
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
 
   @Input() config!: GroupConfig;
   @Input() collectionName = "";

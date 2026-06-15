@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter, inject } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { QueryTemplate, TEMPLATE_CATEGORIES } from "../../models";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 @Component({
   selector: "app-template-card",
@@ -10,7 +10,7 @@ import { LoggingService } from "@shared/services/logging.service";
   templateUrl: "./template-card.component.html",
 })
 export class TemplateCardComponent {
-  private readonly logger = inject(LoggingService);
+  private readonly logger = getLoggingService();
 
   @Input() template!: QueryTemplate;
   @Input() isFavorite = false;

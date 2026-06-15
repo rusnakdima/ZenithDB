@@ -36,7 +36,7 @@ impl<T: Clone> TypedProviderCache<T> {
     if let Some(instance) = cache.get(conn_id) {
       if Instant::now().duration_since(instance.created_at) < Duration::from_secs(CACHE_TTL_SECONDS)
       {
-        tracing::debug!(
+        log::debug!(
           "Reusing cached {} provider for connection: {}",
           self.provider_name,
           conn_id

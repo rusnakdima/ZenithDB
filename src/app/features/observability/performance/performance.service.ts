@@ -1,7 +1,7 @@
 import { Injectable, inject, signal, computed } from "@angular/core";
 import { MetricsApiService } from "@shared/services/metrics-api.service";
 import { TIME_CONSTANTS } from "@shared/utils/constants";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 export interface QueryMetric {
   timestamp: number;
@@ -26,7 +26,7 @@ type TimeRange = "1h" | "6h" | "24h" | "7d";
 @Injectable({ providedIn: "root" })
 export class PerformanceService {
   private metricsApi = inject(MetricsApiService);
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
 
   private queryMetrics = signal<QueryMetric[]>([]);
   private timeRangeSignal = signal<TimeRange>("1h");

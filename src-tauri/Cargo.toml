@@ -40,6 +40,6 @@ nosql_orm = { git = "https://github.com/rusnakdima/nosql_orm", branch = "main", 
 ] }
 rusqlite = { version = "0.33", features = ["bundled"] }
 ts-rs = "8"
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 chrono = "0.4"
+log = "0.4"
+tauri-logger = { path = "../../tauri-logger" }

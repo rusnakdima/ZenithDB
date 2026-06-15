@@ -6,7 +6,7 @@ import { ToastService } from "@services/toast.service";
 import { RowData } from "@shared/models/connection.config";
 import { withConnectionAndLoading } from "@shared/utils/api-wrapper.util";
 import { generateId, generateTransactionId } from "@shared/utils/id.utils";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 export type IsolationLevel = "Read Committed" | "Read Uncommitted" | "Repeatable Read";
 
@@ -44,7 +44,7 @@ export class TransactionService {
   private api = inject(ApiProvider);
   private loadingService = inject(LoadingService);
   private toast = inject(ToastService);
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
 
   private transactionSignal = signal<Transaction | null>(null);
   private operationLogSignal = signal<TransactionOperation[]>([]);

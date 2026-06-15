@@ -1,10 +1,9 @@
 use crate::commands::connection::ConnectionConfigEnum;
 use crate::commands::error_utils::ToStringError;
 use crate::commands::get_connection_entry;
-use crate::commands::types::{CollectionSchema, CollectionStats, ColumnInfo};
+use crate::commands::types::DatabaseMeta;
 use crate::commands::validate_conn_id;
 use crate::commands::validate_name;
-use crate::dispatch_provider;
 use crate::infrastructure::nosql_orm_adapter::NosqlOrmAdapter;
 use crate::logger::DataflowTimer;
 use crate::models::response::ResponseModel;
@@ -14,6 +13,16 @@ use std::path::PathBuf;
 fn validate_safe_path(base: &str, user_input: &str) -> Result<PathBuf, String> {
   crate::infrastructure::nosql_orm_adapter::validate_safe_path(base, user_input)
 }
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct DatabaseListResult {
+  pub databases: Vec<DatabaseMeta>,
+  pub has_more: bool,
+  pub total_count: usize,
+}
+
+const MAX_DIRS_PER_LEVEL: usize = 10;
+const SCAN_TIMEOUT_SECS: u64 = 30;
 
 #[tauri::command]
 pub async fn create_database(
@@ -200,90 +209,233 @@ pub async fn delete_database(
 }
 
 #[tauri::command]
-pub async fn describe_collection(
-  connection_id: &str,
-  collection: &str,
+pub async fn database_list(
+  connection_id: String,
+  offset: Option<usize>,
+  limit: Option<usize>,
 ) -> Result<ResponseModel, ResponseModel> {
-  let timer = DataflowTimer::new("describe_collection");
-  let result: Result<ResponseModel, ResponseModel> = (|| async {
-    validate_conn_id(connection_id).map_err(|e| ResponseModel::error(e))?;
-    validate_name(collection).map_err(|e| ResponseModel::error(e))?;
-    let entry = get_connection_entry(connection_id)
-      .await
-      .map_err(|e| ResponseModel::error(e))?;
-
-    let (schema, indexes) = dispatch_provider!(entry, provider => {
-        let schema = provider.describe_collection(collection).await.map_err_string()?;
-        let indexes = nosql_orm::provider::SchemaIntrospection::list_indexes(&provider, collection)
-            .await
-            .map_err_string()?;
-        Ok::<_, String>((schema, indexes))
-    })
-    .map_err(|e| ResponseModel::error(e))?;
-
-    let columns: Vec<ColumnInfo> = schema
-      .fields
-      .iter()
-      .map(|(name, field)| ColumnInfo {
-        name: name.clone(),
-        data_type: field.field_type.clone(),
-        nullable: field.nullable,
-        is_primary_key: false,
-      })
-      .collect();
-
-    let index_infos: Vec<crate::commands::types::IndexInfo> = indexes
-      .into_iter()
-      .map(|idx| crate::commands::types::IndexInfo {
-        name: idx.name,
-        columns: idx.fields,
-        is_unique: idx.unique,
-      })
-      .collect();
-
-    Ok(ResponseModel::success(CollectionSchema {
-      name: collection.to_string(),
-      columns,
-      indexes: index_infos,
-    }))
-  })()
-  .await;
-  match &result {
-    Ok(resp) => timer.finish(resp),
-    Err(err) => timer.finish_error(&err.message),
+  let timer = DataflowTimer::new("database_list");
+  let params =
+    serde_json::json!({ "connection_id": &connection_id, "offset": offset, "limit": limit });
+  log::debug!(
+    "command = database_list, params = {} [COMMAND_ENTRY]",
+    crate::logger::redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default())
+  );
+  if let Err(e) = validate_conn_id(&connection_id) {
+    timer.clone().finish_error(&e);
+    return Err(ResponseModel::error(e));
   }
-  result
+  let entry = match get_connection_entry(&connection_id).await {
+    Ok(e) => e,
+    Err(e) => {
+      timer.clone().finish_error(&e);
+      return Err(ResponseModel::error(e));
+    }
+  };
+  let offset = offset.unwrap_or(0);
+  let limit = limit.unwrap_or(MAX_DIRS_PER_LEVEL);
+
+  let result = match &entry.config.config {
+    ConnectionConfigEnum::Json { path, .. } => {
+      let path_obj = std::path::Path::new(path).to_path_buf();
+      if !path_obj.is_dir() {
+        return Ok(ResponseModel::success(DatabaseListResult {
+          databases: Vec::new(),
+          has_more: false,
+          total_count: 0,
+        }));
+      }
+
+      match list_json_databases(path_obj.clone(), offset, limit).await {
+        Ok(r) => ResponseModel::success(r),
+        Err(e) => {
+          timer.clone().finish_error(&e);
+          ResponseModel::error(e)
+        }
+      }
+    }
+    ConnectionConfigEnum::Sqlite { path, .. } => ResponseModel::success(DatabaseListResult {
+      databases: vec![DatabaseMeta::from_name(
+        std::path::Path::new(path)
+          .file_stem()
+          .and_then(|n| n.to_str())
+          .unwrap_or("database"),
+      )],
+      has_more: false,
+      total_count: 1,
+    }),
+    ConnectionConfigEnum::Redis { .. } => ResponseModel::success(DatabaseListResult {
+      databases: vec![DatabaseMeta::from_name("default")],
+      has_more: false,
+      total_count: 1,
+    }),
+    ConnectionConfigEnum::Mongo { uri, .. } => {
+      match crate::commands::provider::get_or_create_mongo_provider(&connection_id, uri, "admin")
+        .await
+      {
+        Ok(provider) => match provider.list_databases().await.map_err_string() {
+          Ok(db_names) => {
+            let total_count = db_names.len();
+            let has_more = offset + limit < total_count;
+            let dbs: Vec<DatabaseMeta> = db_names
+              .into_iter()
+              .skip(offset)
+              .take(limit)
+              .map(|name| DatabaseMeta {
+                name,
+                size_bytes: None,
+                table_count: None,
+              })
+              .collect();
+            ResponseModel::success(DatabaseListResult {
+              databases: dbs,
+              has_more,
+              total_count,
+            })
+          }
+          Err(e) => {
+            timer.clone().finish_error(&e);
+            ResponseModel::error(e.to_string())
+          }
+        },
+        Err(e) => {
+          timer.clone().finish_error(&e.to_string());
+          ResponseModel::error(e.to_string())
+        }
+      }
+    }
+    ConnectionConfigEnum::Postgres { uri, .. } => {
+      match crate::commands::provider::get_or_create_postgres_provider(&connection_id, uri).await {
+        Ok(provider) => match provider.list_databases().await.map_err_string() {
+          Ok(db_names) => {
+            let total_count = db_names.len();
+            let has_more = offset + limit < total_count;
+            let dbs: Vec<DatabaseMeta> = db_names
+              .into_iter()
+              .skip(offset)
+              .take(limit)
+              .map(|name| DatabaseMeta {
+                name,
+                size_bytes: None,
+                table_count: None,
+              })
+              .collect();
+            ResponseModel::success(DatabaseListResult {
+              databases: dbs,
+              has_more,
+              total_count,
+            })
+          }
+          Err(e) => {
+            timer.clone().finish_error(&e);
+            ResponseModel::error(e)
+          }
+        },
+        Err(e) => {
+          timer.clone().finish_error(&e.to_string());
+          ResponseModel::error(e.to_string())
+        }
+      }
+    }
+    ConnectionConfigEnum::MySql { uri, .. } => {
+      match crate::commands::provider::get_or_create_mysql_provider(&connection_id, uri).await {
+        Ok(provider) => match provider.list_databases().await.map_err_string() {
+          Ok(db_names) => {
+            let total_count = db_names.len();
+            let has_more = offset + limit < total_count;
+            let dbs: Vec<DatabaseMeta> = db_names
+              .into_iter()
+              .skip(offset)
+              .take(limit)
+              .map(|name| DatabaseMeta {
+                name,
+                size_bytes: None,
+                table_count: None,
+              })
+              .collect();
+            ResponseModel::success(DatabaseListResult {
+              databases: dbs,
+              has_more,
+              total_count,
+            })
+          }
+          Err(e) => {
+            timer.clone().finish_error(&e);
+            ResponseModel::error(e)
+          }
+        },
+        Err(e) => {
+          timer.clone().finish_error(&e.to_string());
+          ResponseModel::error(e.to_string())
+        }
+      }
+    }
+  };
+
+  timer.finish(&result);
+  Ok(result)
 }
 
-#[tauri::command]
-pub async fn get_collection_stats(
-  connection_id: &str,
-  collection: &str,
-) -> Result<ResponseModel, ResponseModel> {
-  let timer = DataflowTimer::new("get_collection_stats");
-  let result: Result<ResponseModel, ResponseModel> = (|| async {
-    validate_conn_id(connection_id).map_err(|e| ResponseModel::error(e))?;
-    validate_name(collection).map_err(|e| ResponseModel::error(e))?;
-    let entry = get_connection_entry(connection_id)
-      .await
-      .map_err(|e| ResponseModel::error(e))?;
+async fn list_json_databases(
+  path_obj: std::path::PathBuf,
+  offset: usize,
+  limit: usize,
+) -> Result<DatabaseListResult, String> {
+  let timeout_result =
+    tokio::time::timeout(std::time::Duration::from_secs(SCAN_TIMEOUT_SECS), async {
+      let mut databases: Vec<DatabaseMeta> = Vec::new();
+      let mut entries = match tokio::fs::read_dir(&path_obj).await {
+        Ok(e) => e,
+        Err(_) => {
+          return Ok(DatabaseListResult {
+            databases: Vec::new(),
+            has_more: false,
+            total_count: 0,
+          })
+        }
+      };
 
-    let stats = dispatch_provider!(entry, provider => {
-        provider.get_collection_stats(collection).await.map_err_string()
+      let mut total_count = 0usize;
+      let mut has_json_files = false;
+      while let Some(entry) = entries.next_entry().await.map_err_string()? {
+        let entry_path = entry.path();
+        if entry_path.is_dir() {
+          total_count += 1;
+          if databases.len() < limit * 2 {
+            let name = entry.file_name().into_string().ok().map(|n| n.to_string());
+            if let Some(name) = name {
+              databases.push(DatabaseMeta::from_name(&name));
+            }
+          }
+        } else if let Some(ext) = entry_path.extension() {
+          if ext == "json" {
+            has_json_files = true;
+          }
+        }
+      }
+
+      if databases.is_empty() && has_json_files {
+        if let Some(folder_name) = path_obj.file_name().and_then(|n| n.to_str()) {
+          databases.push(DatabaseMeta::from_name(folder_name));
+          total_count = 1;
+        }
+      }
+
+      databases.sort_by(|a, b| a.name.cmp(&b.name));
+      let has_more = offset + limit < total_count;
+      let result = databases.into_iter().skip(offset).take(limit).collect();
+
+      Ok(DatabaseListResult {
+        databases: result,
+        has_more,
+        total_count,
+      })
     })
-    .map_err(|e| ResponseModel::error(e))?;
+    .await;
 
-    Ok(ResponseModel::success(CollectionStats {
-      name: collection.to_string(),
-      document_count: stats.document_count,
-      size_bytes: stats.size_bytes,
-      index_count: stats.index_count,
-    }))
-  })()
-  .await;
-  match &result {
-    Ok(resp) => timer.finish(resp),
-    Err(err) => timer.finish_error(&err.message),
+  match timeout_result {
+    Ok(Ok(result)) => Ok(result),
+    Ok(Err(e)) => Err(e),
+    Err(_) => Err("Database listing timed out".to_string()),
   }
-  result
 }

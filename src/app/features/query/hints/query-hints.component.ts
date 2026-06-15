@@ -10,7 +10,7 @@ import {
 } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { HintAnalyzerService, QueryHint } from "../services";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 @Component({
   selector: "app-query-hints",
@@ -20,7 +20,7 @@ import { LoggingService } from "@shared/services/logging.service";
 })
 export class QueryHintsComponent implements OnInit {
   private readonly hintAnalyzer = inject(HintAnalyzerService);
-  private readonly logger = inject(LoggingService);
+  private readonly logger = getLoggingService();
 
   @Input() collectionName = "";
   @Input() filterText = "";

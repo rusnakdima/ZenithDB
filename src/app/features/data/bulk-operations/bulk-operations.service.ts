@@ -5,7 +5,7 @@ import { SchemaCompletionService } from "@features/query/services";
 import { FieldInfo } from "@features/query/models";
 import { RowData } from "@shared/models/connection.config";
 import { getRecordId } from "@shared/utils/record.utils";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 export interface BulkUpdateRequest {
   collectionName: string;
@@ -31,7 +31,7 @@ export class BulkOperationsService {
   private readonly dataStore = inject(DataStoreService);
   private readonly toast = inject(ToastService);
   private readonly schemaCompletion = inject(SchemaCompletionService);
-  private readonly logger = inject(LoggingService);
+  private readonly logger = getLoggingService();
 
   private readonly operationInProgress = signal(false);
 

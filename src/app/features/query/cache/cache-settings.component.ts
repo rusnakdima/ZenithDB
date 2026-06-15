@@ -14,7 +14,7 @@ import { FormsModule } from "@angular/forms";
 import { QueryCacheService, CacheEntry } from "./cache.service";
 import { TIME_CONSTANTS } from "@shared/utils/constants";
 import { formatTimeAgo } from "@shared/utils/time.utils";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 @Component({
   selector: "app-cache-settings",
@@ -26,7 +26,7 @@ import { LoggingService } from "@shared/services/logging.service";
 export class CacheSettingsComponent implements OnInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
   private cacheService = inject(QueryCacheService);
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
 
   queryKey = input<string>("");
   initialTtl = input<number>(300);

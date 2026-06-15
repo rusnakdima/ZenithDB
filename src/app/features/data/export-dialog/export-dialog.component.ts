@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter, signal, inject } from "@angular/core";
 import { MatIconModule } from "@angular/material/icon";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 export type ExportFormat = "csv" | "json" | "jsonl" | "sql" | "markdown";
 
@@ -11,7 +11,7 @@ export type ExportFormat = "csv" | "json" | "jsonl" | "sql" | "markdown";
   templateUrl: "./export-dialog.component.html",
 })
 export class ExportDialogComponent {
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
 
   @Input() visible = false;
   @Input() selectedCount = 0;

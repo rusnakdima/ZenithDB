@@ -2,11 +2,11 @@ use crate::commands::connection::{
   ConnectionConfig, ConnectionConfigEnum, ConnectionHealth, ConnectionSummary,
 };
 use crate::commands::connection_entity::ConnectionEntity;
-use crate::commands::decentralization::delete_connection_databases_metadata;
 use crate::commands::provider::{
   create_mongo_provider, create_mysql_provider, create_postgres_provider, create_redis_provider,
   create_sqlite_provider,
 };
+use crate::commands::settings_command::delete_connection_databases_metadata;
 use crate::constants::CONNECTION_TIMEOUT_SECS;
 use crate::models::response::ResponseModel;
 use nosql_orm::provider::{AdminCommands, DatabaseProvider, SchemaIntrospection};
@@ -59,7 +59,7 @@ impl ConnectionsDb {
         [],
       )
       .map_err(|e| e.to_string())?;
-    tracing::trace!("Connections table ready");
+    log::trace!("Connections table ready");
     Ok(())
   }
 
@@ -81,7 +81,7 @@ impl ConnectionsDb {
         ],
       )
       .map_err(|e| e.to_string())?;
-    tracing::info!("Saved connection: {}", entity.id);
+    log::info!("Saved connection: {}", entity.id);
     Ok(())
   }
 
@@ -164,7 +164,7 @@ impl ConnectionsDb {
         rusqlite::params![id],
       )
       .map_err(|e| e.to_string())?;
-    tracing::info!("Deleted connection: {}", id);
+    log::info!("Deleted connection: {}", id);
     Ok(())
   }
 
@@ -318,7 +318,7 @@ impl ConnectionService {
     let db = self.connections_db.lock().await;
     db.save(&entity).map_err(|e| ResponseModel::error(e))?;
 
-    tracing::info!("Saved connection: {} ({})", id, entity.name);
+    log::info!("Saved connection: {} ({})", id, entity.name);
     Ok(ResponseModel::success_message(format!(
       "Connection saved: {}",
       id
@@ -405,10 +405,10 @@ impl ConnectionService {
     drop(db);
 
     if let Err(e) = delete_connection_databases_metadata(id.to_string()).await {
-      tracing::warn!("Failed to delete connection metadata: {}", e);
+      log::warn!("Failed to delete connection metadata: {}", e);
     }
 
-    tracing::info!("Deleted connection: {}", id);
+    log::info!("Deleted connection: {}", id);
     Ok(ResponseModel::success_message(format!(
       "Connection {} deleted",
       id
@@ -440,7 +440,7 @@ impl ConnectionService {
 
     db.save(&entity).map_err(|e| ResponseModel::error(e))?;
     drop(db);
-    tracing::info!("Updated connection: {}", id);
+    log::info!("Updated connection: {}", id);
     Ok(ResponseModel::success_message(format!(
       "Connection {} updated",
       id

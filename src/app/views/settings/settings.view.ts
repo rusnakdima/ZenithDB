@@ -6,7 +6,7 @@ import { SettingsService } from "../../shared/services/settings.service";
 import { ThemeService } from "@shared/services/theme.service";
 import { ThemePreset, THEME_PRESETS } from "@shared/models/theme.model";
 import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 interface ThemeOption {
   value: "dark" | "light" | "system";
@@ -25,7 +25,7 @@ export class SettingsComponent {
   private settingsService = inject(SettingsService);
   private themeService = inject(ThemeService);
   private dataflowLogger = inject(DataflowLoggerService);
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
 
   private readonly page = "Settings";
 

@@ -13,7 +13,7 @@ import { FormsModule } from "@angular/forms";
 import { ModalComponent } from "@shared/components/modal/modal.component";
 import { FieldInfo } from "../../query/models";
 import { FieldWeight } from "./fulltext-search.component";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 export interface TextIndexConfig {
   fields: FieldWeight[];
@@ -27,7 +27,7 @@ export interface TextIndexConfig {
   templateUrl: "./text-index-dialog.component.html",
 })
 export class TextIndexDialogComponent implements OnInit {
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
 
   @Input() collectionName: string = "";
   @Input() fields: FieldInfo[] = [];

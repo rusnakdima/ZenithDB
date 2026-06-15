@@ -9,7 +9,7 @@ import {
   FieldInfo,
 } from "../../models";
 import { SchemaCompletionService } from "../../services";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 @Component({
   selector: "app-query-group",
@@ -19,7 +19,7 @@ import { LoggingService } from "@shared/services/logging.service";
 })
 export class QueryGroupComponent implements OnInit {
   private readonly schemaCompletion = inject(SchemaCompletionService);
-  private readonly logger = inject(LoggingService);
+  private readonly logger = getLoggingService();
 
   @Input() group!: ConditionGroup;
   @Input() collectionName = "";

@@ -19,7 +19,7 @@ import {
   createEmptyCondition,
 } from "../../models";
 import { SchemaCompletionService } from "../../services";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 @Component({
   selector: "app-query-condition",
@@ -29,7 +29,7 @@ import { LoggingService } from "@shared/services/logging.service";
 })
 export class QueryConditionComponent implements OnInit {
   private readonly schemaCompletion = inject(SchemaCompletionService);
-  private readonly logger = inject(LoggingService);
+  private readonly logger = getLoggingService();
 
   @Input() condition!: Condition;
   @Input() collectionName = "";

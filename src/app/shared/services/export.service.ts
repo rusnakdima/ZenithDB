@@ -3,7 +3,7 @@ import { save } from "@tauri-apps/plugin-dialog";
 import { writeTextFile } from "@tauri-apps/plugin-fs";
 import { ToastService } from "@services/toast.service";
 import { LoadingService } from "@shared/services/loading.service";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 import { RowData } from "@shared/models/connection.config";
 import { escapeCsvValue, escapeSqlValue } from "@shared/utils/string.utils";
 
@@ -25,7 +25,7 @@ type ExportOptions = {
 export class ExportService {
   private toast = inject(ToastService) as ToastService;
   private loading = inject(LoadingService) as LoadingService;
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
 
   private validateExportData(data: RowData[]): boolean {
     if (!data || data.length === 0) {

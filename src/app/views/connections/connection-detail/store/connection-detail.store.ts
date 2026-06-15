@@ -1,9 +1,9 @@
 import { Injectable, signal, inject } from "@angular/core";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 @Injectable()
 export class ConnectionDetailStore {
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
 
   readonly loading = signal(false);
   readonly testing = signal(false);

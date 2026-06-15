@@ -24,7 +24,7 @@ import { isNullOrUndefined } from "@shared/utils/collection.utils";
 import { SortableHeaderComponent } from "@shared/components/sortable-header/sortable-header.component";
 import { DataTypeBadgeComponent } from "@shared/components/data-type-badge/data-type-badge.component";
 import { CheckboxComponent } from "@shared/components/checkbox/checkbox.component";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 @Component({
   selector: "app-column-manager",
@@ -44,7 +44,7 @@ import { LoggingService } from "@shared/services/logging.service";
 })
 export class ColumnManagerComponent {
   private cdr = inject(ChangeDetectorRef);
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
   @Input() columns: ColumnInfo[] = [];
   @Input() visibleColumnsList: string[] = [];
   @Input() columnOrder: string[] = [];

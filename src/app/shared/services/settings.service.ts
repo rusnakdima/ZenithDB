@@ -1,6 +1,5 @@
 import { Injectable, signal, effect, inject } from "@angular/core";
 import { PersistentStorageService } from "./persistent-storage.service";
-import { LoggingService } from "./logging.service";
 
 type ThemeSetting = "dark" | "light" | "system";
 type TabSize = 2 | 4 | 8;
@@ -68,7 +67,7 @@ const DEFAULT_SETTINGS: AppSettings = {
 @Injectable({ providedIn: "root" })
 export class SettingsService {
   private storage = inject(PersistentStorageService);
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
   private settingsSignal = signal<AppSettings>(this.loadSettings());
 
   readonly settings = this.settingsSignal;

@@ -20,7 +20,7 @@ import {
   QueryValidatorService,
 } from "../services";
 import { SyntaxMode } from "../models";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 @Component({
   selector: "app-provider-aware-editor",
@@ -165,7 +165,7 @@ export class ProviderAwareEditorComponent implements OnInit, OnChanges {
   private readonly providerDetector = inject(ProviderDetectorService);
   private readonly translationService = inject(QueryTranslationService);
   private readonly validator = inject(QueryValidatorService);
-  private readonly logger = inject(LoggingService);
+  private readonly logger = getLoggingService();
 
   @Input() initialQuery = "";
   @Input() collectionName = "";

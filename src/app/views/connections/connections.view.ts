@@ -16,7 +16,7 @@ import { ConfirmService } from "@shared/services/confirm.service";
 import { withErrorHandling } from "@shared/utils/error-handler.utils";
 import { ConnectionFormService } from "@shared/services/connection-form.service";
 import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 @Component({
   selector: "app-connections",
@@ -34,7 +34,7 @@ export class ConnectionsComponent implements OnInit {
   private connectionFormService = inject(ConnectionFormService);
   private cdr = inject(ChangeDetectorRef);
   private dataflowLogger = inject(DataflowLoggerService);
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
 
   connections = this.store.connections;
   private readonly page = "Connections";

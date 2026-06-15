@@ -1,6 +1,6 @@
 import { Component, signal, output, Input, HostListener, computed, inject } from "@angular/core";
 import { FormsModule } from "@angular/forms";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 @Component({
   selector: "app-sql-editor",
@@ -9,7 +9,7 @@ import { LoggingService } from "@shared/services/logging.service";
   templateUrl: "./sql-editor.component.html",
 })
 export class SqlEditorComponent {
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
   private _query = signal("");
 
   get query() {

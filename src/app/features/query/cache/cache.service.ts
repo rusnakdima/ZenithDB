@@ -1,5 +1,5 @@
 import { Injectable, signal, computed, inject } from "@angular/core";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 export interface CacheEntry<T = unknown> {
   key: string;
@@ -25,7 +25,7 @@ export interface CacheOptions {
 
 @Injectable({ providedIn: "root" })
 export class QueryCacheService {
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
   private cache = new Map<string, CacheEntry>();
   private totalHits = 0;
   private totalMisses = 0;

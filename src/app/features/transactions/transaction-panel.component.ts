@@ -5,7 +5,7 @@ import { TransactionService, IsolationLevel } from "./transaction.service";
 import { ToastService } from "@services/toast.service";
 import { ConfirmService } from "@shared/services/confirm.service";
 import { TransactionLogComponent } from "./transaction-log.component";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 @Component({
   selector: "app-transaction-panel",
@@ -18,7 +18,7 @@ export class TransactionPanelComponent {
   transactionService = inject(TransactionService);
   private toast = inject(ToastService);
   private confirmService = inject(ConfirmService);
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
 
   isActive = this.transactionService.isActive;
   activeCollections = this.transactionService.activeCollections;

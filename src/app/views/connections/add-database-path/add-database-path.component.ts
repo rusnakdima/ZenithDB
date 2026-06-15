@@ -2,7 +2,7 @@ import { Component, input, output, signal, inject } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
 import { ToastService } from "@services/toast.service";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 @Component({
   selector: "app-add-database-path",
@@ -12,7 +12,7 @@ import { LoggingService } from "@shared/services/logging.service";
 })
 export class AddDatabasePathComponent {
   private toast = inject(ToastService);
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
 
   provider = input.required<string>();
   connectionId = input.required<string>();

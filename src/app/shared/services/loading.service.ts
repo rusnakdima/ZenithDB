@@ -1,9 +1,9 @@
 import { Injectable, signal, computed, inject } from "@angular/core";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 @Injectable({ providedIn: "root" })
 export class LoadingService {
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
   private _loadingCount = signal(0);
   isLoading = computed(() => this._loadingCount() > 0);
   loadingMessage = signal<string | null>(null);

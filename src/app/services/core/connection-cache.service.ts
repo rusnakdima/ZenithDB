@@ -6,7 +6,7 @@ import {
 } from "@shared/models/connection.config";
 import { DatabaseService } from "@shared/services/database.service";
 import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 import { CACHE_CONSTANTS } from "@shared/utils/constants";
 import { findById } from "@shared/utils/array.utils";
 
@@ -19,7 +19,7 @@ interface HealthCacheEntry {
 export class ConnectionCacheService {
   private db = inject(DatabaseService);
   private dataflowLogger = inject(DataflowLoggerService);
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
   private readonly page = "ConnectionCacheService";
 
   private readonly HEALTH_TTL_MS = CACHE_CONSTANTS.HEALTH_TTL_MS;

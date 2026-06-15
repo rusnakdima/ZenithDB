@@ -9,7 +9,7 @@ import {
 } from "@angular/core";
 import { MatIconModule } from "@angular/material/icon";
 import { AuditService } from "./audit.service";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 @Component({
   selector: "app-change-detail",
@@ -20,7 +20,7 @@ import { LoggingService } from "@shared/services/logging.service";
 })
 export class ChangeDetailComponent {
   private auditService = inject(AuditService);
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
 
   @Input() before: Record<string, unknown> | undefined;
   @Input() after: Record<string, unknown> | undefined;

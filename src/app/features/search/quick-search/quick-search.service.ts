@@ -3,7 +3,7 @@ import { SchemaService } from "@shared/services/schema.service";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { ApiProvider } from "@providers/api.provider";
 import { CollectionMeta, FilterExpression, RowData } from "@shared/models/connection.config";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 export interface QuickSearchResult {
   collection: string;
@@ -23,7 +23,7 @@ export class QuickSearchService {
   private readonly schemaService = inject(SchemaService);
   private readonly connectionState = inject(ConnectionStateService);
   private readonly api = inject(ApiProvider);
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
 
   private readonly searchResultsSignal = signal<GroupedSearchResults[]>([]);
   private readonly isSearchingSignal = signal(false);

@@ -7,7 +7,7 @@ import {
   FieldType,
 } from "../../query/models";
 import { FilterOperator } from "@shared/models/connection.config";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 export type StageType =
   | "$match"
@@ -77,7 +77,7 @@ export interface AggregationPipeline {
 
 @Injectable({ providedIn: "root" })
 export class PipelineBuilderService {
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
   private readonly _stages = signal<PipelineStage[]>([]);
 
   readonly stages = this._stages.asReadonly();

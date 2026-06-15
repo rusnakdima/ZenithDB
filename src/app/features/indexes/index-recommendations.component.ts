@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter, inject } from "@angular/core";
 import { CommonModule } from "@angular/common";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 @Component({
   selector: "app-index-recommendations",
@@ -21,7 +21,7 @@ export class IndexRecommendationsComponent {
   @Output() acceptRecommendation = new EventEmitter<unknown>();
   @Output() dismissRecommendation = new EventEmitter<unknown>();
 
-  private logger = inject(LoggingService);
+  private logger = getLoggingService();
   private _recommendations: unknown[] = [];
 
   onAcceptRecommendation(recommendation: unknown): void {

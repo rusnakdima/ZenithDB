@@ -1,12 +1,12 @@
 import { Injectable, inject, signal, computed } from "@angular/core";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { ProviderInfo, ProviderType, PROVIDER_METADATA, SyntaxMode } from "../models";
-import { LoggingService } from "@shared/services/logging.service";
+import { getLoggingService } from "@tauri-apps/logger";
 
 @Injectable({ providedIn: "root" })
 export class ProviderDetectorService {
   private readonly connectionState = inject(ConnectionStateService);
-  private readonly logger = inject(LoggingService);
+  private readonly logger = getLoggingService();
 
   private readonly currentProviderInfoSignal = signal<ProviderInfo | null>(null);
 
