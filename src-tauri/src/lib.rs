@@ -1,30 +1,28 @@
-mod commands;
 mod constants;
 mod errors;
 mod infrastructure;
 mod logger;
 mod models;
+mod routes;
 mod services;
 mod state;
 mod types;
 
 use tauri::Manager;
 
-use commands::connection_command::{
+use routes::connection_command::{
   check_health, delete_connection, get_connection, list_connections, save_connection,
   test_connection, test_connection_status, update_connection,
 };
-use commands::database_command::{
-  create_database, database_list, delete_database, rename_database,
-};
-use commands::query_command::{
+use routes::database_command::{create_database, database_list, delete_database, rename_database};
+use routes::query_command::{
   query_delete, query_execute, query_raw, query_save, query_server_version,
 };
-use commands::schema_command::{
+use routes::schema_command::{
   collection_create, collection_drop, collection_list, collection_rename, collection_stats,
   describe_collection,
 };
-use commands::settings_command::{
+use routes::settings_command::{
   append_log_file, capture_screenshot, delete_connection_databases_metadata,
   delete_database_metadata, get_database_metadata, get_system_status, init_decentralized_storage,
   list_databases_metadata, save_database_metadata, save_log_file, update_database_metadata,

@@ -1,14 +1,14 @@
-use crate::commands::connection_command::{
+use crate::constants::CONNECTION_TIMEOUT_SECS;
+use crate::models::response::ResponseModel;
+use crate::routes::connection_command::{
   ConnectionConfig, ConnectionConfigEnum, ConnectionHealth, ConnectionSummary,
 };
-use crate::commands::connection_entity::ConnectionEntity;
-use crate::commands::provider::{
+use crate::routes::connection_entity::ConnectionEntity;
+use crate::routes::provider::{
   create_mongo_provider, create_mysql_provider, create_postgres_provider, create_redis_provider,
   create_sqlite_provider,
 };
-use crate::commands::settings_command::delete_connection_databases_metadata;
-use crate::constants::CONNECTION_TIMEOUT_SECS;
-use crate::models::response::ResponseModel;
+use crate::routes::settings_command::delete_connection_databases_metadata;
 use nosql_orm::prelude::*;
 use nosql_orm::providers::sql::SqliteProvider;
 use std::sync::Arc;
