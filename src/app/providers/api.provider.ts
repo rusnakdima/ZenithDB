@@ -1,7 +1,7 @@
 import { Injectable, inject } from "@angular/core";
 import { TauriBridgeService } from "./tauri-bridge.service";
 import { RequestCancellationService } from "./request-cancellation.service";
-import { DataStoreService } from "@app/services/core/data-store.service";
+import { DataStoreService } from "@app/shared/services/core/unified-storage.service";
 import { ConnectionsApiService } from "@shared/services/connections-api.service";
 import { ToastService } from "@services/toast.service";
 import { ErrorHandlerService } from "@shared/services/error-handler.service";

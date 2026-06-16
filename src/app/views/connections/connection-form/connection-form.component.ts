@@ -13,7 +13,7 @@ import { Router, ActivatedRoute } from "@angular/router";
 import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
 import { ModalComponent } from "@shared/components/modal/modal.component";
-import { DataStoreService } from "@services/core/data-store.service";
+import { DataStoreService } from "@shared/services/core/unified-storage.service";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { ProviderUtils } from "@shared/utils/provider.utils";
 import { parseProviderConfig } from "@shared/utils/provider-config.utils";

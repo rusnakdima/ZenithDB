@@ -1,7 +1,7 @@
 import { Injectable, inject, signal } from "@angular/core";
 import { CacheService } from "@shared/services/cache.service";
 import { TauriBridgeService } from "@providers/tauri-bridge.service";
-import { DataStoreService } from "@services/core/data-store.service";
+import { DataStoreService } from "@shared/services/core/unified-storage.service";
 import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
 import { ConnectionSummary } from "@shared/models/connection.config";
 

@@ -10,7 +10,7 @@ import {
 } from "@angular/core";
 import { Router, RouterLink, ActivatedRoute } from "@angular/router";
 import { FormsModule } from "@angular/forms";
-import { DataStoreService } from "@services/core/data-store.service";
+import { DataStoreService } from "@shared/services/core/unified-storage.service";
 import { ToastService } from "@services/toast.service";
 import { ConfirmService } from "@shared/services/confirm.service";
 import { ConnectionStateService } from "@shared/services/connection-state.service";

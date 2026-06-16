@@ -13,7 +13,7 @@ import { Subscription } from "rxjs";
 import { filter } from "rxjs/operators";
 import { MatIconModule } from "@angular/material/icon";
 import { ExplorerSidebarComponent } from "@shared/components/explorer-sidebar/explorer-sidebar.component";
-import { DataStoreService } from "@services/core/data-store.service";
+import { DataStoreService } from "@shared/services/core/unified-storage.service";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { ToastService } from "@services/toast.service";
 import { ClipboardService } from "@shared/services/clipboard.service";

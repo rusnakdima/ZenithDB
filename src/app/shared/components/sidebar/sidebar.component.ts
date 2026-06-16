@@ -14,7 +14,7 @@ import {
 import { Router, RouterLink, NavigationEnd } from "@angular/router";
 import { MatIconModule } from "@angular/material/icon";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
-import { DataStoreService } from "@shared/services/core/data-store.service";
+import { DataStoreService } from "@shared/services/core/unified-storage.service";
 import { CollectionMeta, SystemMetrics, ConnectionSummary } from "@shared/models/connection.config";
 import { interval, Subscription } from "rxjs";
 import { filter } from "rxjs/operators";

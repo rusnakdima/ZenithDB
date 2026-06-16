@@ -10,7 +10,7 @@ import { Router } from "@angular/router";
 import { MatIconModule } from "@angular/material/icon";
 import { ConnectionCardComponent } from "@views/connections/connection-card/connection-card.component";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
-import { DataStoreService } from "@services/core/data-store.service";
+import { DataStoreService } from "@shared/services/core/unified-storage.service";
 import { ConnectionSummary } from "@shared/models/connection.config";
 import { ConfirmService } from "@shared/services/confirm.service";
 import { withErrorHandling } from "@shared/utils/error-handler.utils";

@@ -9,7 +9,7 @@ import {
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { DatePipe } from "@angular/common";
-import { DataStoreService } from "@services/core/data-store.service";
+import { DataStoreService } from "@shared/services/core/unified-storage.service";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { ToastService } from "@services/toast.service";
 import { PersistentStorageService } from "@shared/services/persistent-storage.service";

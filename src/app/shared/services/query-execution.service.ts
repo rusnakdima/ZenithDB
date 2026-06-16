@@ -1,7 +1,7 @@
 import { Injectable, inject } from "@angular/core";
 import { TabService } from "@shared/services/tab.service";
 import { ToastService } from "@services/toast.service";
-import { DataStoreService } from "@services/core/data-store.service";
+import { DataStoreService } from "@shared/services/core/unified-storage.service";
 import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
 import { QueryResult, RawResult } from "@shared/models/connection.config";
 

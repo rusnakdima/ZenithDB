@@ -1,6 +1,6 @@
 import { Injectable, inject } from "@angular/core";
 import { ActivatedRouteSnapshot, Resolve, Router, RouterStateSnapshot } from "@angular/router";
-import { DataStoreService } from "@shared/services/core/data-store.service";
+import { DataStoreService } from "@shared/services/core/unified-storage.service";
 
 interface ResolveResult {
   loaded: boolean;

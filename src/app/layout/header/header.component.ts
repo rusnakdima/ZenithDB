@@ -12,7 +12,7 @@ import { filter, map } from "rxjs/operators";
 import { MatIconModule } from "@angular/material/icon";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { ThemeService } from "@shared/services/theme.service";
-import { DataStoreService } from "@services/core/data-store.service";
+import { DataStoreService } from "@shared/services/core/unified-storage.service";
 import { ErrorHandlerService } from "@shared/services/error-handler.service";
 import { toSignal } from "@angular/core/rxjs-interop";
 import { findById } from "@shared/utils/array.utils";

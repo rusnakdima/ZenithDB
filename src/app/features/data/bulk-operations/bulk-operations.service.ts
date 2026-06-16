@@ -1,5 +1,5 @@
 import { Injectable, inject, signal } from "@angular/core";
-import { DataStoreService } from "@services/core/data-store.service";
+import { DataStoreService } from "@shared/services/core/unified-storage.service";
 import { ToastService } from "@services/toast.service";
 import { SchemaCompletionService } from "@features/query/services";
 import { FieldInfo } from "@features/query/models";

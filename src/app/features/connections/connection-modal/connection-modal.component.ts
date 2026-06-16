@@ -3,7 +3,7 @@ import { Router } from "@angular/router";
 import { CommonModule } from "@angular/common";
 import { MatIconModule } from "@angular/material/icon";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
-import { DataStoreService } from "@services/core/data-store.service";
+import { DataStoreService } from "@shared/services/core/unified-storage.service";
 import { ConnectionSummary } from "@shared/models/connection.config";
 import { ToastService } from "@services/toast.service";
 import { getLoggingService } from "@tauri-apps/logger";

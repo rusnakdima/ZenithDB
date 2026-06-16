@@ -28,7 +28,7 @@ import { CACHE_CONSTANTS } from "@shared/utils/constants";
 import { evictLRUInPlace } from "@shared/utils/cache.utils";
 import { ConnectionCacheService } from "./connection-cache.service";
 import { CollectionCacheService } from "./collection-cache.service";
-import { QueryCacheService } from "./query-cache.service";
+import { QueryCacheService } from "./storage-query.service";
 
 export interface CacheEntry<T> {
   data: T;

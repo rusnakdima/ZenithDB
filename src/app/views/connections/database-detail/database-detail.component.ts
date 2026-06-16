@@ -11,7 +11,7 @@ import { Router, ActivatedRoute } from "@angular/router";
 import { TitleCasePipe } from "@angular/common";
 import { MatIconModule } from "@angular/material/icon";
 import { FormsModule } from "@angular/forms";
-import { DataStoreService } from "@services/core/data-store.service";
+import { DataStoreService } from "@shared/services/core/unified-storage.service";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { ConfirmService } from "@shared/services/confirm.service";
 import { ErrorHandlerService } from "@shared/services/error-handler.service";
