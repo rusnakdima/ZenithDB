@@ -387,7 +387,7 @@ html.light .json-key {
   }
 
   .mat-mdc-menu-panel {
-    background: transparent !important;
+    @apply bg-[var(--bg-card)]!;
     backdrop-filter: blur(8px);
   }
 
@@ -397,7 +397,7 @@ html.light .json-key {
   }
 
   .mat-mdc-menu-item {
-    background: transparent !important;
+    @apply text-[var(--text-main)]!;
   }
 
   .mat-mdc-menu-item:hover {
@@ -476,17 +476,6 @@ html.light .json-key {
   }
   .light .tree-item.active {
     @apply border border-[var(--accent)]/30 bg-transparent;
-  }
-
-  /* ============================================
-     Angular Material Overrides
-     ============================================ */
-  .mat-mdc-menu-panel {
-    @apply bg-[var(--bg-card)]!;
-  }
-
-  .mat-mdc-menu-panel .mat-mdc-menu-item {
-    @apply text-[var(--text-main)]!;
   }
 
   /* ============================================

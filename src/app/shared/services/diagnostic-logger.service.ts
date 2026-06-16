@@ -1,27 +1,33 @@
-import { Injectable, inject } from "@angular/core";
-import { LoggerService } from "@core/services/logger.service";
+import { Injectable } from "@angular/core";
 
 @Injectable({ providedIn: "root" })
 export class DiagnosticLoggerService {
-  private logger = inject(LoggerService);
-
   debug(message: string, context?: string, data?: any): void {
-    this.logger.debug(message, context, data);
+    console.debug(context ? `[${context}] ${message}` : message, data ?? "");
   }
 
   info(message: string, context?: string, data?: any): void {
-    this.logger.info(message, context, data);
+    console.info(context ? `[${context}] ${message}` : message, data ?? "");
   }
 
   warn(message: string, context?: string, data?: any): void {
-    this.logger.warn(message, context, data);
+    console.warn(context ? `[${context}] ${message}` : message, data ?? "");
   }
 
   error(message: string, context?: string, data?: any): void {
-    this.logger.error(message, context, data);
+    console.error(context ? `[${context}] ${message}` : message, data ?? "");
   }
 
   log(message: string, data?: any): void {
-    this.logger.info(message, "Diagnostic", data);
+    console.info(message, data ?? "");
+  }
+
+  logDataLoad(
+    operation: string,
+    rowCount: number,
+    durationMs: number,
+    metadata?: Record<string, any>
+  ): void {
+    console.info(`[DATA LOAD] ${operation}`, { rowCount, durationMs, ...metadata });
   }
 }
