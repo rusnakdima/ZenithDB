@@ -1,28 +1,31 @@
+mod commands;
 mod constants;
+mod entities;
 mod errors;
-mod infrastructure;
-mod logger;
 mod models;
-mod routes;
+mod repositories;
 mod services;
 mod state;
-mod types;
+mod utils;
 
 use tauri::Manager;
 
-use routes::connection_command::{
+use commands::connection_command::{
   check_health, delete_connection, get_connection, list_connections, save_connection,
   test_connection, test_connection_status, update_connection,
 };
-use routes::database_command::{create_database, database_list, delete_database, rename_database};
-use routes::query_command::{
+use commands::database_command::{
+  create_database, database_list, delete_database, rename_database,
+};
+use commands::logger::log_message;
+use commands::query_command::{
   query_delete, query_execute, query_raw, query_save, query_server_version,
 };
-use routes::schema_command::{
+use commands::schema_command::{
   collection_create, collection_drop, collection_list, collection_rename, collection_stats,
   describe_collection,
 };
-use routes::settings_command::{
+use commands::settings_command::{
   append_log_file, capture_screenshot, delete_connection_databases_metadata,
   delete_database_metadata, get_database_metadata, get_system_status, init_decentralized_storage,
   list_databases_metadata, save_database_metadata, save_log_file, update_database_metadata,
@@ -31,7 +34,7 @@ use routes::settings_command::{
 use state::AppState;
 
 pub fn run() -> Result<(), String> {
-  logger::init_logger();
+  utils::logger::init_logger("zenithdb", log::LevelFilter::Info).ok();
 
   std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
   std::env::set_var("__NV_DISABLE_EXPLICIT_SYNC", "1");
@@ -85,6 +88,7 @@ pub fn run() -> Result<(), String> {
       capture_screenshot,
       save_log_file,
       append_log_file,
+      log_message,
     ])
     .run(tauri::generate_context!())
     .map_err(|e| e.to_string())?;

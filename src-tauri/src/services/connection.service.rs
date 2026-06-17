@@ -1,16 +1,16 @@
-use crate::constants::CONNECTION_TIMEOUT_SECS;
-use crate::models::response::ResponseModel;
-use crate::routes::connection_command::{
+use crate::commands::connection_command::{
   ConnectionConfig, ConnectionConfigEnum, ConnectionHealth, ConnectionSummary,
 };
-use crate::routes::connection_entity::ConnectionEntity;
-use crate::routes::provider::{
+use crate::commands::connection_entity::ConnectionEntity;
+use crate::commands::provider::{
   create_mongo_provider, create_mysql_provider, create_postgres_provider, create_redis_provider,
   create_sqlite_provider,
 };
-use crate::routes::settings_command::delete_connection_databases_metadata;
+use crate::commands::settings_command::delete_connection_databases_metadata;
+use crate::constants::CONNECTION_TIMEOUT_SECS;
+use crate::models::response::ResponseModel;
 use nosql_orm::prelude::*;
-use nosql_orm::providers::sql::SqliteProvider;
+use rusqlite::{params, Connection};
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
@@ -19,22 +19,19 @@ pub struct ConnectionService {
 }
 
 struct ConnectionsDb {
-  repo: Repository<ConnectionEntity, SqliteProvider>,
-  provider: SqliteProvider,
+  conn: Connection,
 }
 
 impl ConnectionsDb {
-  async fn new() -> Result<Self, String> {
+  fn new() -> Result<Self, String> {
     let db_path = Self::path()?;
     if let Some(parent) = db_path.parent() {
       std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
     }
-    let provider = SqliteProvider::connect(db_path.to_string_lossy().as_ref())
-      .await
-      .map_err(|e| format!("Failed to open connections db: {}", e))?;
-    let repo = Repository::new(provider.clone());
-    let db = Self { repo, provider };
-    db.init().await?;
+    let conn =
+      Connection::open(&db_path).map_err(|e| format!("Failed to open connections db: {}", e))?;
+    let db = Self { conn };
+    db.init()?;
     Ok(db)
   }
 
@@ -46,48 +43,116 @@ impl ConnectionsDb {
     Ok(path)
   }
 
-  async fn init(&self) -> Result<(), String> {
+  fn init(&self) -> Result<(), String> {
     self
-      .provider
-      .create_collection("connections", None)
-      .await
+      .conn
+      .execute(
+        "CREATE TABLE IF NOT EXISTS connections (
+        id TEXT PRIMARY KEY,
+        type_col TEXT NOT NULL,
+        name TEXT NOT NULL,
+        config TEXT NOT NULL,
+        created_at TEXT,
+        updated_at TEXT
+      )",
+        [],
+      )
       .map_err(|e| e.to_string())?;
-    log::trace!("Connections table ready");
+    log::info!("Connections table schema created");
     Ok(())
   }
 
-  async fn save(&self, entity: &ConnectionEntity) -> Result<(), String> {
-    self
-      .repo
-      .save(entity.clone())
-      .await
-      .map_err(|e| e.to_string())?;
-    log::info!("Saved connection: {}", entity.get_id().unwrap_or_default());
+  fn save(&self, entity: &ConnectionEntity) -> Result<(), String> {
+    let now = chrono::Utc::now().to_rfc3339();
+    self.conn.execute(
+      "INSERT OR REPLACE INTO connections (id, type_col, name, config, created_at, updated_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+      params![
+        entity.id,
+        entity.type_,
+        entity.name,
+        entity.config,
+        entity.created_at.map(|d| d.to_rfc3339()).unwrap_or_else(|| now.clone()),
+        now,
+      ],
+    ).map_err(|e| e.to_string())?;
+    log::info!(
+      "Saved connection: {}",
+      entity.id.clone().unwrap_or_default()
+    );
     Ok(())
   }
 
-  async fn find_by_id(&self, id: &str) -> Result<Option<ConnectionEntity>, String> {
-    self.repo.find_by_id(id).await.map_err(|e| e.to_string())
+  fn find_by_id(&self, id: &str) -> Result<Option<ConnectionEntity>, String> {
+    let mut stmt = self
+      .conn
+      .prepare(
+        "SELECT id, type_col, name, config, created_at, updated_at FROM connections WHERE id = ?1",
+      )
+      .map_err(|e| e.to_string())?;
+    let mut rows = stmt.query(params![id]).map_err(|e| e.to_string())?;
+    if let Some(row) = rows.next().map_err(|e| e.to_string())? {
+      Ok(Some(self.row_to_entity(row)?))
+    } else {
+      Ok(None)
+    }
   }
 
-  async fn find_all(&self) -> Result<Vec<ConnectionEntity>, String> {
-    self.repo.find_all().await.map_err(|e| e.to_string())
+  fn find_all(&self) -> Result<Vec<ConnectionEntity>, String> {
+    let mut stmt = self
+      .conn
+      .prepare("SELECT id, type_col, name, config, created_at, updated_at FROM connections")
+      .map_err(|e| e.to_string())?;
+    let mut rows = stmt.query([]).map_err(|e| e.to_string())?;
+    let mut entities = Vec::new();
+    while let Some(row) = rows.next().map_err(|e| e.to_string())? {
+      entities.push(self.row_to_entity(row)?);
+    }
+    Ok(entities)
   }
 
-  async fn delete(&self, id: &str) -> Result<(), String> {
-    self.repo.delete(id).await.map_err(|e| e.to_string())?;
+  fn delete(&self, id: &str) -> Result<(), String> {
+    self
+      .conn
+      .execute("DELETE FROM connections WHERE id = ?1", params![id])
+      .map_err(|e| e.to_string())?;
     log::info!("Deleted connection: {}", id);
     Ok(())
   }
 
-  async fn exists(&self, id: &str) -> Result<bool, String> {
-    self.repo.exists(id).await.map_err(|e| e.to_string())
+  fn exists(&self, id: &str) -> Result<bool, String> {
+    let mut stmt = self
+      .conn
+      .prepare("SELECT 1 FROM connections WHERE id = ?1")
+      .map_err(|e| e.to_string())?;
+    let exists = stmt.exists(params![id]).map_err(|e| e.to_string())?;
+    Ok(exists)
+  }
+
+  fn row_to_entity(&self, row: &rusqlite::Row) -> Result<ConnectionEntity, String> {
+    let created_at: Option<String> = row.get(4).map_err(|e| e.to_string())?;
+    let updated_at: Option<String> = row.get(5).map_err(|e| e.to_string())?;
+    Ok(ConnectionEntity {
+      id: row.get(0).map_err(|e| e.to_string())?,
+      type_: row.get(1).map_err(|e| e.to_string())?,
+      name: row.get(2).map_err(|e| e.to_string())?,
+      config: row.get(3).map_err(|e| e.to_string())?,
+      created_at: created_at.and_then(|s| {
+        chrono::DateTime::parse_from_rfc3339(&s)
+          .ok()
+          .map(|d| d.with_timezone(&chrono::Utc))
+      }),
+      updated_at: updated_at.and_then(|s| {
+        chrono::DateTime::parse_from_rfc3339(&s)
+          .ok()
+          .map(|d| d.with_timezone(&chrono::Utc))
+      }),
+    })
   }
 }
 
 impl ConnectionService {
-  pub async fn new() -> Result<Self, String> {
-    let db = ConnectionsDb::new().await?;
+  pub fn new() -> Result<Self, String> {
+    let db = ConnectionsDb::new()?;
     Ok(Self {
       connections_db: Arc::new(Mutex::new(db)),
     })
@@ -97,7 +162,7 @@ impl ConnectionService {
     static SERVICE: tokio::sync::OnceCell<Arc<ConnectionService>> =
       tokio::sync::OnceCell::const_new();
     SERVICE
-      .get_or_try_init(|| async { Self::new().await.map(Arc::new) })
+      .get_or_try_init(|| async { Self::new().map(Arc::new) })
       .await
       .expect("Failed to create ConnectionService")
       .clone()
@@ -225,9 +290,7 @@ impl ConnectionService {
 
     let entity = ConnectionEntity::new(id.clone(), type_str, config.name.clone(), config);
     let db = self.connections_db.lock().await;
-    db.save(&entity)
-      .await
-      .map_err(|e| ResponseModel::error(e))?;
+    db.save(&entity).map_err(|e| ResponseModel::error(e))?;
 
     log::info!("Saved connection: {} ({})", id, entity.name);
     Ok(ResponseModel::success_message(format!(
@@ -238,12 +301,16 @@ impl ConnectionService {
 
   pub async fn list_connections(&self) -> Result<ResponseModel, ResponseModel> {
     let db = self.connections_db.lock().await;
-    let entities = db.find_all().await.map_err(|e| ResponseModel::error(e))?;
+    let entities = db.find_all().map_err(|e| ResponseModel::error(e))?;
     drop(db);
 
     let mut summaries = Vec::new();
     for e in entities {
-      let health = self.check_provider_health(&e.config).await;
+      let config: ConnectionConfig = match serde_json::from_str(&e.config) {
+        Ok(c) => c,
+        Err(_) => continue,
+      };
+      let health = self.check_provider_health(&config).await;
       let status = if health.healthy {
         "connected".to_string()
       } else {
@@ -264,13 +331,13 @@ impl ConnectionService {
     let db = self.connections_db.lock().await;
     let entity = db
       .find_by_id(id)
-      .await
       .map_err(|e| ResponseModel::error(e))?
       .ok_or_else(|| ResponseModel::error(format!("Connection {} not found", id)))?;
     drop(db);
 
-    let config = &entity.config;
-    let health = self.check_provider_health(config).await;
+    let config: ConnectionConfig = serde_json::from_str(&entity.config)
+      .map_err(|e| ResponseModel::error(format!("Failed to parse config: {}", e)))?;
+    let health = self.check_provider_health(&config).await;
     let status = if health.healthy {
       "connected".to_string()
     } else {
@@ -291,12 +358,12 @@ impl ConnectionService {
     let db = self.connections_db.lock().await;
     let entity = db
       .find_by_id(conn_id)
-      .await
       .map_err(|e| ResponseModel::error(e))?
       .ok_or_else(|| ResponseModel::error(format!("Connection {} not found", conn_id)))?;
     drop(db);
 
-    let config = entity.config;
+    let config: ConnectionConfig = serde_json::from_str(&entity.config)
+      .map_err(|e| ResponseModel::error(format!("Failed to parse config: {}", e)))?;
     let health_result = tokio::time::timeout(
       std::time::Duration::from_secs(CONNECTION_TIMEOUT_SECS),
       async { self.check_provider_health(&config).await },
@@ -310,11 +377,11 @@ impl ConnectionService {
   pub async fn delete_connection(&self, id: &str) -> Result<ResponseModel, ResponseModel> {
     let db = self.connections_db.lock().await;
 
-    if !db.exists(id).await.map_err(|e| ResponseModel::error(e))? {
+    if !db.exists(id).map_err(|e| ResponseModel::error(e))? {
       return Err(ResponseModel::error(format!("Connection {} not found", id)));
     }
 
-    db.delete(id).await.map_err(|e| ResponseModel::error(e))?;
+    db.delete(id).map_err(|e| ResponseModel::error(e))?;
     drop(db);
 
     if let Err(e) = delete_connection_databases_metadata(id.to_string()).await {
@@ -337,24 +404,23 @@ impl ConnectionService {
 
     let existing = db
       .find_by_id(id)
-      .await
       .map_err(|e| ResponseModel::error(e))?
       .ok_or_else(|| ResponseModel::error(format!("Connection {} not found", id)))?;
 
     let type_str = Self::get_type_string(&config);
+    let config_json =
+      serde_json::to_string(&config).map_err(|e| ResponseModel::error(e.to_string()))?;
 
     let entity = ConnectionEntity {
       id: Some(id.to_string()),
       type_: type_str,
       name: config.name.clone(),
-      config,
+      config: config_json,
       created_at: existing.created_at,
       updated_at: Some(chrono::Utc::now()),
     };
 
-    db.save(&entity)
-      .await
-      .map_err(|e| ResponseModel::error(e))?;
+    db.save(&entity).map_err(|e| ResponseModel::error(e))?;
     drop(db);
     log::info!("Updated connection: {}", id);
     Ok(ResponseModel::success_message(format!(
@@ -367,7 +433,6 @@ impl ConnectionService {
     let db = self.connections_db.lock().await;
     let entity = db
       .find_by_id(id)
-      .await
       .map_err(|e| ResponseModel::error(e))?
       .ok_or_else(|| ResponseModel::error(format!("Connection {} not found", id)))?;
     drop(db);
@@ -378,9 +443,12 @@ impl ConnectionService {
       config: ConnectionConfig,
     }
 
+    let config: ConnectionConfig = serde_json::from_str(&entity.config)
+      .map_err(|e| ResponseModel::error(format!("Failed to parse config: {}", e)))?;
+
     Ok(ResponseModel::success(ConnectionConfigResult {
       id: entity.id.unwrap_or_default(),
-      config: entity.config,
+      config,
     }))
   }
 
@@ -394,6 +462,6 @@ impl ConnectionService {
 
   pub async fn find_entity_by_id(&self, id: &str) -> Result<Option<ConnectionEntity>, String> {
     let db = self.connections_db.lock().await;
-    db.find_by_id(id).await
+    db.find_by_id(id)
   }
 }

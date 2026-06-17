@@ -8032,6 +8032,7 @@ dependencies = [
  "image",
  "log",
  "nosql_orm",
+ "regex",
  "rusqlite",
  "serde",
  "serde_json",

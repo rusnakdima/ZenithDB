@@ -1,3 +1,4 @@
+#[path = "response.model.rs"]
 pub mod response;
-
-pub use response::{Response, Status};
+#[path = "types.model.rs"]
+pub mod types;
