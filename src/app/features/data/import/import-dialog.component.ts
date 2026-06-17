@@ -24,7 +24,6 @@ export class ImportDialogComponent implements OnInit {
   private importService = inject(ImportService);
   private schemaCompletion = inject(SchemaCompletionService);
   private toast = inject(ToastService);
-  
 
   closed = output<void>();
 
@@ -180,10 +179,7 @@ export class ImportDialogComponent implements OnInit {
     };
 
     try {
-      logger.info(
-        "[DATA_IMPORT]",
-        `Starting import to ${collection}: ${data.rows.length} rows`
-      );
+      logger.info("[DATA_IMPORT]", `Starting import to ${collection}: ${data.rows.length} rows`);
       const result = await this.importService.importData(
         collection,
         data.rows,

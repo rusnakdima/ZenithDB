@@ -33,7 +33,6 @@ export class ApiProvider {
   private toastService: ToastService | null = null;
   private errorHandler = inject(ErrorHandlerService);
   private dataflowLogger = inject(DataflowLoggerService);
-  
 
   private readonly page = "ApiProvider";
 

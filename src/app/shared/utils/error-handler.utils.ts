@@ -53,7 +53,7 @@ export function withErrorHandling<T>(
   services?: {
     errorHandler?: ErrorHandlerService;
     toastService?: ToastService;
-    logger?: Pick<typeof logger, 'debug' | 'info' | 'warn' | 'error'>;
+    logger?: Pick<typeof logger, "debug" | "info" | "warn" | "error">;
   }
 ): Promise<Result<T>> {
   const errorHandler = services?.errorHandler;

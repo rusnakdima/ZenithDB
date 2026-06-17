@@ -24,7 +24,7 @@ import { logger } from "../../../services/logger.service";
 })
 export class RecordFormComponent {
   private cdr = inject(ChangeDetectorRef);
-  
+
   mode = input<"add" | "edit">("add");
   columns = input<ColumnInfo[]>([]);
   data = input<RowData | null>(null);

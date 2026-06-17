@@ -10,8 +10,6 @@ import { logger } from "../../../../services/logger.service";
   templateUrl: "./template-card.component.html",
 })
 export class TemplateCardComponent {
-  
-
   @Input() template!: QueryTemplate;
   @Input() isFavorite = false;
 

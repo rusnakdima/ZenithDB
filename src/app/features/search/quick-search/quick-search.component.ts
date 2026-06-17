@@ -36,7 +36,6 @@ type FlatSearchResult = QuickSearchResult & {
 })
 export class QuickSearchComponent implements OnInit, OnDestroy {
   private readonly searchService = inject(QuickSearchService);
-  
 
   @Input() isOpen = false;
   @Output() close = new EventEmitter<void>();

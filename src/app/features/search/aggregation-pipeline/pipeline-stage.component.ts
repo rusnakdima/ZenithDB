@@ -146,8 +146,6 @@ import { logger } from "../../../services/logger.service";
   ` */
 })
 export class PipelineStageComponent {
-  
-
   @Input() stage!: PipelineStage;
   @Input() collectionName = "";
   @Input() index = 0;

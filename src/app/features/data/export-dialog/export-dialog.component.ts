@@ -11,8 +11,6 @@ export type ExportFormat = "csv" | "json" | "jsonl" | "sql" | "markdown";
   templateUrl: "./export-dialog.component.html",
 })
 export class ExportDialogComponent {
-  
-
   @Input() visible = false;
   @Input() selectedCount = 0;
   @Input() totalCount = 0;

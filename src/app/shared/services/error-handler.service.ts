@@ -1,12 +1,12 @@
-import { HttpErrorResponse } from '@angular/common/http';
-import { Injectable, inject, signal, computed, DestroyRef } from '@angular/core';
-import { ErrorCode, AppError } from '@shared/models/error.model';
-import { logger } from '../../services/logger.service';
+import { HttpErrorResponse } from "@angular/common/http";
+import { Injectable, inject, signal, computed, DestroyRef } from "@angular/core";
+import { ErrorCode, AppError } from "@shared/models/error.model";
+import { logger } from "../../services/logger.service";
 
 export interface ToastMessage {
   id: string;
   message: string;
-  type: 'error' | 'warning' | 'info' | 'success';
+  type: "error" | "warning" | "info" | "success";
   duration: number;
 }
 
@@ -44,7 +44,7 @@ function generateLogId(): string {
 }
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: "root",
 })
 export class ErrorHandlerService {
   private loggerRef = logger;
@@ -64,16 +64,16 @@ export class ErrorHandlerService {
   constructor() {
     const boundOnline = () => this.isOnlineSignal.set(true);
     const boundOffline = () => this.isOnlineSignal.set(false);
-    window.addEventListener('online', boundOnline);
-    window.addEventListener('offline', boundOffline);
+    window.addEventListener("online", boundOnline);
+    window.addEventListener("offline", boundOffline);
     this.destroyRef.onDestroy(() => {
-      window.removeEventListener('online', boundOnline);
-      window.removeEventListener('offline', boundOffline);
+      window.removeEventListener("online", boundOnline);
+      window.removeEventListener("offline", boundOffline);
     });
   }
 
   handleError(error: unknown, context?: string): AppError {
-    this.loggerRef.debug('[ERROR_HANDLER]', 'handleError started', { context });
+    this.loggerRef.debug("[ERROR_HANDLER]", "handleError started", { context });
     const appError = this.normalizeError(error, context);
     this.logError(appError, context);
 
@@ -81,7 +81,7 @@ export class ErrorHandlerService {
       this.showToast(appError);
     }
 
-    this.loggerRef.debug('[ERROR_HANDLER]', 'handleError completed', {
+    this.loggerRef.debug("[ERROR_HANDLER]", "handleError completed", {
       code: appError.code,
       retryable: appError.retryable,
     });
@@ -89,7 +89,7 @@ export class ErrorHandlerService {
   }
 
   handleHttpError(error: HttpErrorResponse, context?: string): AppError {
-    this.loggerRef.debug('[ERROR_HANDLER]', 'handleHttpError started', {
+    this.loggerRef.debug("[ERROR_HANDLER]", "handleHttpError started", {
       status: error.status,
       context,
     });
@@ -98,7 +98,7 @@ export class ErrorHandlerService {
 
     this.showToast(appError);
 
-    this.loggerRef.debug('[ERROR_HANDLER]', 'handleHttpError completed', { code: appError.code });
+    this.loggerRef.debug("[ERROR_HANDLER]", "handleHttpError completed", { code: appError.code });
     return appError;
   }
 
@@ -117,7 +117,7 @@ export class ErrorHandlerService {
       id,
       message,
       type,
-      duration: type === 'error' ? 5000 : 3000,
+      duration: type === "error" ? 5000 : 3000,
     };
 
     this.toastsSignal.update((toasts) => [...toasts, toast]);
@@ -127,14 +127,14 @@ export class ErrorHandlerService {
     }, toast.duration);
   }
 
-  private getToastType(code: ErrorCode): ToastMessage['type'] {
+  private getToastType(code: ErrorCode): ToastMessage["type"] {
     switch (code) {
       case ErrorCode.FORBIDDEN:
-        return 'warning';
+        return "warning";
       case ErrorCode.NOT_FOUND:
-        return 'warning';
+        return "warning";
       default:
-        return 'error';
+        return "error";
     }
   }
 
@@ -167,8 +167,8 @@ export class ErrorHandlerService {
     if (!navigator.onLine) {
       return {
         code: ErrorCode.CONNECTION_FAILED,
-        message: 'No internet connection',
-        userMessage: 'No internet connection',
+        message: "No internet connection",
+        userMessage: "No internet connection",
         timestamp: new Date(),
         retryable: true,
       };
@@ -178,37 +178,69 @@ export class ErrorHandlerService {
       case 0:
         return {
           code: ErrorCode.CONNECTION_FAILED,
-          message: error.message || 'Network request failed',
-          userMessage: error.message || 'Network request failed',
+          message: error.message || "Network request failed",
+          userMessage: error.message || "Network request failed",
           timestamp: new Date(),
           retryable: true,
         };
       case 400:
-        return this.parseErrorResponse(error, ErrorCode.VALIDATION_ERROR, 'Invalid request. Please check your input.');
+        return this.parseErrorResponse(
+          error,
+          ErrorCode.VALIDATION_ERROR,
+          "Invalid request. Please check your input."
+        );
       case 401:
-        return this.parseErrorResponse(error, ErrorCode.UNAUTHORIZED, 'Authentication required. Please log in.');
+        return this.parseErrorResponse(
+          error,
+          ErrorCode.UNAUTHORIZED,
+          "Authentication required. Please log in."
+        );
       case 403:
-        return this.parseErrorResponse(error, ErrorCode.FORBIDDEN, "You don't have permission to perform this action.");
+        return this.parseErrorResponse(
+          error,
+          ErrorCode.FORBIDDEN,
+          "You don't have permission to perform this action."
+        );
       case 404:
-        return this.parseErrorResponse(error, ErrorCode.NOT_FOUND, 'The requested resource was not found.');
+        return this.parseErrorResponse(
+          error,
+          ErrorCode.NOT_FOUND,
+          "The requested resource was not found."
+        );
       case 408:
-        return this.parseErrorResponse(error, ErrorCode.TIMEOUT, 'Request timed out. Please try again.');
+        return this.parseErrorResponse(
+          error,
+          ErrorCode.TIMEOUT,
+          "Request timed out. Please try again."
+        );
       case 500:
-        return this.parseErrorResponse(error, ErrorCode.SERVER_ERROR, 'Server error. Please try again later.');
+        return this.parseErrorResponse(
+          error,
+          ErrorCode.SERVER_ERROR,
+          "Server error. Please try again later."
+        );
       case 502:
       case 503:
       case 504:
         return this.parseErrorResponse(
           error,
           ErrorCode.SERVER_ERROR,
-          'Service temporarily unavailable. Please try again later.'
+          "Service temporarily unavailable. Please try again later."
         );
       default:
-        return this.parseErrorResponse(error, ErrorCode.UNKNOWN, 'An error occurred. Please try again.');
+        return this.parseErrorResponse(
+          error,
+          ErrorCode.UNKNOWN,
+          "An error occurred. Please try again."
+        );
     }
   }
 
-  private parseErrorResponse(error: HttpErrorResponse, defaultCode: ErrorCode, defaultMessage: string): AppError {
+  private parseErrorResponse(
+    error: HttpErrorResponse,
+    defaultCode: ErrorCode,
+    defaultMessage: string
+  ): AppError {
     let userMessage = defaultMessage;
     let details: string | undefined;
     let code = defaultCode;
@@ -232,8 +264,15 @@ export class ErrorHandlerService {
     };
   }
 
-  async retry<T>(operation: () => Promise<T>, config: Partial<RetryConfig> = {}, context?: string): Promise<T> {
-    this.loggerRef.debug('[ERROR_HANDLER]', 'retry started', { maxAttempts: config.maxAttempts, context });
+  async retry<T>(
+    operation: () => Promise<T>,
+    config: Partial<RetryConfig> = {},
+    context?: string
+  ): Promise<T> {
+    this.loggerRef.debug("[ERROR_HANDLER]", "retry started", {
+      maxAttempts: config.maxAttempts,
+      context,
+    });
     const { maxAttempts, delayMs, backoffMultiplier } = { ...DEFAULT_RETRY_CONFIG, ...config };
 
     let lastError: AppError | null = null;
@@ -241,12 +280,12 @@ export class ErrorHandlerService {
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
         const result = await operation();
-        this.loggerRef.debug('[ERROR_HANDLER]', 'retry completed', { attempt });
+        this.loggerRef.debug("[ERROR_HANDLER]", "retry completed", { attempt });
         return result;
       } catch (error) {
         lastError = this.handleError(error, context);
         if (!lastError.retryable || attempt === maxAttempts) {
-          this.loggerRef.error('[ERROR_HANDLER]', 'retry failed', { attempt });
+          this.loggerRef.error("[ERROR_HANDLER]", "retry failed", { attempt });
           throw lastError;
         }
 
@@ -272,6 +311,6 @@ export class ErrorHandlerService {
     this.logsSignal.update((logs) => [entry, ...logs].slice(0, 100));
     this.errorsSignal.update((errors) => [error, ...errors].slice(0, 100));
 
-    this.loggerRef.error('[ERROR_HANDLER]', 'Error logged', { code: error.code, context });
+    this.loggerRef.error("[ERROR_HANDLER]", "Error logged", { code: error.code, context });
   }
 }

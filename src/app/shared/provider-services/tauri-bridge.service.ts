@@ -33,7 +33,6 @@ interface ResponseModel {
 export class TauriBridgeService {
   private errorHandler = inject(ErrorHandlerService);
   private settingsService = inject(SettingsService);
-  
 
   getConnectionTimeoutMs(): number {
     return this.settingsService.currentSettings.connections.connectionTimeout * 1000;

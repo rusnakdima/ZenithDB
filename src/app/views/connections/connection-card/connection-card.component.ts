@@ -12,8 +12,6 @@ import { logger } from "../../../services/logger.service";
   templateUrl: "./connection-card.component.html",
 })
 export class ConnectionCardComponent implements OnInit {
-  
-
   connection = input.required<ConnectionSummary>();
   viewMode = input<"grid" | "list">("grid");
 

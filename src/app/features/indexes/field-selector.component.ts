@@ -17,8 +17,6 @@ export class FieldSelectorComponent {
   @Input() indexType: IndexType = "single";
   @Output() fieldsChange = new EventEmitter<IndexField[]>();
 
-  
-
   selectedFields = signal<IndexField[]>([]);
 
   onFieldToggle(field: FieldInfo): void {

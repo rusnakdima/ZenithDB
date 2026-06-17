@@ -29,8 +29,6 @@ interface LogEntry {
   templateUrl: "./output-console.component.html",
 })
 export class OutputConsoleComponent implements OnDestroy {
-  
-
   @Input() results: RawResult | null = null;
   @Input() loading = false;
   @Input() error = "";

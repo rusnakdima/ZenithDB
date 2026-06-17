@@ -23,7 +23,6 @@ import { logger } from "../../../services/logger.service";
 })
 export class AutocompleteComponent implements OnInit, OnDestroy {
   private readonly autocompleteService = inject(AutocompleteService);
-  
 
   @Input() minWidth = 280;
   @Input() position = signal({ top: 0, left: 0 });

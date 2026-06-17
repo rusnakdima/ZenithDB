@@ -39,7 +39,6 @@ interface ColumnsCacheEntry {
 export class DataProviderService {
   private api = inject(ApiProvider);
   private connectionState = inject(ConnectionStateService);
-  
 
   private readonly MAX_ENTRIES_PER_COLLECTION = CACHE_CONSTANTS.MAX_ENTRIES_PER_COLLECTION;
   private readonly COLUMNS_CACHE_TTL = CACHE_CONSTANTS.DEFAULT_TTL_MS;

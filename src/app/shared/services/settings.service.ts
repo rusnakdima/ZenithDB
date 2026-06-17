@@ -68,7 +68,7 @@ const DEFAULT_SETTINGS: AppSettings = {
 @Injectable({ providedIn: "root" })
 export class SettingsService {
   private storage = inject(PersistentStorageService);
-  
+
   private settingsSignal = signal<AppSettings>(this.loadSettings());
 
   readonly settings = this.settingsSignal;

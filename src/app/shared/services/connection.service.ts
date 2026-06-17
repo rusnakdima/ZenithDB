@@ -16,7 +16,6 @@ export class ConnectionService {
   private loadingService = inject(LoadingService);
   private api = inject(ApiProvider);
   private appLogger = inject(DataflowLoggerService, { optional: true });
-  
 
   async listConnections(): Promise<ConnectionSummary[]> {
     const startTime = performance.now();
@@ -100,7 +99,10 @@ export class ConnectionService {
     } catch (e) {
       const error = e instanceof Error ? e.message : String(e);
       this.appLogger?.warn("[CONNECTION]", "Failed to test connection", { error });
-      this.appLogger?.logUserAction("connection", "testConnectionById", { connId, error: String(e) });
+      this.appLogger?.logUserAction("connection", "testConnectionById", {
+        connId,
+        error: String(e),
+      });
       return null;
     }
   }

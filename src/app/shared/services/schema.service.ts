@@ -15,7 +15,6 @@ export class SchemaService {
   private connectionState = inject(ConnectionStateService);
   private loadingService = inject(LoadingService);
   private api = inject(ApiProvider);
-  
 
   async listCollections(connId?: string, dbName?: string): Promise<CollectionMeta[]> {
     logger.debug("[SCHEMA]", "listCollections started", { connId, dbName });

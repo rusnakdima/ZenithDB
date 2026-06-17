@@ -10,8 +10,6 @@ import { logger } from "../../services/logger.service";
   templateUrl: "./dashboard.view.html",
 })
 export class DashboardComponent {
-  
-
   constructor() {
     logger.debug("[DASHBOARD]", "Dashboard view initialized");
   }

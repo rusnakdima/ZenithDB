@@ -165,7 +165,6 @@ export class ProviderAwareEditorComponent implements OnInit, OnChanges {
   private readonly providerDetector = inject(ProviderDetectorService);
   private readonly translationService = inject(QueryTranslationService);
   private readonly validator = inject(QueryValidatorService);
-  
 
   @Input() initialQuery = "";
   @Input() collectionName = "";

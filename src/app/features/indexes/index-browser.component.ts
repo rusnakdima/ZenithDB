@@ -27,7 +27,6 @@ type SortDirection = "asc" | "desc";
 export class IndexBrowserComponent implements OnInit {
   private readonly indexService = inject(IndexService);
   private readonly toast = inject(ToastService);
-  
 
   @Input() collectionName = "";
 

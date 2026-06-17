@@ -29,7 +29,6 @@ import { logger } from "../../../../services/logger.service";
 })
 export class QueryConditionComponent implements OnInit {
   private readonly schemaCompletion = inject(SchemaCompletionService);
-  
 
   @Input() condition!: Condition;
   @Input() collectionName = "";

@@ -41,7 +41,6 @@ export class ImportService {
   private toast = inject(ToastService);
   private api = inject(ApiProvider);
   private connectionState = inject(ConnectionStateService);
-  
 
   private progressSignal = signal<ImportProgress | null>(null);
   readonly progress = this.progressSignal.asReadonly();

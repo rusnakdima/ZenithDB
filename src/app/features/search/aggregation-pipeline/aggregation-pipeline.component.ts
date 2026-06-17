@@ -29,7 +29,6 @@ import { logger } from "../../../services/logger.service";
 })
 export class AggregationPipelineComponent implements OnInit {
   readonly pipelineService = inject(PipelineBuilderService);
-  
 
   @Input() collectionName = "";
   @Output() cancel = new EventEmitter<void>();

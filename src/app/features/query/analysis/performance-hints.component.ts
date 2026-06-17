@@ -29,7 +29,6 @@ export class PerformanceHintsComponent implements OnInit, OnChanges {
   private cdr = inject(ChangeDetectorRef);
   private readonly queryAnalyzer = inject(QueryAnalyzerService);
   private readonly errorHandler = inject(ErrorHandlerService);
-  
 
   @Input() collectionName = "";
   @Input() filterText = "";

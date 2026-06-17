@@ -12,7 +12,6 @@ export interface HistoryItem {
 @Injectable()
 export class QueryEditorStore {
   private storage = inject(PersistentStorageService);
-  
 
   readonly showHistory = signal(false);
   readonly history = signal<HistoryItem[]>([]);

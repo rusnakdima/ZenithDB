@@ -12,7 +12,6 @@ import { logger } from "../../../services/logger.service";
 
 @Injectable({ providedIn: "root" })
 export class FilterBuilderService {
-  
   buildFilter(groups: ConditionGroup[]): FilterExpression | null {
     if (!groups || groups.length === 0) return null;
 

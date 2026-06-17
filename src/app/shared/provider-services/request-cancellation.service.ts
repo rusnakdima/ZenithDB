@@ -8,7 +8,6 @@ export class RequestCancellationService {
   private abortController: AbortController | null = null;
   private abortTimeoutId: number | undefined;
   private tauriBridge = inject(TauriBridgeService);
-  
 
   private getTimeoutMs(): number {
     return this.tauriBridge.getConnectionTimeoutMs();

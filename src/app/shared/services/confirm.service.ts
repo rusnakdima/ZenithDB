@@ -12,7 +12,6 @@ export interface ConfirmOptions {
 
 @Injectable({ providedIn: "root" })
 export class ConfirmService {
-  
   private resolvePromise: ((value: boolean) => void) | null = null;
   isOpen = signal(false);
   options = signal<ConfirmOptions>({ message: "" });

@@ -16,26 +16,26 @@ pub struct CollectionListResult {
   pub total_count: usize,
 }
 
-#[tauri::command]
+#[tauri::command(rename_all = "camelCase")]
 pub async fn collection_list(
-  connection_id: String,
-  _db_name: Option<String>,
+  conn_id: String,
+  db_name: Option<String>,
   offset: Option<usize>,
   limit: Option<usize>,
 ) -> Result<ResponseModel, ResponseModel> {
   let timer = DataflowTimer::new("collection_list");
-  let params = serde_json::json!({ "connection_id": &connection_id, "_db_name": _db_name, "offset": offset, "limit": limit });
+  let params = serde_json::json!({ "conn_id": &conn_id, "db_name": &db_name, "offset": offset, "limit": limit });
   log::debug!(
     "command = collection_list, params = {} [COMMAND_ENTRY]",
     redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default())
   );
 
-  if let Err(e) = validate_conn_id(&connection_id) {
+  if let Err(e) = validate_conn_id(&conn_id) {
     timer.clone().finish_error(&e);
     return Err(ResponseModel::error(e));
   }
 
-  let entry = match get_connection_entry_with_timer(&connection_id, &timer).await {
+  let entry = match get_connection_entry_with_timer(&conn_id, &timer).await {
     Ok(e) => e,
     Err(e) => return Err(e),
   };

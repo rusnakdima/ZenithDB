@@ -13,7 +13,6 @@ export class AdminService {
   private dataProvider = inject(DataProviderService);
   private loadingService = inject(LoadingService);
   private api = inject(ApiProvider);
-  
 
   async createCollection(name: string): Promise<void> {
     logger.debug("[ADMIN]", "createCollection started", { name });

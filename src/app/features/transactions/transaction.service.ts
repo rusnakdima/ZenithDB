@@ -44,7 +44,6 @@ export class TransactionService {
   private api = inject(ApiProvider);
   private loadingService = inject(LoadingService);
   private toast = inject(ToastService);
-  
 
   private transactionSignal = signal<Transaction | null>(null);
   private operationLogSignal = signal<TransactionOperation[]>([]);

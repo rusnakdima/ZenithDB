@@ -10,8 +10,6 @@ import { logger } from "../../../services/logger.service";
   templateUrl: "./raw-filter-editor.component.html",
 })
 export class RawFilterEditorComponent implements OnInit {
-  
-
   @Input() initialJson = "";
   @Output() jsonChange = new EventEmitter<string>();
   @Output() jsonApply = new EventEmitter<string>();

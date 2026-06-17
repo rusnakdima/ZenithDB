@@ -15,7 +15,6 @@ export interface TranslationResult {
 @Injectable({ providedIn: "root" })
 export class QueryTranslationService {
   private readonly providerDetector = inject(ProviderDetectorService);
-  
 
   translateToProvider(filter: FilterExpression, mode?: SyntaxMode): TranslationResult {
     const syntaxMode = mode ?? this.providerDetector.currentSyntaxMode();

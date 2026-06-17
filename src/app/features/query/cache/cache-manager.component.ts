@@ -26,7 +26,6 @@ export class CacheManagerComponent {
   private cdr = inject(ChangeDetectorRef);
   private cacheService = inject(QueryCacheService);
   private toast = inject(ToastService);
-  
 
   expandedKeys = signal<Set<string>>(new Set());
   filterText = signal("");

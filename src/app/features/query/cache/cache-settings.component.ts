@@ -26,7 +26,6 @@ import { logger } from "../../../services/logger.service";
 export class CacheSettingsComponent implements OnInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
   private cacheService = inject(QueryCacheService);
-  
 
   queryKey = input<string>("");
   initialTtl = input<number>(300);

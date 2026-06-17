@@ -16,7 +16,6 @@ type TimeRange = "1h" | "6h" | "24h" | "7d";
 })
 export class PerformanceDashboardComponent implements OnInit, OnDestroy {
   private performanceService = inject(PerformanceService);
-  
 
   metrics = signal<PerformanceMetrics | null>(null);
   selectedTimeRange = signal<TimeRange>("1h");

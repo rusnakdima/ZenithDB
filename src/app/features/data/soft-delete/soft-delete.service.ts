@@ -14,7 +14,6 @@ export interface DeletedRecord extends RowData {
 export class SoftDeleteService {
   private dataStore = inject(DataStoreService);
   private toast = inject(ToastService);
-  
 
   private showDeletedSignal = signal(false);
 
@@ -97,10 +96,7 @@ export class SoftDeleteService {
     let deleted = 0;
     let failed = 0;
 
-    logger.info(
-      "[DATA]",
-      `Bulk permanently deleting ${records.length} records from ${collection}`
-    );
+    logger.info("[DATA]", `Bulk permanently deleting ${records.length} records from ${collection}`);
     for (const record of records) {
       try {
         await this.permanentDelete(collection, record);

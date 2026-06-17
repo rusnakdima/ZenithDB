@@ -77,7 +77,7 @@ export class UniversalQueryEditorComponent implements OnInit, OnChanges {
   private readonly filterBuilder = inject(FilterBuilderService);
   private readonly templateService = inject(TemplateService);
   private readonly hintAnalyzer = inject(HintAnalyzerService);
-  
+
   private readonly cdr = inject(ChangeDetectorRef);
 
   @Input() collectionName = "";

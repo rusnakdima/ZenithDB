@@ -59,7 +59,7 @@ export class SchemaTreeComponent implements OnInit, OnDestroy {
   private connectionState = inject(ConnectionStateService);
   private confirm = inject(ConfirmService);
   private errorHandler = inject(ErrorHandlerService);
-  
+
   private boundCloseContextMenu: (() => void) | null = null;
 
   ngOnInit() {

@@ -7,7 +7,7 @@ import { SystemMetrics } from "@shared/models/connection.config";
 @Injectable({ providedIn: "root" })
 export class MetricsApiService extends CacheService {
   private tauriBridge = inject(TauriBridgeService);
-  
+
   private metricsSignal = signal<SystemMetrics | null>(null);
   private metricsTimestamp = signal<number>(0);
   private refreshCallbacks: Set<() => void> = new Set();

@@ -43,7 +43,7 @@ export class DataStoreService {
   private decentralizationApi = inject(DecentralizationApiService);
   private collectionsApi = inject(CollectionsApiService);
   private dataflowLogger = inject(DataflowLoggerService);
-  
+
   private readonly page = "DataStoreService";
 
   connectionCache = inject(ConnectionCacheService);

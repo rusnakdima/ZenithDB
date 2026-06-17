@@ -13,7 +13,6 @@ import { logger } from "../../../services/logger.service";
 })
 export class DatabaseSelectorComponent {
   private toast = inject(ToastService);
-  
 
   provider = input.required<string>();
   uri = input.required<string>();

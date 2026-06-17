@@ -31,7 +31,6 @@ export class BulkOperationsService {
   private readonly dataStore = inject(DataStoreService);
   private readonly toast = inject(ToastService);
   private readonly schemaCompletion = inject(SchemaCompletionService);
-  
 
   private readonly operationInProgress = signal(false);
 

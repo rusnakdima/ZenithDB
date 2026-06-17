@@ -25,7 +25,6 @@ type ExportOptions = {
 export class ExportService {
   private toast = inject(ToastService) as ToastService;
   private loading = inject(LoadingService) as LoadingService;
-  
 
   private validateExportData(data: RowData[]): boolean {
     if (!data || data.length === 0) {

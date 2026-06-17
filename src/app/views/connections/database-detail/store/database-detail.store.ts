@@ -3,8 +3,6 @@ import { logger } from "../../../../services/logger.service";
 
 @Injectable()
 export class DatabaseDetailStore {
-  
-
   readonly loading = signal(false);
   readonly totalDocuments = signal(0);
   readonly showCreateCollection = signal(false);

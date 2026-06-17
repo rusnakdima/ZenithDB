@@ -27,7 +27,6 @@ import { logger } from "../../../services/logger.service";
 export class VisualQueryBuilderComponent implements OnInit, OnChanges {
   private readonly filterBuilder = inject(FilterBuilderService);
   private readonly schemaCompletion = inject(SchemaCompletionService);
-  
 
   @Input() collectionName = "";
   @Input() initialFilter: FilterExpression | null = null;

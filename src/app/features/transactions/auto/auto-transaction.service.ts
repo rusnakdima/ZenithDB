@@ -25,7 +25,6 @@ export interface BatchError {
 export class AutoTransactionService {
   private transactionService = inject(TransactionService);
   private toast = inject(ToastService);
-  
 
   private queueSignal = signal<PendingOperation[]>([]);
   private errorSignal = signal<BatchError | null>(null);

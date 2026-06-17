@@ -39,7 +39,6 @@ export class ComplexFilterComponent implements OnInit {
   private readonly filterBuilder = inject(FilterBuilderService);
   private readonly storage = inject(PersistentStorageService);
   private readonly toast = inject(ToastService);
-  
 
   @Input() collectionName = "";
   @Input() initialFilter: FilterExpression | null = null;

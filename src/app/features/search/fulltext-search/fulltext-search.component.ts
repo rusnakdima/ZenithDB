@@ -44,7 +44,6 @@ export class FulltextSearchComponent implements OnInit, OnDestroy {
   private readonly schemaCompletionService = inject(SchemaCompletionService);
   private readonly providerDetectorService = inject(ProviderDetectorService);
   private readonly dialogService = inject(DialogService);
-  
 
   @Input() collectionName: string = "";
 

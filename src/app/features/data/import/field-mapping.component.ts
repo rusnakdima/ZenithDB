@@ -16,8 +16,6 @@ interface MappingOption {
   templateUrl: "./field-mapping.component.html",
 })
 export class FieldMappingComponent {
-  
-
   sourceHeaders = input<string[]>([]);
   targetFields = input<string[]>([]);
   mappings = input<FieldMapping[]>([]);

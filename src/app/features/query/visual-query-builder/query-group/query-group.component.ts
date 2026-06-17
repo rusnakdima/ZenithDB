@@ -19,7 +19,6 @@ import { logger } from "../../../../services/logger.service";
 })
 export class QueryGroupComponent implements OnInit {
   private readonly schemaCompletion = inject(SchemaCompletionService);
-  
 
   @Input() group!: ConditionGroup;
   @Input() collectionName = "";

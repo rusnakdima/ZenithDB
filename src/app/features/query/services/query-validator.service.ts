@@ -22,7 +22,6 @@ export interface ValidationResult {
 export class QueryValidatorService {
   private readonly filterBuilder = inject(FilterBuilderService);
   private readonly providerDetector = inject(ProviderDetectorService);
-  
 
   validateQuery(query: string): ValidationResult {
     const errors: ValidationError[] = [];

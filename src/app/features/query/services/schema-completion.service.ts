@@ -25,7 +25,6 @@ export interface CompletionContext {
 export class SchemaCompletionService {
   private readonly schemaService = inject(SchemaService);
   private readonly connectionState = inject(ConnectionStateService);
-  
 
   private readonly schemaCacheSignal = signal<Map<string, FieldInfo[]>>(new Map());
 

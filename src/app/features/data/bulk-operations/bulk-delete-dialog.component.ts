@@ -15,7 +15,6 @@ import { logger } from "../../../services/logger.service";
 export class BulkDeleteDialogComponent {
   private readonly bulkOps = inject(BulkOperationsService);
   private readonly toast = inject(ToastService);
-  
 
   @Input() collectionName = "";
   @Input() documentIds: string[] = [];

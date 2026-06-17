@@ -25,7 +25,6 @@ export interface IndexRecommendation {
 export class HintAnalyzerService {
   private readonly schemaCompletion = inject(SchemaCompletionService);
   private readonly providerDetector = inject(ProviderDetectorService);
-  
 
   async analyzeQuery(filter: FilterExpression, collectionName: string): Promise<QueryHint[]> {
     const hints: QueryHint[] = [];

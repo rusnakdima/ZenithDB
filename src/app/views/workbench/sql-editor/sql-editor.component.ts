@@ -9,7 +9,6 @@ import { logger } from "../../../services/logger.service";
   templateUrl: "./sql-editor.component.html",
 })
 export class SqlEditorComponent {
-  
   private _query = signal("");
 
   get query() {

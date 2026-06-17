@@ -14,7 +14,6 @@ import { logger } from "../../../../services/logger.service";
 })
 export class SortConfigComponent implements OnInit {
   private readonly schemaCompletion = inject(SchemaCompletionService);
-  
 
   @Input() config!: SortStageConfig;
   @Input() collectionName = "";

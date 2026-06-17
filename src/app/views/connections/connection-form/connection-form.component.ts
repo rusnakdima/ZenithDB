@@ -50,7 +50,6 @@ export class ConnectionFormComponent implements OnInit {
   connectionFormService = inject(ConnectionFormService);
   private cdr = inject(ChangeDetectorRef);
   private dataflowLogger = inject(DataflowLoggerService);
-  
 
   private readonly page = "ConnectionForm";
 

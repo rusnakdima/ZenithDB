@@ -34,7 +34,6 @@ export class ConnectionsComponent implements OnInit {
   private connectionFormService = inject(ConnectionFormService);
   private cdr = inject(ChangeDetectorRef);
   private dataflowLogger = inject(DataflowLoggerService);
-  
 
   connections = this.store.connections;
   private readonly page = "Connections";

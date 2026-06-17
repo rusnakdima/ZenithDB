@@ -61,7 +61,6 @@ import { logger } from "../../../services/logger.service";
 export class DataTableGridComponent implements OnInit, OnChanges, OnDestroy, AfterViewInit {
   private store = inject(DataTableGridStore);
   private service = inject(DataTableGridService);
-  
 
   @ViewChild("headerScroll") headerScrollRef!: ElementRef<HTMLDivElement>;
   @ViewChild("bodyScroll") bodyScrollRef!: ElementRef<HTMLDivElement>;
@@ -452,10 +451,7 @@ export class DataTableGridComponent implements OnInit, OnChanges, OnDestroy, Aft
 
   async exportData(format: ExportFormat) {
     try {
-      logger.info(
-        "[DATA_GRID]",
-        `Exporting ${this.collectionName} as ${format.toUpperCase()}`
-      );
+      logger.info("[DATA_GRID]", `Exporting ${this.collectionName} as ${format.toUpperCase()}`);
       await this.service.exportData(this.collectionName, format);
     } catch {
       // error handled in service

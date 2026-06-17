@@ -25,7 +25,6 @@ import { logger } from "../../../services/logger.service";
 export class BulkUpdateDialogComponent implements OnInit {
   private readonly bulkOps = inject(BulkOperationsService);
   private readonly toast = inject(ToastService);
-  
 
   @Input() collectionName = "";
   @Input() documentIds: string[] = [];

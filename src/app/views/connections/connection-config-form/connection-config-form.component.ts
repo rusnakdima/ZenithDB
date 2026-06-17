@@ -34,8 +34,6 @@ export interface ConnectionFormData {
   templateUrl: "./connection-config-form.component.html",
 })
 export class ConnectionConfigFormComponent implements OnInit, OnChanges {
-  
-
   provider = input.required<ProviderType>();
   initialData = input<ConnectionFormData>({
     name: "",

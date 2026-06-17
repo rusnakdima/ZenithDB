@@ -77,7 +77,6 @@ export interface AggregationPipeline {
 
 @Injectable({ providedIn: "root" })
 export class PipelineBuilderService {
-  
   private readonly _stages = signal<PipelineStage[]>([]);
 
   readonly stages = this._stages.asReadonly();

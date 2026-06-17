@@ -15,7 +15,6 @@ export class KeyboardShortcutsService {
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
   private connectionFormService = inject(ConnectionFormService);
-  
 
   private enabled = signal(true);
 

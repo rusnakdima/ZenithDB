@@ -129,7 +129,6 @@ const OPERATORS_BY_TYPE: Record<FieldType, { operator: FilterOperator; label: st
 export class AutocompleteService {
   private readonly schemaCompletion = inject(SchemaCompletionService);
   private readonly providerDetector = inject(ProviderDetectorService);
-  
 
   private readonly isActiveSignal = signal(false);
   private readonly itemsSignal = signal<CompletionItem[]>([]);

@@ -41,7 +41,6 @@ export class WorkbenchComponent implements OnDestroy {
   private readonly queryExecution = inject(QueryExecutionService);
   private cdr = inject(ChangeDetectorRef);
   private dataflowLogger = inject(DataflowLoggerService);
-  
 
   private readonly page = "Workbench";
 

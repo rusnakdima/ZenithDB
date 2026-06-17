@@ -23,7 +23,6 @@ export class QuickSearchService {
   private readonly schemaService = inject(SchemaService);
   private readonly connectionState = inject(ConnectionStateService);
   private readonly api = inject(ApiProvider);
-  
 
   private readonly searchResultsSignal = signal<GroupedSearchResults[]>([]);
   private readonly isSearchingSignal = signal(false);

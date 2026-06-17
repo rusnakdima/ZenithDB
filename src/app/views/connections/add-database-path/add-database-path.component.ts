@@ -12,7 +12,6 @@ import { logger } from "../../../services/logger.service";
 })
 export class AddDatabasePathComponent {
   private toast = inject(ToastService);
-  
 
   provider = input.required<string>();
   connectionId = input.required<string>();

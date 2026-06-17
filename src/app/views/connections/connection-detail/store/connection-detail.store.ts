@@ -3,8 +3,6 @@ import { logger } from "../../../../services/logger.service";
 
 @Injectable()
 export class ConnectionDetailStore {
-  
-
   readonly loading = signal(false);
   readonly testing = signal(false);
   readonly showAddDbModal = signal(false);

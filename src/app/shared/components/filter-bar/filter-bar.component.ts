@@ -35,7 +35,7 @@ import { safeJsonParse } from "@shared/utils/json.utils";
 export class FilterBarComponent implements OnInit, OnChanges, OnDestroy {
   private localStorage = new PersistentStorageService();
   private cdr = inject(ChangeDetectorRef);
-  
+
   @Input() filter = "";
   @Input() viewMode: "grid" | "json" = "grid";
   @Input() availableColumns: { name: string; data_type: string }[] = [];

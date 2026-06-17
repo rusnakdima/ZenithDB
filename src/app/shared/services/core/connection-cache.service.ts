@@ -19,7 +19,7 @@ interface HealthCacheEntry {
 export class ConnectionCacheService {
   private db = inject(DatabaseService);
   private dataflowLogger = inject(DataflowLoggerService);
-  
+
   private readonly page = "ConnectionCacheService";
 
   private readonly HEALTH_TTL_MS = CACHE_CONSTANTS.HEALTH_TTL_MS;

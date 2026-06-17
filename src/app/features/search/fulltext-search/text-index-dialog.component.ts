@@ -27,8 +27,6 @@ export interface TextIndexConfig {
   templateUrl: "./text-index-dialog.component.html",
 })
 export class TextIndexDialogComponent implements OnInit {
-  
-
   @Input() collectionName: string = "";
   @Input() fields: FieldInfo[] = [];
   @Input() existingWeights: FieldWeight[] = [];

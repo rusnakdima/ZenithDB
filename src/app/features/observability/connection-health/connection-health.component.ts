@@ -14,7 +14,6 @@ import { logger } from "../../../services/logger.service";
 export class ConnectionHealthComponent implements OnInit, OnDestroy {
   private readonly metricsService = inject(MetricsApiService);
   private readonly connectionState = inject(ConnectionStateService);
-  
 
   private refreshIntervalId: ReturnType<typeof setInterval> | null = null;
   private readonly REFRESH_INTERVAL_MS = TIME_CONSTANTS.THIRTY_SECONDS_MS;

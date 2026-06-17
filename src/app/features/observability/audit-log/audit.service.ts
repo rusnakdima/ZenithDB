@@ -32,7 +32,6 @@ export class AuditService {
   private connectionState = inject(ConnectionStateService);
   private api = inject(ApiProvider);
   private loadingService = inject(LoadingService);
-  
 
   private auditLogSignal = signal<AuditEntry[]>([]);
   readonly auditLog = this.auditLogSignal.asReadonly();

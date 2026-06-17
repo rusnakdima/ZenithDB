@@ -17,7 +17,6 @@ export class BatchTransactionComponent {
   private autoTransactionService = inject(AutoTransactionService);
   private confirmService = inject(ConfirmService);
   private toast = inject(ToastService);
-  
 
   queue = this.autoTransactionService.queue;
   queueCount = this.autoTransactionService.queueCount;

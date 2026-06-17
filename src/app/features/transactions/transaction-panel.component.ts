@@ -18,7 +18,6 @@ export class TransactionPanelComponent {
   transactionService = inject(TransactionService);
   private toast = inject(ToastService);
   private confirmService = inject(ConfirmService);
-  
 
   isActive = this.transactionService.isActive;
   activeCollections = this.transactionService.activeCollections;

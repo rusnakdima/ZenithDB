@@ -14,7 +14,6 @@ import { logger } from "../../../../services/logger.service";
 })
 export class GroupConfigComponent implements OnInit {
   private readonly schemaCompletion = inject(SchemaCompletionService);
-  
 
   @Input() config!: GroupConfig;
   @Input() collectionName = "";

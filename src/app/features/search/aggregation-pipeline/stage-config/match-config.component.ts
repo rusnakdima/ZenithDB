@@ -13,8 +13,6 @@ import { logger } from "../../../../services/logger.service";
   templateUrl: "./match-config.component.html",
 })
 export class MatchConfigComponent {
-  
-
   @Input() config!: MatchConfig;
   @Input() collectionName = "";
   @Output() configChange = new EventEmitter<MatchConfig>();

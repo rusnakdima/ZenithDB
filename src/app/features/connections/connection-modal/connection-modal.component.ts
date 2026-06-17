@@ -25,7 +25,6 @@ export class ConnectionModalComponent {
   private connState = inject(ConnectionStateService);
   private dataStore = inject(DataStoreService);
   private toast = inject(ToastService);
-  
 
   isOpen = signal(false);
   searchQuery = signal("");

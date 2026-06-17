@@ -36,7 +36,6 @@ export class MetricsChartComponent implements AfterViewInit, OnDestroy, OnChange
 
   private ctx: CanvasRenderingContext2D | null = null;
   private animationFrame: number | null = null;
-  
 
   ngAfterViewInit(): void {
     this.initCanvas();

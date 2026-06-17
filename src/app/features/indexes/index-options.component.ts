@@ -16,8 +16,6 @@ export class IndexOptionsComponent {
   @Input() options: IndexOptions = {};
   @Output() optionsChange = new EventEmitter<IndexOptions>();
 
-  
-
   onUniqueChange(unique: boolean): void {
     logger.debug("[INDEX]", "Index unique option changed", { unique });
     this.optionsChange.emit({ ...this.options, unique });

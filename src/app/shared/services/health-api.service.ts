@@ -8,7 +8,7 @@ import { ConnectionHealth } from "@shared/models/connection.config";
 @Injectable({ providedIn: "root" })
 export class HealthApiService extends CacheService {
   private tauriBridge = inject(TauriBridgeService);
-  
+
   private healthSignal = signal<Map<string, ConnectionHealth>>(new Map());
   private healthTimestamps = signal<Map<string, number>>(new Map());
   private refreshCallbacks = new Map<string, Set<() => void>>();

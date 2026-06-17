@@ -21,7 +21,6 @@ export class IndexRecommendationsComponent {
   @Output() acceptRecommendation = new EventEmitter<unknown>();
   @Output() dismissRecommendation = new EventEmitter<unknown>();
 
-  
   private _recommendations: unknown[] = [];
 
   onAcceptRecommendation(recommendation: unknown): void {

@@ -13,7 +13,6 @@ import { logger } from "../../services/logger.service";
 })
 export class TransactionLogComponent {
   private transactionService = inject(TransactionService);
-  
 
   @Output() close = new EventEmitter<void>();
 

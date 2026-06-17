@@ -6,7 +6,6 @@ import { logger } from "../../../services/logger.service";
 @Injectable({ providedIn: "root" })
 export class ProviderDetectorService {
   private readonly connectionState = inject(ConnectionStateService);
-  
 
   private readonly currentProviderInfoSignal = signal<ProviderInfo | null>(null);
 

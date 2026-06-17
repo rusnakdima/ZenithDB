@@ -25,7 +25,6 @@ export class SettingsComponent {
   private settingsService = inject(SettingsService);
   private themeService = inject(ThemeService);
   private dataflowLogger = inject(DataflowLoggerService);
-  
 
   private readonly page = "Settings";
 

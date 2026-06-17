@@ -26,7 +26,6 @@ type TimeRange = "1h" | "6h" | "24h" | "7d";
 @Injectable({ providedIn: "root" })
 export class PerformanceService {
   private metricsApi = inject(MetricsApiService);
-  
 
   private queryMetrics = signal<QueryMetric[]>([]);
   private timeRangeSignal = signal<TimeRange>("1h");

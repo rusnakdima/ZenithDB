@@ -9,7 +9,6 @@ import { findById } from "@shared/utils/array.utils";
 export class CommandPaletteService {
   private router = inject(Router);
   private themeService = inject(ThemeService);
-  
 
   private readonly recentCommandsKey = "command_palette_recent";
   private readonly maxRecent = 5;

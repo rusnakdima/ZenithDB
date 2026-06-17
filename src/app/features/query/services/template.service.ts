@@ -11,7 +11,6 @@ const FAVORITES_STORAGE_KEY = "zenith_template_favorites";
 @Injectable({ providedIn: "root" })
 export class TemplateService {
   private readonly storage = inject(PersistentStorageService);
-  
 
   private readonly templatesSignal = signal<QueryTemplate[]>([]);
   private readonly favoritesSignal = signal<Set<string>>(new Set());

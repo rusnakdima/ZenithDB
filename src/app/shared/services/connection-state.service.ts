@@ -4,7 +4,6 @@ import { ConnectionSummary, ConnectionConfig } from "@shared/models/connection.c
 
 @Injectable({ providedIn: "root" })
 export class ConnectionStateService {
-  
   activeConnectionId = signal<string | null>(null);
   activeConnectionName = signal<string | null>(null);
   activeProvider = signal<string | null>(null);

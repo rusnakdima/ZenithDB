@@ -21,7 +21,7 @@ import { logger } from "../../../services/logger.service";
 })
 export class CellEditorComponent {
   private cdr = inject(ChangeDetectorRef);
-  
+
   @Input() value: unknown = null;
   @Input() isEditing = false;
   @Input() editValue = "";

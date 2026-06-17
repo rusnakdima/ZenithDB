@@ -15,8 +15,6 @@ export class DropIndexDialogComponent {
   @Output() closed = new EventEmitter<void>();
   @Output() confirm = new EventEmitter<void>();
 
-  
-
   onCancel(): void {
     logger.debug("[INDEX]", "Drop index dialog cancelled", { indexName: this.indexName });
     this.closed.emit();

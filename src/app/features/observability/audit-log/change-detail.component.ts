@@ -20,7 +20,6 @@ import { logger } from "../../../services/logger.service";
 })
 export class ChangeDetailComponent {
   private auditService = inject(AuditService);
-  
 
   @Input() before: Record<string, unknown> | undefined;
   @Input() after: Record<string, unknown> | undefined;

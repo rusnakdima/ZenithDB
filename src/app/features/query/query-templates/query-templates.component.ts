@@ -23,7 +23,6 @@ import { logger } from "../../../services/logger.service";
 })
 export class QueryTemplatesComponent implements OnInit {
   private readonly templateService = inject(TemplateService);
-  
 
   @Output() selectTemplate = new EventEmitter<QueryTemplate>();
   @Output() close = new EventEmitter<void>();

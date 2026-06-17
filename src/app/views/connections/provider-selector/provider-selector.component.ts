@@ -17,8 +17,6 @@ interface ProviderOption {
   templateUrl: "./provider-selector.component.html",
 })
 export class ProviderSelectorComponent {
-  
-
   selected = input<ProviderType | null>(null);
 
   next = output<void>();

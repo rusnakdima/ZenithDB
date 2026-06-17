@@ -8,7 +8,6 @@ export type ThemeMode = "dark" | "light";
 
 @Injectable({ providedIn: "root" })
 export class ThemeService {
-  
   private _themeMode = signal<ThemeMode>("dark");
   private _preset = signal<ThemePreset>(THEME_PRESETS[4]);
 

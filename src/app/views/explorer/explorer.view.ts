@@ -86,7 +86,6 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   private diagLogger = inject(DiagnosticLoggerService);
   private errorHandler = inject(ErrorHandlerService);
   private dataflowLogger = inject(DataflowLoggerService);
-  
 
   private readonly pageName = "Explorer";
 

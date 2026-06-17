@@ -6,7 +6,6 @@ import { logger } from "../../services/logger.service";
 export class ResponseSizeGuardService {
   private readonly MAX_RESPONSE_SIZE_MB = 10;
   private readonly MAX_RESPONSE_SIZE_BYTES = this.MAX_RESPONSE_SIZE_MB * 1024 * 1024;
-  
 
   checkResponseSize(data: unknown): { truncated: boolean; message?: string } {
     try {

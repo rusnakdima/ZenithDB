@@ -20,7 +20,6 @@ import { logger } from "../../../services/logger.service";
 })
 export class QueryHintsComponent implements OnInit {
   private readonly hintAnalyzer = inject(HintAnalyzerService);
-  
 
   @Input() collectionName = "";
   @Input() filterText = "";

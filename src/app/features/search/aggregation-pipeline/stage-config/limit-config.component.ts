@@ -11,8 +11,6 @@ import { logger } from "../../../../services/logger.service";
   templateUrl: "./limit-config.component.html",
 })
 export class LimitConfigComponent {
-  
-
   @Input() config!: SkipLimitConfig;
   @Output() configChange = new EventEmitter<SkipLimitConfig>();
 

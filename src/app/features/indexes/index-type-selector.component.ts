@@ -59,8 +59,6 @@ export class IndexTypeSelectorComponent {
   @Input() selectedType: IndexType = "single";
   @Output() typeChange = new EventEmitter<IndexType>();
 
-  
-
   indexTypes = INDEX_TYPES;
 
   onTypeSelect(type: IndexType): void {

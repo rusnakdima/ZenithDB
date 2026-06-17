@@ -43,7 +43,7 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy {
   private diagLogger = inject(DiagnosticLoggerService);
   private cdr = inject(ChangeDetectorRef);
   private dataflowLogger = inject(DataflowLoggerService);
-  
+
   providerUtils = inject(ProviderUtils);
   route = inject(ActivatedRoute);
   router = inject(Router);

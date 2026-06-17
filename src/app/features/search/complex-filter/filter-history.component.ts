@@ -13,7 +13,6 @@ import { logger } from "../../../services/logger.service";
 })
 export class FilterHistoryComponent implements OnInit {
   private readonly storage = inject(PersistentStorageService);
-  
 
   @Input() namedFilters: NamedFilter[] = [];
   @Output() historySelect = new EventEmitter<FilterExpression>();

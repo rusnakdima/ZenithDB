@@ -25,7 +25,6 @@ export interface CacheOptions {
 
 @Injectable({ providedIn: "root" })
 export class QueryCacheService {
-  
   private cache = new Map<string, CacheEntry>();
   private totalHits = 0;
   private totalMisses = 0;

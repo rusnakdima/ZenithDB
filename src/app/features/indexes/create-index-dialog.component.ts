@@ -30,7 +30,6 @@ export class CreateIndexDialogComponent implements OnInit {
   private readonly indexService = inject(IndexService);
   private readonly schemaCompletion = inject(SchemaCompletionService);
   private readonly toast = inject(ToastService);
-  
 
   @Input() collectionName = "";
 

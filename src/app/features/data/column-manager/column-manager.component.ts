@@ -44,7 +44,7 @@ import { logger } from "../../../services/logger.service";
 })
 export class ColumnManagerComponent {
   private cdr = inject(ChangeDetectorRef);
-  
+
   @Input() columns: ColumnInfo[] = [];
   @Input() visibleColumnsList: string[] = [];
   @Input() columnOrder: string[] = [];

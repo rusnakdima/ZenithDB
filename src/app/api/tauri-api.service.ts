@@ -17,7 +17,6 @@ export interface InvokeOptions {
 
 @Injectable({ providedIn: "root" })
 export class TauriApiService {
-
   async invoke<T>(
     command: string,
     args?: Record<string, unknown>,
@@ -41,7 +40,10 @@ export class TauriApiService {
       }
     } catch (error: unknown) {
       if (!options.suppressError) {
-        logger.error('[TAURI_API]', `Error invoking command "${command}" - TauriApi - ${JSON.stringify(error)}`);
+        logger.error(
+          "[TAURI_API]",
+          `Error invoking command "${command}" - TauriApi - ${JSON.stringify(error)}`
+        );
       }
       throw error;
     }
@@ -65,7 +67,10 @@ export class TauriApiService {
       ]);
     } catch (error: unknown) {
       if (!options.suppressError) {
-        logger.error('[TAURI_API]', `Error invoking command "${command}" - TauriApi - ${JSON.stringify(error)}`);
+        logger.error(
+          "[TAURI_API]",
+          `Error invoking command "${command}" - TauriApi - ${JSON.stringify(error)}`
+        );
       }
       throw error;
     }

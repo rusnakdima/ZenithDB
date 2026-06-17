@@ -25,7 +25,6 @@ export class AuditLogComponent implements OnInit {
   private auditService = inject(AuditService);
   private exportService = inject(ExportService);
   private toast = inject(ToastService);
-  
 
   auditLog = signal<AuditEntry[]>([]);
   loading = signal(false);

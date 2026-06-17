@@ -5,7 +5,6 @@ import { logger } from "../../services/logger.service";
 @Injectable({ providedIn: "root" })
 export class ClipboardService {
   private toast = inject(ToastService);
-  
 
   async copyToClipboard(text: string, successMessage = "Copied to clipboard"): Promise<boolean> {
     logger.debug("[CLIPBOARD]", "copyToClipboard started", { textLength: text.length });

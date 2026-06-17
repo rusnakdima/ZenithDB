@@ -10,8 +10,6 @@ import { logger } from "../../../services/logger.service";
   templateUrl: "./pipeline-json-editor.component.html",
 })
 export class PipelineJsonEditorComponent {
-  
-
   @Input() set json(value: string) {
     this.jsonContent.set(value);
   }

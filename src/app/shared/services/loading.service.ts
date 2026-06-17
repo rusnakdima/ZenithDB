@@ -3,7 +3,6 @@ import { logger } from "../../services/logger.service";
 
 @Injectable({ providedIn: "root" })
 export class LoadingService {
-  
   private _loadingCount = signal(0);
   isLoading = computed(() => this._loadingCount() > 0);
   loadingMessage = signal<string | null>(null);

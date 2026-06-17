@@ -12,7 +12,6 @@ export interface DialogConfig<T = unknown> {
 
 @Injectable({ providedIn: "root" })
 export class DialogService {
-  
   private dialogsSignal = signal<DialogConfig<unknown>[]>([]);
   private counter = 0;
 

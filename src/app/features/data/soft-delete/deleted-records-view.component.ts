@@ -26,7 +26,6 @@ export class DeletedRecordsViewComponent {
   private softDeleteService = inject(SoftDeleteService);
   private confirmService = inject(ConfirmService);
   private toast = inject(ToastService);
-  
 
   @Input() collectionName = "";
   @Input() columns: { name: string; dataType: string }[] = [];
