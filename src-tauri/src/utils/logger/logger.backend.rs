@@ -1,27 +1,16 @@
 use log::{LevelFilter, Log, Metadata, Record};
-use serde::{Deserialize, Serialize};
 use std::fs::{File, OpenOptions};
 use std::io::Write;
 use std::path::PathBuf;
 use std::sync::Mutex;
-use tauri::{AppHandle, Emitter};
 
 const MAX_LOG_FILES: usize = 7;
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct LogEntry {
-  pub level: String,
-  pub component: String,
-  pub message: String,
-  pub timestamp: String,
-}
 
 pub struct AppLogger {
   level: LevelFilter,
   file: Mutex<Option<File>>,
   current_file_path: Mutex<Option<PathBuf>>,
   app_name: String,
-  app_handle: Mutex<Option<AppHandle>>,
 }
 
 impl AppLogger {
@@ -38,13 +27,7 @@ impl AppLogger {
       file: Mutex::new(file),
       current_file_path: Mutex::new(file_path),
       app_name: app_name.to_string(),
-      app_handle: Mutex::new(None),
     }
-  }
-
-  pub fn with_app_handle(self, app_handle: AppHandle) -> Self {
-    *self.app_handle.lock().unwrap() = Some(app_handle);
-    self
   }
 
   fn get_log_directory(app_name: &str) -> Option<PathBuf> {
@@ -138,34 +121,21 @@ impl AppLogger {
     }
   }
 
-  fn emit_to_frontend(&self, entry: &LogEntry) {
-    if let Ok(guard) = self.app_handle.lock() {
-      if let Some(ref handle) = *guard {
-        let _ = handle.emit("app-log", entry.clone());
-      }
-    }
-  }
-
   pub fn log_from_frontend(&self, level: &str, component: &str, message: &str) {
     let timestamp = chrono::Local::now()
       .format("%Y-%m-%d %H:%M:%S%.3f")
       .to_string();
 
-    let entry = LogEntry {
-      level: level.to_uppercase(),
-      component: component.to_string(),
-      message: message.to_string(),
-      timestamp: timestamp.clone(),
-    };
-
     let msg = format!(
       "[{}] [{}] [{}] {}\n",
-      timestamp, entry.level, component, message
+      timestamp,
+      level.to_uppercase(),
+      component,
+      message
     );
 
     eprint!("{}", msg);
     self.write_to_file(&msg);
-    self.emit_to_frontend(&entry);
   }
 }
 
@@ -220,17 +190,6 @@ pub unsafe fn init_log_system(
   level: LevelFilter,
 ) -> Result<(), log::SetLoggerError> {
   let logger = AppLogger::new(level, app_name);
-  set_global_logger(logger);
-  log::set_max_level(LevelFilter::Trace);
-  Ok(())
-}
-
-pub fn init_log_system_with_handle(
-  app_name: &str,
-  level: LevelFilter,
-  app_handle: AppHandle,
-) -> Result<(), log::SetLoggerError> {
-  let logger = AppLogger::new(level, app_name).with_app_handle(app_handle);
   set_global_logger(logger);
   log::set_max_level(LevelFilter::Trace);
   Ok(())

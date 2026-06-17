@@ -8045,6 +8045,7 @@ dependencies = [
  "tokio",
  "ts-rs",
  "uuid",
+ "winapi",
 ]
 
 [[package]]

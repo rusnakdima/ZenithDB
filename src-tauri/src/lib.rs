@@ -25,10 +25,11 @@ use commands::schema_command::{
   collection_create, collection_drop, collection_list, collection_rename, collection_stats,
   describe_collection,
 };
+use commands::screenshot_command::capture_screenshot;
 use commands::settings_command::{
-  append_log_file, capture_screenshot, delete_connection_databases_metadata,
-  delete_database_metadata, get_database_metadata, get_system_status, init_decentralized_storage,
-  list_databases_metadata, save_database_metadata, save_log_file, update_database_metadata,
+  append_log_file, delete_connection_databases_metadata, delete_database_metadata,
+  get_database_metadata, get_system_status, init_decentralized_storage, list_databases_metadata,
+  save_database_metadata, save_log_file, update_database_metadata,
 };
 
 use state::AppState;

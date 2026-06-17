@@ -1,8 +1,12 @@
 import { Injectable, inject, Injector } from "@angular/core";
 import { TauriBridgeService } from "./tauri-bridge.service";
 import { RequestCancellationService } from "./request-cancellation.service";
-import { DataStoreService } from "@app/shared/services/core/unified-storage.service";
+import { DataStoreService } from "@shared/services/core/unified-storage.service";
 import { ConnectionsApiService } from "@shared/services/connections-api.service";
+import { CollectionsApiService } from "@shared/services/collections-api.service";
+import { QueryApiService } from "@shared/services/query-api.service";
+import { TransactionApiService } from "@shared/services/transaction-api.service";
+import { MetricsApiService } from "@shared/services/metrics-api.service";
 import { ToastService } from "@services/toast.service";
 import { ErrorHandlerService } from "@shared/services/error-handler.service";
 import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
@@ -12,14 +16,12 @@ import {
   ConnectionConfig,
   ConnectionConfigResult,
   TestConnectionConfig,
-  ConnectionHealth,
   CollectionMeta,
   CollectionSchema,
   CollectionStats,
   QueryParams,
   QueryResult,
   RawResult,
-  SystemMetrics,
   RowData,
 } from "@shared/models/connection.config";
 
@@ -29,6 +31,10 @@ export class ApiProvider {
   private cancellation = inject(RequestCancellationService);
   private injector = inject(Injector);
   private connectionsApi = inject(ConnectionsApiService);
+  private collectionsApi = inject(CollectionsApiService);
+  private queryApi = inject(QueryApiService);
+  private transactionApi = inject(TransactionApiService);
+  private metricsApi = inject(MetricsApiService);
   private toastService: ToastService | null = null;
   private errorHandler = inject(ErrorHandlerService);
   private dataflowLogger = inject(DataflowLoggerService);
@@ -64,35 +70,7 @@ export class ApiProvider {
   }
 
   async listConnections(): Promise<ConnectionSummary[]> {
-    const startTime = performance.now();
-    this.dataflowLogger.logApiCall(this.page, "listConnections", "list_connections", {});
-    try {
-      const result = await this.tauriBridge.invoke<ConnectionSummary[]>(
-        "list_connections",
-        {},
-        { suppressError: true }
-      );
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logDataReceive(
-        this.page,
-        "listConnections",
-        "list_connections",
-        result,
-        duration
-      );
-      return result;
-    } catch (err) {
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logError(
-        this.page,
-        "listConnections",
-        "list_connections",
-        String(err),
-        duration
-      );
-      logger.error("[API]", "listConnections failed", { error: String(err) });
-      throw err;
-    }
+    return this.connectionsApi.listConnections();
   }
 
   async getConnection(id: string): Promise<ConnectionConfigResult> {
@@ -229,17 +207,17 @@ export class ApiProvider {
     }
   }
 
-  async testConnection(config: TestConnectionConfig): Promise<ConnectionHealth> {
+  async testConnection(
+    config: TestConnectionConfig
+  ): Promise<import("@shared/models/connection.config").ConnectionHealth> {
     const startTime = performance.now();
     this.dataflowLogger.logApiCall(this.page, "testConnection", "test_connection", { config });
     try {
       const isNetwork = this.isNetworkProvider(config);
       const signal = isNetwork ? this.createAbortSignal() : this.getFastAbortSignal();
-      const result = await this.tauriBridge.invoke<ConnectionHealth>(
-        "test_connection",
-        { config },
-        { signal, suppressError: true }
-      );
+      const result = await this.tauriBridge.invoke<
+        import("@shared/models/connection.config").ConnectionHealth
+      >("test_connection", { config }, { signal, suppressError: true });
       const duration = performance.now() - startTime;
       this.dataflowLogger.logDataReceive(
         this.page,
@@ -270,42 +248,8 @@ export class ApiProvider {
   }
 
   async listCollections(connId: string, dbName?: string): Promise<CollectionMeta[]> {
-    const startTime = performance.now();
-    this.dataflowLogger.logApiCall(this.page, "listCollections", "collection_list", {
-      connId,
-      dbName,
-    });
-    try {
-      const result = await this.tauriBridge.invoke<{
-        collections: CollectionMeta[];
-        has_more: boolean;
-        total_count: number;
-      }>(
-        "collection_list",
-        { connId: connId, db_name: dbName },
-        { signal: this.createAbortSignal(), suppressError: true }
-      );
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logDataReceive(
-        this.page,
-        "listCollections",
-        "collection_list",
-        result,
-        duration
-      );
-      this.dataStore.updateCollections(connId, result.collections);
-      return result.collections;
-    } catch (err) {
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logError(
-        this.page,
-        "listCollections",
-        "collection_list",
-        String(err),
-        duration
-      );
-      throw err;
-    }
+    const result = await this.collectionsApi.listCollectionsWithRefresh(connId, dbName);
+    return result.collections;
   }
 
   async listCollectionsPaginated(
@@ -314,79 +258,11 @@ export class ApiProvider {
     offset?: number,
     limit?: number
   ): Promise<{ collections: CollectionMeta[]; hasMore: boolean; totalCount: number }> {
-    const startTime = performance.now();
-    this.dataflowLogger.logApiCall(this.page, "listCollectionsPaginated", "collection_list", {
-      connId,
-      dbName,
-      offset,
-      limit,
-    });
-    try {
-      const result = await this.tauriBridge.invoke<{
-        collections: CollectionMeta[];
-        has_more: boolean;
-        total_count: number;
-      }>(
-        "collection_list",
-        { connId: connId, db_name: dbName, offset, limit },
-        { signal: this.createAbortSignal(), suppressError: true }
-      );
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logDataReceive(
-        this.page,
-        "listCollectionsPaginated",
-        "collection_list",
-        result,
-        duration
-      );
-      return {
-        collections: result.collections,
-        hasMore: result.has_more,
-        totalCount: result.total_count,
-      };
-    } catch (err) {
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logError(
-        this.page,
-        "listCollectionsPaginated",
-        "collection_list",
-        String(err),
-        duration
-      );
-      throw err;
-    }
+    return this.collectionsApi.listCollections(connId, dbName, offset ?? 0, limit ?? 10);
   }
 
-  async getSystemStatus(): Promise<SystemMetrics> {
-    const startTime = performance.now();
-    this.dataflowLogger.logApiCall(this.page, "getSystemStatus", "get_system_status", {});
-    try {
-      const result = await this.tauriBridge.invoke<SystemMetrics>(
-        "get_system_status",
-        {},
-        { suppressError: true }
-      );
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logDataReceive(
-        this.page,
-        "getSystemStatus",
-        "get_system_status",
-        result,
-        duration
-      );
-      this.dataStore.updateSystemMetrics(result);
-      return result;
-    } catch (err) {
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logError(
-        this.page,
-        "getSystemStatus",
-        "get_system_status",
-        String(err),
-        duration
-      );
-      throw err;
-    }
+  async getSystemStatus(): Promise<import("@shared/models/connection.config").SystemMetrics> {
+    return this.metricsApi.fetchMetricsWithRefresh();
   }
 
   async updateConnection(id: string, config: ConnectionConfig): Promise<void> {
@@ -489,136 +365,19 @@ export class ApiProvider {
     connId: string,
     isolationLevel?: string
   ): Promise<{ transactionId: string }> {
-    const startTime = performance.now();
-    this.dataflowLogger.logApiCall(this.page, "beginTransaction", "begin_transaction", {
-      connId,
-      isolationLevel,
-    });
-    try {
-      const result = await this.tauriBridge.invoke<{ transactionId: string }>(
-        "begin_transaction",
-        { connId, isolationLevel },
-        { signal: this.createAbortSignal(), suppressError: true }
-      );
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logDataReceive(
-        this.page,
-        "beginTransaction",
-        "begin_transaction",
-        result,
-        duration
-      );
-      return result;
-    } catch (err) {
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logError(
-        this.page,
-        "beginTransaction",
-        "begin_transaction",
-        String(err),
-        duration
-      );
-      throw err;
-    }
+    return this.transactionApi.beginTransaction(connId, isolationLevel);
   }
 
   async commitTransaction(transactionId: string): Promise<void> {
-    const startTime = performance.now();
-    this.dataflowLogger.logApiCall(this.page, "commitTransaction", "commit_transaction", {
-      transactionId,
-    });
-    try {
-      await this.tauriBridge.invoke<void>(
-        "commit_transaction",
-        { transactionId },
-        { signal: this.createAbortSignal(), suppressError: true }
-      );
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logDataReceive(
-        this.page,
-        "commitTransaction",
-        "commit_transaction",
-        { success: true },
-        duration
-      );
-    } catch (err) {
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logError(
-        this.page,
-        "commitTransaction",
-        "commit_transaction",
-        String(err),
-        duration
-      );
-      throw err;
-    }
+    return this.transactionApi.commitTransaction(transactionId);
   }
 
   async rollbackTransaction(transactionId: string): Promise<void> {
-    const startTime = performance.now();
-    this.dataflowLogger.logApiCall(this.page, "rollbackTransaction", "rollback_transaction", {
-      transactionId,
-    });
-    try {
-      await this.tauriBridge.invoke<void>(
-        "rollback_transaction",
-        { transactionId },
-        { signal: this.createAbortSignal(), suppressError: true }
-      );
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logDataReceive(
-        this.page,
-        "rollbackTransaction",
-        "rollback_transaction",
-        { success: true },
-        duration
-      );
-    } catch (err) {
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logError(
-        this.page,
-        "rollbackTransaction",
-        "rollback_transaction",
-        String(err),
-        duration
-      );
-      throw err;
-    }
+    return this.transactionApi.rollbackTransaction(transactionId);
   }
 
   async insertDocument(connId: string, collection: string, data: RowData): Promise<RowData | null> {
-    const startTime = performance.now();
-    this.dataflowLogger.logApiCall(this.page, "insertDocument", "insert_document", {
-      connId,
-      collection,
-      data,
-    });
-    try {
-      const result = await this.tauriBridge.invoke<RowData>(
-        "insert_document",
-        { connId, collection, data },
-        { signal: this.createAbortSignal(), suppressError: true }
-      );
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logDataReceive(
-        this.page,
-        "insertDocument",
-        "insert_document",
-        result,
-        duration
-      );
-      return result;
-    } catch (err) {
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logError(
-        this.page,
-        "insertDocument",
-        "insert_document",
-        String(err),
-        duration
-      );
-      throw err;
-    }
+    return this.queryApi.insertDocument(connId, collection, data);
   }
 
   async updateDocument(
@@ -627,298 +386,39 @@ export class ApiProvider {
     id: string,
     data: RowData
   ): Promise<RowData | null> {
-    const startTime = performance.now();
-    this.dataflowLogger.logApiCall(this.page, "updateDocument", "update_document", {
-      connId,
-      collection,
-      id,
-      data,
-    });
-    try {
-      const result = await this.tauriBridge.invoke<RowData>(
-        "update_document",
-        { connId, collection, id, data },
-        { signal: this.createAbortSignal(), suppressError: true }
-      );
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logDataReceive(
-        this.page,
-        "updateDocument",
-        "update_document",
-        result,
-        duration
-      );
-      return result;
-    } catch (err) {
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logError(
-        this.page,
-        "updateDocument",
-        "update_document",
-        String(err),
-        duration
-      );
-      throw err;
-    }
+    return this.queryApi.updateDocument(connId, collection, id, data);
   }
 
   async deleteDocument(connId: string, collection: string, id: string): Promise<void> {
-    const startTime = performance.now();
-    this.dataflowLogger.logApiCall(this.page, "deleteDocument", "delete_document", {
-      connId,
-      collection,
-      id,
-    });
-    try {
-      await this.tauriBridge.invoke<void>(
-        "delete_document",
-        { connId, collection, id },
-        { signal: this.createAbortSignal(), suppressError: true }
-      );
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logDataReceive(
-        this.page,
-        "deleteDocument",
-        "delete_document",
-        { success: true },
-        duration
-      );
-    } catch (err) {
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logError(
-        this.page,
-        "deleteDocument",
-        "delete_document",
-        String(err),
-        duration
-      );
-      throw err;
-    }
+    return this.queryApi.deleteDocument(connId, collection, id);
   }
 
   async softDeleteDocument(connId: string, collection: string, id: string): Promise<void> {
-    const startTime = performance.now();
-    this.dataflowLogger.logApiCall(this.page, "softDeleteDocument", "soft_delete_document", {
-      connId,
-      collection,
-      id,
-    });
-    try {
-      await this.tauriBridge.invoke<void>(
-        "soft_delete_document",
-        { connId, collection, id },
-        { signal: this.createAbortSignal(), suppressError: true }
-      );
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logDataReceive(
-        this.page,
-        "softDeleteDocument",
-        "soft_delete_document",
-        { success: true },
-        duration
-      );
-    } catch (err) {
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logError(
-        this.page,
-        "softDeleteDocument",
-        "soft_delete_document",
-        String(err),
-        duration
-      );
-      throw err;
-    }
+    return this.queryApi.softDeleteDocument(connId, collection, id);
   }
 
   async rebuildIndex(connId: string, collection: string, indexName: string): Promise<void> {
-    const startTime = performance.now();
-    this.dataflowLogger.logApiCall(this.page, "rebuildIndex", "rebuild_index", {
-      connId,
-      collection,
-      indexName,
-    });
-    try {
-      await this.tauriBridge.invoke<void>(
-        "rebuild_index",
-        { connId: connId, collection, indexName },
-        { signal: this.createAbortSignal(), suppressError: true }
-      );
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logDataReceive(
-        this.page,
-        "rebuildIndex",
-        "rebuild_index",
-        { success: true },
-        duration
-      );
-    } catch (err) {
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logError(
-        this.page,
-        "rebuildIndex",
-        "rebuild_index",
-        String(err),
-        duration
-      );
-      throw err;
-    }
+    return this.queryApi.rebuildIndex(connId, collection, indexName);
   }
 
   async createIndex(connId: string, collection: string, indexDef: unknown): Promise<void> {
-    const startTime = performance.now();
-    this.dataflowLogger.logApiCall(this.page, "createIndex", "create_index", {
-      connId,
-      collection,
-      indexDef,
-    });
-    try {
-      await this.tauriBridge.invoke<void>(
-        "create_index",
-        { connId: connId, collection, index_definition: indexDef },
-        { signal: this.createAbortSignal(), suppressError: true }
-      );
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logDataReceive(
-        this.page,
-        "createIndex",
-        "create_index",
-        { success: true },
-        duration
-      );
-    } catch (err) {
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logError(this.page, "createIndex", "create_index", String(err), duration);
-      throw err;
-    }
+    return this.queryApi.createIndex(connId, collection, indexDef);
   }
 
   async dropIndex(connId: string, collection: string, indexName: string): Promise<void> {
-    const startTime = performance.now();
-    this.dataflowLogger.logApiCall(this.page, "dropIndex", "drop_index", {
-      connId,
-      collection,
-      indexName,
-    });
-    try {
-      await this.tauriBridge.invoke<void>(
-        "drop_index",
-        { connId: connId, collection, indexName },
-        { signal: this.createAbortSignal(), suppressError: true }
-      );
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logDataReceive(
-        this.page,
-        "dropIndex",
-        "drop_index",
-        { success: true },
-        duration
-      );
-    } catch (err) {
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logError(this.page, "dropIndex", "drop_index", String(err), duration);
-      throw err;
-    }
+    return this.queryApi.dropIndex(connId, collection, indexName);
   }
 
   async createDatabase(connId: string, name: string): Promise<void> {
-    const startTime = performance.now();
-    this.dataflowLogger.logApiCall(this.page, "createDatabase", "create_database", {
-      connId,
-      name,
-    });
-    try {
-      await this.tauriBridge.invoke<void>(
-        "create_database",
-        { connection_id: connId, name },
-        { signal: this.createAbortSignal(), suppressError: true }
-      );
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logDataReceive(
-        this.page,
-        "createDatabase",
-        "create_database",
-        { success: true },
-        duration
-      );
-    } catch (err) {
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logError(
-        this.page,
-        "createDatabase",
-        "create_database",
-        String(err),
-        duration
-      );
-      throw err;
-    }
+    return this.collectionsApi.createDatabase(connId, name);
   }
 
   async describeCollection(connId: string, collection: string): Promise<CollectionSchema> {
-    const startTime = performance.now();
-    this.dataflowLogger.logApiCall(this.page, "describeCollection", "collection_describe", {
-      connId,
-      collection,
-    });
-    try {
-      const result = await this.tauriBridge.invoke<CollectionSchema>(
-        "collection_describe",
-        { connection_id: connId, name: collection },
-        { signal: this.createAbortSignal(), suppressError: true }
-      );
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logDataReceive(
-        this.page,
-        "describeCollection",
-        "collection_describe",
-        result,
-        duration
-      );
-      return result;
-    } catch (err) {
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logError(
-        this.page,
-        "describeCollection",
-        "collection_describe",
-        String(err),
-        duration
-      );
-      throw err;
-    }
+    return this.collectionsApi.describeCollection(connId, collection);
   }
 
   async getCollectionStats(connId: string, collection: string): Promise<CollectionStats> {
-    const startTime = performance.now();
-    this.dataflowLogger.logApiCall(this.page, "getCollectionStats", "collection_stats", {
-      connId,
-      collection,
-    });
-    try {
-      const result = await this.tauriBridge.invoke<CollectionStats>(
-        "collection_stats",
-        { connection_id: connId, name: collection },
-        { signal: this.createAbortSignal(), suppressError: true }
-      );
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logDataReceive(
-        this.page,
-        "getCollectionStats",
-        "collection_stats",
-        result,
-        duration
-      );
-      return result;
-    } catch (err) {
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logError(
-        this.page,
-        "getCollectionStats",
-        "collection_stats",
-        String(err),
-        duration
-      );
-      throw err;
-    }
+    return this.collectionsApi.getCollectionStats(connId, collection);
   }
 
   async queryData(
@@ -926,26 +426,7 @@ export class ApiProvider {
     collection: string,
     params: QueryParams
   ): Promise<QueryResult<RowData>> {
-    const startTime = performance.now();
-    this.dataflowLogger.logApiCall(this.page, "queryData", "query_execute", {
-      connId,
-      collection,
-      params,
-    });
-    try {
-      const result = await this.tauriBridge.invoke<QueryResult<RowData>>(
-        "query_execute",
-        { connection_id: connId, collection, params },
-        { signal: this.createAbortSignal(), suppressError: true }
-      );
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logDataReceive(this.page, "queryData", "query_execute", result, duration);
-      return result;
-    } catch (err) {
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logError(this.page, "queryData", "query_execute", String(err), duration);
-      throw err;
-    }
+    return this.queryApi.queryData(connId, collection, params);
   }
 
   async saveRow(
@@ -953,272 +434,38 @@ export class ApiProvider {
     collection: string,
     data: Record<string, unknown>
   ): Promise<RowData | null> {
-    const startTime = performance.now();
-    this.dataflowLogger.logApiCall(this.page, "saveRow", "query_save", {
-      connId,
-      collection,
-      data,
-    });
-    try {
-      const result = await this.tauriBridge.invoke<RowData>(
-        "query_save",
-        { connection_id: connId, collection, data },
-        { signal: this.createAbortSignal(), suppressError: true }
-      );
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logDataReceive(this.page, "saveRow", "query_save", result, duration);
-      return result;
-    } catch (err) {
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logError(this.page, "saveRow", "query_save", String(err), duration);
-      throw err;
-    }
+    return this.queryApi.saveRow(connId, collection, data);
   }
 
   async deleteRow(connId: string, collection: string, id: string): Promise<void> {
-    const startTime = performance.now();
-    this.dataflowLogger.logApiCall(this.page, "deleteRow", "query_delete", {
-      connId,
-      collection,
-      id,
-    });
-    try {
-      await this.tauriBridge.invoke<void>(
-        "query_delete",
-        { connection_id: connId, collection, id },
-        { signal: this.createAbortSignal(), suppressError: true }
-      );
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logDataReceive(
-        this.page,
-        "deleteRow",
-        "query_delete",
-        { success: true },
-        duration
-      );
-    } catch (err) {
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logError(this.page, "deleteRow", "query_delete", String(err), duration);
-      throw err;
-    }
+    return this.queryApi.deleteRow(connId, collection, id);
   }
 
   async createCollection(connId: string, name: string): Promise<void> {
-    const startTime = performance.now();
-    this.dataflowLogger.logApiCall(this.page, "createCollection", "collection_create", {
-      connId,
-      name,
-    });
-    try {
-      await this.tauriBridge.invoke<void>(
-        "collection_create",
-        { connection_id: connId, name },
-        { signal: this.createAbortSignal(), suppressError: true }
-      );
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logDataReceive(
-        this.page,
-        "createCollection",
-        "collection_create",
-        { success: true },
-        duration
-      );
-    } catch (err) {
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logError(
-        this.page,
-        "createCollection",
-        "collection_create",
-        String(err),
-        duration
-      );
-      throw err;
-    }
+    return this.collectionsApi.createCollection(connId, name);
   }
 
   async dropCollection(connId: string, name: string): Promise<void> {
-    const startTime = performance.now();
-    this.dataflowLogger.logApiCall(this.page, "dropCollection", "collection_drop", {
-      connId,
-      name,
-    });
-    try {
-      await this.tauriBridge.invoke<void>(
-        "collection_drop",
-        { connection_id: connId, name },
-        { signal: this.createAbortSignal(), suppressError: true }
-      );
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logDataReceive(
-        this.page,
-        "dropCollection",
-        "collection_drop",
-        { success: true },
-        duration
-      );
-    } catch (err) {
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logError(
-        this.page,
-        "dropCollection",
-        "collection_drop",
-        String(err),
-        duration
-      );
-      throw err;
-    }
+    return this.collectionsApi.dropCollection(connId, name);
   }
 
   async renameCollection(connId: string, oldName: string, newName: string): Promise<void> {
-    const startTime = performance.now();
-    this.dataflowLogger.logApiCall(this.page, "renameCollection", "collection_rename", {
-      connId,
-      oldName,
-      newName,
-    });
-    try {
-      await this.tauriBridge.invoke<void>(
-        "collection_rename",
-        { connection_id: connId, old_name: oldName, new_name: newName },
-        { signal: this.createAbortSignal(), suppressError: true }
-      );
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logDataReceive(
-        this.page,
-        "renameCollection",
-        "collection_rename",
-        { success: true },
-        duration
-      );
-    } catch (err) {
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logError(
-        this.page,
-        "renameCollection",
-        "collection_rename",
-        String(err),
-        duration
-      );
-      throw err;
-    }
+    return this.collectionsApi.renameCollection(connId, oldName, newName);
   }
 
   async renameDatabase(connId: string, oldName: string, newName: string): Promise<void> {
-    const startTime = performance.now();
-    this.dataflowLogger.logApiCall(this.page, "renameDatabase", "rename_database", {
-      connId,
-      oldName,
-      newName,
-    });
-    try {
-      await this.tauriBridge.invoke<void>(
-        "rename_database",
-        { connection_id: connId, old_name: oldName, new_name: newName },
-        { signal: this.createAbortSignal(), suppressError: true }
-      );
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logDataReceive(
-        this.page,
-        "renameDatabase",
-        "rename_database",
-        { success: true },
-        duration
-      );
-    } catch (err) {
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logError(
-        this.page,
-        "renameDatabase",
-        "rename_database",
-        String(err),
-        duration
-      );
-      throw err;
-    }
+    return this.collectionsApi.renameDatabase(connId, oldName, newName);
   }
 
   async deleteDatabase(connId: string, name: string): Promise<void> {
-    const startTime = performance.now();
-    this.dataflowLogger.logApiCall(this.page, "deleteDatabase", "delete_database", {
-      connId,
-      name,
-    });
-    try {
-      await this.tauriBridge.invoke<void>(
-        "delete_database",
-        { connection_id: connId, name },
-        { signal: this.createAbortSignal(), suppressError: true }
-      );
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logDataReceive(
-        this.page,
-        "deleteDatabase",
-        "delete_database",
-        { success: true },
-        duration
-      );
-    } catch (err) {
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logError(
-        this.page,
-        "deleteDatabase",
-        "delete_database",
-        String(err),
-        duration
-      );
-      throw err;
-    }
+    return this.collectionsApi.deleteDatabase(connId, name);
   }
 
   async executeRaw(connId: string, sql: string): Promise<RawResult> {
-    const startTime = performance.now();
-    this.dataflowLogger.logApiCall(this.page, "executeRaw", "query_raw", { connId, sql });
-    try {
-      const result = await this.tauriBridge.invoke<RawResult>(
-        "query_raw",
-        { connection_id: connId, sql },
-        { signal: this.createAbortSignal(), suppressError: true }
-      );
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logDataReceive(this.page, "executeRaw", "query_raw", result, duration);
-      return result;
-    } catch (err) {
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logError(this.page, "executeRaw", "query_raw", String(err), duration);
-      throw err;
-    }
+    return this.queryApi.executeRaw(connId, sql);
   }
 
   async getServerVersion(connId: string): Promise<string> {
-    const startTime = performance.now();
-    this.dataflowLogger.logApiCall(this.page, "getServerVersion", "query_server_version", {
-      connId,
-    });
-    try {
-      const result = await this.tauriBridge.invoke<string>(
-        "query_server_version",
-        { connection_id: connId },
-        { signal: this.createAbortSignal(), suppressError: true }
-      );
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logDataReceive(
-        this.page,
-        "getServerVersion",
-        "query_server_version",
-        result,
-        duration
-      );
-      return result;
-    } catch (err) {
-      const duration = performance.now() - startTime;
-      this.dataflowLogger.logError(
-        this.page,
-        "getServerVersion",
-        "query_server_version",
-        String(err),
-        duration
-      );
-      throw err;
-    }
+    return this.queryApi.getServerVersion(connId);
   }
 }

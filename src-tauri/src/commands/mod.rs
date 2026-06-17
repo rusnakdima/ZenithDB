@@ -18,6 +18,8 @@ pub mod provider;
 pub mod query_command;
 #[path = "schema.command.rs"]
 pub mod schema_command;
+#[path = "screenshot.command.rs"]
+pub mod screenshot_command;
 #[path = "settings.command.rs"]
 pub mod settings_command;
 #[path = "types.command.rs"]
