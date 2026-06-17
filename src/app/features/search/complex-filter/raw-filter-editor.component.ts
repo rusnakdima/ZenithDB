@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter, signal, inject, OnInit } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../../services/logger.service";
 
 @Component({
   selector: "app-raw-filter-editor",
@@ -10,7 +10,7 @@ import { getLoggingService } from "@tauri-apps/logger";
   templateUrl: "./raw-filter-editor.component.html",
 })
 export class RawFilterEditorComponent implements OnInit {
-  private logger = getLoggingService();
+  
 
   @Input() initialJson = "";
   @Output() jsonChange = new EventEmitter<string>();
@@ -50,13 +50,13 @@ export class RawFilterEditorComponent implements OnInit {
 
   onApply(): void {
     if (this.isValid()) {
-      this.logger.debug("[SEARCH_FILTER]", "Raw filter JSON applied");
+      logger.debug("[SEARCH_FILTER]", "Raw filter JSON applied");
       this.jsonApply.emit(this.jsonInput());
     }
   }
 
   onToggleToVisual(): void {
-    this.logger.debug("[SEARCH_FILTER]", "Toggled to visual filter editor");
+    logger.debug("[SEARCH_FILTER]", "Toggled to visual filter editor");
     this.jsonChange.emit(this.jsonInput());
   }
 }

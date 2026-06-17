@@ -4,7 +4,7 @@ import { FormsModule } from "@angular/forms";
 import { ModalComponent } from "@shared/components/modal/modal.component";
 import { BulkOperationsService, BulkDeleteRequest } from "./bulk-operations.service";
 import { ToastService } from "@services/toast.service";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../../services/logger.service";
 
 @Component({
   selector: "app-bulk-delete-dialog",
@@ -15,7 +15,7 @@ import { getLoggingService } from "@tauri-apps/logger";
 export class BulkDeleteDialogComponent {
   private readonly bulkOps = inject(BulkOperationsService);
   private readonly toast = inject(ToastService);
-  private readonly logger = getLoggingService();
+  
 
   @Input() collectionName = "";
   @Input() documentIds: string[] = [];
@@ -44,7 +44,7 @@ export class BulkDeleteDialogComponent {
     this.isProcessing.set(true);
 
     try {
-      this.logger.info("[DATA_BULK]", `Confirm bulk delete: ${this.documentIds.length} records`);
+      logger.info("[DATA_BULK]", `Confirm bulk delete: ${this.documentIds.length} records`);
       const request: BulkDeleteRequest = {
         collectionName: this.collectionName,
         documentIds: this.documentIds,

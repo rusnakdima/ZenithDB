@@ -1,6 +1,6 @@
 import { Component, signal, output, Input, HostListener, computed, inject } from "@angular/core";
 import { FormsModule } from "@angular/forms";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../../services/logger.service";
 
 @Component({
   selector: "app-sql-editor",
@@ -9,7 +9,7 @@ import { getLoggingService } from "@tauri-apps/logger";
   templateUrl: "./sql-editor.component.html",
 })
 export class SqlEditorComponent {
-  private logger = getLoggingService();
+  
   private _query = signal("");
 
   get query() {
@@ -35,7 +35,7 @@ export class SqlEditorComponent {
     const target = event.target as HTMLTextAreaElement;
     this._query.set(target.value);
     this.queryChange.emit(target.value);
-    this.logger.debug("[SQL_EDITOR]", "Query input changed", { length: target.value.length });
+    logger.debug("[SQL_EDITOR]", "Query input changed", { length: target.value.length });
   }
 
   @HostListener("keydown", ["$event"])
@@ -49,7 +49,7 @@ export class SqlEditorComponent {
       const newValue = value.substring(0, start) + "  " + value.substring(end);
       this._query.set(newValue);
       this.queryChange.emit(newValue);
-      this.logger.debug("[SQL_EDITOR]", "Tab inserted at position", { start, end });
+      logger.debug("[SQL_EDITOR]", "Tab inserted at position", { start, end });
       setTimeout(() => {
         target.selectionStart = target.selectionEnd = start + 2;
       });

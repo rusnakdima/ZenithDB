@@ -20,7 +20,7 @@ import {
   QueryValidatorService,
 } from "../services";
 import { SyntaxMode } from "../models";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../../services/logger.service";
 
 @Component({
   selector: "app-provider-aware-editor",
@@ -165,7 +165,7 @@ export class ProviderAwareEditorComponent implements OnInit, OnChanges {
   private readonly providerDetector = inject(ProviderDetectorService);
   private readonly translationService = inject(QueryTranslationService);
   private readonly validator = inject(QueryValidatorService);
-  private readonly logger = getLoggingService();
+  
 
   @Input() initialQuery = "";
   @Input() collectionName = "";
@@ -201,7 +201,7 @@ export class ProviderAwareEditorComponent implements OnInit, OnChanges {
   }
 
   setSyntaxMode(mode: SyntaxMode): void {
-    this.logger.debug("[QUERY]", "Syntax mode changed", { mode });
+    logger.debug("[QUERY]", "Syntax mode changed", { mode });
     const currentQuery = this.query();
     const translated = this.translationService.translateToProvider(
       this.validator.parseQueryToFilter(currentQuery) ?? {},

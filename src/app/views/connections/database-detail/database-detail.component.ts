@@ -23,7 +23,7 @@ import { QUERY_CONSTANTS } from "@shared/utils/constants";
 import { AddDatabasePathComponent } from "../add-database-path/add-database-path.component";
 import { DiagnosticLoggerService } from "@shared/services/diagnostic-logger.service";
 import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../../services/logger.service";
 import { Subscription } from "rxjs";
 import { filter, distinctUntilChanged } from "rxjs/operators";
 
@@ -43,7 +43,7 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy {
   private diagLogger = inject(DiagnosticLoggerService);
   private cdr = inject(ChangeDetectorRef);
   private dataflowLogger = inject(DataflowLoggerService);
-  private logger = getLoggingService();
+  
   providerUtils = inject(ProviderUtils);
   route = inject(ActivatedRoute);
   router = inject(Router);
@@ -67,7 +67,7 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy {
   private routeSub: Subscription | null = null;
 
   async ngOnInit() {
-    this.logger.debug("[DB_DETAIL]", "ngOnInit");
+    logger.debug("[DB_DETAIL]", "ngOnInit");
     this.routeSub = this.route.paramMap
       .pipe(
         filter((params) => params.get("id") !== null),
@@ -163,7 +163,7 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy {
   }
 
   openCollection(collectionName: string) {
-    this.logger.log("[DB_DETAIL]", "User action: openCollection", { collectionName });
+    logger.log("[DB_DETAIL]", "User action: openCollection", { collectionName });
     const connId = this.connectionId();
     const dbName = this.databaseName();
     if (connId && dbName) {
@@ -175,12 +175,12 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy {
   }
 
   refresh() {
-    this.logger.log("[DB_DETAIL]", "User action: refresh");
+    logger.log("[DB_DETAIL]", "User action: refresh");
     this.loadCollections();
   }
 
   goBack() {
-    this.logger.log("[DB_DETAIL]", "User action: goBack");
+    logger.log("[DB_DETAIL]", "User action: goBack");
     const connId = this.connectionId();
     if (connId) {
       this.router.navigate(["/connections", connId]);
@@ -203,7 +203,7 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy {
     const name = this.newCollectionName.trim();
     if (!name) return;
 
-    this.logger.log("[DB_DETAIL]", "User action: createCollection", { name });
+    logger.log("[DB_DETAIL]", "User action: createCollection", { name });
     const connId = this.connectionId();
     if (!connId) return;
 
@@ -232,7 +232,7 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.logger.log("[DB_DETAIL]", "User action: renameCollection", { oldName, newName });
+    logger.log("[DB_DETAIL]", "User action: renameCollection", { oldName, newName });
     const connId = this.connectionId();
     if (!connId) return;
 
@@ -253,7 +253,7 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy {
   }
 
   async deleteCollection(colName: string) {
-    this.logger.log("[DB_DETAIL]", "User action: deleteCollection", { colName });
+    logger.log("[DB_DETAIL]", "User action: deleteCollection", { colName });
     if (!(await this.confirm.confirmDelete(colName))) return;
 
     const connId = this.connectionId();
@@ -268,7 +268,7 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy {
   }
 
   async onAddDbModalAdded(data: { name: string; path: string }) {
-    this.logger.log("[DB_DETAIL]", "User action: addDatabase", { name: data.name });
+    logger.log("[DB_DETAIL]", "User action: addDatabase", { name: data.name });
     const connId = this.connectionId();
     if (!connId) return;
 

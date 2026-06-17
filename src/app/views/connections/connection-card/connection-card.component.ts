@@ -3,7 +3,7 @@ import { MatIconModule } from "@angular/material/icon";
 import { ConnectionSummary } from "@shared/models/connection.config";
 import { ProviderUtils } from "@shared/utils/provider.utils";
 import { ConnectionStatusBadgeComponent } from "@shared/components/connection-status-badge/connection-status-badge.component";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../../services/logger.service";
 
 @Component({
   selector: "app-connection-card",
@@ -12,7 +12,7 @@ import { getLoggingService } from "@tauri-apps/logger";
   templateUrl: "./connection-card.component.html",
 })
 export class ConnectionCardComponent implements OnInit {
-  private logger = getLoggingService();
+  
 
   connection = input.required<ConnectionSummary>();
   viewMode = input<"grid" | "list">("grid");
@@ -26,7 +26,7 @@ export class ConnectionCardComponent implements OnInit {
   providerUtils = inject(ProviderUtils);
 
   ngOnInit(): void {
-    this.logger.debug("[CONNECTION_CARD]", "Component initialized", {
+    logger.debug("[CONNECTION_CARD]", "Component initialized", {
       connectionId: this.connection().id,
     });
   }
@@ -36,7 +36,7 @@ export class ConnectionCardComponent implements OnInit {
   }
 
   onConnect(): void {
-    this.logger.info("[CONNECTION_CARD]", "Connect clicked", {
+    logger.info("[CONNECTION_CARD]", "Connect clicked", {
       connectionId: this.connection().id,
     });
     this.connect.emit(this.connection());
@@ -44,13 +44,13 @@ export class ConnectionCardComponent implements OnInit {
 
   onDelete(event: Event): void {
     event.stopPropagation();
-    this.logger.info("[CONNECTION_CARD]", "Delete clicked", { connectionId: this.connection().id });
+    logger.info("[CONNECTION_CARD]", "Delete clicked", { connectionId: this.connection().id });
     this.delete.emit(this.connection());
   }
 
   onDuplicate(event: Event): void {
     event.stopPropagation();
-    this.logger.info("[CONNECTION_CARD]", "Duplicate clicked", {
+    logger.info("[CONNECTION_CARD]", "Duplicate clicked", {
       connectionId: this.connection().id,
     });
     this.duplicate.emit(this.connection());
@@ -58,7 +58,7 @@ export class ConnectionCardComponent implements OnInit {
 
   onEdit(event: Event): void {
     event.stopPropagation();
-    this.logger.info("[CONNECTION_CARD]", "Edit clicked", { connectionId: this.connection().id });
+    logger.info("[CONNECTION_CARD]", "Edit clicked", { connectionId: this.connection().id });
     this.edit.emit(this.connection());
   }
 

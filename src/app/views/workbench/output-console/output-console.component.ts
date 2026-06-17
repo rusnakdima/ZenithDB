@@ -11,7 +11,7 @@ import {
 import { JsonPipe, DatePipe } from "@angular/common";
 import { RawResult } from "@shared/models/connection.config";
 import { trackByIndex } from "@shared/utils/collection.utils";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../../services/logger.service";
 
 type LogLevel = "all" | "info" | "warn" | "error";
 type TabType = "results" | "messages" | "plan";
@@ -29,7 +29,7 @@ interface LogEntry {
   templateUrl: "./output-console.component.html",
 })
 export class OutputConsoleComponent implements OnDestroy {
-  private logger = getLoggingService();
+  
 
   @Input() results: RawResult | null = null;
   @Input() loading = false;
@@ -65,22 +65,22 @@ export class OutputConsoleComponent implements OnDestroy {
 
   setActiveTab(tab: TabType) {
     this.activeTab.set(tab);
-    this.logger.debug("[OUTPUT_CONSOLE]", "Active tab changed", { tab });
+    logger.debug("[OUTPUT_CONSOLE]", "Active tab changed", { tab });
   }
 
   setFilterLevel(level: LogLevel) {
     this.filterLevel.set(level);
-    this.logger.debug("[OUTPUT_CONSOLE]", "Filter level changed", { level });
+    logger.debug("[OUTPUT_CONSOLE]", "Filter level changed", { level });
   }
 
   toggleAutoScroll() {
     this.autoScroll.set(!this.autoScroll());
-    this.logger.debug("[OUTPUT_CONSOLE]", "Auto-scroll toggled", { autoScroll: this.autoScroll() });
+    logger.debug("[OUTPUT_CONSOLE]", "Auto-scroll toggled", { autoScroll: this.autoScroll() });
   }
 
   clearMessages() {
     this.logs.set([]);
-    this.logger.debug("[OUTPUT_CONSOLE]", "Messages cleared");
+    logger.debug("[OUTPUT_CONSOLE]", "Messages cleared");
   }
 
   addLog(level: "info" | "warn" | "error", message: string) {

@@ -5,7 +5,7 @@ import { TransactionService, IsolationLevel } from "./transaction.service";
 import { ToastService } from "@services/toast.service";
 import { ConfirmService } from "@shared/services/confirm.service";
 import { TransactionLogComponent } from "./transaction-log.component";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../services/logger.service";
 
 @Component({
   selector: "app-transaction-panel",
@@ -18,7 +18,7 @@ export class TransactionPanelComponent {
   transactionService = inject(TransactionService);
   private toast = inject(ToastService);
   private confirmService = inject(ConfirmService);
-  private logger = getLoggingService();
+  
 
   isActive = this.transactionService.isActive;
   activeCollections = this.transactionService.activeCollections;
@@ -34,7 +34,7 @@ export class TransactionPanelComponent {
 
   async onBeginTransaction(): Promise<void> {
     try {
-      this.logger.info("[TRANSACTION]", "User initiating transaction", {
+      logger.info("[TRANSACTION]", "User initiating transaction", {
         isolationLevel: this.isolationLevel(),
       });
       await this.transactionService.beginTransaction(this.isolationLevel());
@@ -53,7 +53,7 @@ export class TransactionPanelComponent {
     if (!confirmed) return;
 
     try {
-      this.logger.info("[TRANSACTION]", "User committing transaction");
+      logger.info("[TRANSACTION]", "User committing transaction");
       await this.transactionService.commitTransaction();
     } catch (e) {
       this.toast.error(`Failed to commit: ${(e as Error).message}`);
@@ -70,7 +70,7 @@ export class TransactionPanelComponent {
     if (!confirmed) return;
 
     try {
-      this.logger.info("[TRANSACTION]", "User rolling back transaction");
+      logger.info("[TRANSACTION]", "User rolling back transaction");
       await this.transactionService.rollbackTransaction();
     } catch (e) {
       this.toast.error(`Failed to rollback: ${(e as Error).message}`);
@@ -82,7 +82,7 @@ export class TransactionPanelComponent {
     if (!name) return;
 
     try {
-      this.logger.debug("[TRANSACTION]", "User creating savepoint", { name });
+      logger.debug("[TRANSACTION]", "User creating savepoint", { name });
       await this.transactionService.createSavepoint(name);
     } catch (e) {
       this.toast.error(`Failed to create savepoint: ${(e as Error).message}`);
@@ -102,7 +102,7 @@ export class TransactionPanelComponent {
     if (!name) return;
 
     try {
-      this.logger.debug("[TRANSACTION]", "User rolling back to savepoint", { name });
+      logger.debug("[TRANSACTION]", "User rolling back to savepoint", { name });
       await this.transactionService.rollbackToSavepoint(name);
     } catch (e) {
       this.toast.error(`Failed to rollback to savepoint: ${(e as Error).message}`);
@@ -114,12 +114,12 @@ export class TransactionPanelComponent {
   }
 
   onUndoLast(): void {
-    this.logger.debug("[TRANSACTION]", "User undoing last operation");
+    logger.debug("[TRANSACTION]", "User undoing last operation");
     this.transactionService.undoLastOperation();
   }
 
   onClearLog(): void {
-    this.logger.debug("[TRANSACTION]", "User clearing operation log");
+    logger.debug("[TRANSACTION]", "User clearing operation log");
     this.transactionService.clearOperationLog();
   }
 }

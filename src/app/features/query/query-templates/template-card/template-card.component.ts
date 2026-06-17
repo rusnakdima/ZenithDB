@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter, inject } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { QueryTemplate, TEMPLATE_CATEGORIES } from "../../models";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../../../services/logger.service";
 
 @Component({
   selector: "app-template-card",
@@ -10,7 +10,7 @@ import { getLoggingService } from "@tauri-apps/logger";
   templateUrl: "./template-card.component.html",
 })
 export class TemplateCardComponent {
-  private readonly logger = getLoggingService();
+  
 
   @Input() template!: QueryTemplate;
   @Input() isFavorite = false;
@@ -28,7 +28,7 @@ export class TemplateCardComponent {
   }
 
   onFavoriteClick(event: MouseEvent): void {
-    this.logger.debug("[QUERY_TEMPLATE]", "Toggle favorite from card", { id: this.template.id });
+    logger.debug("[QUERY_TEMPLATE]", "Toggle favorite from card", { id: this.template.id });
     event.stopPropagation();
     this.toggleFavorite.emit(this.template.id);
   }

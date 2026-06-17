@@ -1,10 +1,10 @@
 import { Injectable, signal, inject } from "@angular/core";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../services/logger.service";
 import { ConnectionSummary, ConnectionConfig } from "@shared/models/connection.config";
 
 @Injectable({ providedIn: "root" })
 export class ConnectionStateService {
-  private logger = getLoggingService();
+  
   activeConnectionId = signal<string | null>(null);
   activeConnectionName = signal<string | null>(null);
   activeProvider = signal<string | null>(null);
@@ -16,7 +16,7 @@ export class ConnectionStateService {
   activeCollectionName = signal<string | null>(null);
 
   setActiveConnection(connOrId: ConnectionSummary | string): void {
-    this.logger.debug("[CONNECTION_STATE]", "setActiveConnection called", {
+    logger.debug("[CONNECTION_STATE]", "setActiveConnection called", {
       type: typeof connOrId,
     });
     if (typeof connOrId === "string") {
@@ -30,17 +30,17 @@ export class ConnectionStateService {
   }
 
   setActiveConnectionConfig(config: ConnectionConfig) {
-    this.logger.debug("[CONNECTION_STATE]", "setActiveConnectionConfig called");
+    logger.debug("[CONNECTION_STATE]", "setActiveConnectionConfig called");
     this.activeConnectionConfig.set(config);
   }
 
   setActiveDatabase(dbName: string | null): void {
-    this.logger.debug("[CONNECTION_STATE]", "setActiveDatabase called", { dbName });
+    logger.debug("[CONNECTION_STATE]", "setActiveDatabase called", { dbName });
     this.activeDatabaseName.set(dbName);
   }
 
   setActiveCollection(collectionName: string | null): void {
-    this.logger.debug("[CONNECTION_STATE]", "setActiveCollection called", { collectionName });
+    logger.debug("[CONNECTION_STATE]", "setActiveCollection called", { collectionName });
     this.activeCollectionName.set(collectionName);
   }
 }

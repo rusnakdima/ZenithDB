@@ -13,7 +13,7 @@ import {
 } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { AutocompleteService, CompletionItem } from "../services";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../../services/logger.service";
 
 @Component({
   selector: "app-autocomplete",
@@ -23,7 +23,7 @@ import { getLoggingService } from "@tauri-apps/logger";
 })
 export class AutocompleteComponent implements OnInit, OnDestroy {
   private readonly autocompleteService = inject(AutocompleteService);
-  private readonly logger = getLoggingService();
+  
 
   @Input() minWidth = 280;
   @Input() position = signal({ top: 0, left: 0 });
@@ -76,7 +76,7 @@ export class AutocompleteComponent implements OnInit, OnDestroy {
   }
 
   onItemClick(item: CompletionItem): void {
-    this.logger.debug("[QUERY_AUTOCOMPLETE]", "Item clicked", { label: item.label });
+    logger.debug("[QUERY_AUTOCOMPLETE]", "Item clicked", { label: item.label });
     this.itemSelect.emit(item);
     this.autocompleteService.close();
   }

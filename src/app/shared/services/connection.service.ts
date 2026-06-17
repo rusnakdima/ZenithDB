@@ -9,19 +9,19 @@ import {
   ConnectionHealth,
 } from "@shared/models/connection.config";
 import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../services/logger.service";
 
 @Injectable({ providedIn: "root" })
 export class ConnectionService {
   private loadingService = inject(LoadingService);
   private api = inject(ApiProvider);
-  private logger = inject(DataflowLoggerService, { optional: true });
-  private appLogger = getLoggingService();
+  private appLogger = inject(DataflowLoggerService, { optional: true });
+  
 
   async listConnections(): Promise<ConnectionSummary[]> {
     const startTime = performance.now();
     const result = await this.api.listConnections();
-    this.logger?.logApiCall("connection", "listConnections", "connection_list", {
+    this.appLogger?.logApiCall("connection", "listConnections", "connection_list", {
       count: result.length,
     });
     return result;
@@ -32,7 +32,7 @@ export class ConnectionService {
     const result = await withLoading(this.loadingService, "Loading connection...", () =>
       this.api.getConnection(id)
     );
-    this.logger?.logDataReceive(
+    this.appLogger?.logDataReceive(
       "connection",
       "getConnection",
       "connection_get",
@@ -47,7 +47,7 @@ export class ConnectionService {
     const result = await withLoading(this.loadingService, "Saving connection...", () =>
       this.api.saveConnection(config)
     );
-    this.logger?.logDataReceive(
+    this.appLogger?.logDataReceive(
       "connection",
       "saveConnection",
       "connection_save",
@@ -62,7 +62,7 @@ export class ConnectionService {
     await withLoading(this.loadingService, "Deleting connection...", () =>
       this.api.deleteConnection(id)
     );
-    this.logger?.logUserAction("connection", "deleteConnection", { id });
+    this.appLogger?.logUserAction("connection", "deleteConnection", { id });
   }
 
   async testConnection(config: TestConnectionConfig): Promise<ConnectionHealth> {
@@ -70,7 +70,7 @@ export class ConnectionService {
     const result = await withLoading(this.loadingService, "Testing connection...", () =>
       this.api.testConnection(config)
     );
-    this.logger?.logDataReceive(
+    this.appLogger?.logDataReceive(
       "connection",
       "testConnection",
       "connection_test",
@@ -89,7 +89,7 @@ export class ConnectionService {
         config: fullConn.config.config,
       };
       const result = await this.api.testConnection(config);
-      this.logger?.logDataReceive(
+      this.appLogger?.logDataReceive(
         "connection",
         "testConnectionById",
         "connection_test",
@@ -100,7 +100,7 @@ export class ConnectionService {
     } catch (e) {
       const error = e instanceof Error ? e.message : String(e);
       this.appLogger?.warn("[CONNECTION]", "Failed to test connection", { error });
-      this.logger?.logUserAction("connection", "testConnectionById", { connId, error: String(e) });
+      this.appLogger?.logUserAction("connection", "testConnectionById", { connId, error: String(e) });
       return null;
     }
   }
@@ -109,7 +109,7 @@ export class ConnectionService {
     const startTime = performance.now();
     try {
       const result = await this.api.testConnectionStatus(connId);
-      this.logger?.logDataReceive(
+      this.appLogger?.logDataReceive(
         "connection",
         "testConnectionStatus",
         "connection_status",
@@ -118,7 +118,7 @@ export class ConnectionService {
       );
       return result;
     } catch (e) {
-      this.logger?.logUserAction("connection", "testConnectionStatus", {
+      this.appLogger?.logUserAction("connection", "testConnectionStatus", {
         connId,
         error: String(e),
       });
@@ -129,6 +129,6 @@ export class ConnectionService {
   async updateConnection(id: string, config: ConnectionConfig): Promise<void> {
     const startTime = performance.now();
     await this.api.updateConnection(id, config);
-    this.logger?.logUserAction("connection", "updateConnection", { id });
+    this.appLogger?.logUserAction("connection", "updateConnection", { id });
   }
 }

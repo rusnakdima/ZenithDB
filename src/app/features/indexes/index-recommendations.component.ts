@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter, inject } from "@angular/core";
 import { CommonModule } from "@angular/common";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../services/logger.service";
 
 @Component({
   selector: "app-index-recommendations",
@@ -12,7 +12,7 @@ export class IndexRecommendationsComponent {
   @Input() collectionName = "";
   @Input() set recommendations(value: unknown[]) {
     this._recommendations = value;
-    this.logger.debug("[IndexRecommendations]", "Recommendations loaded", {
+    logger.debug("[IndexRecommendations]", "Recommendations loaded", {
       count: value.length,
       collection: this.collectionName,
     });
@@ -21,25 +21,25 @@ export class IndexRecommendationsComponent {
   @Output() acceptRecommendation = new EventEmitter<unknown>();
   @Output() dismissRecommendation = new EventEmitter<unknown>();
 
-  private logger = getLoggingService();
+  
   private _recommendations: unknown[] = [];
 
   onAcceptRecommendation(recommendation: unknown): void {
-    this.logger.info("[IndexRecommendations]", "Recommendation accepted", {
+    logger.info("[IndexRecommendations]", "Recommendation accepted", {
       collection: this.collectionName,
     });
     this.acceptRecommendation.emit(recommendation);
   }
 
   onDismissRecommendation(recommendation: unknown): void {
-    this.logger.debug("[IndexRecommendations]", "Recommendation dismissed", {
+    logger.debug("[IndexRecommendations]", "Recommendation dismissed", {
       collection: this.collectionName,
     });
     this.dismissRecommendation.emit(recommendation);
   }
 
   onCreateIndex(): void {
-    this.logger.info("[IndexRecommendations]", "Index creation initiated from recommendation", {
+    logger.info("[IndexRecommendations]", "Index creation initiated from recommendation", {
       collection: this.collectionName,
     });
     this.createIndex.emit();

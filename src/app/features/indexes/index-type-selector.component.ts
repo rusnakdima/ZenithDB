@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter, inject } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { IndexType } from "./create-index-dialog.component";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../services/logger.service";
 
 interface IndexTypeOption {
   type: IndexType;
@@ -59,12 +59,12 @@ export class IndexTypeSelectorComponent {
   @Input() selectedType: IndexType = "single";
   @Output() typeChange = new EventEmitter<IndexType>();
 
-  private logger = getLoggingService();
+  
 
   indexTypes = INDEX_TYPES;
 
   onTypeSelect(type: IndexType): void {
-    this.logger.debug("[INDEX]", "Index type selected", { type });
+    logger.debug("[INDEX]", "Index type selected", { type });
     this.typeChange.emit(type);
   }
 

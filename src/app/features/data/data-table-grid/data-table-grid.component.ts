@@ -37,7 +37,7 @@ import { RecordFormComponent } from "@features/data/record-form/record-form.comp
 import { BulkActionBarComponent } from "@features/data/bulk-action-bar/bulk-action-bar.component";
 import { DataTableGridStore } from "./store/data-table-grid.store";
 import { DataTableGridService } from "./services/data-table-grid.service";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../../services/logger.service";
 
 @Component({
   selector: "app-data-table-grid",
@@ -61,7 +61,7 @@ import { getLoggingService } from "@tauri-apps/logger";
 export class DataTableGridComponent implements OnInit, OnChanges, OnDestroy, AfterViewInit {
   private store = inject(DataTableGridStore);
   private service = inject(DataTableGridService);
-  private logger = getLoggingService();
+  
 
   @ViewChild("headerScroll") headerScrollRef!: ElementRef<HTMLDivElement>;
   @ViewChild("bodyScroll") bodyScrollRef!: ElementRef<HTMLDivElement>;
@@ -452,7 +452,7 @@ export class DataTableGridComponent implements OnInit, OnChanges, OnDestroy, Aft
 
   async exportData(format: ExportFormat) {
     try {
-      this.logger.info(
+      logger.info(
         "[DATA_GRID]",
         `Exporting ${this.collectionName} as ${format.toUpperCase()}`
       );
@@ -492,7 +492,7 @@ export class DataTableGridComponent implements OnInit, OnChanges, OnDestroy, Aft
     if ((record as any).__delete) {
       delete (record as any).__delete;
       try {
-        this.logger.info("[DATA_GRID]", `Deleting record in ${this.collectionName}`);
+        logger.info("[DATA_GRID]", `Deleting record in ${this.collectionName}`);
         await this.service.deleteRecord(this.collectionName, record);
         this.closeRecordForm();
         this.dataChange.emit();
@@ -503,7 +503,7 @@ export class DataTableGridComponent implements OnInit, OnChanges, OnDestroy, Aft
     } else {
       try {
         const isEdit = this.recordFormMode() === "edit";
-        this.logger.info(
+        logger.info(
           "[DATA_GRID]",
           `${isEdit ? "Updating" : "Creating"} record in ${this.collectionName}`
         );
@@ -528,7 +528,7 @@ export class DataTableGridComponent implements OnInit, OnChanges, OnDestroy, Aft
   async confirmBulkDelete() {
     try {
       const count = this.store.selectedRows().size;
-      this.logger.info("[DATA_GRID]", `Bulk deleting ${count} records from ${this.collectionName}`);
+      logger.info("[DATA_GRID]", `Bulk deleting ${count} records from ${this.collectionName}`);
       await this.service.bulkDelete(this.collectionName);
       this.store.clearSelection();
       this.showBulkDeleteConfirm.set(false);

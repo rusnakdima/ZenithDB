@@ -1,7 +1,7 @@
 import { Component, input, output, signal, inject } from "@angular/core";
 import { MatIconModule } from "@angular/material/icon";
 import { ProviderType } from "@shared/models/provider.model";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../../services/logger.service";
 
 interface ProviderOption {
   type: ProviderType;
@@ -17,7 +17,7 @@ interface ProviderOption {
   templateUrl: "./provider-selector.component.html",
 })
 export class ProviderSelectorComponent {
-  private logger = getLoggingService();
+  
 
   selected = input<ProviderType | null>(null);
 
@@ -45,7 +45,7 @@ export class ProviderSelectorComponent {
   ];
 
   selectProvider(type: ProviderType) {
-    this.logger.info("[PROVIDER_SELECTOR]", "Provider selected", { type });
+    logger.info("[PROVIDER_SELECTOR]", "Provider selected", { type });
     this.providerSelected.emit(type);
   }
 }

@@ -24,7 +24,7 @@ import { isNullOrUndefined } from "@shared/utils/collection.utils";
 import { SortableHeaderComponent } from "@shared/components/sortable-header/sortable-header.component";
 import { DataTypeBadgeComponent } from "@shared/components/data-type-badge/data-type-badge.component";
 import { CheckboxComponent } from "@shared/components/checkbox/checkbox.component";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../../services/logger.service";
 
 @Component({
   selector: "app-column-manager",
@@ -44,7 +44,7 @@ import { getLoggingService } from "@tauri-apps/logger";
 })
 export class ColumnManagerComponent {
   private cdr = inject(ChangeDetectorRef);
-  private logger = getLoggingService();
+  
   @Input() columns: ColumnInfo[] = [];
   @Input() visibleColumnsList: string[] = [];
   @Input() columnOrder: string[] = [];
@@ -97,7 +97,7 @@ export class ColumnManagerComponent {
   }
 
   onToggleColumnVisibility(col: string) {
-    this.logger.debug("[DATA]", `Column visibility toggled: ${col}`);
+    logger.debug("[DATA]", `Column visibility toggled: ${col}`);
     this.toggleColumnVisibility.emit(col);
   }
 

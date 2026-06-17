@@ -4,7 +4,7 @@ import { FormsModule } from "@angular/forms";
 import { FieldInfo } from "@features/query/models";
 import { IndexField } from "./index.service";
 import { IndexType } from "./create-index-dialog.component";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../services/logger.service";
 
 @Component({
   selector: "app-field-selector",
@@ -17,7 +17,7 @@ export class FieldSelectorComponent {
   @Input() indexType: IndexType = "single";
   @Output() fieldsChange = new EventEmitter<IndexField[]>();
 
-  private logger = getLoggingService();
+  
 
   selectedFields = signal<IndexField[]>([]);
 
@@ -26,10 +26,10 @@ export class FieldSelectorComponent {
     const existing = current.find((f) => f.name === field.name);
 
     if (existing) {
-      this.logger.debug("[INDEX]", "Field deselected for index", { field: field.name });
+      logger.debug("[INDEX]", "Field deselected for index", { field: field.name });
       this.selectedFields.update((fields) => fields.filter((f) => f.name !== field.name));
     } else {
-      this.logger.debug("[INDEX]", "Field selected for index", { field: field.name });
+      logger.debug("[INDEX]", "Field selected for index", { field: field.name });
       this.selectedFields.update((fields) => [
         ...fields,
         { name: field.name, direction: "asc" as const },

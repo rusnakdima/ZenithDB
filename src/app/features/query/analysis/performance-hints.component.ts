@@ -16,7 +16,7 @@ import { QueryAnalyzerService, QueryAnalysisResult } from "./query-analyzer.serv
 import { QueryHint, IndexRecommendation } from "../services/hint-analyzer.service";
 import { FilterExpression } from "@shared/models/connection.config";
 import { ErrorHandlerService } from "@shared/services/error-handler.service";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../../services/logger.service";
 
 @Component({
   selector: "app-performance-hints",
@@ -29,7 +29,7 @@ export class PerformanceHintsComponent implements OnInit, OnChanges {
   private cdr = inject(ChangeDetectorRef);
   private readonly queryAnalyzer = inject(QueryAnalyzerService);
   private readonly errorHandler = inject(ErrorHandlerService);
-  private readonly logger = getLoggingService();
+  
 
   @Input() collectionName = "";
   @Input() filterText = "";
@@ -60,7 +60,7 @@ export class PerformanceHintsComponent implements OnInit, OnChanges {
     }
 
     this.isLoading.set(true);
-    this.logger.debug("[QUERY]", "Starting performance analysis", {
+    logger.debug("[QUERY]", "Starting performance analysis", {
       collectionName: this.collectionName,
     });
 
@@ -83,7 +83,7 @@ export class PerformanceHintsComponent implements OnInit, OnChanges {
       this.hints.set(result.hints);
       this.recommendations.set(result.recommendations);
       this.score.set(result.score);
-      this.logger.debug("[QUERY]", "Performance analysis complete", {
+      logger.debug("[QUERY]", "Performance analysis complete", {
         score: result.score,
         hintCount: result.hints.length,
       });

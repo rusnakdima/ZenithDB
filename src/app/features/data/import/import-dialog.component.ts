@@ -12,7 +12,7 @@ import {
 import { SchemaCompletionService } from "@features/query/services/schema-completion.service";
 import { FieldMappingComponent } from "./field-mapping.component";
 import { ToastService } from "@services/toast.service";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../../services/logger.service";
 
 @Component({
   selector: "app-import-dialog",
@@ -24,7 +24,7 @@ export class ImportDialogComponent implements OnInit {
   private importService = inject(ImportService);
   private schemaCompletion = inject(SchemaCompletionService);
   private toast = inject(ToastService);
-  private logger = getLoggingService();
+  
 
   closed = output<void>();
 
@@ -180,7 +180,7 @@ export class ImportDialogComponent implements OnInit {
     };
 
     try {
-      this.logger.info(
+      logger.info(
         "[DATA_IMPORT]",
         `Starting import to ${collection}: ${data.rows.length} rows`
       );

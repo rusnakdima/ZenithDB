@@ -1,14 +1,14 @@
 import { Injectable, inject, signal } from "@angular/core";
 import { CacheService } from "@shared/services/cache.service";
 import { TauriBridgeService } from "@providers/tauri-bridge.service";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../services/logger.service";
 import { TIME_CONSTANTS, QUERY_CONSTANTS } from "@shared/utils/constants";
 import { ConnectionHealth } from "@shared/models/connection.config";
 
 @Injectable({ providedIn: "root" })
 export class HealthApiService extends CacheService {
   private tauriBridge = inject(TauriBridgeService);
-  private appLogger = getLoggingService();
+  
   private healthSignal = signal<Map<string, ConnectionHealth>>(new Map());
   private healthTimestamps = signal<Map<string, number>>(new Map());
   private refreshCallbacks = new Map<string, Set<() => void>>();
@@ -23,7 +23,7 @@ export class HealthApiService extends CacheService {
     connectionId: string,
     timeoutMs = QUERY_CONSTANTS.MAX_LIMIT
   ): Promise<ConnectionHealth> {
-    this.appLogger.debug("[HEALTH_API]", "checkHealth started", { connectionId, timeoutMs });
+    logger.debug("[HEALTH_API]", "checkHealth started", { connectionId, timeoutMs });
     const cached = this.getHealth(connectionId);
     const timestamp = this.healthTimestamps().get(connectionId) ?? 0;
     if (cached && !this.isStale(timestamp, this.HEALTH_TTL_MS)) {
@@ -70,7 +70,7 @@ export class HealthApiService extends CacheService {
   }
 
   invalidateHealth(connectionId?: string): void {
-    this.appLogger.debug("[HEALTH_API]", "invalidateHealth called", { connectionId });
+    logger.debug("[HEALTH_API]", "invalidateHealth called", { connectionId });
     if (connectionId) {
       this.healthSignal.update((map) => {
         const newMap = new Map(map);
@@ -93,7 +93,7 @@ export class HealthApiService extends CacheService {
   }
 
   private async fetchHealth(connectionId: string): Promise<ConnectionHealth> {
-    this.appLogger.debug("[HEALTH_API]", "fetchHealth started", { connectionId });
+    logger.debug("[HEALTH_API]", "fetchHealth started", { connectionId });
     const cacheKey = `health:${connectionId}`;
     const fetchFn = async (): Promise<ConnectionHealth> => {
       const health = await this.tauriBridge.invoke<ConnectionHealth>("check_health", {
@@ -112,7 +112,7 @@ export class HealthApiService extends CacheService {
       return health;
     };
     return this.getOrFetch(cacheKey, fetchFn, this.HEALTH_TTL_MS).then((result) => {
-      this.appLogger.debug("[HEALTH_API]", "fetchHealth completed", { connectionId });
+      logger.debug("[HEALTH_API]", "fetchHealth completed", { connectionId });
       return result;
     });
   }

@@ -1,6 +1,6 @@
 import { Injectable, signal, inject, DestroyRef } from "@angular/core";
 import { Router } from "@angular/router";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../services/logger.service";
 import {
   SHORTCUT_CONFIG,
   formatShortcut,
@@ -15,7 +15,7 @@ export class KeyboardShortcutsService {
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
   private connectionFormService = inject(ConnectionFormService);
-  private logger = getLoggingService();
+  
 
   private enabled = signal(true);
 
@@ -101,12 +101,12 @@ export class KeyboardShortcutsService {
   }
 
   private dispatchAction(action: string, _event: KeyboardEvent): void {
-    this.logger.debug("[SHORTCUTS]", "Shortcut triggered", { action });
+    logger.debug("[SHORTCUTS]", "Shortcut triggered", { action });
     const handler = this.shortcutActions[action];
     if (handler) {
       handler();
     }
-    this.logger.debug("[SHORTCUTS]", "Shortcut completed", { action });
+    logger.debug("[SHORTCUTS]", "Shortcut completed", { action });
   }
 
   private closeTopModal(): void {
@@ -114,7 +114,7 @@ export class KeyboardShortcutsService {
   }
 
   getShortcutsByCategory(): Record<ShortcutCategory, { key: string; desc: string }[]> {
-    this.logger.debug("[SHORTCUTS]", "getShortcutsByCategory started");
+    logger.debug("[SHORTCUTS]", "getShortcutsByCategory started");
     const result: Record<ShortcutCategory, { key: string; desc: string }[]> = {
       navigation: [],
       actions: [],
@@ -127,7 +127,7 @@ export class KeyboardShortcutsService {
       result[config.category].push({ key: display, desc: config.description });
     }
 
-    this.logger.debug("[SHORTCUTS]", "getShortcutsByCategory completed", {
+    logger.debug("[SHORTCUTS]", "getShortcutsByCategory completed", {
       categories: Object.keys(result).length,
     });
     return result;

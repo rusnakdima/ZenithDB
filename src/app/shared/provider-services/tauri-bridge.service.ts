@@ -2,7 +2,7 @@ import { Injectable, inject } from "@angular/core";
 import { invoke, InvokeOptions as TauriInvokeOptions } from "@tauri-apps/api/core";
 import { ErrorHandlerService } from "@shared/services/error-handler.service";
 import { SettingsService } from "@shared/services/settings.service";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../services/logger.service";
 
 const DEFAULT_TIMEOUT_MS = 30000;
 
@@ -33,7 +33,7 @@ interface ResponseModel {
 export class TauriBridgeService {
   private errorHandler = inject(ErrorHandlerService);
   private settingsService = inject(SettingsService);
-  private logger = getLoggingService();
+  
 
   getConnectionTimeoutMs(): number {
     return this.settingsService.currentSettings.connections.connectionTimeout * 1000;
@@ -51,7 +51,7 @@ export class TauriBridgeService {
     const timeoutMs = options.timeoutMs ?? this.getDefaultTimeoutMs();
     const { signal, suppressError } = options;
 
-    this.logger.debug("[TAURI_BRIDGE]", "Invoking command", { command, args });
+    logger.debug("[TAURI_BRIDGE]", "Invoking command", { command, args });
 
     try {
       const tauriOptions = signal ? { signal: signal as unknown as AbortSignal } : {};
@@ -59,7 +59,7 @@ export class TauriBridgeService {
         invoke<ResponseModel>(command, args, tauriOptions as TauriInvokeOptions),
         new Promise<never>((_, reject) => {
           const timeoutId = window.setTimeout(() => {
-            this.logger.warn("[TAURI_BRIDGE]", "Command timed out", { command, timeoutMs });
+            logger.warn("[TAURI_BRIDGE]", "Command timed out", { command, timeoutMs });
             reject(new Error(`Command "${command}" timed out after ${timeoutMs}ms`));
           }, timeoutMs);
           if (signal) {
@@ -75,14 +75,14 @@ export class TauriBridgeService {
       ]);
 
       if (response.status === "success") {
-        this.logger.debug("[TAURI_BRIDGE]", "Command succeeded", { command });
+        logger.debug("[TAURI_BRIDGE]", "Command succeeded", { command });
         return response.data as T;
       }
 
-      this.logger.error("[TAURI_BRIDGE]", "Command failed", { command, message: response.message });
+      logger.error("[TAURI_BRIDGE]", "Command failed", { command, message: response.message });
       throw new ApiException(response.message || `Operation failed: ${command}`, command);
     } catch (error: unknown) {
-      this.logger.error("[TAURI_BRIDGE]", "Invoke failed", { command, error });
+      logger.error("[TAURI_BRIDGE]", "Invoke failed", { command, error });
       if (!suppressError) {
         const appError = this.errorHandler.handleError(error, `TauriBridgeService.${command}`);
         if (error instanceof ApiException) {

@@ -9,7 +9,7 @@ import {
   FieldInfo,
 } from "../../models";
 import { SchemaCompletionService } from "../../services";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../../../services/logger.service";
 
 @Component({
   selector: "app-query-group",
@@ -19,7 +19,7 @@ import { getLoggingService } from "@tauri-apps/logger";
 })
 export class QueryGroupComponent implements OnInit {
   private readonly schemaCompletion = inject(SchemaCompletionService);
-  private readonly logger = getLoggingService();
+  
 
   @Input() group!: ConditionGroup;
   @Input() collectionName = "";
@@ -59,7 +59,7 @@ export class QueryGroupComponent implements OnInit {
   }
 
   addCondition(): void {
-    this.logger.debug("[QUERY]", "Adding condition to group");
+    logger.debug("[QUERY]", "Adding condition to group");
     const conditions = [...this.group.conditions, createEmptyCondition()];
     this.groupChange.emit({
       ...this.group,
@@ -84,7 +84,7 @@ export class QueryGroupComponent implements OnInit {
   }
 
   addNestedGroup(): void {
-    this.logger.debug("[QUERY]", "Adding nested group");
+    logger.debug("[QUERY]", "Adding nested group");
     const groups = [
       ...(this.group.groups ?? []),
       createEmptyGroup(this.group.operator === "or" ? "or" : "and"),

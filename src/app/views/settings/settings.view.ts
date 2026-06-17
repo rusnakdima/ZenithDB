@@ -6,7 +6,7 @@ import { SettingsService } from "../../shared/services/settings.service";
 import { ThemeService } from "@shared/services/theme.service";
 import { ThemePreset, THEME_PRESETS } from "@shared/models/theme.model";
 import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../services/logger.service";
 
 interface ThemeOption {
   value: "dark" | "light" | "system";
@@ -25,7 +25,7 @@ export class SettingsComponent {
   private settingsService = inject(SettingsService);
   private themeService = inject(ThemeService);
   private dataflowLogger = inject(DataflowLoggerService);
-  private logger = getLoggingService();
+  
 
   private readonly page = "Settings";
 
@@ -39,7 +39,7 @@ export class SettingsComponent {
   ];
 
   selectPreset(preset: ThemePreset): void {
-    this.logger.log("[SETTINGS]", "User action: selectPreset", { preset: preset.name });
+    logger.log("[SETTINGS]", "User action: selectPreset", { preset: preset.name });
     this.themeService.setPreset(preset);
   }
 
@@ -52,7 +52,7 @@ export class SettingsComponent {
       checkUpdates: boolean;
     }>
   ): void {
-    this.logger.log("[SETTINGS]", "User action: updateGeneral", partial);
+    logger.log("[SETTINGS]", "User action: updateGeneral", partial);
     this.settingsService.updateGeneral(partial);
     if (partial.theme) {
       this.themeService.setTheme(partial.theme as "dark" | "light");
@@ -65,26 +65,26 @@ export class SettingsComponent {
     autoSave?: boolean;
     lineNumbers?: boolean;
   }): void {
-    this.logger.log("[SETTINGS]", "User action: updateEditor", partial);
+    logger.log("[SETTINGS]", "User action: updateEditor", partial);
     this.settingsService.updateEditor(partial);
   }
 
   updateData(
     partial: Partial<{ defaultPageSize: number; confirmBeforeDelete: boolean; maxRows: number }>
   ): void {
-    this.logger.log("[SETTINGS]", "User action: updateData", partial);
+    logger.log("[SETTINGS]", "User action: updateData", partial);
     this.settingsService.updateData(partial);
   }
 
   updateConnections(
     partial: Partial<{ connectionTimeout: number; maxConcurrent: number; autoReconnect: boolean }>
   ): void {
-    this.logger.log("[SETTINGS]", "User action: updateConnections", partial);
+    logger.log("[SETTINGS]", "User action: updateConnections", partial);
     this.settingsService.updateConnections(partial);
   }
 
   resetToDefaults(): void {
-    this.logger.log("[SETTINGS]", "User action: resetToDefaults");
+    logger.log("[SETTINGS]", "User action: resetToDefaults");
     this.settingsService.resetToDefaults();
   }
 

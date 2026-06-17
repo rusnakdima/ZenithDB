@@ -1,4 +1,4 @@
-import { Injectable, inject, signal } from "@angular/core";
+import { Injectable, inject, signal, Injector } from "@angular/core";
 import { CacheService } from "@shared/services/cache.service";
 import { TauriBridgeService } from "@providers/tauri-bridge.service";
 import { DataStoreService } from "@shared/services/core/unified-storage.service";
@@ -10,9 +10,13 @@ export class ConnectionsApiService extends CacheService {
   private connectionsSignal = signal<ConnectionSummary[]>([]);
   private refreshCallbacks: Set<() => void> = new Set();
   private tauriBridge = inject(TauriBridgeService);
-  private dataStore = inject(DataStoreService);
+  private injector = inject(Injector);
   private dataflowLogger = inject(DataflowLoggerService);
   private readonly page = "ConnectionsApiService";
+
+  private get dataStore(): DataStoreService {
+    return this.injector.get(DataStoreService);
+  }
 
   getConnections(): ConnectionSummary[] {
     return this.connectionsSignal();

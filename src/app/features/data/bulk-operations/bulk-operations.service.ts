@@ -5,7 +5,7 @@ import { SchemaCompletionService } from "@features/query/services";
 import { FieldInfo } from "@features/query/models";
 import { RowData } from "@shared/models/connection.config";
 import { getRecordId } from "@shared/utils/record.utils";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../../services/logger.service";
 
 export interface BulkUpdateRequest {
   collectionName: string;
@@ -31,7 +31,7 @@ export class BulkOperationsService {
   private readonly dataStore = inject(DataStoreService);
   private readonly toast = inject(ToastService);
   private readonly schemaCompletion = inject(SchemaCompletionService);
-  private readonly logger = getLoggingService();
+  
 
   private readonly operationInProgress = signal(false);
 
@@ -48,7 +48,7 @@ export class BulkOperationsService {
     const result: BulkOperationResult = { success: 0, failed: 0, errors: [] };
 
     try {
-      this.logger.info(
+      logger.info(
         "[DATA_BULK]",
         `Bulk update started: ${request.documentIds.length} records, field=${request.field}`
       );
@@ -88,7 +88,7 @@ export class BulkOperationsService {
     const result: BulkOperationResult = { success: 0, failed: 0, errors: [] };
 
     try {
-      this.logger.info(
+      logger.info(
         "[DATA_BULK]",
         `Bulk delete started: ${request.documentIds.length} records, softDelete=${request.softDelete}`
       );
@@ -124,7 +124,7 @@ export class BulkOperationsService {
     const result: BulkOperationResult = { success: 0, failed: 0, errors: [] };
 
     try {
-      this.logger.info("[DATA_BULK]", `Bulk update fields started: ${updates.length} updates`);
+      logger.info("[DATA_BULK]", `Bulk update fields started: ${updates.length} updates`);
       for (const update of updates) {
         try {
           const document = await this.fetchDocument(collectionName, update.id);

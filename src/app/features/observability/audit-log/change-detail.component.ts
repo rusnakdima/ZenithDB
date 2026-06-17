@@ -9,7 +9,7 @@ import {
 } from "@angular/core";
 import { MatIconModule } from "@angular/material/icon";
 import { AuditService } from "./audit.service";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../../services/logger.service";
 
 @Component({
   selector: "app-change-detail",
@@ -20,7 +20,7 @@ import { getLoggingService } from "@tauri-apps/logger";
 })
 export class ChangeDetailComponent {
   private auditService = inject(AuditService);
-  private logger = getLoggingService();
+  
 
   @Input() before: Record<string, unknown> | undefined;
   @Input() after: Record<string, unknown> | undefined;
@@ -29,17 +29,17 @@ export class ChangeDetailComponent {
 
   diffs = computed(() => {
     const result = this.auditService.computeDiff(this.before, this.after);
-    this.logger.debug("[ChangeDetail]", "Change diff computed", { diffCount: result.length });
+    logger.debug("[ChangeDetail]", "Change diff computed", { diffCount: result.length });
     return result;
   });
 
   onClose(): void {
-    this.logger.debug("[ChangeDetail]", "Change detail closed");
+    logger.debug("[ChangeDetail]", "Change detail closed");
     this.close.emit();
   }
 
   onExport(): void {
-    this.logger.info("[ChangeDetail]", "Change details exported");
+    logger.info("[ChangeDetail]", "Change details exported");
     this.exportChange.emit();
   }
 

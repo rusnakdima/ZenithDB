@@ -3,7 +3,7 @@ import { FilterExpression, FilterOperator } from "@shared/models/connection.conf
 import { FilterBuilderService } from "./filter-builder.service";
 import { ProviderDetectorService } from "./provider-detector.service";
 import { MONGO_OPERATOR_MAP } from "@shared/utils/operator.utils";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../../services/logger.service";
 
 export interface ValidationError {
   line: number;
@@ -22,14 +22,14 @@ export interface ValidationResult {
 export class QueryValidatorService {
   private readonly filterBuilder = inject(FilterBuilderService);
   private readonly providerDetector = inject(ProviderDetectorService);
-  private readonly logger = getLoggingService();
+  
 
   validateQuery(query: string): ValidationResult {
     const errors: ValidationError[] = [];
     const warnings: ValidationError[] = [];
 
     if (!query || query.trim().length === 0) {
-      this.logger.debug("[QUERY]", "Empty query validation");
+      logger.debug("[QUERY]", "Empty query validation");
       return {
         isValid: false,
         errors: [{ line: 1, column: 1, message: "Query cannot be empty", severity: "error" }],
@@ -37,7 +37,7 @@ export class QueryValidatorService {
       };
     }
 
-    this.logger.debug("[QUERY]", "Validating query", { queryLength: query.length });
+    logger.debug("[QUERY]", "Validating query", { queryLength: query.length });
     const syntaxMode = this.providerDetector.currentSyntaxMode();
 
     switch (syntaxMode) {
@@ -62,7 +62,7 @@ export class QueryValidatorService {
   }
 
   validateFilter(filter: FilterExpression): ValidationResult {
-    this.logger.debug("[QUERY]", "Validating filter expression");
+    logger.debug("[QUERY]", "Validating filter expression");
     const result = this.filterBuilder.validateFilter(filter);
     return {
       isValid: result.isValid,

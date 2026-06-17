@@ -4,7 +4,7 @@ import { FormsModule } from "@angular/forms";
 import { ProjectConfig, ProjectField } from "../pipeline-builder.service";
 import { SchemaCompletionService } from "../../../query/services/schema-completion.service";
 import { FieldInfo } from "../../../query/models";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../../../services/logger.service";
 
 @Component({
   selector: "app-project-config",
@@ -14,7 +14,7 @@ import { getLoggingService } from "@tauri-apps/logger";
 })
 export class ProjectConfigComponent implements OnInit {
   private readonly schemaCompletion = inject(SchemaCompletionService);
-  private logger = getLoggingService();
+  
 
   @Input() config!: ProjectConfig;
   @Input() collectionName = "";
@@ -35,7 +35,7 @@ export class ProjectConfigComponent implements OnInit {
 
   addField(): void {
     const newField: ProjectField = { name: "", include: true };
-    this.logger.debug("[SEARCH_PIPELINE]", "Project field added");
+    logger.debug("[SEARCH_PIPELINE]", "Project field added");
     this.configChange.emit({
       ...this.config,
       fields: [...this.config.fields, newField],
@@ -51,7 +51,7 @@ export class ProjectConfigComponent implements OnInit {
   updateFieldInclude(index: number, include: boolean): void {
     const fields = [...this.config.fields];
     fields[index] = { ...fields[index], include };
-    this.logger.debug("[SEARCH_PIPELINE]", "Project field include changed", { index, include });
+    logger.debug("[SEARCH_PIPELINE]", "Project field include changed", { index, include });
     this.configChange.emit({ ...this.config, fields });
   }
 
@@ -62,7 +62,7 @@ export class ProjectConfigComponent implements OnInit {
   }
 
   removeField(index: number): void {
-    this.logger.debug("[SEARCH_PIPELINE]", "Project field removed", { index });
+    logger.debug("[SEARCH_PIPELINE]", "Project field removed", { index });
     this.configChange.emit({
       ...this.config,
       fields: this.config.fields.filter((_, i) => i !== index),
@@ -74,7 +74,7 @@ export class ProjectConfigComponent implements OnInit {
       name: f.name,
       include: true,
     }));
-    this.logger.debug("[SEARCH_PIPELINE]", "All project fields included");
+    logger.debug("[SEARCH_PIPELINE]", "All project fields included");
     this.configChange.emit({
       ...this.config,
       fields: allFields,
@@ -86,7 +86,7 @@ export class ProjectConfigComponent implements OnInit {
       name: f.name,
       include: false,
     }));
-    this.logger.debug("[SEARCH_PIPELINE]", "All project fields excluded");
+    logger.debug("[SEARCH_PIPELINE]", "All project fields excluded");
     this.configChange.emit({
       ...this.config,
       fields: allFields,

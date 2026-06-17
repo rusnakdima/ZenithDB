@@ -1,6 +1,6 @@
 import { Component, input, output, inject } from "@angular/core";
 import { MatIconModule } from "@angular/material/icon";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../../services/logger.service";
 
 @Component({
   selector: "app-bulk-action-bar",

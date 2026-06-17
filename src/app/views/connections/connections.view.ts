@@ -16,7 +16,7 @@ import { ConfirmService } from "@shared/services/confirm.service";
 import { withErrorHandling } from "@shared/utils/error-handler.utils";
 import { ConnectionFormService } from "@shared/services/connection-form.service";
 import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../services/logger.service";
 
 @Component({
   selector: "app-connections",
@@ -34,7 +34,7 @@ export class ConnectionsComponent implements OnInit {
   private connectionFormService = inject(ConnectionFormService);
   private cdr = inject(ChangeDetectorRef);
   private dataflowLogger = inject(DataflowLoggerService);
-  private logger = getLoggingService();
+  
 
   connections = this.store.connections;
   private readonly page = "Connections";
@@ -44,7 +44,7 @@ export class ConnectionsComponent implements OnInit {
   }
 
   async ngOnInit() {
-    this.logger.debug("[CONNECTIONS]", "Loading connections");
+    logger.debug("[CONNECTIONS]", "Loading connections");
     await withErrorHandling(() => this.store.refreshConnections(), {
       loading: this.loading,
       toast: true,
@@ -53,7 +53,7 @@ export class ConnectionsComponent implements OnInit {
   }
 
   onConnect(connection: ConnectionSummary): void {
-    this.logger.log("[CONNECTIONS]", "User action: connect", {
+    logger.log("[CONNECTIONS]", "User action: connect", {
       connectionId: connection.id,
       name: connection.name,
     });
@@ -62,7 +62,7 @@ export class ConnectionsComponent implements OnInit {
   }
 
   async onDelete(connection: ConnectionSummary): Promise<void> {
-    this.logger.log("[CONNECTIONS]", "User action: delete", {
+    logger.log("[CONNECTIONS]", "User action: delete", {
       connectionId: connection.id,
       name: connection.name,
     });
@@ -75,22 +75,22 @@ export class ConnectionsComponent implements OnInit {
   }
 
   onEdit(connection: ConnectionSummary): void {
-    this.logger.log("[CONNECTIONS]", "User action: edit", { connectionId: connection.id });
+    logger.log("[CONNECTIONS]", "User action: edit", { connectionId: connection.id });
     this.connectionFormService.openForEdit(connection.id);
   }
 
   onDuplicate(connection: ConnectionSummary): void {
-    this.logger.log("[CONNECTIONS]", "User action: duplicate", { connectionId: connection.id });
+    logger.log("[CONNECTIONS]", "User action: duplicate", { connectionId: connection.id });
     this.connectionFormService.openForDuplicate(connection.id);
   }
 
   openNewConnection(): void {
-    this.logger.log("[CONNECTIONS]", "User action: openNewConnection");
+    logger.log("[CONNECTIONS]", "User action: openNewConnection");
     this.connectionFormService.openNew();
   }
 
   async onRefresh(): Promise<void> {
-    this.logger.log("[CONNECTIONS]", "User action: refresh");
+    logger.log("[CONNECTIONS]", "User action: refresh");
     await withErrorHandling(() => this.store.refreshConnections(), {
       loading: this.loading,
       toast: true,

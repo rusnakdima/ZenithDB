@@ -1,3 +1,5 @@
+import { invoke } from '@tauri-apps/api/core';
+
 export enum LogLevel {
   Debug = 0,
   Info = 1,
@@ -26,6 +28,10 @@ export class LoggerService {
       LoggerService.instance = new LoggerService();
     }
     return LoggerService.instance;
+  }
+
+  private logToBackend(level: string, message: string, context?: string): void {
+    invoke('log_message', { level, component: context || 'app', message }).catch(() => {});
   }
 
   setLevel(level: LogLevel): void {
@@ -58,6 +64,7 @@ export class LoggerService {
       };
       this.addLog(entry);
       console.debug(`[DEBUG] ${context ? `[${context}] ` : ""}${message}`, data ?? "");
+      this.logToBackend('debug', message, context);
     }
   }
 
@@ -72,6 +79,7 @@ export class LoggerService {
       };
       this.addLog(entry);
       console.info(`[INFO] ${context ? `[${context}] ` : ""}${message}`, data ?? "");
+      this.logToBackend('info', message, context);
     }
   }
 
@@ -86,6 +94,7 @@ export class LoggerService {
       };
       this.addLog(entry);
       console.warn(`[WARN] ${context ? `[${context}] ` : ""}${message}`, data ?? "");
+      this.logToBackend('warn', message, context);
     }
   }
 
@@ -100,6 +109,7 @@ export class LoggerService {
       };
       this.addLog(entry);
       console.error(`[ERROR] ${context ? `[${context}] ` : ""}${message}`, data ?? "");
+      this.logToBackend('error', message, context);
     }
   }
 

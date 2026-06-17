@@ -1,7 +1,7 @@
 import { ErrorHandlerService } from "@shared/services/error-handler.service";
 import { ToastService } from "@services/toast.service";
 import { AppError, ErrorCode } from "@shared/models/error.model";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger, LogLevel } from "../../services/logger.service";
 
 interface Result<T> {
   success: boolean;
@@ -53,7 +53,7 @@ export function withErrorHandling<T>(
   services?: {
     errorHandler?: ErrorHandlerService;
     toastService?: ToastService;
-    logger?: ReturnType<typeof getLoggingService>;
+    logger?: Pick<typeof logger, 'debug' | 'info' | 'warn' | 'error'>;
   }
 ): Promise<Result<T>> {
   const errorHandler = services?.errorHandler;

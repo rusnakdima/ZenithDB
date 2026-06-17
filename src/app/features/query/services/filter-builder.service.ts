@@ -8,11 +8,11 @@ import {
   ProjectionConfig,
   FieldType,
 } from "../models";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../../services/logger.service";
 
 @Injectable({ providedIn: "root" })
 export class FilterBuilderService {
-  private readonly logger = getLoggingService();
+  
   buildFilter(groups: ConditionGroup[]): FilterExpression | null {
     if (!groups || groups.length === 0) return null;
 
@@ -212,7 +212,7 @@ export class FilterBuilderService {
     const warnings: string[] = [];
 
     this.validateExpression(expr, errors, warnings);
-    this.logger.debug("[QUERY]", "Filter validation", {
+    logger.debug("[QUERY]", "Filter validation", {
       isValid: errors.length === 0,
       errorCount: errors.length,
     });

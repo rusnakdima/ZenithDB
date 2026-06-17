@@ -13,7 +13,7 @@ import { ToastService } from "@services/toast.service";
 import { TIME_CONSTANTS } from "@shared/utils/constants";
 import { formatTimeAgo } from "@shared/utils/time.utils";
 import { formatBytes } from "@shared/utils/number.utils";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../../services/logger.service";
 
 @Component({
   selector: "app-cache-manager",
@@ -26,7 +26,7 @@ export class CacheManagerComponent {
   private cdr = inject(ChangeDetectorRef);
   private cacheService = inject(QueryCacheService);
   private toast = inject(ToastService);
-  private logger = getLoggingService();
+  
 
   expandedKeys = signal<Set<string>>(new Set());
   filterText = signal("");
@@ -58,13 +58,13 @@ export class CacheManagerComponent {
   }
 
   clearEntry(key: string): void {
-    this.logger.debug("[QUERY_CACHE]", "UI clearing cache entry", { key });
+    logger.debug("[QUERY_CACHE]", "UI clearing cache entry", { key });
     this.cacheService.clearCache(key);
     this.toast.success(`Cache entry cleared`);
   }
 
   clearAllCache(): void {
-    this.logger.debug("[QUERY_CACHE]", "UI clearing all cache");
+    logger.debug("[QUERY_CACHE]", "UI clearing all cache");
     this.cacheService.clearCache();
     this.toast.success(`All cache cleared`);
   }

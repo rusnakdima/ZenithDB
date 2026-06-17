@@ -19,7 +19,7 @@ import {
 } from "./pipeline-builder.service";
 import { PipelineStageComponent } from "./pipeline-stage.component";
 import { PipelineJsonEditorComponent } from "./pipeline-json-editor.component";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../../services/logger.service";
 
 @Component({
   selector: "app-aggregation-pipeline",
@@ -29,7 +29,7 @@ import { getLoggingService } from "@tauri-apps/logger";
 })
 export class AggregationPipelineComponent implements OnInit {
   readonly pipelineService = inject(PipelineBuilderService);
-  private logger = getLoggingService();
+  
 
   @Input() collectionName = "";
   @Output() cancel = new EventEmitter<void>();
@@ -49,18 +49,18 @@ export class AggregationPipelineComponent implements OnInit {
   jsonError = signal<string | null>(null);
 
   ngOnInit(): void {
-    this.logger.debug("[SEARCH_PIPELINE]", "Aggregation pipeline component initialized", {
+    logger.debug("[SEARCH_PIPELINE]", "Aggregation pipeline component initialized", {
       collectionName: this.collectionName,
     });
   }
 
   addStage(type: StageType): void {
-    this.logger.debug("[SEARCH_PIPELINE]", "Adding stage", { type });
+    logger.debug("[SEARCH_PIPELINE]", "Adding stage", { type });
     this.pipelineService.addStage(type);
   }
 
   removeStage(id: string): void {
-    this.logger.debug("[SEARCH_PIPELINE]", "Removing stage", { id });
+    logger.debug("[SEARCH_PIPELINE]", "Removing stage", { id });
     this.pipelineService.removeStage(id);
   }
 
@@ -77,7 +77,7 @@ export class AggregationPipelineComponent implements OnInit {
   }
 
   clearAll(): void {
-    this.logger.info("[SEARCH_PIPELINE]", "Clearing all pipeline stages");
+    logger.info("[SEARCH_PIPELINE]", "Clearing all pipeline stages");
     this.pipelineService.clearAll();
   }
 
@@ -92,13 +92,13 @@ export class AggregationPipelineComponent implements OnInit {
   }
 
   onCancel(): void {
-    this.logger.debug("[SEARCH_PIPELINE]", "Pipeline execution cancelled");
+    logger.debug("[SEARCH_PIPELINE]", "Pipeline execution cancelled");
     this.cancel.emit();
   }
 
   onExecute(): void {
     const pipeline = this.pipelineService.buildPipeline();
-    this.logger.info("[SEARCH_PIPELINE]", "Executing aggregation pipeline", { pipeline });
+    logger.info("[SEARCH_PIPELINE]", "Executing aggregation pipeline", { pipeline });
     this.execute.emit(pipeline);
   }
 }

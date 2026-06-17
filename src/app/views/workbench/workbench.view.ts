@@ -24,7 +24,7 @@ import { QueryExecutionService } from "@shared/services/query-execution.service"
 import { formatSQL } from "@shared/utils/sql-formatter.utils";
 import { findById } from "@shared/utils/array.utils";
 import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../services/logger.service";
 
 @Component({
   selector: "app-workbench",
@@ -41,7 +41,7 @@ export class WorkbenchComponent implements OnDestroy {
   private readonly queryExecution = inject(QueryExecutionService);
   private cdr = inject(ChangeDetectorRef);
   private dataflowLogger = inject(DataflowLoggerService);
-  private logger = getLoggingService();
+  
 
   private readonly page = "Workbench";
 
@@ -66,17 +66,17 @@ export class WorkbenchComponent implements OnDestroy {
   }
 
   addTab() {
-    this.logger.log("[WORKBENCH]", "User action: addTab");
+    logger.log("[WORKBENCH]", "User action: addTab");
     this.tabService.addTab();
   }
 
   closeTab(tabId: string, event?: MouseEvent) {
-    this.logger.log("[WORKBENCH]", "User action: closeTab", { tabId });
+    logger.log("[WORKBENCH]", "User action: closeTab", { tabId });
     this.tabService.closeTab(tabId, event);
   }
 
   selectTab(tabId: string) {
-    this.logger.log("[WORKBENCH]", "User action: selectTab", { tabId });
+    logger.log("[WORKBENCH]", "User action: selectTab", { tabId });
     this.tabService.selectTab(tabId);
   }
 
@@ -86,7 +86,7 @@ export class WorkbenchComponent implements OnDestroy {
 
   async runCurrentTab() {
     const tab = this.activeTab();
-    this.logger.log("[WORKBENCH]", "User action: runCurrentTab", {
+    logger.log("[WORKBENCH]", "User action: runCurrentTab", {
       tabId: tab?.id,
       queryLength: tab?.query.length,
     });
@@ -95,7 +95,7 @@ export class WorkbenchComponent implements OnDestroy {
   }
 
   runAllTabs() {
-    this.logger.log("[WORKBENCH]", "User action: runAllTabs", { tabCount: this.tabs().length });
+    logger.log("[WORKBENCH]", "User action: runAllTabs", { tabCount: this.tabs().length });
     this.tabs().forEach((tab) => {
       if (tab.query.trim() && !tab.loading) {
         this.executeTab(tab.id);
@@ -133,7 +133,7 @@ export class WorkbenchComponent implements OnDestroy {
   }
 
   formatAllSQL() {
-    this.logger.log("[WORKBENCH]", "User action: formatAllSQL");
+    logger.log("[WORKBENCH]", "User action: formatAllSQL");
     this.tabService.updateAllTabs({
       modified: true,
     });
@@ -143,7 +143,7 @@ export class WorkbenchComponent implements OnDestroy {
   }
 
   clearEditor() {
-    this.logger.log("[WORKBENCH]", "User action: clearEditor");
+    logger.log("[WORKBENCH]", "User action: clearEditor");
     this.tabService.updateActiveTab({
       query: "",
       results: null,

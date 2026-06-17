@@ -13,7 +13,7 @@ import { FormsModule } from "@angular/forms";
 import { ModalComponent } from "@shared/components/modal/modal.component";
 import { FieldInfo } from "../../query/models";
 import { FieldWeight } from "./fulltext-search.component";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../../services/logger.service";
 
 export interface TextIndexConfig {
   fields: FieldWeight[];
@@ -27,7 +27,7 @@ export interface TextIndexConfig {
   templateUrl: "./text-index-dialog.component.html",
 })
 export class TextIndexDialogComponent implements OnInit {
-  private logger = getLoggingService();
+  
 
   @Input() collectionName: string = "";
   @Input() fields: FieldInfo[] = [];
@@ -48,7 +48,7 @@ export class TextIndexDialogComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.logger.debug("[SEARCH_FULLTEXT]", "Text index dialog initialized", {
+    logger.debug("[SEARCH_FULLTEXT]", "Text index dialog initialized", {
       collectionName: this.collectionName,
       fieldCount: this.fields.length,
       hasExistingWeights: this.existingWeights.length > 0,
@@ -88,7 +88,7 @@ export class TextIndexDialogComponent implements OnInit {
     if (weights.length === 0) {
       return;
     }
-    this.logger.info("[SEARCH_FULLTEXT]", "Creating text index", {
+    logger.info("[SEARCH_FULLTEXT]", "Creating text index", {
       collectionName: this.collectionName,
       indexName: this.indexName(),
       fieldWeights: weights,

@@ -4,7 +4,7 @@ import { ProviderDetectorService } from "./provider-detector.service";
 import { SyntaxMode } from "../models";
 import { MONGO_OPERATOR_MAP } from "@shared/utils/operator.utils";
 import { escapeSqlValue } from "@shared/utils/string.utils";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../../services/logger.service";
 
 export interface TranslationResult {
   query: string;
@@ -15,11 +15,11 @@ export interface TranslationResult {
 @Injectable({ providedIn: "root" })
 export class QueryTranslationService {
   private readonly providerDetector = inject(ProviderDetectorService);
-  private readonly logger = getLoggingService();
+  
 
   translateToProvider(filter: FilterExpression, mode?: SyntaxMode): TranslationResult {
     const syntaxMode = mode ?? this.providerDetector.currentSyntaxMode();
-    this.logger.debug("[QUERY]", "Translating filter to provider", { syntaxMode });
+    logger.debug("[QUERY]", "Translating filter to provider", { syntaxMode });
 
     switch (syntaxMode) {
       case "sql":

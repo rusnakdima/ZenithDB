@@ -10,7 +10,7 @@ import { FilterBuilderService } from "@features/query/services/filter-builder.se
 import { PersistentStorageService } from "@shared/services/persistent-storage.service";
 import { ToastService } from "@services/toast.service";
 import { FilterExpression } from "@shared/models/connection.config";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../../services/logger.service";
 
 export interface NamedFilter {
   id: string;
@@ -39,7 +39,7 @@ export class ComplexFilterComponent implements OnInit {
   private readonly filterBuilder = inject(FilterBuilderService);
   private readonly storage = inject(PersistentStorageService);
   private readonly toast = inject(ToastService);
-  private logger = getLoggingService();
+  
 
   @Input() collectionName = "";
   @Input() initialFilter: FilterExpression | null = null;
@@ -58,7 +58,7 @@ export class ComplexFilterComponent implements OnInit {
   namedFilters = signal<NamedFilter[]>([]);
 
   ngOnInit(): void {
-    this.logger.debug("[SEARCH_FILTER]", "Complex filter component initialized", {
+    logger.debug("[SEARCH_FILTER]", "Complex filter component initialized", {
       collectionName: this.collectionName,
       hasInitialFilter: !!this.initialFilter,
     });
@@ -103,16 +103,16 @@ export class ComplexFilterComponent implements OnInit {
       const parsed = JSON.parse(json);
       const groups = this.filterBuilder.parseFilter(parsed);
       if (groups.length > 0) {
-        this.logger.info("[SEARCH_FILTER]", "Filter applied from JSON");
+        logger.info("[SEARCH_FILTER]", "Filter applied from JSON");
         this.rootGroup.set(groups[0]);
         this.filterChange.emit(this.buildFilter());
         this.toast.success("Filter applied from JSON");
       } else {
-        this.logger.warn("[SEARCH_FILTER]", "Invalid filter structure from JSON");
+        logger.warn("[SEARCH_FILTER]", "Invalid filter structure from JSON");
         this.toast.error("Invalid filter structure");
       }
     } catch (e) {
-      this.logger.error("[SEARCH_FILTER]", "Invalid JSON for filter", {
+      logger.error("[SEARCH_FILTER]", "Invalid JSON for filter", {
         error: (e as Error).message,
       });
       this.toast.error("Invalid JSON: " + (e as Error).message);
@@ -123,13 +123,13 @@ export class ComplexFilterComponent implements OnInit {
 
   applyCurrentFilter(): void {
     const filter = this.buildFilter();
-    this.logger.info("[SEARCH_FILTER]", "Applying filter", { filter });
+    logger.info("[SEARCH_FILTER]", "Applying filter", { filter });
     this.applyFilter.emit(filter);
     this.addToHistory(filter);
   }
 
   clearFilter(): void {
-    this.logger.info("[SEARCH_FILTER]", "Filter cleared");
+    logger.info("[SEARCH_FILTER]", "Filter cleared");
     this.rootGroup.set(createEmptyGroup());
     this.updateRawJson();
     this.filterChange.emit(null);
@@ -156,7 +156,7 @@ export class ComplexFilterComponent implements OnInit {
   }
 
   onHistorySelect(filter: FilterExpression): void {
-    this.logger.debug("[SEARCH_FILTER]", "Filter from history selected", { filter });
+    logger.debug("[SEARCH_FILTER]", "Filter from history selected", { filter });
     const groups = this.filterBuilder.parseFilter(filter);
     if (groups.length > 0) {
       this.rootGroup.set(groups[0]);
@@ -167,7 +167,7 @@ export class ComplexFilterComponent implements OnInit {
   }
 
   onHistoryDelete(filter: FilterExpression): void {
-    this.logger.debug("[SEARCH_FILTER]", "Filter deleted from history");
+    logger.debug("[SEARCH_FILTER]", "Filter deleted from history");
     const history = this.storage.getFilterHistory();
     const jsonStr = JSON.stringify(filter);
     const index = history.indexOf(jsonStr);
@@ -206,7 +206,7 @@ export class ComplexFilterComponent implements OnInit {
       createdAt: Date.now(),
     };
 
-    this.logger.info("[SEARCH_FILTER]", "Filter saved", { name, filter });
+    logger.info("[SEARCH_FILTER]", "Filter saved", { name, filter });
     this.namedFilters.update((filters) => [...filters, namedFilter]);
     this.saveNamedFilters();
     this.showSaveDialog.set(false);
@@ -224,7 +224,7 @@ export class ComplexFilterComponent implements OnInit {
   }
 
   deleteNamedFilter(id: string): void {
-    this.logger.info("[SEARCH_FILTER]", "Named filter deleted", { id });
+    logger.info("[SEARCH_FILTER]", "Named filter deleted", { id });
     this.namedFilters.update((filters) => filters.filter((f) => f.id !== id));
     this.saveNamedFilters();
     this.toast.success("Filter deleted");

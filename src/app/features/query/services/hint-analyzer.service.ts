@@ -2,7 +2,7 @@ import { Injectable, inject } from "@angular/core";
 import { FilterExpression } from "@shared/models/connection.config";
 import { SchemaCompletionService } from "./schema-completion.service";
 import { ProviderDetectorService } from "./provider-detector.service";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../../services/logger.service";
 
 export interface QueryHint {
   type: "info" | "warning" | "error";
@@ -25,7 +25,7 @@ export interface IndexRecommendation {
 export class HintAnalyzerService {
   private readonly schemaCompletion = inject(SchemaCompletionService);
   private readonly providerDetector = inject(ProviderDetectorService);
-  private readonly logger = getLoggingService();
+  
 
   async analyzeQuery(filter: FilterExpression, collectionName: string): Promise<QueryHint[]> {
     const hints: QueryHint[] = [];
@@ -171,14 +171,14 @@ export class HintAnalyzerService {
   }
 
   private createCompoundIndexSuggestion(collectionName: string, fields: string[]): void {
-    this.logger.info("[HINT_ANALYZER]", "Creating compound index", {
+    logger.info("[HINT_ANALYZER]", "Creating compound index", {
       collectionName,
       fields: fields.join(", "),
     });
   }
 
   private createIndexSuggestion(collectionName: string, field: string): void {
-    this.logger.info("[HINT_ANALYZER]", "Creating index", { collectionName, field });
+    logger.info("[HINT_ANALYZER]", "Creating index", { collectionName, field });
   }
 
   analyzeSort(sortField: string, collectionName: string): QueryHint[] {

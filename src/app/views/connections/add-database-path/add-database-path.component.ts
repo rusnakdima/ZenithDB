@@ -2,7 +2,7 @@ import { Component, input, output, signal, inject } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
 import { ToastService } from "@services/toast.service";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../../services/logger.service";
 
 @Component({
   selector: "app-add-database-path",
@@ -12,7 +12,7 @@ import { getLoggingService } from "@tauri-apps/logger";
 })
 export class AddDatabasePathComponent {
   private toast = inject(ToastService);
-  private logger = getLoggingService();
+  
 
   provider = input.required<string>();
   connectionId = input.required<string>();
@@ -25,7 +25,7 @@ export class AddDatabasePathComponent {
 
   async onBrowsePath() {
     try {
-      this.logger.debug("[ADD_DATABASE_PATH]", "Opening file dialog");
+      logger.debug("[ADD_DATABASE_PATH]", "Opening file dialog");
       const { open } = await import("@tauri-apps/plugin-dialog");
       const isJson = this.provider() === "json";
       const selected = await open({
@@ -39,10 +39,10 @@ export class AddDatabasePathComponent {
         const path = selected as string;
         this.dbPath.set(path);
         this.dbName.set(this.extractName(path, isJson));
-        this.logger.info("[ADD_DATABASE_PATH]", "File selected", { path, name: this.dbName() });
+        logger.info("[ADD_DATABASE_PATH]", "File selected", { path, name: this.dbName() });
       }
     } catch (e) {
-      this.logger.error("[ADD_DATABASE_PATH]", "Failed to open file dialog", { error: String(e) });
+      logger.error("[ADD_DATABASE_PATH]", "Failed to open file dialog", { error: String(e) });
       this.toast.error("Failed to open file dialog");
     }
   }
@@ -62,12 +62,12 @@ export class AddDatabasePathComponent {
     const name = this.dbName().trim();
     const path = this.dbPath().trim();
     if (!name) return;
-    this.logger.info("[ADD_DATABASE_PATH]", "Database path added", { name, path });
+    logger.info("[ADD_DATABASE_PATH]", "Database path added", { name, path });
     this.added.emit({ name, path });
   }
 
   onCancel() {
-    this.logger.debug("[ADD_DATABASE_PATH]", "Cancelled");
+    logger.debug("[ADD_DATABASE_PATH]", "Cancelled");
     this.cancelled.emit();
   }
 }

@@ -1,4 +1,4 @@
-import { Injectable, inject } from "@angular/core";
+import { Injectable, inject, Injector } from "@angular/core";
 import { TauriBridgeService } from "./tauri-bridge.service";
 import { RequestCancellationService } from "./request-cancellation.service";
 import { DataStoreService } from "@shared/services/core/unified-storage.service";
@@ -6,7 +6,7 @@ import { ConnectionsApiService } from "@shared/services/connections-api.service"
 import { ToastService } from "@shared/services/toast.service";
 import { ErrorHandlerService } from "@shared/services/error-handler.service";
 import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../services/logger.service";
 import {
   ConnectionSummary,
   ConnectionConfig,
@@ -28,14 +28,18 @@ import { IndexDefinition } from "@shared/models/index-definition.model";
 export class ApiProvider {
   private tauriBridge = inject(TauriBridgeService);
   private cancellation = inject(RequestCancellationService);
-  private dataStore = inject(DataStoreService);
+  private injector = inject(Injector);
   private connectionsApi = inject(ConnectionsApiService);
   private toastService: ToastService | null = null;
   private errorHandler = inject(ErrorHandlerService);
   private dataflowLogger = inject(DataflowLoggerService);
-  private logger = getLoggingService();
+  
 
   private readonly page = "ApiProvider";
+
+  private get dataStore(): DataStoreService {
+    return this.injector.get(DataStoreService);
+  }
 
   private getFastAbortSignal() {
     return this.cancellation.getFastAbortSignal();
@@ -88,7 +92,7 @@ export class ApiProvider {
         String(err),
         duration
       );
-      this.logger.error("[API]", "listConnections failed", { error: String(err) });
+      logger.error("[API]", "listConnections failed", { error: String(err) });
       throw err;
     }
   }

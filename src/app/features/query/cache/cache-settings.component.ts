@@ -14,7 +14,7 @@ import { FormsModule } from "@angular/forms";
 import { QueryCacheService, CacheEntry } from "./cache.service";
 import { TIME_CONSTANTS } from "@shared/utils/constants";
 import { formatTimeAgo } from "@shared/utils/time.utils";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../../services/logger.service";
 
 @Component({
   selector: "app-cache-settings",
@@ -26,7 +26,7 @@ import { getLoggingService } from "@tauri-apps/logger";
 export class CacheSettingsComponent implements OnInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
   private cacheService = inject(QueryCacheService);
-  private logger = getLoggingService();
+  
 
   queryKey = input<string>("");
   initialTtl = input<number>(300);
@@ -49,7 +49,7 @@ export class CacheSettingsComponent implements OnInit, OnDestroy {
   private refreshInterval: ReturnType<typeof setInterval> | null = null;
 
   ngOnInit(): void {
-    this.logger.debug("[QUERY_CACHE]", "Cache settings initialized", {
+    logger.debug("[QUERY_CACHE]", "Cache settings initialized", {
       initialTtl: this.initialTtl(),
     });
     this.ttl.set(this.initialTtl());
@@ -93,7 +93,7 @@ export class CacheSettingsComponent implements OnInit, OnDestroy {
   clearCache(): void {
     const key = this.customKey() || this.queryKey();
     if (key) {
-      this.logger.debug("[QUERY_CACHE]", "Settings clearing cache", { key });
+      logger.debug("[QUERY_CACHE]", "Settings clearing cache", { key });
       this.cacheService.clearCache(key);
       this.refreshStatus();
     }

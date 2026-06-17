@@ -1,6 +1,6 @@
 import { Injectable, inject } from "@angular/core";
 import { invoke } from "@tauri-apps/api/core";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../services/logger.service";
 
 interface Response<T> {
   status: "success" | "error";
@@ -17,7 +17,6 @@ export interface InvokeOptions {
 
 @Injectable({ providedIn: "root" })
 export class TauriApiService {
-  private readonly loggingService = getLoggingService();
 
   async invoke<T>(
     command: string,
@@ -42,7 +41,7 @@ export class TauriApiService {
       }
     } catch (error: unknown) {
       if (!options.suppressError) {
-        this.loggingService.error(`Error invoking command "${command}"`, "TauriApi", { error });
+        logger.error('[TAURI_API]', `Error invoking command "${command}" - TauriApi - ${JSON.stringify(error)}`);
       }
       throw error;
     }
@@ -66,7 +65,7 @@ export class TauriApiService {
       ]);
     } catch (error: unknown) {
       if (!options.suppressError) {
-        this.loggingService.error(`Error invoking command "${command}"`, "TauriApi", { error });
+        logger.error('[TAURI_API]', `Error invoking command "${command}" - TauriApi - ${JSON.stringify(error)}`);
       }
       throw error;
     }

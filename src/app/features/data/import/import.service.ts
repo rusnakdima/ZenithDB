@@ -2,7 +2,7 @@ import { Injectable, inject, signal } from "@angular/core";
 import { ToastService } from "@services/toast.service";
 import { ApiProvider } from "@providers/api.provider";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../../services/logger.service";
 
 export interface ParsedData {
   headers: string[];
@@ -41,7 +41,7 @@ export class ImportService {
   private toast = inject(ToastService);
   private api = inject(ApiProvider);
   private connectionState = inject(ConnectionStateService);
-  private logger = getLoggingService();
+  
 
   private progressSignal = signal<ImportProgress | null>(null);
   readonly progress = this.progressSignal.asReadonly();
@@ -211,7 +211,7 @@ export class ImportService {
     const total = data.length;
     this.progressSignal.set({ current: 0, total, percentage: 0 });
 
-    this.logger.debug(
+    logger.debug(
       "[DATA_IMPORT]",
       `Importing ${total} rows to ${collection}, batchSize=${options.batchSize}`
     );
@@ -247,7 +247,7 @@ export class ImportService {
     const duration = performance.now() - startTime;
     this.progressSignal.set(null);
 
-    this.logger.info(
+    logger.info(
       "[DATA_IMPORT]",
       `Import completed: ${imported} imported, ${updated} updated, ${errors.length} errors`
     );

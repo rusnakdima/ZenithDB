@@ -7,7 +7,7 @@ import { GroupConfigComponent } from "./stage-config/group-config.component";
 import { SortConfigComponent } from "./stage-config/sort-config.component";
 import { ProjectConfigComponent } from "./stage-config/project-config.component";
 import { LimitConfigComponent } from "./stage-config/limit-config.component";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../../services/logger.service";
 
 @Component({
   selector: "app-pipeline-stage",
@@ -146,7 +146,7 @@ import { getLoggingService } from "@tauri-apps/logger";
   ` */
 })
 export class PipelineStageComponent {
-  private logger = getLoggingService();
+  
 
   @Input() stage!: PipelineStage;
   @Input() collectionName = "";
@@ -159,31 +159,31 @@ export class PipelineStageComponent {
   @Output() configChange = new EventEmitter<StageConfig>();
 
   onRemove(): void {
-    this.logger.debug("[SEARCH_PIPELINE]", "Pipeline stage removed", {
+    logger.debug("[SEARCH_PIPELINE]", "Pipeline stage removed", {
       stageType: this.stage.type,
     });
     this.remove.emit();
   }
 
   onMoveUp(): void {
-    this.logger.debug("[SEARCH_PIPELINE]", "Pipeline stage move up", { index: this.index });
+    logger.debug("[SEARCH_PIPELINE]", "Pipeline stage move up", { index: this.index });
     this.moveUp.emit();
   }
 
   onMoveDown(): void {
-    this.logger.debug("[SEARCH_PIPELINE]", "Pipeline stage move down", { index: this.index });
+    logger.debug("[SEARCH_PIPELINE]", "Pipeline stage move down", { index: this.index });
     this.moveDown.emit();
   }
 
   onConfigChange(config: StageConfig): void {
-    this.logger.debug("[SEARCH_PIPELINE]", "Pipeline stage config changed", {
+    logger.debug("[SEARCH_PIPELINE]", "Pipeline stage config changed", {
       stageType: this.stage.type,
     });
     this.configChange.emit(config);
   }
 
   onReplaceRootChange(expression: string): void {
-    this.logger.debug("[SEARCH_PIPELINE]", "ReplaceRoot expression changed");
+    logger.debug("[SEARCH_PIPELINE]", "ReplaceRoot expression changed");
     this.configChange.emit({ expression });
   }
 

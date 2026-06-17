@@ -1,5 +1,5 @@
 import { Injectable, signal, inject } from "@angular/core";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../services/logger.service";
 
 export interface ConfirmOptions {
   title?: string;
@@ -12,13 +12,13 @@ export interface ConfirmOptions {
 
 @Injectable({ providedIn: "root" })
 export class ConfirmService {
-  private logger = getLoggingService();
+  
   private resolvePromise: ((value: boolean) => void) | null = null;
   isOpen = signal(false);
   options = signal<ConfirmOptions>({ message: "" });
 
   async confirmDelete(itemName: string): Promise<boolean> {
-    this.logger.debug("[CONFIRM]", "confirmDelete called", { itemName });
+    logger.debug("[CONFIRM]", "confirmDelete called", { itemName });
     return this.confirm({
       title: "Delete",
       message: `Are you sure you want to delete this? This action cannot be undone.`,
@@ -30,7 +30,7 @@ export class ConfirmService {
   }
 
   async confirm(options: ConfirmOptions): Promise<boolean> {
-    this.logger.debug("[CONFIRM]", "confirm called", { title: options.title });
+    logger.debug("[CONFIRM]", "confirm called", { title: options.title });
     this.options.set(options);
     this.isOpen.set(true);
     return new Promise((resolve) => {
@@ -39,7 +39,7 @@ export class ConfirmService {
   }
 
   confirmResult(result: boolean): void {
-    this.logger.debug("[CONFIRM]", "confirmResult called", { result });
+    logger.debug("[CONFIRM]", "confirmResult called", { result });
     this.isOpen.set(false);
     this.resolvePromise?.(result);
     this.resolvePromise = null;

@@ -1,6 +1,6 @@
 import { Injectable, signal, computed, inject } from "@angular/core";
 import { PersistentStorageService } from "@shared/services/persistent-storage.service";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../../../services/logger.service";
 
 export interface HistoryItem {
   id: string;
@@ -12,7 +12,7 @@ export interface HistoryItem {
 @Injectable()
 export class QueryEditorStore {
   private storage = inject(PersistentStorageService);
-  private logger = getLoggingService();
+  
 
   readonly showHistory = signal(false);
   readonly history = signal<HistoryItem[]>([]);
@@ -42,7 +42,7 @@ export class QueryEditorStore {
   }
 
   addToHistory(query: string, success: boolean): void {
-    this.logger.debug("[QUERY]", "Adding to history", { queryLength: query.length, success });
+    logger.debug("[QUERY]", "Adding to history", { queryLength: query.length, success });
     const item: HistoryItem = {
       id: crypto.randomUUID(),
       query,
@@ -60,7 +60,7 @@ export class QueryEditorStore {
   }
 
   clearAllHistory(): void {
-    this.logger.debug("[QUERY]", "Clearing all query history");
+    logger.debug("[QUERY]", "Clearing all query history");
     this.history.set([]);
     this.storage.remove("zenith_query_history");
   }

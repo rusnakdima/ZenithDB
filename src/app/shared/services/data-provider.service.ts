@@ -1,7 +1,7 @@
 import { Injectable, signal, inject } from "@angular/core";
 import { ApiProvider } from "@providers/api.provider";
 import { ConnectionStateService } from "./connection-state.service";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../services/logger.service";
 import {
   ColumnInfo,
   RowData,
@@ -39,7 +39,7 @@ interface ColumnsCacheEntry {
 export class DataProviderService {
   private api = inject(ApiProvider);
   private connectionState = inject(ConnectionStateService);
-  private logger = getLoggingService();
+  
 
   private readonly MAX_ENTRIES_PER_COLLECTION = CACHE_CONSTANTS.MAX_ENTRIES_PER_COLLECTION;
   private readonly COLUMNS_CACHE_TTL = CACHE_CONSTANTS.DEFAULT_TTL_MS;
@@ -109,7 +109,7 @@ export class DataProviderService {
   }
 
   async loadData(params: DataProviderParams, forceRefresh?: boolean): Promise<QueryResult> {
-    this.logger.debug("[DATA_PROVIDER]", "loadData started", {
+    logger.debug("[DATA_PROVIDER]", "loadData started", {
       collection: params.collection,
       forceRefresh,
     });
@@ -170,7 +170,7 @@ export class DataProviderService {
 
         this.currentParams.set(params);
         this.isDataLoaded.set(true);
-        this.logger.debug("[DATA_PROVIDER]", "loadData completed", {
+        logger.debug("[DATA_PROVIDER]", "loadData completed", {
           collection: params.collection,
           rowsReturned: result.data.length,
           total: result.total,
@@ -215,7 +215,7 @@ export class DataProviderService {
   }
 
   invalidateCache(collection: string): void {
-    this.logger.debug("[DATA_PROVIDER]", "invalidateCache called", { collection });
+    logger.debug("[DATA_PROVIDER]", "invalidateCache called", { collection });
     const cache = this.collectionDataCache();
     const keysToDelete: string[] = [];
     for (const key of cache.keys()) {
@@ -233,7 +233,7 @@ export class DataProviderService {
   }
 
   invalidateColumnsCache(collection?: string): void {
-    this.logger.debug("[DATA_PROVIDER]", "invalidateColumnsCache called", { collection });
+    logger.debug("[DATA_PROVIDER]", "invalidateColumnsCache called", { collection });
     const cache = this.columnsCache();
     if (collection) {
       const key = `${collection}_schema`;

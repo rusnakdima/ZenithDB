@@ -2,7 +2,7 @@ import { Component, Output, EventEmitter, inject, ChangeDetectionStrategy } from
 import { TitleCasePipe } from "@angular/common";
 import { MatIconModule } from "@angular/material/icon";
 import { TransactionService, TransactionOperation } from "./transaction.service";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../services/logger.service";
 
 @Component({
   selector: "app-transaction-log",
@@ -13,7 +13,7 @@ import { getLoggingService } from "@tauri-apps/logger";
 })
 export class TransactionLogComponent {
   private transactionService = inject(TransactionService);
-  private logger = getLoggingService();
+  
 
   @Output() close = new EventEmitter<void>();
 
@@ -26,13 +26,13 @@ export class TransactionLogComponent {
   onUndoOperation(index: number): void {
     const operations = this.operationLog();
     if (index >= operations.length - 1) {
-      this.logger.debug("[TRANSACTION]", "Undoing last operation");
+      logger.debug("[TRANSACTION]", "Undoing last operation");
       this.transactionService.undoLastOperation();
     }
   }
 
   onClearLog(): void {
-    this.logger.debug("[TRANSACTION]", "Clearing operation log");
+    logger.debug("[TRANSACTION]", "Clearing operation log");
     this.transactionService.clearOperationLog();
   }
 

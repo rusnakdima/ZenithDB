@@ -13,7 +13,7 @@ import {
 import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
 import { ProviderType } from "@shared/models/provider.model";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../../services/logger.service";
 
 export interface ConnectionFormData {
   name: string;
@@ -34,7 +34,7 @@ export interface ConnectionFormData {
   templateUrl: "./connection-config-form.component.html",
 })
 export class ConnectionConfigFormComponent implements OnInit, OnChanges {
-  private logger = getLoggingService();
+  
 
   provider = input.required<ProviderType>();
   initialData = input<ConnectionFormData>({
@@ -70,7 +70,7 @@ export class ConnectionConfigFormComponent implements OnInit, OnChanges {
     if (!this.data.host && !this.data.path) {
       this.setDefaultsForProvider();
     }
-    this.logger.debug("[CONNECTION_CONFIG_FORM]", "Initialized", { provider: this.provider() });
+    logger.debug("[CONNECTION_CONFIG_FORM]", "Initialized", { provider: this.provider() });
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -87,11 +87,11 @@ export class ConnectionConfigFormComponent implements OnInit, OnChanges {
         database: newData.database,
         useSsl: newData.useSsl,
       };
-      this.logger.debug("[CONNECTION_CONFIG_FORM]", "Initial data changed", {
+      logger.debug("[CONNECTION_CONFIG_FORM]", "Initial data changed", {
         provider: this.provider(),
       });
     } else if (changes["provider"] && !this.isFirstInit) {
-      this.logger.debug("[CONNECTION_CONFIG_FORM]", "Provider changed", {
+      logger.debug("[CONNECTION_CONFIG_FORM]", "Provider changed", {
         provider: this.provider(),
       });
       this.resetDataForProvider();

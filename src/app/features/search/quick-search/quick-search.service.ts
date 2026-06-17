@@ -3,7 +3,7 @@ import { SchemaService } from "@shared/services/schema.service";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { ApiProvider } from "@providers/api.provider";
 import { CollectionMeta, FilterExpression, RowData } from "@shared/models/connection.config";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../../services/logger.service";
 
 export interface QuickSearchResult {
   collection: string;
@@ -23,7 +23,7 @@ export class QuickSearchService {
   private readonly schemaService = inject(SchemaService);
   private readonly connectionState = inject(ConnectionStateService);
   private readonly api = inject(ApiProvider);
-  private logger = getLoggingService();
+  
 
   private readonly searchResultsSignal = signal<GroupedSearchResults[]>([]);
   private readonly isSearchingSignal = signal(false);
@@ -53,10 +53,10 @@ export class QuickSearchService {
 
     this.debounceTimeoutId = setTimeout(async () => {
       try {
-        this.logger.info("[SEARCH_QUICK]", "Executing quick search", { query });
+        logger.info("[SEARCH_QUICK]", "Executing quick search", { query });
         const results = await this.performSearch(query);
         this.searchResultsSignal.set(results);
-        this.logger.info("[SEARCH_QUICK]", "Quick search completed", {
+        logger.info("[SEARCH_QUICK]", "Quick search completed", {
           resultCount: results.length,
           collections: results.map((r) => r.collection),
         });
@@ -64,7 +64,7 @@ export class QuickSearchService {
         const error = e instanceof Error ? e.message : "Search failed";
         this.errorSignal.set(error);
         this.searchResultsSignal.set([]);
-        this.logger.error("[SEARCH_QUICK]", "Quick search failed", { error });
+        logger.error("[SEARCH_QUICK]", "Quick search failed", { error });
       } finally {
         this.isSearchingSignal.set(false);
       }
@@ -174,7 +174,7 @@ export class QuickSearchService {
   }
 
   clearResults(): void {
-    this.logger.debug("[SEARCH_QUICK]", "Quick search results cleared");
+    logger.debug("[SEARCH_QUICK]", "Quick search results cleared");
     this.searchResultsSignal.set([]);
     this.errorSignal.set(null);
   }

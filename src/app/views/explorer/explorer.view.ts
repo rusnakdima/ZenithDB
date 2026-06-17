@@ -22,7 +22,7 @@ import { PersistentStorageService } from "@shared/services/persistent-storage.se
 import { DiagnosticLoggerService } from "@shared/services/diagnostic-logger.service";
 import { ErrorHandlerService } from "@shared/services/error-handler.service";
 import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../services/logger.service";
 import {
   CollectionMeta,
   CollectionStats,
@@ -86,7 +86,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   private diagLogger = inject(DiagnosticLoggerService);
   private errorHandler = inject(ErrorHandlerService);
   private dataflowLogger = inject(DataflowLoggerService);
-  private logger = getLoggingService();
+  
 
   private readonly pageName = "Explorer";
 
@@ -557,7 +557,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   }
 
   onFilterApply() {
-    this.logger.log("[EXPLORER]", "User action: filterApply", { filter: this.filterText() });
+    logger.log("[EXPLORER]", "User action: filterApply", { filter: this.filterText() });
     this.reloadCounter.update((c) => c + 1);
     this.page.set(0);
     if (this.viewTab() === "json") {
@@ -566,13 +566,13 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   }
 
   onFilterClear() {
-    this.logger.log("[EXPLORER]", "User action: filterClear");
+    logger.log("[EXPLORER]", "User action: filterClear");
     this.filterText.set("");
     this.page.set(0);
   }
 
   onRefresh() {
-    this.logger.log("[EXPLORER]", "User action: refresh", { collection: this.activeCollection() });
+    logger.log("[EXPLORER]", "User action: refresh", { collection: this.activeCollection() });
     this.reloadCounter.update((c) => c + 1);
     this.page.set(0);
     this.loadStats();
@@ -582,7 +582,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   }
 
   onCreateDocument() {
-    this.logger.log("[EXPLORER]", "User action: createDocument", {
+    logger.log("[EXPLORER]", "User action: createDocument", {
       collection: this.activeCollection(),
     });
     this.isCreatingDocument.set(true);
@@ -591,7 +591,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   }
 
   async onExport(format: ExportFormat) {
-    this.logger.log("[EXPLORER]", "User action: export", {
+    logger.log("[EXPLORER]", "User action: export", {
       format,
       collection: this.activeCollection(),
     });
@@ -630,7 +630,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   }
 
   async onImport() {
-    this.logger.log("[EXPLORER]", "User action: import", { collection: this.activeCollection() });
+    logger.log("[EXPLORER]", "User action: import", { collection: this.activeCollection() });
     try {
       const { open } = await import("@tauri-apps/plugin-dialog");
       const { readTextFile } = await import("@tauri-apps/plugin-fs");
@@ -732,7 +732,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
 
   async saveDocument(doc: RowData) {
     if (!doc || !this.activeCollection()) return;
-    this.logger.log("[EXPLORER]", "User action: saveDocument", {
+    logger.log("[EXPLORER]", "User action: saveDocument", {
       collection: this.activeCollection(),
     });
     try {
@@ -747,7 +747,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
 
   async deleteDocument(doc: RowData) {
     const id = getRecordId(doc);
-    this.logger.log("[EXPLORER]", "User action: deleteDocument", {
+    logger.log("[EXPLORER]", "User action: deleteDocument", {
       collection: this.activeCollection(),
       id,
     });

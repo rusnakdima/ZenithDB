@@ -19,7 +19,7 @@ import {
   createEmptyCondition,
 } from "../../models";
 import { SchemaCompletionService } from "../../services";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../../../services/logger.service";
 
 @Component({
   selector: "app-query-condition",
@@ -29,7 +29,7 @@ import { getLoggingService } from "@tauri-apps/logger";
 })
 export class QueryConditionComponent implements OnInit {
   private readonly schemaCompletion = inject(SchemaCompletionService);
-  private readonly logger = getLoggingService();
+  
 
   @Input() condition!: Condition;
   @Input() collectionName = "";
@@ -70,7 +70,7 @@ export class QueryConditionComponent implements OnInit {
   }
 
   onFieldChange(field: string): void {
-    this.logger.debug("[QUERY]", "Condition field changed", { field });
+    logger.debug("[QUERY]", "Condition field changed", { field });
     const fieldInfo = this.fields().find((f) => f.name === field);
     const newType = fieldInfo?.type ?? "string";
     const operators = FIELD_OPERATORS[newType] || FIELD_OPERATORS["string"];

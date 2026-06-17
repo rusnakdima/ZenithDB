@@ -1,9 +1,9 @@
 import { Injectable, signal, inject } from "@angular/core";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../../../services/logger.service";
 
 @Injectable()
 export class DatabaseDetailStore {
-  private logger = getLoggingService();
+  
 
   readonly loading = signal(false);
   readonly totalDocuments = signal(0);
@@ -11,27 +11,27 @@ export class DatabaseDetailStore {
 
   setLoading(isLoading: boolean): void {
     this.loading.set(isLoading);
-    this.logger.debug("[DATABASE_DETAIL_STORE]", "Loading state changed", { isLoading });
+    logger.debug("[DATABASE_DETAIL_STORE]", "Loading state changed", { isLoading });
   }
 
   setTotalDocuments(total: number): void {
     this.totalDocuments.set(total);
-    this.logger.debug("[DATABASE_DETAIL_STORE]", "Total documents updated", { total });
+    logger.debug("[DATABASE_DETAIL_STORE]", "Total documents updated", { total });
   }
 
   openCreateCollectionModal(): void {
     this.showCreateCollection.set(true);
-    this.logger.debug("[DATABASE_DETAIL_STORE]", "Create collection modal opened");
+    logger.debug("[DATABASE_DETAIL_STORE]", "Create collection modal opened");
   }
 
   closeCreateCollectionModal(): void {
     this.showCreateCollection.set(false);
-    this.logger.debug("[DATABASE_DETAIL_STORE]", "Create collection modal closed");
+    logger.debug("[DATABASE_DETAIL_STORE]", "Create collection modal closed");
   }
 
   toggleCreateCollectionModal(): void {
     this.showCreateCollection.update((v) => !v);
-    this.logger.debug("[DATABASE_DETAIL_STORE]", "Create collection modal toggled", {
+    logger.debug("[DATABASE_DETAIL_STORE]", "Create collection modal toggled", {
       isOpen: this.showCreateCollection(),
     });
   }

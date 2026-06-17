@@ -4,7 +4,7 @@ import { FormsModule } from "@angular/forms";
 import { SortStageConfig } from "../pipeline-builder.service";
 import { SchemaCompletionService } from "../../../query/services/schema-completion.service";
 import { FieldInfo, SortConfig } from "../../../query/models";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../../../services/logger.service";
 
 @Component({
   selector: "app-sort-config",
@@ -14,7 +14,7 @@ import { getLoggingService } from "@tauri-apps/logger";
 })
 export class SortConfigComponent implements OnInit {
   private readonly schemaCompletion = inject(SchemaCompletionService);
-  private logger = getLoggingService();
+  
 
   @Input() config!: SortStageConfig;
   @Input() collectionName = "";
@@ -35,7 +35,7 @@ export class SortConfigComponent implements OnInit {
 
   addSort(): void {
     const newSort: SortConfig = { field: "", direction: "asc" };
-    this.logger.debug("[SEARCH_PIPELINE]", "Sort field added");
+    logger.debug("[SEARCH_PIPELINE]", "Sort field added");
     this.configChange.emit({
       ...this.config,
       sorts: [...this.config.sorts, newSort],
@@ -54,12 +54,12 @@ export class SortConfigComponent implements OnInit {
       ...sorts[index],
       direction: sorts[index].direction === "asc" ? "desc" : "asc",
     };
-    this.logger.debug("[SEARCH_PIPELINE]", "Sort direction toggled", { index });
+    logger.debug("[SEARCH_PIPELINE]", "Sort direction toggled", { index });
     this.configChange.emit({ ...this.config, sorts });
   }
 
   removeSort(index: number): void {
-    this.logger.debug("[SEARCH_PIPELINE]", "Sort field removed", { index });
+    logger.debug("[SEARCH_PIPELINE]", "Sort field removed", { index });
     this.configChange.emit({
       ...this.config,
       sorts: this.config.sorts.filter((_, i) => i !== index),

@@ -7,7 +7,7 @@ import {
   FieldType,
 } from "../../query/models";
 import { FilterOperator } from "@shared/models/connection.config";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../../services/logger.service";
 
 export type StageType =
   | "$match"
@@ -77,7 +77,7 @@ export interface AggregationPipeline {
 
 @Injectable({ providedIn: "root" })
 export class PipelineBuilderService {
-  private logger = getLoggingService();
+  
   private readonly _stages = signal<PipelineStage[]>([]);
 
   readonly stages = this._stages.asReadonly();
@@ -93,12 +93,12 @@ export class PipelineBuilderService {
       config: config ?? this.getDefaultConfig(type),
       order: this._stages().length,
     };
-    this.logger.info("[SEARCH_PIPELINE]", "Pipeline stage added", { type, config });
+    logger.info("[SEARCH_PIPELINE]", "Pipeline stage added", { type, config });
     this._stages.update((stages) => [...stages, stage]);
   }
 
   removeStage(id: string): void {
-    this.logger.debug("[SEARCH_PIPELINE]", "Pipeline stage removed", { id });
+    logger.debug("[SEARCH_PIPELINE]", "Pipeline stage removed", { id });
     this._stages.update((stages) => {
       const filtered = stages.filter((s) => s.id !== id);
       return filtered.map((s, i) => ({ ...s, order: i }));
@@ -106,7 +106,7 @@ export class PipelineBuilderService {
   }
 
   reorderStages(fromIndex: number, toIndex: number): void {
-    this.logger.debug("[SEARCH_PIPELINE]", "Pipeline stages reordered", { fromIndex, toIndex });
+    logger.debug("[SEARCH_PIPELINE]", "Pipeline stages reordered", { fromIndex, toIndex });
     this._stages.update((stages) => {
       const newStages = [...stages];
       const [moved] = newStages.splice(fromIndex, 1);
@@ -116,7 +116,7 @@ export class PipelineBuilderService {
   }
 
   updateStageConfig(id: string, config: StageConfig): void {
-    this.logger.debug("[SEARCH_PIPELINE]", "Pipeline stage config updated", { id, config });
+    logger.debug("[SEARCH_PIPELINE]", "Pipeline stage config updated", { id, config });
     this._stages.update((stages) => stages.map((s) => (s.id === id ? { ...s, config } : s)));
   }
 
@@ -133,7 +133,7 @@ export class PipelineBuilderService {
   }
 
   clearAll(): void {
-    this.logger.info("[SEARCH_PIPELINE]", "All pipeline stages cleared");
+    logger.info("[SEARCH_PIPELINE]", "All pipeline stages cleared");
     this._stages.set([]);
   }
 
@@ -150,7 +150,7 @@ export class PipelineBuilderService {
       }
       const stages = this.parsePipeline(parsed);
       this._stages.set(stages);
-      this.logger.info("[SEARCH_PIPELINE]", "Pipeline loaded from JSON", {
+      logger.info("[SEARCH_PIPELINE]", "Pipeline loaded from JSON", {
         stageCount: stages.length,
       });
       return true;

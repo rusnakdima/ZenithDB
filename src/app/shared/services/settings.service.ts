@@ -1,6 +1,6 @@
 import { Injectable, signal, effect, inject } from "@angular/core";
 import { PersistentStorageService } from "./persistent-storage.service";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../services/logger.service";
 
 type ThemeSetting = "dark" | "light" | "system";
 type TabSize = 2 | 4 | 8;
@@ -68,7 +68,7 @@ const DEFAULT_SETTINGS: AppSettings = {
 @Injectable({ providedIn: "root" })
 export class SettingsService {
   private storage = inject(PersistentStorageService);
-  private logger = getLoggingService();
+  
   private settingsSignal = signal<AppSettings>(this.loadSettings());
 
   readonly settings = this.settingsSignal;
@@ -132,7 +132,7 @@ export class SettingsService {
         return this.mergeWithDefaults(stored);
       }
     } catch (e) {
-      this.logger.warn("[SETTINGS]", "Failed to load settings from storage, using defaults", {
+      logger.warn("[SETTINGS]", "Failed to load settings from storage, using defaults", {
         error: e,
       });
     }

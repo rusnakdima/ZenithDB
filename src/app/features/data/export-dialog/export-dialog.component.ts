@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter, signal, inject } from "@angular/core";
 import { MatIconModule } from "@angular/material/icon";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../../services/logger.service";
 
 export type ExportFormat = "csv" | "json" | "jsonl" | "sql" | "markdown";
 
@@ -11,7 +11,7 @@ export type ExportFormat = "csv" | "json" | "jsonl" | "sql" | "markdown";
   templateUrl: "./export-dialog.component.html",
 })
 export class ExportDialogComponent {
-  private logger = getLoggingService();
+  
 
   @Input() visible = false;
   @Input() selectedCount = 0;
@@ -33,7 +33,7 @@ export class ExportDialogComponent {
   }
 
   onExport(format: ExportFormat) {
-    this.logger.info("[DATA_GRID]", `Export requested: ${format.toUpperCase()}`);
+    logger.info("[DATA_GRID]", `Export requested: ${format.toUpperCase()}`);
     this.exportData.emit(format);
   }
 

@@ -15,7 +15,7 @@ import { ToastService } from "@services/toast.service";
 import { ConfirmService } from "@shared/services/confirm.service";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { ErrorHandlerService } from "@shared/services/error-handler.service";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../../services/logger.service";
 import { MatIconModule } from "@angular/material/icon";
 import { SkeletonLoaderComponent } from "@shared/components/loading/skeleton-loader.component";
 import { CollectionMeta, ColumnInfo } from "@shared/models/connection.config";
@@ -59,7 +59,7 @@ export class SchemaTreeComponent implements OnInit, OnDestroy {
   private connectionState = inject(ConnectionStateService);
   private confirm = inject(ConfirmService);
   private errorHandler = inject(ErrorHandlerService);
-  private logger = getLoggingService();
+  
   private boundCloseContextMenu: (() => void) | null = null;
 
   ngOnInit() {
@@ -127,12 +127,12 @@ export class SchemaTreeComponent implements OnInit, OnDestroy {
     event.stopPropagation();
     const current = new Set(this.expanded());
     if (current.has(name)) {
-      this.logger.debug("[SCHEMA]", "Collapsing collection", { collection: name });
+      logger.debug("[SCHEMA]", "Collapsing collection", { collection: name });
       current.delete(name);
     } else {
       current.clear();
       current.add(name);
-      this.logger.debug("[SCHEMA]", "Expanding collection", { collection: name });
+      logger.debug("[SCHEMA]", "Expanding collection", { collection: name });
       const col = this.collections().find((c) => c.name === name);
       if (col) this.loadCollectionFields(col);
     }
@@ -146,7 +146,7 @@ export class SchemaTreeComponent implements OnInit, OnDestroy {
   selectCollection(collection: TreeNode) {
     this.selectedCollection.set(collection.name);
     this.selectedNode.set(collection);
-    this.logger.debug("[SCHEMA]", "Collection selected", { collection: collection.name });
+    logger.debug("[SCHEMA]", "Collection selected", { collection: collection.name });
     this.collectionSelect.emit(collection.name);
   }
 
@@ -184,7 +184,7 @@ export class SchemaTreeComponent implements OnInit, OnDestroy {
       return;
     }
     try {
-      this.logger.info("[SCHEMA]", "Creating collection", { name });
+      logger.info("[SCHEMA]", "Creating collection", { name });
       await this.store.createCollection(name);
       this.toast.success(`Collection "${name}" created`);
       this.showNewCollectionModal.set(false);
@@ -213,7 +213,7 @@ export class SchemaTreeComponent implements OnInit, OnDestroy {
       return;
     }
     try {
-      this.logger.info("[SCHEMA]", "Renaming collection", { oldName, newName });
+      logger.info("[SCHEMA]", "Renaming collection", { oldName, newName });
       await this.store.dropCollection(oldName);
       await this.store.createCollection(newName);
       this.toast.success(`Renamed to "${newName}"`);
@@ -232,7 +232,7 @@ export class SchemaTreeComponent implements OnInit, OnDestroy {
     this.closeContextMenu();
     if (await this.confirm.confirmDelete(node.name)) {
       try {
-        this.logger.info("[SCHEMA]", "Dropping collection", { collection: node.name });
+        logger.info("[SCHEMA]", "Dropping collection", { collection: node.name });
         await this.store.dropCollection(node.name);
         this.toast.success(`Collection "${node.name}" dropped`);
         if (this.selectedCollection() === node.name) {

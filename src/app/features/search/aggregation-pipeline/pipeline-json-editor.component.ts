@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter, signal, computed, inject } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../../services/logger.service";
 
 @Component({
   selector: "app-pipeline-json-editor",
@@ -10,7 +10,7 @@ import { getLoggingService } from "@tauri-apps/logger";
   templateUrl: "./pipeline-json-editor.component.html",
 })
 export class PipelineJsonEditorComponent {
-  private logger = getLoggingService();
+  
 
   @Input() set json(value: string) {
     this.jsonContent.set(value);
@@ -61,14 +61,14 @@ export class PipelineJsonEditorComponent {
     try {
       const parsed = JSON.parse(this.jsonContent());
       const formatted = JSON.stringify(parsed, null, 2);
-      this.logger.debug("[SEARCH_PIPELINE]", "JSON formatted");
+      logger.debug("[SEARCH_PIPELINE]", "JSON formatted");
       this.jsonContent.set(formatted);
       this.jsonChange.emit(formatted);
     } catch {}
   }
 
   copyToClipboard(): void {
-    this.logger.debug("[SEARCH_PIPELINE]", "Pipeline JSON copied to clipboard");
+    logger.debug("[SEARCH_PIPELINE]", "Pipeline JSON copied to clipboard");
     navigator.clipboard
       .writeText(this.jsonContent())
       .then(() => {})

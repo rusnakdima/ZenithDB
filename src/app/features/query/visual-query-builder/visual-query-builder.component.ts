@@ -16,7 +16,7 @@ import { QueryGroupComponent } from "./query-group/query-group.component";
 import { ConditionGroup, SortConfig, createEmptyGroup } from "../models";
 import { FilterBuilderService, SchemaCompletionService } from "../services";
 import { FilterExpression } from "@shared/models/connection.config";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../../services/logger.service";
 
 @Component({
   selector: "app-visual-query-builder",
@@ -27,7 +27,7 @@ import { getLoggingService } from "@tauri-apps/logger";
 export class VisualQueryBuilderComponent implements OnInit, OnChanges {
   private readonly filterBuilder = inject(FilterBuilderService);
   private readonly schemaCompletion = inject(SchemaCompletionService);
-  private readonly logger = getLoggingService();
+  
 
   @Input() collectionName = "";
   @Input() initialFilter: FilterExpression | null = null;
@@ -157,7 +157,7 @@ export class VisualQueryBuilderComponent implements OnInit, OnChanges {
   }
 
   onApply(): void {
-    this.logger.debug("[QUERY]", "Visual query builder apply");
+    logger.debug("[QUERY]", "Visual query builder apply");
     const filter = this.filterBuilder.buildFilter([this.rootGroup()]);
     const validSorts = this.sorts().filter((s) => s.field);
 

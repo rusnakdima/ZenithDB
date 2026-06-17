@@ -7,7 +7,7 @@ import {
 import { ProviderDetectorService } from "./provider-detector.service";
 import { FilterOperator } from "@shared/models/connection.config";
 import { FieldType, FIELD_OPERATORS } from "../models";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../../services/logger.service";
 
 const KEYWORDS_SQL = [
   "SELECT",
@@ -129,7 +129,7 @@ const OPERATORS_BY_TYPE: Record<FieldType, { operator: FilterOperator; label: st
 export class AutocompleteService {
   private readonly schemaCompletion = inject(SchemaCompletionService);
   private readonly providerDetector = inject(ProviderDetectorService);
-  private readonly logger = getLoggingService();
+  
 
   private readonly isActiveSignal = signal(false);
   private readonly itemsSignal = signal<CompletionItem[]>([]);
@@ -146,7 +146,7 @@ export class AutocompleteService {
   });
 
   async triggerCompletion(context: CompletionContext, collectionName?: string): Promise<void> {
-    this.logger.debug("[QUERY_AUTOCOMPLETE]", "Triggering completion", {
+    logger.debug("[QUERY_AUTOCOMPLETE]", "Triggering completion", {
       triggerKind: context.triggerKind,
       collectionName,
     });
@@ -154,7 +154,7 @@ export class AutocompleteService {
     this.itemsSignal.set(items);
     this.isActiveSignal.set(items.length > 0);
     this.selectedIndexSignal.set(0);
-    this.logger.debug("[QUERY_AUTOCOMPLETE]", "Completion items built", {
+    logger.debug("[QUERY_AUTOCOMPLETE]", "Completion items built", {
       itemCount: items.length,
     });
   }
@@ -164,7 +164,7 @@ export class AutocompleteService {
     collectionName: string,
     currentField?: string
   ): Promise<void> {
-    this.logger.debug("[QUERY_AUTOCOMPLETE]", "Triggering field completion", {
+    logger.debug("[QUERY_AUTOCOMPLETE]", "Triggering field completion", {
       collectionName,
       currentField,
     });
@@ -343,7 +343,7 @@ export class AutocompleteService {
   confirmSelection(): CompletionItem | null {
     const item = this.selectedItem();
     if (item) {
-      this.logger.debug("[QUERY_AUTOCOMPLETE]", "Item selected", {
+      logger.debug("[QUERY_AUTOCOMPLETE]", "Item selected", {
         label: item.label,
         kind: item.kind,
       });

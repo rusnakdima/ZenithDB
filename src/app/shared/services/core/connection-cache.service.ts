@@ -6,7 +6,7 @@ import {
 } from "@shared/models/connection.config";
 import { DatabaseService } from "@shared/services/database.service";
 import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../../services/logger.service";
 import { CACHE_CONSTANTS } from "@shared/utils/constants";
 import { findById } from "@shared/utils/array.utils";
 
@@ -19,7 +19,7 @@ interface HealthCacheEntry {
 export class ConnectionCacheService {
   private db = inject(DatabaseService);
   private dataflowLogger = inject(DataflowLoggerService);
-  private logger = getLoggingService();
+  
   private readonly page = "ConnectionCacheService";
 
   private readonly HEALTH_TTL_MS = CACHE_CONSTANTS.HEALTH_TTL_MS;
@@ -160,7 +160,7 @@ export class ConnectionCacheService {
     const startTime = performance.now();
     try {
       const connections = await this.db.listConnections();
-      this.logger.debug("[CONNECTION_CACHE]", "refreshConnections got connections", {
+      logger.debug("[CONNECTION_CACHE]", "refreshConnections got connections", {
         count: connections.length,
       });
       this.connectionsSignal.set(connections);

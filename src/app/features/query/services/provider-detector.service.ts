@@ -1,12 +1,12 @@
 import { Injectable, inject, signal, computed } from "@angular/core";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { ProviderInfo, ProviderType, PROVIDER_METADATA, SyntaxMode } from "../models";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../../services/logger.service";
 
 @Injectable({ providedIn: "root" })
 export class ProviderDetectorService {
   private readonly connectionState = inject(ConnectionStateService);
-  private readonly logger = getLoggingService();
+  
 
   private readonly currentProviderInfoSignal = signal<ProviderInfo | null>(null);
 
@@ -39,14 +39,14 @@ export class ProviderDetectorService {
 
   updateFromConnection(connection: { provider?: string; type?: string } | null): void {
     if (!connection) {
-      this.logger.debug("[QUERY]", "Clearing provider info - no active connection");
+      logger.debug("[QUERY]", "Clearing provider info - no active connection");
       this.currentProviderInfoSignal.set(null);
       return;
     }
 
     const provider = connection.provider?.toLowerCase() ?? "postgresql";
     const info = PROVIDER_METADATA[provider] ?? PROVIDER_METADATA["postgresql"];
-    this.logger.debug("[QUERY]", "Updated provider from connection", {
+    logger.debug("[QUERY]", "Updated provider from connection", {
       provider,
       type: info.type,
       syntaxMode: info.syntaxMode,

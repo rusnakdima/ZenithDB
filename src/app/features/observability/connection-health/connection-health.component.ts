@@ -3,7 +3,7 @@ import { CommonModule } from "@angular/common";
 import { MetricsApiService } from "@shared/services/metrics-api.service";
 import { ConnectionStateService } from "@shared/services/connection-state.service";
 import { TIME_CONSTANTS } from "@shared/utils/constants";
-import { getLoggingService } from "@tauri-apps/logger";
+import { logger } from "../../../services/logger.service";
 
 @Component({
   selector: "app-connection-health",
@@ -14,7 +14,7 @@ import { getLoggingService } from "@tauri-apps/logger";
 export class ConnectionHealthComponent implements OnInit, OnDestroy {
   private readonly metricsService = inject(MetricsApiService);
   private readonly connectionState = inject(ConnectionStateService);
-  private readonly logger = getLoggingService();
+  
 
   private refreshIntervalId: ReturnType<typeof setInterval> | null = null;
   private readonly REFRESH_INTERVAL_MS = TIME_CONSTANTS.THIRTY_SECONDS_MS;
@@ -84,7 +84,7 @@ export class ConnectionHealthComponent implements OnInit, OnDestroy {
     this.error.set(null);
 
     try {
-      this.logger.debug("[HEALTH]", "Loading connection health metrics");
+      logger.debug("[HEALTH]", "Loading connection health metrics");
       const metrics = await this.metricsService.fetchMetricsWithRefresh();
 
       this.metricsSignal.set({
@@ -106,7 +106,7 @@ export class ConnectionHealthComponent implements OnInit, OnDestroy {
   }
 
   refresh(): void {
-    this.logger.debug("[HEALTH]", "User refreshing health metrics");
+    logger.debug("[HEALTH]", "User refreshing health metrics");
     this.loadMetrics();
   }
 
