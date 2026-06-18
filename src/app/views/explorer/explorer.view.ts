@@ -190,6 +190,8 @@ export class ExplorerComponent implements OnInit, OnDestroy {
       const conn = findById(this.store.connections(), this.currentConnectionId);
       if (conn) {
         this.connectionState.setActiveConnection(conn);
+      } else if (this.currentConnectionId) {
+        this.connectionState.setActiveConnection(this.currentConnectionId);
       }
     }
 

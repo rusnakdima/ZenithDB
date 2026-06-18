@@ -1,7 +1,7 @@
 import { Injectable, signal, computed } from "@angular/core";
 import { RowData, ColumnInfo } from "@shared/models/connection.config";
 
-@Injectable()
+@Injectable({ providedIn: "root" })
 export class DataTableGridStore {
   readonly data = signal<RowData[]>([]);
   readonly total = signal(0);
