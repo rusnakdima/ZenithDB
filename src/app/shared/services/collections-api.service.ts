@@ -166,21 +166,21 @@ export class CollectionsApiService extends CacheService {
 
   async describeCollection(connId: string, collection: string): Promise<CollectionSchema> {
     const startTime = performance.now();
-    this.logger?.logApiCall(this.page, "describeCollection", "collection_describe", {
+    this.logger?.logApiCall(this.page, "describeCollection", "describe_collection", {
       connId,
       collection,
     });
     try {
       const result = await this.tauriBridge.invoke<CollectionSchema>(
-        "collection_describe",
-        { connection_id: connId, name: collection },
+        "describe_collection",
+        { connectionId: connId, collection },
         { signal: this.cancellation.createAbortSignal(), suppressError: true }
       );
       const duration = performance.now() - startTime;
       this.logger?.logDataReceive(
         this.page,
         "describeCollection",
-        "collection_describe",
+        "describe_collection",
         result,
         duration
       );
@@ -207,7 +207,7 @@ export class CollectionsApiService extends CacheService {
     try {
       const result = await this.tauriBridge.invoke<CollectionStats>(
         "collection_stats",
-        { connection_id: connId, name: collection },
+        { connectionId: connId, name: collection },
         { signal: this.cancellation.createAbortSignal(), suppressError: true }
       );
       const duration = performance.now() - startTime;
@@ -241,7 +241,7 @@ export class CollectionsApiService extends CacheService {
     try {
       await this.tauriBridge.invoke<void>(
         "collection_create",
-        { connection_id: connId, name },
+        { connectionId: connId, name },
         { signal: this.cancellation.createAbortSignal(), suppressError: true }
       );
       const duration = performance.now() - startTime;
@@ -275,7 +275,7 @@ export class CollectionsApiService extends CacheService {
     try {
       await this.tauriBridge.invoke<void>(
         "collection_drop",
-        { connection_id: connId, name },
+        { connectionId: connId, name },
         { signal: this.cancellation.createAbortSignal(), suppressError: true }
       );
       const duration = performance.now() - startTime;
@@ -304,7 +304,7 @@ export class CollectionsApiService extends CacheService {
     try {
       await this.tauriBridge.invoke<void>(
         "collection_rename",
-        { connection_id: connId, old_name: oldName, new_name: newName },
+        { connectionId: connId, oldName, newName },
         { signal: this.cancellation.createAbortSignal(), suppressError: true }
       );
       const duration = performance.now() - startTime;

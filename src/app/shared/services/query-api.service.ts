@@ -25,7 +25,7 @@ export class QueryApiService extends CacheService {
     try {
       const result = await this.tauriBridge.invoke<QueryResult<RowData>>(
         "query_execute",
-        { connection_id: connId, collection, params },
+        { connectionId: connId, collection, params },
         { signal: this.cancellation.createAbortSignal(), suppressError: true }
       );
       const duration = performance.now() - startTime;
@@ -120,7 +120,7 @@ export class QueryApiService extends CacheService {
     try {
       const result = await this.tauriBridge.invoke<string>(
         "query_server_version",
-        { connection_id: connId },
+        { connectionId: connId },
         { signal: this.cancellation.createAbortSignal(), suppressError: true }
       );
       const duration = performance.now() - startTime;
