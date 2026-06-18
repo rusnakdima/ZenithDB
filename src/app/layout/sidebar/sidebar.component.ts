@@ -288,7 +288,7 @@ export class SidebarComponent implements OnInit {
         .testConnectionStatus(conn.id)
         .then((result) => {
           if (result) {
-            this.dataStore.updateConnection(conn.id, { status: result.status });
+            this.dataStore.updateConnectionInCache(conn.id, { status: result.status });
           }
         })
         .catch((e) =>
@@ -334,7 +334,7 @@ export class SidebarComponent implements OnInit {
       );
       results.forEach((result, index) => {
         if (result) {
-          this.dataStore.updateConnection(connections[index].id, { status: result.status });
+          this.dataStore.updateConnectionInCache(connections[index].id, { status: result.status });
         }
       });
     } catch (e) {
@@ -353,7 +353,7 @@ export class SidebarComponent implements OnInit {
       .testConnectionStatus(connId)
       .then((result) => {
         if (result) {
-          this.dataStore.updateConnection(connId, { status: result.status });
+          this.dataStore.updateConnectionInCache(connId, { status: result.status });
         }
       })
       .catch(() => {});

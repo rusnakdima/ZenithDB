@@ -90,8 +90,12 @@ export class DataStoreService {
     this.connectionCache.removeConnection(id);
   }
 
-  updateConnection(id: string, updates: Partial<ConnectionSummary>): void {
-    this.connectionCache.updateConnection(id, updates);
+  updateConnectionInCache(id: string, updates: Partial<ConnectionSummary>): void {
+    this.connectionCache.updateConnectionInCache(id, updates);
+  }
+
+  async updateConnection(id: string, config: TestConnectionConfig): Promise<void> {
+    await this.connectionCache.updateConnection(id, config);
   }
 
   getDatabases(connectionId: string): DatabaseMetadata[] {

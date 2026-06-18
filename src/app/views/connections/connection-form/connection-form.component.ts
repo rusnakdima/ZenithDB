@@ -290,9 +290,10 @@ export class ConnectionFormComponent implements OnInit {
     try {
       const config = this.buildConfig();
       if (this.editingId) {
-        await this.store.deleteConnection(this.editingId);
+        await this.store.updateConnection(this.editingId, config);
+      } else {
+        await this.store.saveConnection(config);
       }
-      await this.store.saveConnection(config);
       logger.debug("[CONNECTION_FORM]", "save completed successfully");
       this.onClose();
     } catch (e) {

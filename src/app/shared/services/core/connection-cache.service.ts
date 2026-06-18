@@ -55,10 +55,40 @@ export class ConnectionCacheService {
     this.connectionsSignal.update((conns) => conns.filter((c) => c.id !== id));
   }
 
-  updateConnection(id: string, updates: Partial<ConnectionSummary>): void {
+  updateConnectionInCache(id: string, updates: Partial<ConnectionSummary>): void {
     this.connectionsSignal.update((conns) =>
       conns.map((c) => (c.id === id ? { ...c, ...updates } : c))
     );
+  }
+
+  async updateConnection(id: string, config: TestConnectionConfig): Promise<void> {
+    this.dataflowLogger.logApiCall(this.page, "updateConnection", "update_connection", {
+      id,
+      config,
+    });
+    const startTime = performance.now();
+    try {
+      await this.db.updateConnection(id, config);
+      await this.refreshConnections();
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logDataReceive(
+        this.page,
+        "updateConnection",
+        "update_connection",
+        { id },
+        duration
+      );
+    } catch (err) {
+      const duration = performance.now() - startTime;
+      this.dataflowLogger.logError(
+        this.page,
+        "updateConnection",
+        "update_connection",
+        String(err),
+        duration
+      );
+      throw err;
+    }
   }
 
   getHealth(connectionId: string): ConnectionHealth | null {
