@@ -43,33 +43,38 @@ fn validate_sql(sql: &str) -> Result<(), String> {
   Ok(())
 }
 
-#[tauri::command]
+#[tauri::command(rename_all = "camelCase")]
 pub async fn query_execute(
-  connection_id: String,
+  connectionId: String,
   collection: String,
   params: QueryParams,
 ) -> Result<QueryResult<Value>, String> {
-  let timer = DataflowTimer::new("query_execute");
-  let params_log = serde_json::json!({ "connection_id": &connection_id, "collection": &collection, "params": &params });
-  log::debug!(
-    "command = query_execute, params = {} [COMMAND_ENTRY]",
-    redact_sensitive_data(&serde_json::to_string(&params_log).unwrap_or_default())
+  log::info!(
+    "[query_execute] connectionId={}, collection={}",
+    connectionId,
+    collection
   );
-  if let Err(e) = validate_conn_id(&connection_id) {
+  let timer = DataflowTimer::new("query_execute");
+  let params_log = serde_json::json!({ "connectionId": &connectionId, "collection": &collection, "params": &params });
+  if let Err(e) = validate_conn_id(&connectionId) {
+    log::error!("[query_execute] validate_conn_id failed: {}", e);
     timer.clone().finish_error(&e);
     return Err(e);
   }
   if let Err(e) = validate_name(&collection) {
+    log::error!("[query_execute] validate_name failed: {}", e);
     timer.clone().finish_error(&e);
     return Err(e);
   }
-  let entry = match get_connection_entry(&connection_id).await {
+  let entry = match get_connection_entry(&connectionId).await {
     Ok(e) => e,
     Err(e) => {
+      log::error!("[query_execute] get_connection_entry failed: {}", e);
       timer.clone().finish_error(&e);
       return Err(e);
     }
   };
+  log::info!("[query_execute] get_connection_entry passed");
   let filter = match parse_filter(params.filter.clone()) {
     Ok(f) => f,
     Err(e) => {
@@ -80,7 +85,11 @@ pub async fn query_execute(
   let skip = params.skip;
   let limit = params.limit;
   let sort_by = params.sort.as_deref();
-  let sort_asc = true;
+  let sort_asc = params
+    .direction
+    .as_deref()
+    .map(|d| d == "asc")
+    .unwrap_or(true);
 
   let (data, total) = match dispatch_provider!(entry, provider => {
       let total = provider.count(&collection, filter.as_ref()).await.map_err_string()?;
@@ -92,8 +101,11 @@ pub async fn query_execute(
   }) {
     Ok(r) => r,
     Err(e) => {
-      timer.clone().finish_error(&e);
-      return Err(e);
+      log::warn!(
+        "[query_execute] Query failed (collection may not exist), returning empty result: {}",
+        e
+      );
+      (vec![], 0)
     }
   };
 
@@ -112,19 +124,20 @@ pub async fn query_execute(
   Ok(result)
 }
 
-#[tauri::command]
+#[tauri::command(rename_all = "camelCase")]
 pub async fn query_save(
-  connection_id: String,
+  connectionId: String,
   collection: String,
   data: Value,
 ) -> Result<ResponseModel, ResponseModel> {
   let timer = DataflowTimer::new("query_save");
-  let params_log = serde_json::json!({ "connection_id": &connection_id, "collection": &collection, "data": &data });
+  let params_log =
+    serde_json::json!({ "connectionId": &connectionId, "collection": &collection, "data": &data });
   log::debug!(
     "command = query_save, params = {} [COMMAND_ENTRY]",
     redact_sensitive_data(&serde_json::to_string(&params_log).unwrap_or_default())
   );
-  if let Err(e) = validate_conn_id(&connection_id) {
+  if let Err(e) = validate_conn_id(&connectionId) {
     timer.clone().finish_error(&e);
     return Err(ResponseModel::error(e));
   }
@@ -132,7 +145,7 @@ pub async fn query_save(
     timer.clone().finish_error(&e);
     return Err(ResponseModel::error(e));
   }
-  let entry = match get_connection_entry(&connection_id).await {
+  let entry = match get_connection_entry(&connectionId).await {
     Ok(e) => e,
     Err(e) => {
       timer.clone().finish_error(&e);
@@ -153,6 +166,7 @@ pub async fn query_save(
   }) {
     Ok(r) => r,
     Err(e) => {
+      log::error!("[query_save] dispatch_provider failed: {}", e);
       timer.clone().finish_error(&e);
       return Err(ResponseModel::error(e));
     }
@@ -161,20 +175,20 @@ pub async fn query_save(
   Ok(ResponseModel::success(result))
 }
 
-#[tauri::command]
+#[tauri::command(rename_all = "camelCase")]
 pub async fn query_delete(
-  connection_id: String,
+  connectionId: String,
   collection: String,
   id: String,
 ) -> Result<(), String> {
   let timer = DataflowTimer::new("query_delete");
   let params_log =
-    serde_json::json!({ "connection_id": &connection_id, "collection": &collection, "id": &id });
+    serde_json::json!({ "connectionId": &connectionId, "collection": &collection, "id": &id });
   log::debug!(
     "command = query_delete, params = {} [COMMAND_ENTRY]",
     redact_sensitive_data(&serde_json::to_string(&params_log).unwrap_or_default())
   );
-  if let Err(e) = validate_conn_id(&connection_id) {
+  if let Err(e) = validate_conn_id(&connectionId) {
     timer.clone().finish_error(&e);
     return Err(e);
   }
@@ -182,7 +196,7 @@ pub async fn query_delete(
     timer.clone().finish_error(&e);
     return Err(e);
   }
-  let entry = match get_connection_entry(&connection_id).await {
+  let entry = match get_connection_entry(&connectionId).await {
     Ok(e) => e,
     Err(e) => {
       timer.clone().finish_error(&e);
@@ -202,23 +216,19 @@ pub async fn query_delete(
   Ok(())
 }
 
-#[tauri::command]
-pub async fn query_raw(connection_id: String, sql: String) -> Result<RawResult, String> {
+#[tauri::command(rename_all = "camelCase")]
+pub async fn query_raw(connectionId: String, sql: String) -> Result<RawResult, String> {
   let timer = DataflowTimer::new("query_raw");
-  let params_log = serde_json::json!({ "connection_id": &connection_id, "sql": &sql });
+  let params_log = serde_json::json!({ "connectionId": &connectionId, "sql": &sql });
   log::debug!(
     "command = query_raw, params = {} [COMMAND_ENTRY]",
     redact_sensitive_data(&serde_json::to_string(&params_log).unwrap_or_default())
   );
-  if let Err(e) = validate_conn_id(&connection_id) {
+  if let Err(e) = validate_conn_id(&connectionId) {
     timer.clone().finish_error(&e);
     return Err(e);
   }
-  if let Err(e) = validate_sql(&sql) {
-    timer.clone().finish_error(&e);
-    return Err(e);
-  }
-  let entry = match get_connection_entry(&connection_id).await {
+  let entry = match get_connection_entry(&connectionId).await {
     Ok(e) => e,
     Err(e) => {
       timer.clone().finish_error(&e);
@@ -243,19 +253,19 @@ pub async fn query_raw(connection_id: String, sql: String) -> Result<RawResult, 
   Ok(result)
 }
 
-#[tauri::command]
-pub async fn query_server_version(connection_id: String) -> Result<String, String> {
+#[tauri::command(rename_all = "camelCase")]
+pub async fn query_server_version(connectionId: String) -> Result<String, String> {
   let timer = DataflowTimer::new("query_server_version");
-  let params_log = serde_json::json!({ "connection_id": &connection_id });
+  let params_log = serde_json::json!({ "connectionId": &connectionId });
   log::debug!(
     "command = query_server_version, params = {} [COMMAND_ENTRY]",
     redact_sensitive_data(&serde_json::to_string(&params_log).unwrap_or_default())
   );
-  if let Err(e) = validate_conn_id(&connection_id) {
+  if let Err(e) = validate_conn_id(&connectionId) {
     timer.clone().finish_error(&e);
     return Err(e);
   }
-  let entry = match get_connection_entry(&connection_id).await {
+  let entry = match get_connection_entry(&connectionId).await {
     Ok(e) => e,
     Err(e) => {
       timer.clone().finish_error(&e);

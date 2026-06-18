@@ -4,6 +4,7 @@ use crate::utils::logger::{redact_sensitive_data, DataflowTimer};
 use chrono::{DateTime, Local, Utc};
 use nosql_orm::prelude::*;
 use nosql_orm::providers::sql::SqliteProvider;
+use rusqlite::{params, Connection};
 use serde::{Deserialize, Serialize};
 use std::fs::{self, OpenOptions};
 use std::io::Write;
@@ -137,10 +138,21 @@ impl MetadataDb {
   }
 
   async fn init(&self) -> Result<(), String> {
-    self
-      .provider
-      .create_collection("database_metadata", None)
-      .await
+    let db_path = Self::path()?;
+    let conn = Connection::open(&db_path).map_err(|e| e.to_string())?;
+    conn
+      .execute(
+        "CREATE TABLE IF NOT EXISTS database_metadata (
+          id TEXT PRIMARY KEY,
+          connection_id TEXT NOT NULL,
+          name TEXT NOT NULL,
+          path TEXT,
+          created_at TEXT,
+          updated_at TEXT,
+          metadata TEXT
+        )",
+        [],
+      )
       .map_err(|e| e.to_string())?;
     log::trace!("Database metadata table ready");
     Ok(())

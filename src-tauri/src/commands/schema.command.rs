@@ -69,7 +69,7 @@ pub async fn collection_list(
   Ok(result)
 }
 
-#[tauri::command]
+#[tauri::command(rename_all = "camelCase")]
 pub async fn collection_stats(
   connection_id: String,
   name: String,
@@ -111,7 +111,7 @@ pub async fn collection_stats(
   Ok(result)
 }
 
-#[tauri::command]
+#[tauri::command(rename_all = "camelCase")]
 pub async fn collection_create(
   connection_id: String,
   name: String,
@@ -151,7 +151,7 @@ pub async fn collection_create(
   Ok(result)
 }
 
-#[tauri::command]
+#[tauri::command(rename_all = "camelCase")]
 pub async fn collection_drop(
   connection_id: String,
   name: String,
@@ -191,14 +191,14 @@ pub async fn collection_drop(
   Ok(result)
 }
 
-#[tauri::command]
+#[tauri::command(rename_all = "camelCase")]
 pub async fn collection_rename(
   connection_id: String,
-  old_name: String,
-  new_name: String,
+  oldName: String,
+  newName: String,
 ) -> Result<ResponseModel, ResponseModel> {
   let timer = DataflowTimer::new("collection_rename");
-  let params = serde_json::json!({ "connection_id": &connection_id, "old_name": &old_name, "new_name": &new_name });
+  let params = serde_json::json!({ "connection_id": &connection_id, "oldName": &oldName, "newName": &newName });
   log::debug!(
     "command = collection_rename, params = {} [COMMAND_ENTRY]",
     redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default())
@@ -208,11 +208,11 @@ pub async fn collection_rename(
     timer.clone().finish_error(&e);
     return Err(ResponseModel::error(e));
   }
-  if let Err(e) = validate_name(&old_name) {
+  if let Err(e) = validate_name(&oldName) {
     timer.clone().finish_error(&e);
     return Err(ResponseModel::error(e));
   }
-  if let Err(e) = validate_name(&new_name) {
+  if let Err(e) = validate_name(&newName) {
     timer.clone().finish_error(&e);
     return Err(ResponseModel::error(e));
   }
@@ -223,7 +223,7 @@ pub async fn collection_rename(
   };
 
   let result = match dispatch_provider!(entry, provider => {
-      provider.rename_collection(&old_name, &new_name).await.map_err_string()
+      provider.rename_collection(&oldName, &newName).await.map_err_string()
   }) {
     Ok(_) => ResponseModel::success_message("Collection renamed"),
     Err(e) => {
@@ -236,7 +236,7 @@ pub async fn collection_rename(
   Ok(result)
 }
 
-#[tauri::command]
+#[tauri::command(rename_all = "camelCase")]
 pub async fn describe_collection(
   connection_id: &str,
   collection: &str,
