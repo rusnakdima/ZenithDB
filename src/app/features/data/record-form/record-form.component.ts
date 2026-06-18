@@ -196,6 +196,14 @@ export class RecordFormComponent {
     this.cancelled.emit();
   }
 
+  onSaveClick() {
+    this.onSubmit();
+  }
+
+  onCancelClick() {
+    this.onCancel();
+  }
+
   onDeleteClick() {
     this.showDeleteConfirm.set(true);
   }
