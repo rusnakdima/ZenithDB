@@ -265,7 +265,7 @@ export class ApiProvider {
     return this.metricsApi.fetchMetricsWithRefresh();
   }
 
-  async updateConnection(id: string, config: ConnectionConfig): Promise<void> {
+  async updateConnection(id: string, config: TestConnectionConfig): Promise<void> {
     const startTime = performance.now();
     this.dataflowLogger.logApiCall(this.page, "updateConnection", "update_connection", {
       id,

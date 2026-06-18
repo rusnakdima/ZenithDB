@@ -179,6 +179,6 @@ export class DataflowLoggerPanelComponent {
   }
 
   trackById(index: number, entry: DataFlowEntry): string {
-    return entry.id;
+    return entry.id || String(index);
   }
 }

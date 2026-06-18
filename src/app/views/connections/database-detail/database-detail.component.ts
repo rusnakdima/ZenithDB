@@ -159,7 +159,7 @@ export class DatabaseDetailComponent implements OnInit, OnDestroy {
   }
 
   trackByCollection(index: number, col: CollectionMeta): string {
-    return col.name;
+    return col.name || String(index);
   }
 
   openCollection(collectionName: string) {

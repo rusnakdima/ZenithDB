@@ -128,7 +128,7 @@ export class ConnectionService {
     }
   }
 
-  async updateConnection(id: string, config: ConnectionConfig): Promise<void> {
+  async updateConnection(id: string, config: TestConnectionConfig): Promise<void> {
     const startTime = performance.now();
     await this.api.updateConnection(id, config);
     this.appLogger?.logUserAction("connection", "updateConnection", { id });

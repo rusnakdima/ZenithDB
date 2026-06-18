@@ -178,7 +178,7 @@ export class WorkbenchComponent implements OnDestroy {
   }
 
   trackByTabId(_: number, tab: QueryTab) {
-    return tab.id;
+    return tab.id || String(_);
   }
 
   ngOnDestroy() {
