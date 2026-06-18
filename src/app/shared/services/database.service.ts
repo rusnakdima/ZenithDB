@@ -109,7 +109,7 @@ export class DatabaseService {
     return result;
   }
 
-  async updateConnection(id: string, config: ConnectionConfig) {
+  async updateConnection(id: string, config: TestConnectionConfig) {
     const startTime = performance.now();
     await this.connectionService.updateConnection(id, config);
     this.logger?.logUserAction("database", "updateConnection", { id });
