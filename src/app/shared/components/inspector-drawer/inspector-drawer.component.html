@@ -1,11 +1,11 @@
-<div class="fixed inset-0 z-40" (click)="onBackdropClick($event)">
+<div class="fixed inset-0 z-40 bg-black/50" (click)="onBackdropClick($event)">
   <div
-    class="inspector-drawer fixed top-0 right-0 z-50 flex h-full w-[420px] transform flex-col border-l border-[var(--accent)] bg-transparent shadow-2xl backdrop-blur-md transition-transform duration-300"
+    class="inspector-drawer fixed top-0 right-0 z-50 flex h-full w-[420px] transform flex-col border-l border-[var(--accent)] bg-[var(--bg-modal)] shadow-2xl backdrop-blur-md transition-transform duration-300"
     [class.inspector-drawer-open]="true"
     (click)="onDrawerClick($event)"
   >
     <div
-      class="flex items-center justify-between border-b border-[var(--accent)] bg-transparent px-5 py-4"
+      class="flex items-center justify-between border-b border-[var(--accent)] bg-[var(--bg-modal)] px-5 py-4"
     >
       <div class="flex items-center gap-3">
         <mat-icon
@@ -33,7 +33,7 @@
       </div>
     </div>
 
-    <div class="drawer-content flex-1 space-y-6 overflow-y-auto p-5">
+    <div class="drawer-content flex-1 space-y-6 overflow-y-auto bg-[var(--bg-modal)] p-5">
       <!-- Actions Section -->
       @if (!isCreateMode()) {
         <div class="section">
@@ -206,7 +206,7 @@
       }
     </div>
 
-    <div class="drawer-footer border-t border-[var(--accent)] bg-transparent px-5 py-4">
+    <div class="drawer-footer border-t border-[var(--accent)] bg-[var(--bg-modal)] px-5 py-4">
       @if (!showDeleteConfirm() && !isEditMode() && !isCreateMode()) {
         <button
           class="flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--accent)] bg-transparent px-4 py-3 text-sm font-bold text-[var(--accent)] transition-all hover:bg-[var(--accent)]/10"
