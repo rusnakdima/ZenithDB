@@ -99,7 +99,7 @@
         }
 
         <div class="space-y-2">
-          @for (db of databases(); track db.id) {
+          @for (db of databases(); track db.name) {
             <div
               class="cursor-pointer rounded-xl border border-[var(--accent)] bg-transparent p-4 transition-colors hover:bg-transparent"
               (click)="openDatabase(db.name)"

@@ -98,6 +98,6 @@ export class QueryHistoryComponent implements OnInit {
   }
 
   trackByEntry(index: number, entry: QueryHistoryEntry): string {
-    return entry.id;
+    return entry.id || String(index);
   }
 }

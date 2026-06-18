@@ -78,6 +78,7 @@ export class FilterHistoryComponent implements OnInit {
   }
 
   trackByFilter(index: number, filter: FilterExpression): string {
-    return JSON.stringify(filter);
+    const serialized = JSON.stringify(filter);
+    return serialized || String(index);
   }
 }

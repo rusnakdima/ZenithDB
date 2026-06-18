@@ -73,10 +73,10 @@ export class FieldSelectorComponent {
   }
 
   trackByField(index: number, field: FieldInfo): string {
-    return field.name;
+    return field.name || String(index);
   }
 
   trackBySelected(index: number, field: IndexField): string {
-    return field.name;
+    return field.name || String(index);
   }
 }

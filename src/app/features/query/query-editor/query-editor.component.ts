@@ -257,11 +257,11 @@ export class QueryEditorComponent implements OnInit, OnDestroy {
   }
 
   trackByTabId(_: number, tab: QueryTab) {
-    return tab.id;
+    return tab.id || String(_);
   }
 
   trackByHistoryId(_: number, item: HistoryItem) {
-    return item.id;
+    return item.id || String(_);
   }
 
   hasAffectedRows(): boolean {

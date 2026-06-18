@@ -333,6 +333,6 @@ export class SchemaTreeComponent implements OnInit, OnDestroy {
   }
 
   trackByName(index: number, node: TreeNode): string {
-    return node.name;
+    return node.name || String(index);
   }
 }

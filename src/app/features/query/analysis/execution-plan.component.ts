@@ -93,6 +93,6 @@ export class ExecutionPlanComponent {
   }
 
   trackByNodeId(index: number, node: ExecutionPlanNode): string {
-    return node.id;
+    return node.id || String(index);
   }
 }

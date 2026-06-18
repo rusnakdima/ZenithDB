@@ -178,7 +178,7 @@ export class IndexBrowserComponent implements OnInit {
   }
 
   trackByIndex(index: number, idx: IndexInfo): string {
-    return idx.name;
+    return idx.name || String(index);
   }
 
   getIndexJson(index: IndexInfo): string {
