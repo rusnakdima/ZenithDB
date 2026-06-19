@@ -7,7 +7,7 @@ import { GroupConfigComponent } from "./stage-config/group-config.component";
 import { SortConfigComponent } from "./stage-config/sort-config.component";
 import { ProjectConfigComponent } from "./stage-config/project-config.component";
 import { LimitConfigComponent } from "./stage-config/limit-config.component";
-import { logger } from "../../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 @Component({
   selector: "app-pipeline-stage",

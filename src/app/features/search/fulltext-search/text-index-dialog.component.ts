@@ -13,7 +13,7 @@ import { FormsModule } from "@angular/forms";
 import { ModalComponent } from "@shared/components/modal/modal.component";
 import { FieldInfo } from "../../query/models";
 import { FieldWeight } from "./fulltext-search.component";
-import { logger } from "../../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 export interface TextIndexConfig {
   fields: FieldWeight[];

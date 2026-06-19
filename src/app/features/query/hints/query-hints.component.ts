@@ -10,7 +10,7 @@ import {
 } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { HintAnalyzerService, QueryHint } from "../services";
-import { logger } from "../../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 @Component({
   selector: "app-query-hints",

@@ -1,8 +1,8 @@
 import { Injectable, signal, computed, effect, Inject, PLATFORM_ID, inject } from "@angular/core";
 import { isPlatformBrowser } from "@angular/common";
 import { SettingsService } from "./settings.service";
-import { logger } from "../../services/logger.service";
-import { ThemePreset, THEME_PRESETS, getAccentShades, getAccentRgb } from "../models/theme.model";
+import { logger } from "@core/services/logger.service";
+import { ThemePreset, THEME_PRESETS, getAccentShades, getAccentRgb } from "@app/models/theme.model";
 
 export type ThemeMode = "dark" | "light";
 

@@ -1,8 +1,8 @@
 import { Injectable, inject, signal } from "@angular/core";
 import { ToastService } from "@services/toast.service";
 import { ApiProvider } from "@providers/api.provider";
-import { ConnectionStateService } from "@shared/services/connection-state.service";
-import { logger } from "../../../services/logger.service";
+import { ConnectionStateService } from "@services/connection-state.service";
+import { logger } from "@core/services/logger.service";
 
 export interface ParsedData {
   headers: string[];
@@ -224,7 +224,7 @@ export class ImportService {
           const result = await this.api.saveRow(
             connId,
             collection,
-            row as import("@shared/models/connection.config").RowData
+            row as import("@app/models/connection.config").RowData
           );
           if (result) {
             imported++;

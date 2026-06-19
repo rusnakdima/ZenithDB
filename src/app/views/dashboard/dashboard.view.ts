@@ -1,7 +1,7 @@
 import { Component, inject } from "@angular/core";
 import { MatIconModule } from "@angular/material/icon";
 import { CommonModule } from "@angular/common";
-import { logger } from "../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 @Component({
   selector: "app-dashboard",

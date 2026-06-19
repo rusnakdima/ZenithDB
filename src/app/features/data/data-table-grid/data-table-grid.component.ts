@@ -25,7 +25,7 @@ import {
   CdkDragPlaceholder,
   moveItemInArray,
 } from "@angular/cdk/drag-drop";
-import { ColumnInfo, RowData } from "@shared/models/connection.config";
+import { ColumnInfo, RowData } from "@app/models/connection.config";
 import { FormatValuePipe } from "@shared/pipes/format-value.pipe";
 import { trackByRow, isNullOrUndefined } from "@shared/utils/collection.utils";
 import {
@@ -37,7 +37,7 @@ import { RecordFormComponent } from "@features/data/record-form/record-form.comp
 import { BulkActionBarComponent } from "@features/data/bulk-action-bar/bulk-action-bar.component";
 import { DataTableGridStore } from "./store/data-table-grid.store";
 import { DataTableGridService } from "./services/data-table-grid.service";
-import { logger } from "../../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 @Component({
   selector: "app-data-table-grid",

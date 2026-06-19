@@ -6,8 +6,8 @@ import {
   createEmptyGroup,
   FieldType,
 } from "../../query/models";
-import { FilterOperator } from "@shared/models/connection.config";
-import { logger } from "../../../services/logger.service";
+import { FilterOperator } from "@app/models/connection.config";
+import { logger } from "@core/services/logger.service";
 
 export type StageType =
   | "$match"

@@ -1,9 +1,9 @@
 import { Injectable, inject, signal } from "@angular/core";
-import { ConnectionStateService } from "@shared/services/connection-state.service";
+import { ConnectionStateService } from "@services/connection-state.service";
 import { LoadingService } from "@shared/services/loading.service";
 import { ToastService } from "@services/toast.service";
 import { ApiProvider } from "@providers/api.provider";
-import { IndexInfo } from "@shared/models/connection.config";
+import { IndexInfo } from "@app/models/connection.config";
 import { withConnectionAndLoading } from "@shared/utils/api-wrapper.util";
 
 export interface IndexDefinition {

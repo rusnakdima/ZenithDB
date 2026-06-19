@@ -1,16 +1,16 @@
 import { Injectable, inject, Injector } from "@angular/core";
 import { TauriBridgeService } from "./tauri-bridge.service";
 import { RequestCancellationService } from "./request-cancellation.service";
-import { DataStoreService } from "@shared/services/core/unified-storage.service";
-import { ConnectionsApiService } from "@shared/services/connections-api.service";
-import { CollectionsApiService } from "@shared/services/collections-api.service";
-import { QueryApiService } from "@shared/services/query-api.service";
-import { TransactionApiService } from "@shared/services/transaction-api.service";
-import { MetricsApiService } from "@shared/services/metrics-api.service";
+import { DataStoreService } from "@core/services/unified-storage.service";
+import { ConnectionsApiService } from "@services/connections-api.service";
+import { CollectionsApiService } from "@services/collections-api.service";
+import { QueryApiService } from "@services/query-api.service";
+import { TransactionApiService } from "@services/transaction-api.service";
+import { MetricsApiService } from "@services/metrics-api.service";
 import { ToastService } from "@services/toast.service";
 import { ErrorHandlerService } from "@shared/services/error-handler.service";
 import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
-import { logger } from "../services/logger.service";
+import { logger } from "@core/services/logger.service";
 import {
   ConnectionSummary,
   ConnectionConfig,
@@ -23,7 +23,7 @@ import {
   QueryResult,
   RawResult,
   RowData,
-} from "@shared/models/connection.config";
+} from "@app/models/connection.config";
 
 @Injectable({ providedIn: "root" })
 export class ApiProvider {
@@ -209,14 +209,14 @@ export class ApiProvider {
 
   async testConnection(
     config: TestConnectionConfig
-  ): Promise<import("@shared/models/connection.config").ConnectionHealth> {
+  ): Promise<import("@app/models/connection.config").ConnectionHealth> {
     const startTime = performance.now();
     this.dataflowLogger.logApiCall(this.page, "testConnection", "test_connection", { config });
     try {
       const isNetwork = this.isNetworkProvider(config);
       const signal = isNetwork ? this.createAbortSignal() : this.getFastAbortSignal();
       const result = await this.tauriBridge.invoke<
-        import("@shared/models/connection.config").ConnectionHealth
+        import("@app/models/connection.config").ConnectionHealth
       >("test_connection", { config }, { signal, suppressError: true });
       const duration = performance.now() - startTime;
       this.dataflowLogger.logDataReceive(
@@ -261,7 +261,7 @@ export class ApiProvider {
     return this.collectionsApi.listCollections(connId, dbName, offset ?? 0, limit ?? 10);
   }
 
-  async getSystemStatus(): Promise<import("@shared/models/connection.config").SystemMetrics> {
+  async getSystemStatus(): Promise<import("@app/models/connection.config").SystemMetrics> {
     return this.metricsApi.fetchMetricsWithRefresh();
   }
 

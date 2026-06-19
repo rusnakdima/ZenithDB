@@ -9,9 +9,9 @@ import {
   inject,
 } from "@angular/core";
 import { JsonPipe, DatePipe } from "@angular/common";
-import { RawResult } from "@shared/models/connection.config";
+import { RawResult } from "@app/models/connection.config";
 import { trackByIndex } from "@shared/utils/collection.utils";
-import { logger } from "../../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 type LogLevel = "all" | "info" | "warn" | "error";
 type TabType = "results" | "messages" | "plan";

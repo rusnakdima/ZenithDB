@@ -12,8 +12,8 @@ import { MatIconModule } from "@angular/material/icon";
 import { SoftDeleteService, DeletedRecord } from "./soft-delete.service";
 import { ConfirmService } from "@shared/services/confirm.service";
 import { ToastService } from "@services/toast.service";
-import { RowData } from "@shared/models/connection.config";
-import { logger } from "../../../services/logger.service";
+import { RowData } from "@app/models/connection.config";
+import { logger } from "@core/services/logger.service";
 
 @Component({
   selector: "app-deleted-records-view",

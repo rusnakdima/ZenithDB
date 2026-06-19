@@ -13,7 +13,7 @@ import {
 } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { AutocompleteService, CompletionItem } from "../services";
-import { logger } from "../../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 @Component({
   selector: "app-autocomplete",

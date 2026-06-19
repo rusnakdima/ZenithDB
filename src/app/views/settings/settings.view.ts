@@ -4,9 +4,9 @@ import { MatIconModule } from "@angular/material/icon";
 import { FormsModule } from "@angular/forms";
 import { SettingsService } from "../../shared/services/settings.service";
 import { ThemeService } from "@shared/services/theme.service";
-import { ThemePreset, THEME_PRESETS } from "@shared/models/theme.model";
+import { ThemePreset, THEME_PRESETS } from "@app/models/theme.model";
 import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
-import { logger } from "../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 interface ThemeOption {
   value: "dark" | "light" | "system";

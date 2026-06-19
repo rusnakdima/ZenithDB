@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter, inject } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { IndexType } from "./create-index-dialog.component";
-import { logger } from "../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 interface IndexTypeOption {
   type: IndexType;

@@ -1,7 +1,7 @@
 import { Injectable, inject, signal, computed } from "@angular/core";
-import { MetricsApiService } from "@shared/services/metrics-api.service";
+import { MetricsApiService } from "@services/metrics-api.service";
 import { TIME_CONSTANTS } from "@shared/utils/constants";
-import { logger } from "../../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 export interface QueryMetric {
   timestamp: number;

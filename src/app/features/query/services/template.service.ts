@@ -1,9 +1,9 @@
 import { Injectable, inject, signal, computed } from "@angular/core";
 import { PersistentStorageService } from "@shared/services/persistent-storage.service";
 import { QueryTemplate, TemplateCategory, QueryTemplateFilter } from "../models";
-import { FilterOperator } from "@shared/models/connection.config";
+import { FilterOperator } from "@app/models/connection.config";
 import { findById } from "@shared/utils/array.utils";
-import { logger } from "../../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 const TEMPLATES_STORAGE_KEY = "zenith_query_templates";
 const FAVORITES_STORAGE_KEY = "zenith_template_favorites";

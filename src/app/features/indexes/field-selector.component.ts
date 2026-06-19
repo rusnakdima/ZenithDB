@@ -4,7 +4,7 @@ import { FormsModule } from "@angular/forms";
 import { FieldInfo } from "@features/query/models";
 import { IndexField } from "./index.service";
 import { IndexType } from "./create-index-dialog.component";
-import { logger } from "../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 @Component({
   selector: "app-field-selector",

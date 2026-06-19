@@ -1,9 +1,9 @@
 import { Injectable, inject } from "@angular/core";
-import { TabService } from "@shared/services/tab.service";
+import { TabService } from "@services/tab.service";
 import { ToastService } from "@services/toast.service";
-import { DataStoreService } from "@shared/services/core/unified-storage.service";
+import { DataStoreService } from "@core/services/unified-storage.service";
 import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
-import { QueryResult, RawResult } from "@shared/models/connection.config";
+import { QueryResult, RawResult } from "@app/models/connection.config";
 
 export interface QueryExecutionResult {
   results: RawResult | null;

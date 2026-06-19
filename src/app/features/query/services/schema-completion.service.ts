@@ -1,8 +1,8 @@
 import { Injectable, inject, signal } from "@angular/core";
 import { FieldInfo, FieldType } from "../models";
-import { SchemaService } from "@shared/services/schema.service";
-import { ConnectionStateService } from "@shared/services/connection-state.service";
-import { logger } from "../../../services/logger.service";
+import { SchemaService } from "@services/schema.service";
+import { ConnectionStateService } from "@services/connection-state.service";
+import { logger } from "@core/services/logger.service";
 
 export interface CompletionItem {
   label: string;

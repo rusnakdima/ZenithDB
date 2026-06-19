@@ -1,5 +1,5 @@
 import { Injectable, inject } from "@angular/core";
-import { FilterExpression, FilterOperator } from "@shared/models/connection.config";
+import { FilterExpression, FilterOperator } from "@app/models/connection.config";
 import {
   ConditionGroup,
   Condition,
@@ -8,7 +8,7 @@ import {
   ProjectionConfig,
   FieldType,
 } from "../models";
-import { logger } from "../../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 @Injectable({ providedIn: "root" })
 export class FilterBuilderService {

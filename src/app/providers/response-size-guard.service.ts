@@ -1,6 +1,6 @@
 import { Injectable, inject } from "@angular/core";
 import { ToastService } from "@services/toast.service";
-import { logger } from "../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 @Injectable({ providedIn: "root" })
 export class ResponseSizeGuardService {

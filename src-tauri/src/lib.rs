@@ -17,6 +17,11 @@ use commands::connection_command::{
 use commands::database_command::{
   create_database, database_list, delete_database, rename_database,
 };
+use commands::ipc_commands::{
+  begin_transaction, commit_transaction, create_index, delete_document, drop_index, get_version,
+  initialize_app, insert_document, is_connected, rebuild_index, rollback_transaction,
+  soft_delete_document, update_document,
+};
 use commands::logger::log_message;
 use commands::query_command::{
   query_delete, query_execute, query_raw, query_save, query_server_version,
@@ -90,6 +95,19 @@ pub fn run() -> Result<(), String> {
       save_log_file,
       append_log_file,
       log_message,
+      initialize_app,
+      get_version,
+      is_connected,
+      rebuild_index,
+      create_index,
+      drop_index,
+      insert_document,
+      update_document,
+      delete_document,
+      soft_delete_document,
+      begin_transaction,
+      commit_transaction,
+      rollback_transaction,
     ])
     .run(tauri::generate_context!())
     .map_err(|e| e.to_string())?;

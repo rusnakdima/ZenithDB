@@ -1,9 +1,9 @@
 import { Component, Input, Output, EventEmitter, inject, OnInit, signal } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { PersistentStorageService } from "@shared/services/persistent-storage.service";
-import { FilterExpression } from "@shared/models/connection.config";
+import { FilterExpression } from "@app/models/connection.config";
 import { NamedFilter } from "./complex-filter.component";
-import { logger } from "../../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 @Component({
   selector: "app-filter-history",

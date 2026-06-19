@@ -1,17 +1,17 @@
 import { Injectable, inject } from "@angular/core";
-import { ConnectionStateService } from "@shared/services/connection-state.service";
+import { ConnectionStateService } from "@services/connection-state.service";
 import { ApiProvider } from "@providers/api.provider";
-import { ConnectionService } from "@shared/services/connection.service";
-import { QueryService } from "@shared/services/query.service";
-import { SchemaService } from "@shared/services/schema.service";
-import { AdminService } from "@shared/services/admin.service";
+import { ConnectionService } from "@services/connection.service";
+import { QueryService } from "@services/query.service";
+import { SchemaService } from "@services/schema.service";
+import { AdminService } from "@services/admin.service";
 import {
   SystemMetrics,
   ConnectionConfigEnum,
   ConnectionConfig,
   QueryParams,
   TestConnectionConfig,
-} from "@shared/models/connection.config";
+} from "@app/models/connection.config";
 import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
 
 @Injectable({ providedIn: "root" })

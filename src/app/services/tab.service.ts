@@ -1,5 +1,5 @@
 import { Injectable, signal, computed, inject } from "@angular/core";
-import { QueryTab } from "@shared/models/query.model";
+import { QueryTab } from "@app/models/query.model";
 import { findById } from "@shared/utils/array.utils";
 import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
 

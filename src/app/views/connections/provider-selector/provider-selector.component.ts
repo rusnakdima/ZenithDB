@@ -1,7 +1,7 @@
 import { Component, input, output, signal, inject } from "@angular/core";
 import { MatIconModule } from "@angular/material/icon";
-import { ProviderType } from "@shared/models/provider.model";
-import { logger } from "../../../services/logger.service";
+import { ProviderType } from "@app/models/provider.model";
+import { logger } from "@core/services/logger.service";
 
 interface ProviderOption {
   type: ProviderType;

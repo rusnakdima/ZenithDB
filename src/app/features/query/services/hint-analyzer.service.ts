@@ -1,8 +1,8 @@
 import { Injectable, inject } from "@angular/core";
-import { FilterExpression } from "@shared/models/connection.config";
+import { FilterExpression } from "@app/models/connection.config";
 import { SchemaCompletionService } from "./schema-completion.service";
 import { ProviderDetectorService } from "./provider-detector.service";
-import { logger } from "../../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 export interface QueryHint {
   type: "info" | "warning" | "error";

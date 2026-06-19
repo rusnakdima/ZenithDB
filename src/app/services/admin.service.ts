@@ -1,11 +1,11 @@
 import { Injectable, inject } from "@angular/core";
-import { ConnectionStateService } from "@shared/services/connection-state.service";
-import { DataProviderService } from "@shared/services/data-provider.service";
+import { ConnectionStateService } from "@services/connection-state.service";
+import { DataProviderService } from "@services/data-provider.service";
 import { LoadingService } from "@shared/services/loading.service";
-import { logger } from "../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 import { withConnectionAndLoading } from "@shared/utils/api-wrapper.util";
 import { ApiProvider } from "@providers/api.provider";
-import { RawResult } from "@shared/models/connection.config";
+import { RawResult } from "@app/models/connection.config";
 
 @Injectable({ providedIn: "root" })
 export class AdminService {

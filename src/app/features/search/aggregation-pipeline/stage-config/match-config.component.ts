@@ -4,7 +4,7 @@ import { FormsModule } from "@angular/forms";
 import { QueryGroupComponent } from "../../../query/visual-query-builder/query-group/query-group.component";
 import { MatchConfig } from "../pipeline-builder.service";
 import { ConditionGroup } from "../../../query/models";
-import { logger } from "../../../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 @Component({
   selector: "app-match-config",

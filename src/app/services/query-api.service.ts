@@ -3,7 +3,7 @@ import { CacheService } from "@shared/services/cache.service";
 import { TauriBridgeService } from "@providers/tauri-bridge.service";
 import { RequestCancellationService } from "@providers/request-cancellation.service";
 import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
-import { QueryParams, QueryResult, RawResult, RowData } from "@shared/models/connection.config";
+import { QueryParams, QueryResult, RawResult, RowData } from "@app/models/connection.config";
 
 @Injectable({ providedIn: "root" })
 export class QueryApiService extends CacheService {

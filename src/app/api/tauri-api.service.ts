@@ -1,6 +1,6 @@
 import { Injectable, inject } from "@angular/core";
 import { invoke } from "@tauri-apps/api/core";
-import { logger } from "../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 interface Response<T> {
   status: "success" | "error";

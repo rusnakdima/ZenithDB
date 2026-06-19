@@ -3,7 +3,7 @@ import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
 import { CheckboxComponent } from "@shared/components/checkbox/checkbox.component";
 import { ToastService } from "@services/toast.service";
-import { logger } from "../../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 @Component({
   selector: "app-database-selector",

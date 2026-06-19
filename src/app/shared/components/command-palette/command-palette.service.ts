@@ -2,7 +2,7 @@ import { Injectable, inject } from "@angular/core";
 import { Router } from "@angular/router";
 import { Command } from "./command.model";
 import { ThemeService } from "@shared/services/theme.service";
-import { logger } from "../../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 import { findById } from "@shared/utils/array.utils";
 
 @Injectable({ providedIn: "root" })

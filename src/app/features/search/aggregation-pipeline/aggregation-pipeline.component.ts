@@ -19,7 +19,7 @@ import {
 } from "./pipeline-builder.service";
 import { PipelineStageComponent } from "./pipeline-stage.component";
 import { PipelineJsonEditorComponent } from "./pipeline-json-editor.component";
-import { logger } from "../../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 @Component({
   selector: "app-aggregation-pipeline",

@@ -1,6 +1,6 @@
 import { Injectable, inject, signal, computed } from "@angular/core";
-import { CollectionMeta } from "@shared/models/connection.config";
-import { DatabaseService } from "@shared/services/database.service";
+import { CollectionMeta } from "@app/models/connection.config";
+import { DatabaseService } from "@services/database.service";
 import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
 import { CACHE_CONSTANTS } from "@shared/utils/constants";
 import { evictLRUInPlace } from "@shared/utils/cache.utils";
@@ -191,7 +191,7 @@ export class CollectionCacheService {
 
   async getCollectionStats(
     collection: string
-  ): Promise<import("@shared/models/connection.config").CollectionStats> {
+  ): Promise<import("@app/models/connection.config").CollectionStats> {
     this.dataflowLogger.logApiCall(this.page, "getCollectionStats", "get_collection_stats", {
       collection,
     });

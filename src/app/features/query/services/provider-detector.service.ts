@@ -1,7 +1,7 @@
 import { Injectable, inject, signal, computed } from "@angular/core";
-import { ConnectionStateService } from "@shared/services/connection-state.service";
+import { ConnectionStateService } from "@services/connection-state.service";
 import { ProviderInfo, ProviderType, PROVIDER_METADATA, SyntaxMode } from "../models";
-import { logger } from "../../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 @Injectable({ providedIn: "root" })
 export class ProviderDetectorService {

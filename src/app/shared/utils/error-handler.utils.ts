@@ -1,7 +1,7 @@
 import { ErrorHandlerService } from "@shared/services/error-handler.service";
 import { ToastService } from "@services/toast.service";
-import { AppError, ErrorCode } from "@shared/models/error.model";
-import { logger, LogLevel } from "../../services/logger.service";
+import { AppError, ErrorCode } from "@app/models/error.model";
+import { logger, LogLevel } from "@core/services/logger.service";
 
 interface Result<T> {
   success: boolean;

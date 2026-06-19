@@ -19,12 +19,12 @@ import {
   CdkDragPlaceholder,
   moveItemInArray,
 } from "@angular/cdk/drag-drop";
-import { ColumnInfo, RowData } from "@shared/models/connection.config";
+import { ColumnInfo, RowData } from "@app/models/connection.config";
 import { isNullOrUndefined } from "@shared/utils/collection.utils";
 import { SortableHeaderComponent } from "@shared/components/sortable-header/sortable-header.component";
 import { DataTypeBadgeComponent } from "@shared/components/data-type-badge/data-type-badge.component";
 import { CheckboxComponent } from "@shared/components/checkbox/checkbox.component";
-import { logger } from "../../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 @Component({
   selector: "app-column-manager",

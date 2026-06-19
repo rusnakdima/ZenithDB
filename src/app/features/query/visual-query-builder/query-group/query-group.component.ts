@@ -9,7 +9,7 @@ import {
   FieldInfo,
 } from "../../models";
 import { SchemaCompletionService } from "../../services";
-import { logger } from "../../../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 @Component({
   selector: "app-query-group",

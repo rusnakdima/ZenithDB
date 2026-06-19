@@ -17,7 +17,7 @@ import {
   GroupedSearchResults,
   QuickSearchResult,
 } from "./quick-search.service";
-import { logger } from "../../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 type SelectResult = {
   collection: string;

@@ -1,9 +1,9 @@
 import { Injectable, inject, signal, computed } from "@angular/core";
 import { TransactionService, TransactionOperationType } from "../transaction.service";
 import { ToastService } from "@services/toast.service";
-import { RowData } from "@shared/models/connection.config";
+import { RowData } from "@app/models/connection.config";
 import { generateBatchId } from "@shared/utils/id.utils";
-import { logger } from "../../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 export type PendingOperationType = "insert" | "update" | "delete";
 

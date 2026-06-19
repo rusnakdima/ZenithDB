@@ -7,9 +7,9 @@ import {
   ConnectionConfig,
   TestConnectionConfig,
   ConnectionHealth,
-} from "@shared/models/connection.config";
+} from "@app/models/connection.config";
 import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
-import { logger } from "../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 @Injectable({ providedIn: "root" })
 export class ConnectionService {

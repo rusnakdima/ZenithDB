@@ -3,8 +3,8 @@ import { save } from "@tauri-apps/plugin-dialog";
 import { writeTextFile } from "@tauri-apps/plugin-fs";
 import { ToastService } from "@services/toast.service";
 import { LoadingService } from "@shared/services/loading.service";
-import { logger } from "../../services/logger.service";
-import { RowData } from "@shared/models/connection.config";
+import { logger } from "@core/services/logger.service";
+import { RowData } from "@app/models/connection.config";
 import { escapeCsvValue, escapeSqlValue } from "@shared/utils/string.utils";
 
 type FileFilter = {

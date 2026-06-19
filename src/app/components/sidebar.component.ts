@@ -13,20 +13,20 @@ import {
 } from "@angular/core";
 import { Router, RouterLink, NavigationEnd } from "@angular/router";
 import { MatIconModule } from "@angular/material/icon";
-import { ConnectionStateService } from "@shared/services/connection-state.service";
-import { DataStoreService } from "@shared/services/core/unified-storage.service";
-import { CollectionMeta, SystemMetrics, ConnectionSummary } from "@shared/models/connection.config";
+import { ConnectionStateService } from "@services/connection-state.service";
+import { DataStoreService } from "@core/services/unified-storage.service";
+import { CollectionMeta, SystemMetrics, ConnectionSummary } from "@app/models/connection.config";
 import { interval, Subscription } from "rxjs";
 import { filter } from "rxjs/operators";
 import { ProviderUtils } from "@shared/utils/provider.utils";
 import { ThemeService } from "@shared/services/theme.service";
 import { ErrorHandlerService } from "@shared/services/error-handler.service";
-import { MetricsApiService } from "@shared/services/metrics-api.service";
-import { ConnectionFormService } from "@shared/services/connection-form.service";
-import { TreeNode } from "@shared/models/tree-node.model";
+import { MetricsApiService } from "@services/metrics-api.service";
+import { ConnectionFormService } from "@services/connection-form.service";
+import { TreeNode } from "@app/models/tree-node.model";
 import { ConfirmService } from "@shared/services/confirm.service";
 import { ToastService } from "@services/toast.service";
-import { DatabaseService } from "@shared/services/database.service";
+import { DatabaseService } from "@services/database.service";
 import { findById } from "@shared/utils/array.utils";
 
 @Component({

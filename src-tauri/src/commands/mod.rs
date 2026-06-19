@@ -10,6 +10,8 @@ pub mod connection_entity;
 pub mod database_command;
 #[path = "error-utils.command.rs"]
 pub mod error_utils;
+#[path = "ipc_commands.rs"]
+pub mod ipc_commands;
 #[path = "logger.command.rs"]
 pub mod logger;
 #[path = "provider.command.rs"]

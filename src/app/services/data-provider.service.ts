@@ -1,14 +1,14 @@
 import { Injectable, signal, inject } from "@angular/core";
 import { ApiProvider } from "@providers/api.provider";
 import { ConnectionStateService } from "./connection-state.service";
-import { logger } from "../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 import {
   ColumnInfo,
   RowData,
   QueryParams,
   QueryResult,
   FilterExpression,
-} from "@shared/models/connection.config";
+} from "@app/models/connection.config";
 import { evictLRU } from "@shared/utils/cache.utils";
 import { CACHE_CONSTANTS } from "@shared/utils/constants";
 

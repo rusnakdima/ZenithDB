@@ -1,9 +1,9 @@
 import { Injectable, inject, signal } from "@angular/core";
-import { DataStoreService } from "@shared/services/core/unified-storage.service";
+import { DataStoreService } from "@core/services/unified-storage.service";
 import { ToastService } from "@services/toast.service";
-import { RowData } from "@shared/models/connection.config";
+import { RowData } from "@app/models/connection.config";
 import { getRecordId } from "@shared/utils/record.utils";
-import { logger } from "../../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 export interface DeletedRecord extends RowData {
   _deletedAt: string;

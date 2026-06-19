@@ -1,6 +1,6 @@
 import { Injectable, signal, effect, inject } from "@angular/core";
 import { PersistentStorageService } from "./persistent-storage.service";
-import { logger } from "../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 type ThemeSetting = "dark" | "light" | "system";
 type TabSize = 2 | 4 | 8;

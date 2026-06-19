@@ -9,7 +9,7 @@ import { IndexService, IndexDefinition, IndexField, IndexOptions } from "./index
 import { SchemaCompletionService } from "@features/query/services";
 import { FieldInfo } from "@features/query/models";
 import { ToastService } from "@services/toast.service";
-import { logger } from "../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 export type IndexType = "single" | "compound" | "text" | "geospatial" | "ttl" | "hashed";
 

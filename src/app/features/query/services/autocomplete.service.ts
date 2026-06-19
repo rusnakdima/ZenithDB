@@ -5,9 +5,9 @@ import {
   SchemaCompletionService,
 } from "./schema-completion.service";
 import { ProviderDetectorService } from "./provider-detector.service";
-import { FilterOperator } from "@shared/models/connection.config";
+import { FilterOperator } from "@app/models/connection.config";
 import { FieldType, FIELD_OPERATORS } from "../models";
-import { logger } from "../../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 const KEYWORDS_SQL = [
   "SELECT",

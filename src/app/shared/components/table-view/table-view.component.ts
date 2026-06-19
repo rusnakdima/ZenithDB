@@ -8,7 +8,7 @@ import {
 } from "@angular/core";
 import { DataTableGridComponent } from "@features/data/data-table-grid/data-table-grid.component";
 import { PaginationComponent } from "@shared/components/pagination/pagination.component";
-import { ColumnInfo, RowData } from "@shared/models/connection.config";
+import { ColumnInfo, RowData } from "@app/models/connection.config";
 
 @Component({
   selector: "app-table-view",

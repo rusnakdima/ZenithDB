@@ -1,6 +1,6 @@
 import { Component, input, output } from "@angular/core";
 import { MatIconModule } from "@angular/material/icon";
-import { RowData } from "@shared/models/connection.config";
+import { RowData } from "@app/models/connection.config";
 
 @Component({
   selector: "app-json-document-item",

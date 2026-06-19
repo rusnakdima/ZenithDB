@@ -13,21 +13,21 @@ import { Router, ActivatedRoute } from "@angular/router";
 import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
 import { ModalComponent } from "@shared/components/modal/modal.component";
-import { DataStoreService } from "@shared/services/core/unified-storage.service";
-import { ConnectionStateService } from "@shared/services/connection-state.service";
+import { DataStoreService } from "@core/services/unified-storage.service";
+import { ConnectionStateService } from "@services/connection-state.service";
 import { ProviderUtils } from "@shared/utils/provider.utils";
 import { parseProviderConfig } from "@shared/utils/provider-config.utils";
-import { ConnectionHealth, TestConnectionConfig } from "@shared/models/connection.config";
-import { ProviderType } from "@shared/models/provider.model";
+import { ConnectionHealth, TestConnectionConfig } from "@app/models/connection.config";
+import { ProviderType } from "@app/models/provider.model";
 import {
   ConnectionConfigFormComponent,
   ConnectionFormData,
 } from "../connection-config-form/connection-config-form.component";
 import { ErrorHandlerService } from "@shared/services/error-handler.service";
 import { ToastService } from "@services/toast.service";
-import { ConnectionFormService } from "@shared/services/connection-form.service";
+import { ConnectionFormService } from "@services/connection-form.service";
 import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
-import { logger } from "../../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 @Component({
   selector: "app-connection-form",

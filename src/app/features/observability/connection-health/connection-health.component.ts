@@ -1,9 +1,9 @@
 import { Component, signal, computed, inject, OnInit, OnDestroy } from "@angular/core";
 import { CommonModule } from "@angular/common";
-import { MetricsApiService } from "@shared/services/metrics-api.service";
-import { ConnectionStateService } from "@shared/services/connection-state.service";
+import { MetricsApiService } from "@services/metrics-api.service";
+import { ConnectionStateService } from "@services/connection-state.service";
 import { TIME_CONSTANTS } from "@shared/utils/constants";
-import { logger } from "../../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 @Component({
   selector: "app-connection-health",

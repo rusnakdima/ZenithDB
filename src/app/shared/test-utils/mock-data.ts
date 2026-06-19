@@ -1,4 +1,4 @@
-export const mockConnectionSummaries: import("@shared/models/connection.config").ConnectionSummary[] =
+export const mockConnectionSummaries: import("@app/models/connection.config").ConnectionSummary[] =
   [
     {
       id: "12345678-1234-1234-1234-123456789012",
@@ -14,7 +14,7 @@ export const mockConnectionSummaries: import("@shared/models/connection.config")
     },
   ];
 
-export const mockConnectionConfigResult: import("@shared/models/connection.config").ConnectionConfigResult =
+export const mockConnectionConfigResult: import("@app/models/connection.config").ConnectionConfigResult =
   {
     id: "12345678-1234-1234-1234-123456789012",
     config: {
@@ -23,19 +23,19 @@ export const mockConnectionConfigResult: import("@shared/models/connection.confi
     },
   };
 
-export const mockConnectionHealth: import("@shared/models/connection.config").ConnectionHealth = {
+export const mockConnectionHealth: import("@app/models/connection.config").ConnectionHealth = {
   healthy: true,
   provider: "json",
   server_version: "1.0.0",
   latency_ms: 5,
 };
 
-export const mockCollectionMetas: import("@shared/models/connection.config").CollectionMeta[] = [
+export const mockCollectionMetas: import("@app/models/connection.config").CollectionMeta[] = [
   { name: "users", count: 100 },
   { name: "orders", count: 50 },
 ];
 
-export const mockCollectionSchema: import("@shared/models/connection.config").CollectionSchema = {
+export const mockCollectionSchema: import("@app/models/connection.config").CollectionSchema = {
   name: "users",
   columns: [
     { name: "id", data_type: "string", nullable: false, is_primary_key: true },
@@ -45,14 +45,14 @@ export const mockCollectionSchema: import("@shared/models/connection.config").Co
   indexes: [{ name: "email_unique", columns: ["email"], is_unique: true }],
 };
 
-export const mockCollectionStats: import("@shared/models/connection.config").CollectionStats = {
+export const mockCollectionStats: import("@app/models/connection.config").CollectionStats = {
   name: "users",
   document_count: 100,
   size_bytes: 4096,
   index_count: 1,
 };
 
-export const mockQueryResult: import("@shared/models/connection.config").QueryResult = {
+export const mockQueryResult: import("@app/models/connection.config").QueryResult = {
   data: [
     { id: "1", name: "Alice", email: "alice@test.com" },
     { id: "2", name: "Bob", email: "bob@test.com" },
@@ -61,7 +61,7 @@ export const mockQueryResult: import("@shared/models/connection.config").QueryRe
   has_more: false,
 };
 
-export const mockSystemMetrics: import("@shared/models/connection.config").SystemMetrics = {
+export const mockSystemMetrics: import("@app/models/connection.config").SystemMetrics = {
   cpu_usage: 25.5,
   ram_used: 8 * 1024 * 1024 * 1024,
   ram_total: 16 * 1024 * 1024 * 1024,
@@ -73,7 +73,7 @@ export const mockSystemMetrics: import("@shared/models/connection.config").Syste
   status: "optimal",
 };
 
-export const mockDatabaseMetadata: import("@shared/models/connection.config").DatabaseMetadata = {
+export const mockDatabaseMetadata: import("@app/models/connection.config").DatabaseMetadata = {
   id: 1,
   connection_id: "12345678-1234-1234-1234-123456789012",
   name: "testdb",
@@ -83,7 +83,7 @@ export const mockDatabaseMetadata: import("@shared/models/connection.config").Da
   metadata: null,
 };
 
-export const mockRawResult: import("@shared/models/connection.config").RawResult = {
+export const mockRawResult: import("@app/models/connection.config").RawResult = {
   columns: ["id", "name"],
   rows: [
     ["1", "Alice"],

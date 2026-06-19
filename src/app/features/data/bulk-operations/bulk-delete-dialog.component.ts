@@ -4,7 +4,7 @@ import { FormsModule } from "@angular/forms";
 import { ModalComponent } from "@shared/components/modal/modal.component";
 import { BulkOperationsService, BulkDeleteRequest } from "./bulk-operations.service";
 import { ToastService } from "@services/toast.service";
-import { logger } from "../../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 @Component({
   selector: "app-bulk-delete-dialog",

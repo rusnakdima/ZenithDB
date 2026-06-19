@@ -1,5 +1,5 @@
 import { Component, input, computed } from "@angular/core";
-import { ConnectionSummary } from "@shared/models/connection.config";
+import { ConnectionSummary } from "@app/models/connection.config";
 
 export type ConnectionStatus = "connected" | "disconnected" | undefined;
 

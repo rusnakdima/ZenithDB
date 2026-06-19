@@ -13,7 +13,7 @@ import { FormsModule } from "@angular/forms";
 import { QueryTemplate, TEMPLATE_CATEGORIES, TemplateCategory } from "../models";
 import { TemplateService } from "../services";
 import { TemplateCardComponent } from "./template-card/template-card.component";
-import { logger } from "../../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 @Component({
   selector: "app-query-templates",

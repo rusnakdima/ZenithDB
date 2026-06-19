@@ -16,17 +16,17 @@ import {
 } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
-import { ConnectionStateService } from "@shared/services/connection-state.service";
-import { DataStoreService } from "@shared/services/core/unified-storage.service";
+import { ConnectionStateService } from "@services/connection-state.service";
+import { DataStoreService } from "@core/services/unified-storage.service";
 import { ToastService } from "@services/toast.service";
 import { PersistentStorageService } from "@shared/services/persistent-storage.service";
-import { ExportService } from "@shared/services/export.service";
-import { TabService } from "@shared/services/tab.service";
-import { QueryExecutionService } from "@shared/services/query-execution.service";
-import { QueryResult } from "@shared/models/connection.config";
+import { ExportService } from "@services/export.service";
+import { TabService } from "@services/tab.service";
+import { QueryExecutionService } from "@services/query-execution.service";
+import { QueryResult } from "@app/models/connection.config";
 import { formatSQL } from "@shared/utils";
-import { QueryTab } from "@shared/models/query.model";
-import { FilterExpression } from "@shared/models/connection.config";
+import { QueryTab } from "@app/models/query.model";
+import { FilterExpression } from "@app/models/connection.config";
 import { QueryTemplate } from "../models/query-template.model";
 
 import {
@@ -37,7 +37,7 @@ import {
   TemplateService,
   HintAnalyzerService,
 } from "../services";
-import { logger } from "../../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 import { VisualQueryBuilderComponent } from "../visual-query-builder/visual-query-builder.component";
 import { QueryTemplatesComponent } from "../query-templates/query-templates.component";

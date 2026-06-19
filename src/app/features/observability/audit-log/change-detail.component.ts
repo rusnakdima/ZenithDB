@@ -9,7 +9,7 @@ import {
 } from "@angular/core";
 import { MatIconModule } from "@angular/material/icon";
 import { AuditService } from "./audit.service";
-import { logger } from "../../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 @Component({
   selector: "app-change-detail",

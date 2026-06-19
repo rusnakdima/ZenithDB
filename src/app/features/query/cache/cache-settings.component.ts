@@ -14,7 +14,7 @@ import { FormsModule } from "@angular/forms";
 import { QueryCacheService, CacheEntry } from "./cache.service";
 import { TIME_CONSTANTS } from "@shared/utils/constants";
 import { formatTimeAgo } from "@shared/utils/time.utils";
-import { logger } from "../../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 @Component({
   selector: "app-cache-settings",

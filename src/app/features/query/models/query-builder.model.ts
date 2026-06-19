@@ -1,4 +1,4 @@
-import { FilterOperator } from "@shared/models/connection.config";
+import { FilterOperator } from "@app/models/connection.config";
 
 export type FieldType = "string" | "number" | "boolean" | "date" | "array" | "object";
 

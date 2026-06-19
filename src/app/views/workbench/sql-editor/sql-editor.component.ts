@@ -1,6 +1,6 @@
 import { Component, signal, output, Input, HostListener, computed, inject } from "@angular/core";
 import { FormsModule } from "@angular/forms";
-import { logger } from "../../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 @Component({
   selector: "app-sql-editor",

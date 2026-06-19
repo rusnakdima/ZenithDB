@@ -2,12 +2,12 @@ import { Component, Input, Output, EventEmitter, signal, inject, OnInit } from "
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { IndexService, IndexDefinition } from "./index.service";
-import { IndexInfo } from "@shared/models/connection.config";
+import { IndexInfo } from "@app/models/connection.config";
 import { CreateIndexDialogComponent } from "./create-index-dialog.component";
 import { DropIndexDialogComponent } from "./drop-index-dialog.component";
 import { IndexRecommendationsComponent } from "./index-recommendations.component";
 import { ToastService } from "@services/toast.service";
-import { logger } from "../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 type SortColumn = "name" | "type" | "fields" | "unique" | "sparse";
 type SortDirection = "asc" | "desc";

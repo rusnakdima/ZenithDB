@@ -20,7 +20,7 @@ import {
   QueryValidatorService,
 } from "../services";
 import { SyntaxMode } from "../models";
-import { logger } from "../../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 @Component({
   selector: "app-provider-aware-editor",

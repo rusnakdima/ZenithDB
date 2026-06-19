@@ -1,6 +1,6 @@
 import { Injectable } from "@angular/core";
 
-import { ProviderType } from "@shared/models/provider.model";
+import { ProviderType } from "@app/models/provider.model";
 
 export type { ProviderType };
 

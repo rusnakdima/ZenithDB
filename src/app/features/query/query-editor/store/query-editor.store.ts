@@ -1,6 +1,6 @@
 import { Injectable, signal, computed, inject } from "@angular/core";
 import { PersistentStorageService } from "@shared/services/persistent-storage.service";
-import { logger } from "../../../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 export interface HistoryItem {
   id: string;

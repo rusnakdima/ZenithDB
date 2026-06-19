@@ -22,7 +22,7 @@ import { MatIconModule } from "@angular/material/icon";
 import { ToastService } from "@services/toast.service";
 import { CheckboxComponent } from "@shared/components/checkbox/checkbox.component";
 import { PersistentStorageService } from "@shared/services/persistent-storage.service";
-import { logger } from "../../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 import { safeJsonParse } from "@shared/utils/json.utils";
 
 @Component({

@@ -13,7 +13,7 @@ import { ToastService } from "@services/toast.service";
 import { TIME_CONSTANTS } from "@shared/utils/constants";
 import { formatTimeAgo } from "@shared/utils/time.utils";
 import { formatBytes } from "@shared/utils/number.utils";
-import { logger } from "../../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 @Component({
   selector: "app-cache-manager",

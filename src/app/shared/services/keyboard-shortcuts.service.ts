@@ -1,14 +1,14 @@
 import { Injectable, signal, inject, DestroyRef } from "@angular/core";
 import { Router } from "@angular/router";
-import { logger } from "../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 import {
   SHORTCUT_CONFIG,
   formatShortcut,
   parseKeyEvent,
   ShortcutCategory,
-} from "./keyboard-shortcuts.models";
+} from "@app/models/keyboard-shortcuts.models";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
-import { ConnectionFormService } from "./connection-form.service";
+import { ConnectionFormService } from "@services/connection-form.service";
 
 @Injectable({ providedIn: "root" })
 export class KeyboardShortcutsService {

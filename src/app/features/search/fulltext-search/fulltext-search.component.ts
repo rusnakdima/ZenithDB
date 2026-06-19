@@ -17,7 +17,7 @@ import { FieldInfo } from "../../query/models";
 import { TextIndexDialogComponent } from "./text-index-dialog.component";
 import { DialogService } from "@shared/services/dialog.service";
 import { TIME_CONSTANTS } from "@shared/utils/constants";
-import { logger } from "../../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 export interface SearchResult {
   document: Record<string, unknown>;

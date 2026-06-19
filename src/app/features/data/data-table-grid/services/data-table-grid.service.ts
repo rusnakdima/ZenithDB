@@ -1,9 +1,9 @@
 import { Injectable, inject } from "@angular/core";
-import { DataStoreService } from "@shared/services/core/unified-storage.service";
+import { DataStoreService } from "@core/services/unified-storage.service";
 import { ToastService } from "@services/toast.service";
 import { ErrorHandlerService } from "@shared/services/error-handler.service";
 import { DiagnosticLoggerService } from "@shared/services/diagnostic-logger.service";
-import { ExportService } from "@shared/services/export.service";
+import { ExportService } from "@services/export.service";
 import { PersistentStorageService } from "@shared/services/persistent-storage.service";
 import { DataTableGridStore } from "../store/data-table-grid.store";
 import {
@@ -12,7 +12,7 @@ import {
   FilterExpression,
   QueryParams,
   QueryResult,
-} from "@shared/models/connection.config";
+} from "@app/models/connection.config";
 import { safeJsonParse } from "@shared/utils/json.utils";
 import { getRecordId } from "@shared/utils/record.utils";
 import { ExportFormat } from "@app/features/data/export-dialog/export-dialog.component";

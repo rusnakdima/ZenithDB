@@ -1,4 +1,4 @@
-import { FilterOperator } from "@shared/models/connection.config";
+import { FilterOperator } from "@app/models/connection.config";
 import { ProviderType } from "./provider-info.model";
 
 export type TemplateCategory = "search" | "modify" | "aggregate" | "admin";

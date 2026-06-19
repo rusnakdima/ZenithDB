@@ -13,23 +13,23 @@ import { Subscription } from "rxjs";
 import { filter } from "rxjs/operators";
 import { MatIconModule } from "@angular/material/icon";
 import { ExplorerSidebarComponent } from "@shared/components/explorer-sidebar/explorer-sidebar.component";
-import { DataStoreService } from "@shared/services/core/unified-storage.service";
-import { ConnectionStateService } from "@shared/services/connection-state.service";
+import { DataStoreService } from "@core/services/unified-storage.service";
+import { ConnectionStateService } from "@services/connection-state.service";
 import { ToastService } from "@services/toast.service";
 import { ClipboardService } from "@shared/services/clipboard.service";
-import { ExportService } from "@shared/services/export.service";
+import { ExportService } from "@services/export.service";
 import { PersistentStorageService } from "@shared/services/persistent-storage.service";
 import { DiagnosticLoggerService } from "@shared/services/diagnostic-logger.service";
 import { ErrorHandlerService } from "@shared/services/error-handler.service";
 import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
-import { logger } from "../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 import {
   CollectionMeta,
   CollectionStats,
   ColumnInfo,
   RowData,
   FilterExpression,
-} from "@shared/models/connection.config";
+} from "@app/models/connection.config";
 import { formatJsonLines, highlightJsonLine, safeJsonParse } from "@shared/utils/json.utils";
 import { getRecordId } from "@shared/utils/record.utils";
 import { findById } from "@shared/utils/array.utils";

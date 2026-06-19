@@ -9,14 +9,14 @@ import {
 import { Router } from "@angular/router";
 import { MatIconModule } from "@angular/material/icon";
 import { ConnectionCardComponent } from "@views/connections/connection-card/connection-card.component";
-import { ConnectionStateService } from "@shared/services/connection-state.service";
-import { DataStoreService } from "@shared/services/core/unified-storage.service";
-import { ConnectionSummary } from "@shared/models/connection.config";
+import { ConnectionStateService } from "@services/connection-state.service";
+import { DataStoreService } from "@core/services/unified-storage.service";
+import { ConnectionSummary } from "@app/models/connection.config";
 import { ConfirmService } from "@shared/services/confirm.service";
 import { withErrorHandling } from "@shared/utils/error-handler.utils";
-import { ConnectionFormService } from "@shared/services/connection-form.service";
+import { ConnectionFormService } from "@services/connection-form.service";
 import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
-import { logger } from "../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 @Component({
   selector: "app-connections",

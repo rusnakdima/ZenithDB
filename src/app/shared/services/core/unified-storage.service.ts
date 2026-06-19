@@ -12,18 +12,18 @@ import {
   TestConnectionConfig,
   CollectionSchema,
   RawResult,
-} from "@shared/models/connection.config";
-import { DatabaseService } from "@shared/services/database.service";
+} from "@app/models/connection.config";
+import { DatabaseService } from "@services/database.service";
 import {
   DecentralizationApiService,
   DatabaseListResult,
-} from "@shared/services/decentralization-api.service";
+} from "@services/decentralization-api.service";
 import {
   CollectionsApiService,
   CollectionListResult,
-} from "@shared/services/collections-api.service";
+} from "@services/collections-api.service";
 import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
-import { logger } from "../../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 import { CACHE_CONSTANTS } from "@shared/utils/constants";
 import { evictLRUInPlace } from "@shared/utils/cache.utils";
 import { ConnectionCacheService } from "./connection-cache.service";
@@ -128,7 +128,7 @@ export class DataStoreService {
 
   updateHealth(
     connectionId: string,
-    health: import("@shared/models/connection.config").ConnectionHealth
+    health: import("@app/models/connection.config").ConnectionHealth
   ): void {
     this.connectionCache.updateHealth(connectionId, health);
   }
@@ -368,7 +368,7 @@ export class DataStoreService {
 
   async getFullConnection(
     id: string
-  ): Promise<import("@shared/models/connection.config").ConnectionConfigResult> {
+  ): Promise<import("@app/models/connection.config").ConnectionConfigResult> {
     return this.db.getConnection(id);
   }
 

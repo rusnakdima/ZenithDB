@@ -12,8 +12,8 @@ import {
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
-import { ProviderType } from "@shared/models/provider.model";
-import { logger } from "../../../services/logger.service";
+import { ProviderType } from "@app/models/provider.model";
+import { logger } from "@core/services/logger.service";
 
 export interface ConnectionFormData {
   name: string;

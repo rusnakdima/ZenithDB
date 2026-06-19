@@ -11,20 +11,20 @@ import {
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
-import { DataStoreService } from "@shared/services/core/unified-storage.service";
-import { ConnectionStateService } from "@shared/services/connection-state.service";
+import { DataStoreService } from "@core/services/unified-storage.service";
+import { ConnectionStateService } from "@services/connection-state.service";
 import { ToastService } from "@services/toast.service";
-import { RawResult } from "@shared/models/connection.config";
+import { RawResult } from "@app/models/connection.config";
 import { SqlEditorComponent } from "./sql-editor/sql-editor.component";
 import { OutputConsoleComponent } from "./output-console/output-console.component";
 
-import { QueryTab } from "@shared/models/query.model";
-import { TabService } from "@shared/services/tab.service";
-import { QueryExecutionService } from "@shared/services/query-execution.service";
+import { QueryTab } from "@app/models/query.model";
+import { TabService } from "@services/tab.service";
+import { QueryExecutionService } from "@services/query-execution.service";
 import { formatSQL } from "@shared/utils/sql-formatter.utils";
 import { findById } from "@shared/utils/array.utils";
 import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
-import { logger } from "../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 @Component({
   selector: "app-workbench",

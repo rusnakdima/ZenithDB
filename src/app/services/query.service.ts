@@ -1,10 +1,10 @@
 import { Injectable, inject } from "@angular/core";
-import { ConnectionStateService } from "@shared/services/connection-state.service";
-import { DataProviderService } from "@shared/services/data-provider.service";
+import { ConnectionStateService } from "@services/connection-state.service";
+import { DataProviderService } from "@services/data-provider.service";
 import { LoadingService } from "@shared/services/loading.service";
 import { withConnectionAndLoading } from "@shared/utils/api-wrapper.util";
 import { ApiProvider } from "@providers/api.provider";
-import { QueryParams, QueryResult, RowData } from "@shared/models/connection.config";
+import { QueryParams, QueryResult, RowData } from "@app/models/connection.config";
 import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
 
 @Injectable({ providedIn: "root" })

@@ -1,9 +1,9 @@
 import { Injectable, inject, signal } from "@angular/core";
-import { ConnectionStateService } from "@shared/services/connection-state.service";
+import { ConnectionStateService } from "@services/connection-state.service";
 import { ApiProvider } from "@providers/api.provider";
 import { LoadingService } from "@shared/services/loading.service";
 import { withConnectionAndLoading } from "@shared/utils/api-wrapper.util";
-import { logger } from "../../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 import { AuditFilter as TauriAuditFilter } from "./audit.service";
 
 export type AuditOperation = "Insert" | "Update" | "Delete" | "SoftDelete" | "Restore";

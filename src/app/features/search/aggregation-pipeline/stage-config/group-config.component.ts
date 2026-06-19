@@ -4,7 +4,7 @@ import { FormsModule } from "@angular/forms";
 import { GroupConfig, GroupAccumulator } from "../pipeline-builder.service";
 import { SchemaCompletionService } from "../../../query/services/schema-completion.service";
 import { FieldInfo } from "../../../query/models";
-import { logger } from "../../../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 @Component({
   selector: "app-group-config",

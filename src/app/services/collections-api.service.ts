@@ -7,7 +7,7 @@ import {
   CollectionMeta,
   CollectionSchema,
   CollectionStats,
-} from "@shared/models/connection.config";
+} from "@app/models/connection.config";
 
 export interface CollectionListResult {
   collections: CollectionMeta[];

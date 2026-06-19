@@ -9,10 +9,10 @@ import {
 import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
 import { AuditService, AuditEntry, AuditOperation, AuditFilter } from "./audit.service";
-import { ExportService } from "@shared/services/export.service";
+import { ExportService } from "@services/export.service";
 import { ToastService } from "@services/toast.service";
 import { ChangeDetailComponent } from "./change-detail.component";
-import { logger } from "../../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 @Component({
   selector: "app-audit-log",

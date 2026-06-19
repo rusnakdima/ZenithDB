@@ -14,9 +14,9 @@ import {
 import { CommonModule } from "@angular/common";
 import { QueryAnalyzerService, QueryAnalysisResult } from "./query-analyzer.service";
 import { QueryHint, IndexRecommendation } from "../services/hint-analyzer.service";
-import { FilterExpression } from "@shared/models/connection.config";
+import { FilterExpression } from "@app/models/connection.config";
 import { ErrorHandlerService } from "@shared/services/error-handler.service";
-import { logger } from "../../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 @Component({
   selector: "app-performance-hints",

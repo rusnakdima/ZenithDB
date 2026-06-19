@@ -2,7 +2,7 @@ import { Component, Output, EventEmitter, inject, ChangeDetectionStrategy } from
 import { TitleCasePipe } from "@angular/common";
 import { MatIconModule } from "@angular/material/icon";
 import { TransactionService, TransactionOperation } from "./transaction.service";
-import { logger } from "../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 @Component({
   selector: "app-transaction-log",

@@ -4,7 +4,7 @@ import { MatIconModule } from "@angular/material/icon";
 import { AutoTransactionService, PendingOperation } from "./auto-transaction.service";
 import { ConfirmService } from "@shared/services/confirm.service";
 import { ToastService } from "@services/toast.service";
-import { logger } from "../../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 @Component({
   selector: "app-batch-transaction",

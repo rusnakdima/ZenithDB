@@ -1,7 +1,7 @@
 import { Injectable, inject } from "@angular/core";
 import { invoke, InvokeOptions } from "@tauri-apps/api/core";
 import { TauriBridgeService } from "./tauri-bridge.service";
-import { logger } from "../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 @Injectable({ providedIn: "root" })
 export class RequestCancellationService {

@@ -1,9 +1,9 @@
 import { Component, input, output, signal, inject, OnInit } from "@angular/core";
 import { MatIconModule } from "@angular/material/icon";
-import { ConnectionSummary } from "@shared/models/connection.config";
+import { ConnectionSummary } from "@app/models/connection.config";
 import { ProviderUtils } from "@shared/utils/provider.utils";
 import { ConnectionStatusBadgeComponent } from "@shared/components/connection-status-badge/connection-status-badge.component";
-import { logger } from "../../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 @Component({
   selector: "app-connection-card",

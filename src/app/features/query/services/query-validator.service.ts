@@ -1,9 +1,9 @@
 import { Injectable, inject } from "@angular/core";
-import { FilterExpression, FilterOperator } from "@shared/models/connection.config";
+import { FilterExpression, FilterOperator } from "@app/models/connection.config";
 import { FilterBuilderService } from "./filter-builder.service";
 import { ProviderDetectorService } from "./provider-detector.service";
 import { MONGO_OPERATOR_MAP } from "@shared/utils/operator.utils";
-import { logger } from "../../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 export interface ValidationError {
   line: number;

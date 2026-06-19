@@ -11,8 +11,8 @@ import { Router, RouterLink, ActivatedRoute } from "@angular/router";
 import { TitleCasePipe } from "@angular/common";
 import { MatIconModule } from "@angular/material/icon";
 import { FormsModule } from "@angular/forms";
-import { DataStoreService } from "@shared/services/core/unified-storage.service";
-import { ConnectionStateService } from "@shared/services/connection-state.service";
+import { DataStoreService } from "@core/services/unified-storage.service";
+import { ConnectionStateService } from "@services/connection-state.service";
 import { ConfirmService } from "@shared/services/confirm.service";
 import { ErrorHandlerService } from "@shared/services/error-handler.service";
 import { ToastService } from "@services/toast.service";
@@ -22,14 +22,14 @@ import {
   ConnectionHealth,
   ConnectionSummary,
   ConnectionConfigResult,
-} from "@shared/models/connection.config";
+} from "@app/models/connection.config";
 import { StatusBadgeComponent } from "@shared/components/status-badge/status-badge.component";
 import { ConnectionStatusBadgeComponent } from "@shared/components/connection-status-badge/connection-status-badge.component";
 import { withErrorHandling } from "@shared/utils/error-handler.utils";
 import { findById } from "@shared/utils/array.utils";
 import { AddDatabasePathComponent } from "../add-database-path/add-database-path.component";
 import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
-import { logger } from "../../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 import { Subscription } from "rxjs";
 import { distinctUntilChanged, debounceTime } from "rxjs/operators";
 

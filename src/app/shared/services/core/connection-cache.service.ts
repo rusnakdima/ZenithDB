@@ -3,10 +3,10 @@ import {
   ConnectionSummary,
   ConnectionHealth,
   TestConnectionConfig,
-} from "@shared/models/connection.config";
-import { DatabaseService } from "@shared/services/database.service";
+} from "@app/models/connection.config";
+import { DatabaseService } from "@services/database.service";
 import { DataflowLoggerService } from "@shared/services/dataflow-logger.service";
-import { logger } from "../../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 import { CACHE_CONSTANTS } from "@shared/utils/constants";
 import { findById } from "@shared/utils/array.utils";
 
@@ -277,7 +277,7 @@ export class ConnectionCacheService {
 
   async getFullConnection(
     id: string
-  ): Promise<import("@shared/models/connection.config").ConnectionConfigResult> {
+  ): Promise<import("@app/models/connection.config").ConnectionConfigResult> {
     return this.db.getConnection(id);
   }
 

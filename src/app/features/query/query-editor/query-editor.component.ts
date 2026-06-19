@@ -9,17 +9,17 @@ import {
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { DatePipe } from "@angular/common";
-import { DataStoreService } from "@shared/services/core/unified-storage.service";
-import { ConnectionStateService } from "@shared/services/connection-state.service";
+import { DataStoreService } from "@core/services/unified-storage.service";
+import { ConnectionStateService } from "@services/connection-state.service";
 import { ToastService } from "@services/toast.service";
 import { PersistentStorageService } from "@shared/services/persistent-storage.service";
-import { ExportService } from "@shared/services/export.service";
-import { RawResult } from "@shared/models/connection.config";
+import { ExportService } from "@services/export.service";
+import { RawResult } from "@app/models/connection.config";
 import { formatSQL } from "@shared/utils";
 
-import { QueryTab } from "@shared/models/query.model";
-import { TabService } from "@shared/services/tab.service";
-import { QueryExecutionService } from "@shared/services/query-execution.service";
+import { QueryTab } from "@app/models/query.model";
+import { TabService } from "@services/tab.service";
+import { QueryExecutionService } from "@services/query-execution.service";
 
 import { UniversalQueryEditorComponent } from "../universal-query-editor";
 

@@ -9,8 +9,8 @@ import { ConditionGroup, createEmptyGroup } from "@features/query/models";
 import { FilterBuilderService } from "@features/query/services/filter-builder.service";
 import { PersistentStorageService } from "@shared/services/persistent-storage.service";
 import { ToastService } from "@services/toast.service";
-import { FilterExpression } from "@shared/models/connection.config";
-import { logger } from "../../../services/logger.service";
+import { FilterExpression } from "@app/models/connection.config";
+import { logger } from "@core/services/logger.service";
 
 export interface NamedFilter {
   id: string;

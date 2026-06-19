@@ -1,5 +1,5 @@
 import { Injectable, signal, inject } from "@angular/core";
-import { logger } from "../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 export interface ConfirmOptions {
   title?: string;

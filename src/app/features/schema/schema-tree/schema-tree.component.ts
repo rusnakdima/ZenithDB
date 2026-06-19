@@ -10,17 +10,17 @@ import {
 } from "@angular/core";
 import { Router, RouterLink, ActivatedRoute } from "@angular/router";
 import { FormsModule } from "@angular/forms";
-import { DataStoreService } from "@shared/services/core/unified-storage.service";
+import { DataStoreService } from "@core/services/unified-storage.service";
 import { ToastService } from "@services/toast.service";
 import { ConfirmService } from "@shared/services/confirm.service";
-import { ConnectionStateService } from "@shared/services/connection-state.service";
+import { ConnectionStateService } from "@services/connection-state.service";
 import { ErrorHandlerService } from "@shared/services/error-handler.service";
-import { logger } from "../../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 import { MatIconModule } from "@angular/material/icon";
 import { SkeletonLoaderComponent } from "@shared/components/loading/skeleton-loader.component";
-import { CollectionMeta, ColumnInfo } from "@shared/models/connection.config";
+import { CollectionMeta, ColumnInfo } from "@app/models/connection.config";
 import { withErrorHandling } from "@shared/utils/error-handler.utils";
-import { TreeNode, FieldNode } from "@shared/models/tree-node.model";
+import { TreeNode, FieldNode } from "@app/models/tree-node.model";
 
 interface ContextMenu {
   show: boolean;

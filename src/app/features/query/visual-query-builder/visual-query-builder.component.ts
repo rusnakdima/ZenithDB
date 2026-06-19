@@ -15,8 +15,8 @@ import { FormsModule } from "@angular/forms";
 import { QueryGroupComponent } from "./query-group/query-group.component";
 import { ConditionGroup, SortConfig, createEmptyGroup } from "../models";
 import { FilterBuilderService, SchemaCompletionService } from "../services";
-import { FilterExpression } from "@shared/models/connection.config";
-import { logger } from "../../../services/logger.service";
+import { FilterExpression } from "@app/models/connection.config";
+import { logger } from "@core/services/logger.service";
 
 @Component({
   selector: "app-visual-query-builder",

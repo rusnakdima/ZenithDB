@@ -11,9 +11,9 @@ import {
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
-import { ColumnInfo, RowData } from "@shared/models/connection.config";
+import { ColumnInfo, RowData } from "@app/models/connection.config";
 import { isNullOrUndefined } from "@shared/utils/collection.utils";
-import { logger } from "../../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 @Component({
   selector: "app-record-form",

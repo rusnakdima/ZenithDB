@@ -2,7 +2,7 @@ import { Injectable, inject } from "@angular/core";
 import { invoke, InvokeOptions as TauriInvokeOptions } from "@tauri-apps/api/core";
 import { ErrorHandlerService } from "@shared/services/error-handler.service";
 import { SettingsService } from "@shared/services/settings.service";
-import { logger } from "../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 const DEFAULT_TIMEOUT_MS = 30000;
 

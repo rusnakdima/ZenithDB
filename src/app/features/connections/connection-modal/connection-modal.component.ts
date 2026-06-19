@@ -2,11 +2,11 @@ import { Component, inject, signal, computed } from "@angular/core";
 import { Router } from "@angular/router";
 import { CommonModule } from "@angular/common";
 import { MatIconModule } from "@angular/material/icon";
-import { ConnectionStateService } from "@shared/services/connection-state.service";
-import { DataStoreService } from "@shared/services/core/unified-storage.service";
-import { ConnectionSummary } from "@shared/models/connection.config";
+import { ConnectionStateService } from "@services/connection-state.service";
+import { DataStoreService } from "@core/services/unified-storage.service";
+import { ConnectionSummary } from "@app/models/connection.config";
 import { ToastService } from "@services/toast.service";
-import { logger } from "../../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 interface ConnectionItem {
   connection: ConnectionSummary;

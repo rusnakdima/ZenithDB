@@ -1,12 +1,12 @@
 import { Injectable, inject, signal, computed } from "@angular/core";
-import { ConnectionStateService } from "@shared/services/connection-state.service";
+import { ConnectionStateService } from "@services/connection-state.service";
 import { ApiProvider } from "@providers/api.provider";
 import { LoadingService } from "@shared/services/loading.service";
 import { ToastService } from "@services/toast.service";
-import { RowData } from "@shared/models/connection.config";
+import { RowData } from "@app/models/connection.config";
 import { withConnectionAndLoading } from "@shared/utils/api-wrapper.util";
 import { generateId, generateTransactionId } from "@shared/utils/id.utils";
-import { logger } from "../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 export type IsolationLevel = "Read Committed" | "Read Uncommitted" | "Repeatable Read";
 

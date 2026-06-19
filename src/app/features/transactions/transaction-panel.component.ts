@@ -5,7 +5,7 @@ import { TransactionService, IsolationLevel } from "./transaction.service";
 import { ToastService } from "@services/toast.service";
 import { ConfirmService } from "@shared/services/confirm.service";
 import { TransactionLogComponent } from "./transaction-log.component";
-import { logger } from "../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 @Component({
   selector: "app-transaction-panel",

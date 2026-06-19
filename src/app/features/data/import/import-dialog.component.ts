@@ -12,7 +12,7 @@ import {
 import { SchemaCompletionService } from "@features/query/services/schema-completion.service";
 import { FieldMappingComponent } from "./field-mapping.component";
 import { ToastService } from "@services/toast.service";
-import { logger } from "../../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 @Component({
   selector: "app-import-dialog",

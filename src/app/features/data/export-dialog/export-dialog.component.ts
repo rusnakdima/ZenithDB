@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter, signal, inject } from "@angular/core";
 import { MatIconModule } from "@angular/material/icon";
-import { logger } from "../../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 export type ExportFormat = "csv" | "json" | "jsonl" | "sql" | "markdown";
 

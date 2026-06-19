@@ -1,5 +1,5 @@
 import { Injectable, signal, computed, Type, inject } from "@angular/core";
-import { logger } from "../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 
 export interface DialogConfig<T = unknown> {
   id: string;

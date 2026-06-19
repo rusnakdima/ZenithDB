@@ -1,9 +1,9 @@
 import { Injectable, inject, signal } from "@angular/core";
-import { SchemaService } from "@shared/services/schema.service";
-import { ConnectionStateService } from "@shared/services/connection-state.service";
+import { SchemaService } from "@services/schema.service";
+import { ConnectionStateService } from "@services/connection-state.service";
 import { ApiProvider } from "@providers/api.provider";
-import { CollectionMeta, FilterExpression, RowData } from "@shared/models/connection.config";
-import { logger } from "../../../services/logger.service";
+import { CollectionMeta, FilterExpression, RowData } from "@app/models/connection.config";
+import { logger } from "@core/services/logger.service";
 
 export interface QuickSearchResult {
   collection: string;

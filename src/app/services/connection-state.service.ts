@@ -1,6 +1,6 @@
 import { Injectable, signal, inject } from "@angular/core";
-import { logger } from "../../services/logger.service";
-import { ConnectionSummary, ConnectionConfig } from "@shared/models/connection.config";
+import { logger } from "@core/services/logger.service";
+import { ConnectionSummary, ConnectionConfig } from "@app/models/connection.config";
 
 @Injectable({ providedIn: "root" })
 export class ConnectionStateService {

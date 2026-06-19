@@ -1,8 +1,8 @@
 import { Injectable, inject, signal } from "@angular/core";
 import { CacheService } from "@shared/services/cache.service";
 import { TauriBridgeService } from "@providers/tauri-bridge.service";
-import { logger } from "../../services/logger.service";
-import { SystemMetrics } from "@shared/models/connection.config";
+import { logger } from "@core/services/logger.service";
+import { SystemMetrics } from "@app/models/connection.config";
 
 @Injectable({ providedIn: "root" })
 export class MetricsApiService extends CacheService {

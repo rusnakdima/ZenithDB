@@ -1,14 +1,14 @@
 import { Injectable, inject } from "@angular/core";
-import { ConnectionStateService } from "@shared/services/connection-state.service";
+import { ConnectionStateService } from "@services/connection-state.service";
 import { LoadingService } from "@shared/services/loading.service";
-import { logger } from "../../services/logger.service";
+import { logger } from "@core/services/logger.service";
 import { withConnectionAndLoading } from "@shared/utils/api-wrapper.util";
 import { ApiProvider } from "@providers/api.provider";
 import {
   CollectionMeta,
   CollectionSchema,
   CollectionStats,
-} from "@shared/models/connection.config";
+} from "@app/models/connection.config";
 
 @Injectable({ providedIn: "root" })
 export class SchemaService {
