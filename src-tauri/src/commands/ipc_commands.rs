@@ -4,7 +4,7 @@ use crate::commands::validate_conn_id;
 use crate::commands::validate_name;
 use crate::dispatch_provider;
 use crate::models::response::ResponseModel;
-use crate::utils::logger::{redact_sensitive_data, DataflowTimer};
+use crate::utils::metrics::{redact_sensitive_data, DataflowTimer};
 use nosql_orm::prelude::*;
 use serde_json::Value;
 
@@ -53,7 +53,7 @@ pub async fn rebuild_index(
       return Err(e);
     }
   };
-  timer.finish(&ResponseModel::success(()));
+  timer.finish_success();
   Ok(())
 }
 
@@ -87,7 +87,7 @@ pub async fn create_index(
       return Err(e);
     }
   };
-  timer.finish(&ResponseModel::success(()));
+  timer.finish_success();
   Ok(())
 }
 
@@ -118,7 +118,7 @@ pub async fn drop_index(
       return Err(e);
     }
   };
-  timer.finish(&ResponseModel::success(()));
+  timer.finish_success();
   Ok(())
 }
 
@@ -152,7 +152,7 @@ pub async fn insert_document(
   match dispatch_provider!(entry, provider => { provider.insert(&collection, data).await.map_err_string() })
   {
     Ok(result) => {
-      timer.finish(&ResponseModel::success(&result));
+      timer.finish_success();
       Ok(result)
     }
     Err(e) => {
@@ -194,7 +194,7 @@ pub async fn update_document(
   match dispatch_provider!(entry, provider => { provider.update(&collection, &id, data).await.map_err_string() })
   {
     Ok(result) => {
-      timer.finish(&ResponseModel::success(&result));
+      timer.finish_success();
       Ok(result)
     }
     Err(e) => {
@@ -234,7 +234,7 @@ pub async fn delete_document(
   match dispatch_provider!(entry, provider => { provider.delete(&collection, &id).await.map_err_string() })
   {
     Ok(_) => {
-      timer.finish(&ResponseModel::success(()));
+      timer.finish_success();
       Ok(())
     }
     Err(e) => {
@@ -278,7 +278,7 @@ pub async fn soft_delete_document(
   match dispatch_provider!(entry, provider => { provider.update(&collection, &id, deleted_data).await.map_err_string() })
   {
     Ok(_) => {
-      timer.finish(&ResponseModel::success(()));
+      timer.finish_success();
       Ok(())
     }
     Err(e) => {
@@ -322,7 +322,7 @@ pub async fn begin_transaction(
       let result = TransactionResult {
         transaction_id: transaction_id.to_string(),
       };
-      timer.finish(&ResponseModel::success(&result));
+      timer.finish_success();
       Ok(result)
     }
     Err(e) => {
@@ -338,7 +338,7 @@ pub async fn commit_transaction(_transaction_id: String) -> Result<(), String> {
   log::debug!(
     "command = commit_transaction, params = {{ \"transaction_id\": \"***\" }} [COMMAND_ENTRY]"
   );
-  timer.finish(&ResponseModel::success(()));
+  timer.finish_success();
   Ok(())
 }
 
@@ -348,6 +348,6 @@ pub async fn rollback_transaction(_transaction_id: String) -> Result<(), String>
   log::debug!(
     "command = rollback_transaction, params = {{ \"transaction_id\": \"***\" }} [COMMAND_ENTRY]"
   );
-  timer.finish(&ResponseModel::success(()));
+  timer.finish_success();
   Ok(())
 }

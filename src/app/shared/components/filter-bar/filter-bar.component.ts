@@ -19,10 +19,9 @@ import {
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
-import { ToastService } from "@services/toast.service";
+import { ToastService } from "@services/services.toast.service";
 import { CheckboxComponent } from "@shared/components/checkbox/checkbox.component";
 import { PersistentStorageService } from "@shared/services/persistent-storage.service";
-import { logger } from "@core/services/logger.service";
 import { safeJsonParse } from "@shared/utils/json.utils";
 
 @Component({
@@ -111,7 +110,6 @@ export class FilterBarComponent implements OnInit, OnChanges, OnDestroy {
       }
     } catch (e) {
       const error = e instanceof Error ? e.message : String(e);
-      logger.warn("[FILTER]", "Failed to load filter history", { error });
     }
   }
 
@@ -120,7 +118,6 @@ export class FilterBarComponent implements OnInit, OnChanges, OnDestroy {
       this.localStorage.setFilterHistory(this.filterHistory());
     } catch (e) {
       const error = e instanceof Error ? e.message : String(e);
-      logger.warn("[FILTER]", "Failed to save filter history", { error });
     }
   }
 

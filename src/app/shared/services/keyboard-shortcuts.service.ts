@@ -1,14 +1,13 @@
 import { Injectable, signal, inject, DestroyRef } from "@angular/core";
 import { Router } from "@angular/router";
-import { logger } from "@core/services/logger.service";
 import {
   SHORTCUT_CONFIG,
   formatShortcut,
   parseKeyEvent,
   ShortcutCategory,
-} from "@app/models/keyboard-shortcuts.models";
+} from "@entities/entities.keyboard-shortcuts.entity";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
-import { ConnectionFormService } from "@services/connection-form.service";
+import { ConnectionFormService } from "@services/services.connection-form.service";
 
 @Injectable({ providedIn: "root" })
 export class KeyboardShortcutsService {
@@ -100,12 +99,10 @@ export class KeyboardShortcutsService {
   }
 
   private dispatchAction(action: string, _event: KeyboardEvent): void {
-    logger.debug("[SHORTCUTS]", "Shortcut triggered", { action });
     const handler = this.shortcutActions[action];
     if (handler) {
       handler();
     }
-    logger.debug("[SHORTCUTS]", "Shortcut completed", { action });
   }
 
   private closeTopModal(): void {
@@ -113,7 +110,6 @@ export class KeyboardShortcutsService {
   }
 
   getShortcutsByCategory(): Record<ShortcutCategory, { key: string; desc: string }[]> {
-    logger.debug("[SHORTCUTS]", "getShortcutsByCategory started");
     const result: Record<ShortcutCategory, { key: string; desc: string }[]> = {
       navigation: [],
       actions: [],
@@ -126,9 +122,6 @@ export class KeyboardShortcutsService {
       result[config.category].push({ key: display, desc: config.description });
     }
 
-    logger.debug("[SHORTCUTS]", "getShortcutsByCategory completed", {
-      categories: Object.keys(result).length,
-    });
     return result;
   }
 }

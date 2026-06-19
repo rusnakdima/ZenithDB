@@ -1,11 +1,9 @@
 import { Injectable, inject } from "@angular/core";
-import { FilterExpression, FilterOperator } from "@app/models/connection.config";
+import { FilterExpression, FilterOperator } from "@entities/entities.connection.config";
 import { ProviderDetectorService } from "./provider-detector.service";
 import { SyntaxMode } from "../models";
 import { MONGO_OPERATOR_MAP } from "@shared/utils/operator.utils";
 import { escapeSqlValue } from "@shared/utils/string.utils";
-import { logger } from "@core/services/logger.service";
-
 export interface TranslationResult {
   query: string;
   errors: string[];
@@ -18,8 +16,6 @@ export class QueryTranslationService {
 
   translateToProvider(filter: FilterExpression, mode?: SyntaxMode): TranslationResult {
     const syntaxMode = mode ?? this.providerDetector.currentSyntaxMode();
-    logger.debug("[QUERY]", "Translating filter to provider", { syntaxMode });
-
     switch (syntaxMode) {
       case "sql":
         return this.translateToSql(filter);

@@ -13,8 +13,8 @@ import { CommonModule } from "@angular/common";
 import { Subscription } from "rxjs";
 import { filter } from "rxjs/operators";
 import { LoadingOverlayComponent } from "@shared/components/loading/loading-overlay.component";
-import { ToastContainerComponent } from "@components/toast-container.component";
-import { ConnectionStateService } from "@services/connection-state.service";
+import { ToastContainerComponent } from "@components/toast-container/toast-container.component";
+import { ConnectionStateService } from "@services/services.connection-state.service";
 import { KeyboardShortcutsService } from "@shared/services/keyboard-shortcuts.service";
 import { ShortcutsHelpDialogComponent } from "@shared/components/shortcuts-help-dialog/shortcuts-help-dialog.component";
 import { CommandPaletteComponent } from "@shared/components/command-palette/command-palette.component";
@@ -22,9 +22,9 @@ import { DialogService } from "@shared/services/dialog.service";
 import { ThemeService } from "@shared/services/theme.service";
 import { ConnectionModalComponent } from "@features/connections/connection-modal/connection-modal.component";
 import { ConfirmDialogComponent } from "@shared/components/confirm-dialog/confirm-dialog.component";
-import { ConnectionFormComponent } from "@views/connections/connection-form/connection-form.component";
-import { FloatingBottomNavComponent } from "@components/floating-bottom-nav.component";
-import { AppHeaderComponent } from "@components/header.component";
+import { ConnectionFormComponent } from "@pages/connections/connection-form/connection-form.component";
+import { FloatingBottomNavComponent } from "@components/floating-bottom-nav/floating-bottom-nav.component";
+import { AppHeaderComponent } from "@components/header/header.component";
 
 @Component({
   selector: "app-root",

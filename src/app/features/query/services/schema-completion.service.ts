@@ -1,9 +1,7 @@
 import { Injectable, inject, signal } from "@angular/core";
 import { FieldInfo, FieldType } from "../models";
-import { SchemaService } from "@services/schema.service";
-import { ConnectionStateService } from "@services/connection-state.service";
-import { logger } from "@core/services/logger.service";
-
+import { SchemaService } from "@services/services.schema.service";
+import { ConnectionStateService } from "@services/services.connection-state.service";
 export interface CompletionItem {
   label: string;
   kind: "collection" | "field" | "operator" | "keyword" | "value";
@@ -48,7 +46,6 @@ export class SchemaCompletionService {
     if (!connId) return [];
 
     try {
-      logger.debug("[QUERY]", "Fetching fields for collection", { collectionName });
       const schema = await this.schemaService.describeCollection(collectionName);
       const fields = schema.columns.map((col) => ({
         name: col.name,
@@ -63,10 +60,6 @@ export class SchemaCompletionService {
         return newCache;
       });
 
-      logger.debug("[QUERY]", "Cached fields for collection", {
-        collectionName,
-        fieldCount: fields.length,
-      });
       return fields;
     } catch {
       return [];
@@ -108,14 +101,12 @@ export class SchemaCompletionService {
 
   invalidateCache(collectionName?: string): void {
     if (collectionName) {
-      logger.debug("[QUERY]", "Invalidating schema cache for collection", { collectionName });
       this.schemaCacheSignal.update((cache) => {
         const newCache = new Map(cache);
         newCache.delete(collectionName);
         return newCache;
       });
     } else {
-      logger.debug("[QUERY]", "Invalidating all schema cache");
       this.schemaCacheSignal.set(new Map());
     }
   }

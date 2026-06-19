@@ -2,13 +2,11 @@ import { Component, Input, Output, EventEmitter, signal, inject, OnInit } from "
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { IndexService, IndexDefinition } from "./index.service";
-import { IndexInfo } from "@app/models/connection.config";
+import { IndexInfo } from "@entities/entities.connection.config";
 import { CreateIndexDialogComponent } from "./create-index-dialog.component";
 import { DropIndexDialogComponent } from "./drop-index-dialog.component";
 import { IndexRecommendationsComponent } from "./index-recommendations.component";
-import { ToastService } from "@services/toast.service";
-import { logger } from "@core/services/logger.service";
-
+import { ToastService } from "@services/services.toast.service";
 type SortColumn = "name" | "type" | "fields" | "unique" | "sparse";
 type SortDirection = "asc" | "desc";
 
@@ -55,7 +53,6 @@ export class IndexBrowserComponent implements OnInit {
     this.loading.set(true);
     this.error.set("");
     try {
-      logger.debug("[INDEX]", "Loading indexes", { collection: this.collectionName });
       const indexes = await this.indexService.getIndexes(this.collectionName);
       this.indexes.set(indexes);
     } catch (e) {
@@ -133,10 +130,6 @@ export class IndexBrowserComponent implements OnInit {
 
   async onIndexCreated(indexDef: IndexDefinition): Promise<void> {
     try {
-      logger.info("[INDEX]", "Creating index", {
-        collection: this.collectionName,
-        indexName: indexDef.name,
-      });
       await this.indexService.createIndex(this.collectionName, indexDef);
       this.toast.success(`Index "${indexDef.name}" created`);
       this.showCreateDialog.set(false);
@@ -149,7 +142,6 @@ export class IndexBrowserComponent implements OnInit {
 
   async onIndexDropped(indexName: string): Promise<void> {
     try {
-      logger.info("[INDEX]", "Dropping index", { collection: this.collectionName, indexName });
       await this.indexService.dropIndex(this.collectionName, indexName);
       this.toast.success(`Index "${indexName}" dropped`);
       this.showDropDialog.set(false);
@@ -162,10 +154,6 @@ export class IndexBrowserComponent implements OnInit {
 
   async onRebuildIndex(indexName: string): Promise<void> {
     try {
-      logger.info("[INDEX]", "Rebuilding index", {
-        collection: this.collectionName,
-        indexName,
-      });
       await this.indexService.rebuildIndex(this.collectionName, indexName);
       this.toast.success(`Index "${indexName}" rebuilt`);
     } catch (e) {

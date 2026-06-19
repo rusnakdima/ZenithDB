@@ -1,6 +1,4 @@
 import { Injectable, signal, inject } from "@angular/core";
-import { logger } from "@core/services/logger.service";
-
 export interface ConfirmOptions {
   title?: string;
   message: string;
@@ -17,7 +15,6 @@ export class ConfirmService {
   options = signal<ConfirmOptions>({ message: "" });
 
   async confirmDelete(itemName: string): Promise<boolean> {
-    logger.debug("[CONFIRM]", "confirmDelete called", { itemName });
     return this.confirm({
       title: "Delete",
       message: `Are you sure you want to delete this? This action cannot be undone.`,
@@ -29,7 +26,6 @@ export class ConfirmService {
   }
 
   async confirm(options: ConfirmOptions): Promise<boolean> {
-    logger.debug("[CONFIRM]", "confirm called", { title: options.title });
     this.options.set(options);
     this.isOpen.set(true);
     return new Promise((resolve) => {
@@ -38,7 +34,6 @@ export class ConfirmService {
   }
 
   confirmResult(result: boolean): void {
-    logger.debug("[CONFIRM]", "confirmResult called", { result });
     this.isOpen.set(false);
     this.resolvePromise?.(result);
     this.resolvePromise = null;

@@ -1,8 +1,6 @@
 import { Injectable, inject, signal, computed } from "@angular/core";
-import { MetricsApiService } from "@services/metrics-api.service";
+import { MetricsApiService } from "@services/services.metrics-api.service";
 import { TIME_CONSTANTS } from "@shared/utils/constants";
-import { logger } from "@core/services/logger.service";
-
 export interface QueryMetric {
   timestamp: number;
   query: string;
@@ -92,7 +90,6 @@ export class PerformanceService {
   }
 
   setTimeRange(range: TimeRange): void {
-    logger.debug("[PERFORMANCE]", "Time range changed", { range });
     this.timeRangeSignal.set(range);
   }
 
@@ -106,14 +103,9 @@ export class PerformanceService {
       const cutoff = Date.now() - this.getRangeMs("7d");
       return updated.filter((m) => m.timestamp >= cutoff);
     });
-    logger.debug("[PERFORMANCE]", "Query recorded", {
-      query: metric.query,
-      executionTime: metric.executionTime,
-    });
   }
 
   clearMetrics(): void {
-    logger.info("[PERFORMANCE]", "Clearing metrics");
     this.queryMetrics.set([]);
   }
 

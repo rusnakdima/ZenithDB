@@ -1,5 +1,5 @@
 import { Injectable, inject } from "@angular/core";
-import { FilterExpression, FilterOperator } from "@app/models/connection.config";
+import { FilterExpression, FilterOperator } from "@entities/entities.connection.config";
 import {
   ConditionGroup,
   Condition,
@@ -8,8 +8,6 @@ import {
   ProjectionConfig,
   FieldType,
 } from "../models";
-import { logger } from "@core/services/logger.service";
-
 @Injectable({ providedIn: "root" })
 export class FilterBuilderService {
   buildFilter(groups: ConditionGroup[]): FilterExpression | null {
@@ -211,11 +209,6 @@ export class FilterBuilderService {
     const warnings: string[] = [];
 
     this.validateExpression(expr, errors, warnings);
-    logger.debug("[QUERY]", "Filter validation", {
-      isValid: errors.length === 0,
-      errorCount: errors.length,
-    });
-
     return {
       isValid: errors.length === 0,
       errors,

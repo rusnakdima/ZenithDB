@@ -1,10 +1,10 @@
 use crate::constants::LIST_TIMEOUT_SECS;
 use crate::models::response::ResponseModel;
-use crate::utils::logger::{redact_sensitive_data, DataflowTimer};
+use crate::utils::metrics::{redact_sensitive_data, DataflowTimer};
 use chrono::{DateTime, Local, Utc};
 use nosql_orm::prelude::*;
 use nosql_orm::providers::sql::SqliteProvider;
-use rusqlite::{params, Connection};
+use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
 use std::fs::{self, OpenOptions};
 use std::io::Write;
@@ -347,7 +347,7 @@ pub async fn init_decentralized_storage() -> Result<(), String> {
   log::debug!("command = init_decentralized_storage [COMMAND_ENTRY]");
   match DecentralizedStorage::init().await {
     Ok(()) => {
-      timer.finish(&ResponseModel::success(()));
+      timer.finish_success();
       Ok(())
     }
     Err(e) => {
@@ -379,7 +379,7 @@ pub async fn save_database_metadata(
   .await
   {
     Ok(result) => {
-      timer.finish(&ResponseModel::success(&result));
+      timer.finish_success();
       Ok(result)
     }
     Err(e) => {
@@ -406,7 +406,7 @@ pub async fn list_databases_metadata(
   .await
   {
     Ok(Ok(result)) => {
-      timer.finish(&ResponseModel::success(&result));
+      timer.finish_success();
       Ok(result)
     }
     Ok(Err(e)) => {
@@ -431,7 +431,7 @@ pub async fn get_database_metadata(id: i64) -> Result<Option<DatabaseMetadata>, 
   );
   match DecentralizedStorage::get_database(id).await {
     Ok(result) => {
-      timer.finish(&ResponseModel::success(&result));
+      timer.finish_success();
       Ok(result)
     }
     Err(e) => {
@@ -457,7 +457,7 @@ pub async fn update_database_metadata(
   match DecentralizedStorage::update_database(id, &name, path.as_deref(), metadata.as_deref()).await
   {
     Ok(result) => {
-      timer.finish(&ResponseModel::success(&result));
+      timer.finish_success();
       Ok(result)
     }
     Err(e) => {
@@ -477,7 +477,7 @@ pub async fn delete_database_metadata(id: i64) -> Result<(), String> {
   );
   match DecentralizedStorage::delete_database(id).await {
     Ok(()) => {
-      timer.finish(&ResponseModel::success(()));
+      timer.finish_success();
       Ok(())
     }
     Err(e) => {
@@ -497,7 +497,7 @@ pub async fn delete_connection_databases_metadata(connection_id: String) -> Resu
   );
   match DecentralizedStorage::delete_connection_databases(&connection_id).await {
     Ok(()) => {
-      timer.finish(&ResponseModel::success(()));
+      timer.finish_success();
       Ok(())
     }
     Err(e) => {
@@ -563,7 +563,7 @@ pub async fn get_system_status() -> Result<ResponseModel, ResponseModel> {
     ResponseModel::error(format!("Task join error: {}", e))
   })?;
 
-  timer.finish(&ResponseModel::success(&sys));
+  timer.finish_success();
   Ok(ResponseModel::success(sys))
 }
 

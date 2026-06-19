@@ -2,8 +2,6 @@ import { Component, Output, EventEmitter, inject, ChangeDetectionStrategy } from
 import { TitleCasePipe } from "@angular/common";
 import { MatIconModule } from "@angular/material/icon";
 import { TransactionService, TransactionOperation } from "./transaction.service";
-import { logger } from "@core/services/logger.service";
-
 @Component({
   selector: "app-transaction-log",
   standalone: true,
@@ -25,13 +23,11 @@ export class TransactionLogComponent {
   onUndoOperation(index: number): void {
     const operations = this.operationLog();
     if (index >= operations.length - 1) {
-      logger.debug("[TRANSACTION]", "Undoing last operation");
       this.transactionService.undoLastOperation();
     }
   }
 
   onClearLog(): void {
-    logger.debug("[TRANSACTION]", "Clearing operation log");
     this.transactionService.clearOperationLog();
   }
 

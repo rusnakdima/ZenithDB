@@ -19,8 +19,6 @@ import {
   createEmptyCondition,
 } from "../../models";
 import { SchemaCompletionService } from "../../services";
-import { logger } from "@core/services/logger.service";
-
 @Component({
   selector: "app-query-condition",
   standalone: true,
@@ -69,7 +67,6 @@ export class QueryConditionComponent implements OnInit {
   }
 
   onFieldChange(field: string): void {
-    logger.debug("[QUERY]", "Condition field changed", { field });
     const fieldInfo = this.fields().find((f) => f.name === field);
     const newType = fieldInfo?.type ?? "string";
     const operators = FIELD_OPERATORS[newType] || FIELD_OPERATORS["string"];

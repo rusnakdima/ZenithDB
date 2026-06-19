@@ -13,8 +13,6 @@ import {
 } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { AutocompleteService, CompletionItem } from "../services";
-import { logger } from "@core/services/logger.service";
-
 @Component({
   selector: "app-autocomplete",
   standalone: true,
@@ -75,7 +73,6 @@ export class AutocompleteComponent implements OnInit, OnDestroy {
   }
 
   onItemClick(item: CompletionItem): void {
-    logger.debug("[QUERY_AUTOCOMPLETE]", "Item clicked", { label: item.label });
     this.itemSelect.emit(item);
     this.autocompleteService.close();
   }

@@ -1,4 +1,4 @@
-export const mockConnectionSummaries: import("@app/models/connection.config").ConnectionSummary[] =
+export const mockConnectionSummaries: import("@entities/entities.connection.config").ConnectionSummary[] =
   [
     {
       id: "12345678-1234-1234-1234-123456789012",
@@ -14,7 +14,7 @@ export const mockConnectionSummaries: import("@app/models/connection.config").Co
     },
   ];
 
-export const mockConnectionConfigResult: import("@app/models/connection.config").ConnectionConfigResult =
+export const mockConnectionConfigResult: import("@entities/entities.connection.config").ConnectionConfigResult =
   {
     id: "12345678-1234-1234-1234-123456789012",
     config: {
@@ -23,36 +23,39 @@ export const mockConnectionConfigResult: import("@app/models/connection.config")
     },
   };
 
-export const mockConnectionHealth: import("@app/models/connection.config").ConnectionHealth = {
-  healthy: true,
-  provider: "json",
-  server_version: "1.0.0",
-  latency_ms: 5,
-};
+export const mockConnectionHealth: import("@entities/entities.connection.config").ConnectionHealth =
+  {
+    healthy: true,
+    provider: "json",
+    server_version: "1.0.0",
+    latency_ms: 5,
+  };
 
-export const mockCollectionMetas: import("@app/models/connection.config").CollectionMeta[] = [
-  { name: "users", count: 100 },
-  { name: "orders", count: 50 },
-];
+export const mockCollectionMetas: import("@entities/entities.connection.config").CollectionMeta[] =
+  [
+    { name: "users", count: 100 },
+    { name: "orders", count: 50 },
+  ];
 
-export const mockCollectionSchema: import("@app/models/connection.config").CollectionSchema = {
-  name: "users",
-  columns: [
-    { name: "id", data_type: "string", nullable: false, is_primary_key: true },
-    { name: "name", data_type: "string", nullable: false, is_primary_key: false },
-    { name: "email", data_type: "string", nullable: true, is_primary_key: false },
-  ],
-  indexes: [{ name: "email_unique", columns: ["email"], is_unique: true }],
-};
+export const mockCollectionSchema: import("@entities/entities.connection.config").CollectionSchema =
+  {
+    name: "users",
+    columns: [
+      { name: "id", data_type: "string", nullable: false, is_primary_key: true },
+      { name: "name", data_type: "string", nullable: false, is_primary_key: false },
+      { name: "email", data_type: "string", nullable: true, is_primary_key: false },
+    ],
+    indexes: [{ name: "email_unique", columns: ["email"], is_unique: true }],
+  };
 
-export const mockCollectionStats: import("@app/models/connection.config").CollectionStats = {
+export const mockCollectionStats: import("@entities/entities.connection.config").CollectionStats = {
   name: "users",
   document_count: 100,
   size_bytes: 4096,
   index_count: 1,
 };
 
-export const mockQueryResult: import("@app/models/connection.config").QueryResult = {
+export const mockQueryResult: import("@entities/entities.connection.config").QueryResult = {
   data: [
     { id: "1", name: "Alice", email: "alice@test.com" },
     { id: "2", name: "Bob", email: "bob@test.com" },
@@ -61,7 +64,7 @@ export const mockQueryResult: import("@app/models/connection.config").QueryResul
   has_more: false,
 };
 
-export const mockSystemMetrics: import("@app/models/connection.config").SystemMetrics = {
+export const mockSystemMetrics: import("@entities/entities.connection.config").SystemMetrics = {
   cpu_usage: 25.5,
   ram_used: 8 * 1024 * 1024 * 1024,
   ram_total: 16 * 1024 * 1024 * 1024,
@@ -73,17 +76,18 @@ export const mockSystemMetrics: import("@app/models/connection.config").SystemMe
   status: "optimal",
 };
 
-export const mockDatabaseMetadata: import("@app/models/connection.config").DatabaseMetadata = {
-  id: 1,
-  connection_id: "12345678-1234-1234-1234-123456789012",
-  name: "testdb",
-  path: "/tmp/testdb",
-  created_at: Date.now(),
-  updated_at: Date.now(),
-  metadata: null,
-};
+export const mockDatabaseMetadata: import("@entities/entities.connection.config").DatabaseMetadata =
+  {
+    id: 1,
+    connection_id: "12345678-1234-1234-1234-123456789012",
+    name: "testdb",
+    path: "/tmp/testdb",
+    created_at: Date.now(),
+    updated_at: Date.now(),
+    metadata: null,
+  };
 
-export const mockRawResult: import("@app/models/connection.config").RawResult = {
+export const mockRawResult: import("@entities/entities.connection.config").RawResult = {
   columns: ["id", "name"],
   rows: [
     ["1", "Alice"],

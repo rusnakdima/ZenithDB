@@ -1,7 +1,5 @@
 import { Component, Input, Output, EventEmitter, signal, inject } from "@angular/core";
 import { MatIconModule } from "@angular/material/icon";
-import { logger } from "@core/services/logger.service";
-
 export type ExportFormat = "csv" | "json" | "jsonl" | "sql" | "markdown";
 
 @Component({
@@ -31,7 +29,6 @@ export class ExportDialogComponent {
   }
 
   onExport(format: ExportFormat) {
-    logger.info("[DATA_GRID]", `Export requested: ${format.toUpperCase()}`);
     this.exportData.emit(format);
   }
 

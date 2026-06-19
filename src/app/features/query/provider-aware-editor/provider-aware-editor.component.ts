@@ -20,8 +20,6 @@ import {
   QueryValidatorService,
 } from "../services";
 import { SyntaxMode } from "../models";
-import { logger } from "@core/services/logger.service";
-
 @Component({
   selector: "app-provider-aware-editor",
   standalone: true,
@@ -200,7 +198,6 @@ export class ProviderAwareEditorComponent implements OnInit, OnChanges {
   }
 
   setSyntaxMode(mode: SyntaxMode): void {
-    logger.debug("[QUERY]", "Syntax mode changed", { mode });
     const currentQuery = this.query();
     const translated = this.translationService.translateToProvider(
       this.validator.parseQueryToFilter(currentQuery) ?? {},

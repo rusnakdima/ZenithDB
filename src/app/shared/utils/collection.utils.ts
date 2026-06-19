@@ -1,4 +1,4 @@
-import { RowData } from "@app/models/connection.config";
+import { RowData } from "@entities/entities.connection.config";
 
 export function trackByRow(index: number, row: RowData): string {
   return String(row["_id"] || row["id"] || index);

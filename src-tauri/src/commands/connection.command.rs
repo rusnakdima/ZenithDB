@@ -1,7 +1,7 @@
 use crate::commands::validate_conn_id;
 use crate::models::response::ResponseModel;
 use crate::state::AppState;
-use crate::utils::logger::{redact_sensitive_data, DataflowTimer};
+use crate::utils::metrics::{redact_sensitive_data, DataflowTimer};
 use tauri::State;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, ts_rs::TS)]
@@ -90,7 +90,7 @@ pub async fn save_connection(
   );
   let result = state.connection_service.save_connection(config).await;
   match &result {
-    Ok(r) => timer.finish(r),
+    Ok(r) => timer.finish_success(),
     Err(e) => timer.finish_error(&e.message),
   }
   result
@@ -102,7 +102,7 @@ pub async fn list_connections(state: State<'_, AppState>) -> Result<ResponseMode
   log::debug!("command = list_connections [COMMAND_ENTRY]");
   let result = state.connection_service.list_connections().await;
   match &result {
-    Ok(r) => timer.finish(r),
+    Ok(r) => timer.finish_success(),
     Err(e) => timer.finish_error(&e.message),
   }
   result
@@ -126,7 +126,7 @@ pub async fn test_connection_status(
   );
   let result = state.connection_service.test_connection_status(id).await;
   match &result {
-    Ok(r) => timer.finish(r),
+    Ok(r) => timer.finish_success(),
     Err(e) => timer.finish_error(&e.message),
   }
   result
@@ -150,7 +150,7 @@ pub async fn check_health(
   );
   let result = state.connection_service.check_health(connection_id).await;
   match &result {
-    Ok(r) => timer.finish(r),
+    Ok(r) => timer.finish_success(),
     Err(e) => timer.finish_error(&e.message),
   }
   result
@@ -174,7 +174,7 @@ pub async fn delete_connection(
   );
   let result = state.connection_service.delete_connection(id).await;
   match &result {
-    Ok(r) => timer.finish(r),
+    Ok(r) => timer.finish_success(),
     Err(e) => timer.finish_error(&e.message),
   }
   result
@@ -199,7 +199,7 @@ pub async fn update_connection(
   );
   let result = state.connection_service.update_connection(id, config).await;
   match &result {
-    Ok(r) => timer.finish(r),
+    Ok(r) => timer.finish_success(),
     Err(e) => timer.finish_error(&e.message),
   }
   result
@@ -223,7 +223,7 @@ pub async fn get_connection(
   );
   let result = state.connection_service.get_connection(id).await;
   match &result {
-    Ok(r) => timer.finish(r),
+    Ok(r) => timer.finish_success(),
     Err(e) => timer.finish_error(&e.message),
   }
   result
@@ -242,7 +242,7 @@ pub async fn test_connection(
   );
   let result = state.connection_service.test_connection(config).await;
   match &result {
-    Ok(r) => timer.finish(r),
+    Ok(r) => timer.finish_success(),
     Err(e) => timer.finish_error(&e.message),
   }
   result

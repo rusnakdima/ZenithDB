@@ -2,8 +2,6 @@ import { Component, input, output, signal, computed, inject } from "@angular/cor
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { FieldMapping } from "./import.service";
-import { logger } from "@core/services/logger.service";
-
 interface MappingOption {
   sourceField: string;
   targetField: string;
@@ -126,9 +124,6 @@ export class FieldMappingComponent {
       }
     }
 
-    logger.debug("[DATA_IMPORT]", `Auto-mapped ${newMappings.length} fields`, {
-      count: newMappings.length,
-    });
     this.mappingsChange.emit(newMappings);
   }
 

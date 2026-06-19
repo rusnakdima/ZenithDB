@@ -4,8 +4,6 @@ import { FormsModule } from "@angular/forms";
 import { SortStageConfig } from "../pipeline-builder.service";
 import { SchemaCompletionService } from "../../../query/services/schema-completion.service";
 import { FieldInfo, SortConfig } from "../../../query/models";
-import { logger } from "@core/services/logger.service";
-
 @Component({
   selector: "app-sort-config",
   standalone: true,
@@ -34,7 +32,6 @@ export class SortConfigComponent implements OnInit {
 
   addSort(): void {
     const newSort: SortConfig = { field: "", direction: "asc" };
-    logger.debug("[SEARCH_PIPELINE]", "Sort field added");
     this.configChange.emit({
       ...this.config,
       sorts: [...this.config.sorts, newSort],
@@ -53,12 +50,10 @@ export class SortConfigComponent implements OnInit {
       ...sorts[index],
       direction: sorts[index].direction === "asc" ? "desc" : "asc",
     };
-    logger.debug("[SEARCH_PIPELINE]", "Sort direction toggled", { index });
     this.configChange.emit({ ...this.config, sorts });
   }
 
   removeSort(index: number): void {
-    logger.debug("[SEARCH_PIPELINE]", "Sort field removed", { index });
     this.configChange.emit({
       ...this.config,
       sorts: this.config.sorts.filter((_, i) => i !== index),

@@ -10,8 +10,6 @@ import {
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { isNullOrUndefined } from "@shared/utils/collection.utils";
-import { logger } from "@core/services/logger.service";
-
 @Component({
   selector: "app-cell-editor",
   standalone: true,
@@ -41,17 +39,14 @@ export class CellEditorComponent {
   }
 
   onStart() {
-    logger.debug("[DATA_GRID]", "Cell edit started");
     this.startEdit.emit();
   }
 
   onSave() {
-    logger.debug("[DATA_GRID]", "Cell edit saved");
     this.saveEdit.emit(this.editValue);
   }
 
   onCancel() {
-    logger.debug("[DATA_GRID]", "Cell edit cancelled");
     this.cancelEdit.emit();
   }
 }

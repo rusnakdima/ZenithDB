@@ -1,12 +1,10 @@
 import { Injectable, inject, signal } from "@angular/core";
 import { DataStoreService } from "@core/services/unified-storage.service";
-import { ToastService } from "@services/toast.service";
+import { ToastService } from "@services/services.toast.service";
 import { SchemaCompletionService } from "@features/query/services";
 import { FieldInfo } from "@features/query/models";
-import { RowData } from "@app/models/connection.config";
+import { RowData } from "@entities/entities.connection.config";
 import { getRecordId } from "@shared/utils/record.utils";
-import { logger } from "@core/services/logger.service";
-
 export interface BulkUpdateRequest {
   collectionName: string;
   documentIds: string[];
@@ -47,10 +45,6 @@ export class BulkOperationsService {
     const result: BulkOperationResult = { success: 0, failed: 0, errors: [] };
 
     try {
-      logger.info(
-        "[DATA_BULK]",
-        `Bulk update started: ${request.documentIds.length} records, field=${request.field}`
-      );
       for (const id of request.documentIds) {
         try {
           const document = await this.fetchDocument(request.collectionName, id);
@@ -87,10 +81,6 @@ export class BulkOperationsService {
     const result: BulkOperationResult = { success: 0, failed: 0, errors: [] };
 
     try {
-      logger.info(
-        "[DATA_BULK]",
-        `Bulk delete started: ${request.documentIds.length} records, softDelete=${request.softDelete}`
-      );
       for (const id of request.documentIds) {
         try {
           await this.dataStore.deleteRow(request.collectionName, id);
@@ -123,7 +113,6 @@ export class BulkOperationsService {
     const result: BulkOperationResult = { success: 0, failed: 0, errors: [] };
 
     try {
-      logger.info("[DATA_BULK]", `Bulk update fields started: ${updates.length} updates`);
       for (const update of updates) {
         try {
           const document = await this.fetchDocument(collectionName, update.id);

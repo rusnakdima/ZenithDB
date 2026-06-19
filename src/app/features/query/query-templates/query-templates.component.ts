@@ -13,8 +13,6 @@ import { FormsModule } from "@angular/forms";
 import { QueryTemplate, TEMPLATE_CATEGORIES, TemplateCategory } from "../models";
 import { TemplateService } from "../services";
 import { TemplateCardComponent } from "./template-card/template-card.component";
-import { logger } from "@core/services/logger.service";
-
 @Component({
   selector: "app-query-templates",
   standalone: true,
@@ -67,10 +65,6 @@ export class QueryTemplatesComponent implements OnInit {
   }
 
   onSelectTemplate(template: QueryTemplate): void {
-    logger.debug("[QUERY_TEMPLATE]", "Template selected from UI", {
-      id: template.id,
-      name: template.name,
-    });
     this.selectTemplate.emit(template);
   }
 

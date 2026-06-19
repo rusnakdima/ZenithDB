@@ -13,7 +13,6 @@ import { FormsModule } from "@angular/forms";
 import { ModalComponent } from "@shared/components/modal/modal.component";
 import { FieldInfo } from "../../query/models";
 import { FieldWeight } from "./fulltext-search.component";
-import { logger } from "@core/services/logger.service";
 
 export interface TextIndexConfig {
   fields: FieldWeight[];
@@ -46,11 +45,6 @@ export class TextIndexDialogComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    logger.debug("[SEARCH_FULLTEXT]", "Text index dialog initialized", {
-      collectionName: this.collectionName,
-      fieldCount: this.fields.length,
-      hasExistingWeights: this.existingWeights.length > 0,
-    });
     if (this.existingWeights.length > 0) {
       this.fieldWeights.set([...this.existingWeights]);
       this.indexName.set(`${this.collectionName}_text_idx`);
@@ -86,11 +80,6 @@ export class TextIndexDialogComponent implements OnInit {
     if (weights.length === 0) {
       return;
     }
-    logger.info("[SEARCH_FULLTEXT]", "Creating text index", {
-      collectionName: this.collectionName,
-      indexName: this.indexName(),
-      fieldWeights: weights,
-    });
     this.indexCreated.emit(weights);
     this.onClose();
   }

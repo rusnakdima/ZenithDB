@@ -24,8 +24,9 @@
       "@core/services/*": ["src/app/core/services/*"],
       "@providers/*": ["src/app/providers/*"],
       "@features/*": ["src/app/features/*"],
-      "@views/*": ["src/app/views/*"],
+      "@pages/*": ["src/app/pages/*"],
       "@components/*": ["src/app/components/*"],
+      "@entities/*": ["src/app/entities/*"],
       "@layout/*": ["src/app/layout/*"]
     }
   },

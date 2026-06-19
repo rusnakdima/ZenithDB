@@ -17,8 +17,6 @@ import { FieldInfo } from "../../query/models";
 import { TextIndexDialogComponent } from "./text-index-dialog.component";
 import { DialogService } from "@shared/services/dialog.service";
 import { TIME_CONSTANTS } from "@shared/utils/constants";
-import { logger } from "@core/services/logger.service";
-
 export interface SearchResult {
   document: Record<string, unknown>;
   score: number;
@@ -72,9 +70,6 @@ export class FulltextSearchComponent implements OnInit, OnDestroy {
   private readonly DEBOUNCE_MS = 300;
 
   ngOnInit(): void {
-    logger.debug("[SEARCH_FULLTEXT]", "Fulltext search component initialized", {
-      collectionName: this.collectionName,
-    });
     this.loadFields();
   }
 
@@ -110,13 +105,11 @@ export class FulltextSearchComponent implements OnInit, OnDestroy {
     }
 
     if (!value.trim()) {
-      logger.debug("[SEARCH_FULLTEXT]", "Search input cleared");
       this.results.set([]);
       this.isSearching.set(false);
       return;
     }
 
-    logger.debug("[SEARCH_FULLTEXT]", "Search input received", { query: value });
     this.isSearching.set(true);
     this.debounceTimeoutId = setTimeout(() => {
       this.executeSearch();
@@ -136,21 +129,12 @@ export class FulltextSearchComponent implements OnInit, OnDestroy {
 
     try {
       const weightedFields = this.fieldWeights();
-      logger.info("[SEARCH_FULLTEXT]", "Executing fulltext search", {
-        query,
-        collectionName: this.collectionName,
-        weightedFields,
-      });
       const searchResults = await this.performSearch(query, weightedFields);
       this.results.set(searchResults);
-      logger.info("[SEARCH_FULLTEXT]", "Fulltext search completed", {
-        resultCount: searchResults.length,
-      });
     } catch (e: unknown) {
       const error = e instanceof Error ? e.message : "Search failed";
       this.error.set(error);
       this.results.set([]);
-      logger.error("[SEARCH_FULLTEXT]", "Fulltext search failed", { error });
     } finally {
       this.isSearching.set(false);
     }
@@ -244,7 +228,6 @@ export class FulltextSearchComponent implements OnInit, OnDestroy {
   }
 
   onTextIndexCreated(weights: FieldWeight[]): void {
-    logger.info("[SEARCH_FULLTEXT]", "Text index created", { weights });
     this.fieldWeights.set(weights);
     this.hasTextIndex.set(true);
     this.textIndexDefinition.set(weights);
@@ -271,7 +254,6 @@ export class FulltextSearchComponent implements OnInit, OnDestroy {
   }
 
   setSortOrder(order: SortOrder): void {
-    logger.debug("[SEARCH_FULLTEXT]", "Sort order changed", { order });
     this.sortOrder.set(order);
     if (this.results().length > 0) {
       this.executeSearch();

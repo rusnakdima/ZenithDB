@@ -1,10 +1,8 @@
 import { Component, Input, Output, EventEmitter, inject, OnInit, signal } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { PersistentStorageService } from "@shared/services/persistent-storage.service";
-import { FilterExpression } from "@app/models/connection.config";
+import { FilterExpression } from "@entities/entities.connection.config";
 import { NamedFilter } from "./complex-filter.component";
-import { logger } from "@core/services/logger.service";
-
 @Component({
   selector: "app-filter-history",
   standalone: true,
@@ -23,7 +21,6 @@ export class FilterHistoryComponent implements OnInit {
   historyItems = signal<FilterExpression[]>([]);
 
   ngOnInit(): void {
-    logger.debug("[SEARCH_FILTER]", "Filter history component initialized");
     this.loadHistory();
   }
 
@@ -39,25 +36,21 @@ export class FilterHistoryComponent implements OnInit {
   }
 
   onHistoryItemSelect(item: FilterExpression): void {
-    logger.debug("[SEARCH_FILTER]", "Filter history item selected", { item });
     this.historySelect.emit(item);
   }
 
   onHistoryItemDelete(item: FilterExpression, event: MouseEvent): void {
     event.stopPropagation();
-    logger.debug("[SEARCH_FILTER]", "Filter history item deleted", { item });
     this.historyDelete.emit(item);
     this.loadHistory();
   }
 
   onNamedFilterApply(namedFilter: NamedFilter): void {
-    logger.info("[SEARCH_FILTER]", "Named filter applied", { name: namedFilter.name });
     this.namedFilterApply.emit(namedFilter);
   }
 
   onNamedFilterDelete(id: string, event: MouseEvent): void {
     event.stopPropagation();
-    logger.debug("[SEARCH_FILTER]", "Named filter deleted", { id });
     this.namedFilterDelete.emit(id);
   }
 

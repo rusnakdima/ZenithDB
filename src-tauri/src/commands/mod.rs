@@ -1,6 +1,6 @@
 use crate::models::response::ResponseModel;
 use crate::services::connection_service::ConnectionService;
-use crate::utils::logger::DataflowTimer;
+use crate::utils::metrics::DataflowTimer;
 
 #[path = "connection.command.rs"]
 pub mod connection_command;
@@ -12,8 +12,7 @@ pub mod database_command;
 pub mod error_utils;
 #[path = "ipc_commands.rs"]
 pub mod ipc_commands;
-#[path = "logger.command.rs"]
-pub mod logger;
+
 #[path = "provider.command.rs"]
 pub mod provider;
 #[path = "query.command.rs"]

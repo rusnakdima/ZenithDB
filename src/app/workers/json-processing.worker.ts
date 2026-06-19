@@ -1,47 +1,26 @@
 /// <reference lib="webworker" />
 
-import { highlightJsonLine } from "@shared/utils/json.utils";
-import { RowData } from "@app/models/connection.config";
-
-export interface WorkerMessage {
-  type: "process";
-  documents: RowData[];
-  startIndex: number;
+interface ProcessedItem {
+  index: number;
+  highlightedLines: Array<{ num: number; html: string }>;
+  json: string;
 }
 
-export interface WorkerResponse {
-  type: "result";
-  processed: Array<{
-    index: number;
-    json: string;
-    highlightedLines: Array<{ num: number; html: string }>;
-  }>;
-  progress: number;
-}
-
-addEventListener("message", ({ data }: MessageEvent<WorkerMessage>) => {
+addEventListener("message", ({ data }) => {
   if (data.type === "process") {
-    const { documents, startIndex } = data;
-    const processed = documents.map((doc, idx) => {
-      const jsonStr = JSON.stringify(doc, null, 2);
-      const rawLines = jsonStr.split("\n");
-      const highlightedLines = rawLines.map((line, lineIdx) => ({
-        num: lineIdx + 1,
-        html: highlightJsonLine(line),
+    const documents = data.documents as Array<{ index: number; json: string }>;
+    const processed: ProcessedItem[] = documents.map((doc) => {
+      const lines = doc.json.split("\n");
+      const highlightedLines = lines.map((line, i) => ({
+        num: i + 1,
+        html: line,
       }));
       return {
-        index: startIndex + idx,
-        json: jsonStr,
+        index: doc.index,
         highlightedLines,
+        json: doc.json,
       };
     });
-
-    const response: WorkerResponse = {
-      type: "result",
-      processed,
-      progress: 100,
-    };
-
-    postMessage(response);
+    postMessage({ type: "result", processed });
   }
 });

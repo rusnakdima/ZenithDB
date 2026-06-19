@@ -7,7 +7,7 @@ use crate::commands::validate_name;
 use crate::dispatch_provider;
 use crate::models::response::ResponseModel;
 use crate::models::types::{QueryParams, QueryResult};
-use crate::utils::logger::{redact_sensitive_data, DataflowTimer};
+use crate::utils::metrics::{redact_sensitive_data, DataflowTimer};
 use nosql_orm::prelude::*;
 use serde_json::Value;
 
@@ -120,7 +120,7 @@ pub async fn query_execute(
     total: total as i64,
     has_more,
   };
-  timer.finish(&ResponseModel::success(&result));
+  timer.finish_success();
   Ok(result)
 }
 
@@ -171,7 +171,7 @@ pub async fn query_save(
       return Err(ResponseModel::error(e));
     }
   };
-  timer.finish(&ResponseModel::success(&result));
+  timer.finish_success();
   Ok(ResponseModel::success(result))
 }
 
@@ -212,7 +212,7 @@ pub async fn query_delete(
       return Err(e);
     }
   }
-  timer.finish(&ResponseModel::success(()));
+  timer.finish_success();
   Ok(())
 }
 
@@ -249,7 +249,7 @@ pub async fn query_raw(connectionId: String, sql: String) -> Result<RawResult, S
       return Err(e);
     }
   };
-  timer.finish(&ResponseModel::success(&result));
+  timer.finish_success();
   Ok(result)
 }
 
@@ -300,6 +300,6 @@ pub async fn query_server_version(connectionId: String) -> Result<String, String
       }
     }
   };
-  timer.finish(&ResponseModel::success(&result));
+  timer.finish_success();
   result
 }

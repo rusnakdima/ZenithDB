@@ -11,10 +11,8 @@ import {
 import { MatIconModule } from "@angular/material/icon";
 import { SoftDeleteService, DeletedRecord } from "./soft-delete.service";
 import { ConfirmService } from "@shared/services/confirm.service";
-import { ToastService } from "@services/toast.service";
-import { RowData } from "@app/models/connection.config";
-import { logger } from "@core/services/logger.service";
-
+import { ToastService } from "@services/services.toast.service";
+import { RowData } from "@entities/entities.connection.config";
 @Component({
   selector: "app-deleted-records-view",
   standalone: true,
@@ -50,7 +48,6 @@ export class DeletedRecordsViewComponent {
 
     this.loading.set(true);
     try {
-      logger.debug("[DATA]", `Loading deleted records from ${this.collectionName}`);
       const records = await this.softDeleteService.getDeletedRecords(this.collectionName);
       this.deletedRecords.set(records);
     } catch (e) {
@@ -101,7 +98,6 @@ export class DeletedRecordsViewComponent {
     if (!record) return;
 
     try {
-      logger.info("[DATA]", `Restoring single record`);
       await this.softDeleteService.restore(this.collectionName, record);
       this.deletedRecords.update((records) => records.filter((_, i) => i !== index));
       this.selectedRecords.update((selected) => {
@@ -122,7 +118,6 @@ export class DeletedRecordsViewComponent {
     const records = selectedIndexes.map((i) => this.deletedRecords()[i]);
 
     try {
-      logger.info("[DATA]", `Restoring ${records.length} selected records`);
       const result = await this.softDeleteService.bulkRestore(this.collectionName, records);
       if (result.failed > 0) {
         this.toast.warning(`Restored ${result.restored} records, ${result.failed} failed`);
@@ -152,7 +147,6 @@ export class DeletedRecordsViewComponent {
     if (!confirmed) return;
 
     try {
-      logger.info("[DATA]", `Permanently deleting single record`);
       await this.softDeleteService.permanentDelete(this.collectionName, record);
       this.deletedRecords.update((records) => records.filter((_, i) => i !== index));
       this.selectedRecords.update((selected) => {
@@ -183,7 +177,6 @@ export class DeletedRecordsViewComponent {
     const records = selectedIndexes.map((i) => this.deletedRecords()[i]);
 
     try {
-      logger.info("[DATA]", `Permanently deleting ${records.length} selected records`);
       const result = await this.softDeleteService.bulkPermanentDelete(this.collectionName, records);
       if (result.failed > 0) {
         this.toast.warning(`Deleted ${result.deleted} records, ${result.failed} failed`);

@@ -1,4 +1,4 @@
-use crate::utils::logger::DataflowTimer;
+use crate::utils::metrics::DataflowTimer;
 use base64::{engine::general_purpose::STANDARD, Engine};
 use serde::{Deserialize, Serialize};
 use std::fs;

@@ -1,6 +1,6 @@
 import { Component, input, output } from "@angular/core";
 import { MatIconModule } from "@angular/material/icon";
-import { Tab } from "@app/models/tab.model";
+import { Tab } from "@entities/entities.tab.entity";
 
 @Component({
   selector: "app-collection-tabs",

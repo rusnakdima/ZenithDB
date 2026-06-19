@@ -6,7 +6,7 @@ use crate::commands::validate_conn_id;
 use crate::commands::validate_name;
 use crate::models::response::ResponseModel;
 use crate::services::infrastructure::nosql_orm_adapter::NosqlOrmAdapter;
-use crate::utils::logger::DataflowTimer;
+use crate::utils::metrics::DataflowTimer;
 use nosql_orm::prelude::*;
 use std::path::PathBuf;
 
@@ -109,7 +109,7 @@ pub async fn create_database(
   })()
   .await;
   match &result {
-    Ok(resp) => timer.finish(resp),
+    Ok(resp) => timer.finish_success(),
     Err(err) => timer.finish_error(&err.message),
   }
   result
@@ -169,7 +169,7 @@ pub async fn rename_database(
     }
   })().await;
   match &result {
-    Ok(resp) => timer.finish(resp),
+    Ok(resp) => timer.finish_success(),
     Err(err) => timer.finish_error(&err.message),
   }
   result
@@ -226,7 +226,7 @@ pub async fn delete_database(
   })()
   .await;
   match &result {
-    Ok(resp) => timer.finish(resp),
+    Ok(resp) => timer.finish_success(),
     Err(err) => timer.finish_error(&err.message),
   }
   result
@@ -242,7 +242,7 @@ pub async fn database_list(
   let params = serde_json::json!({ "conn_id": &conn_id, "offset": offset, "limit": limit });
   log::debug!(
     "command = database_list, params = {} [COMMAND_ENTRY]",
-    crate::utils::logger::redact_sensitive_data(
+    crate::utils::metrics::redact_sensitive_data(
       &serde_json::to_string(&params).unwrap_or_default()
     )
   );
@@ -347,7 +347,7 @@ pub async fn database_list(
     }
   };
 
-  timer.finish(&result);
+  timer.finish_success();
   Ok(result)
 }
 

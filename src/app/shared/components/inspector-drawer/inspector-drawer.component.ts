@@ -2,11 +2,11 @@ import { Component, input, output, signal, computed, inject } from "@angular/cor
 import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
 import { ClipboardService } from "@shared/services/clipboard.service";
-import { ToastService } from "@services/toast.service";
-import { ExportService } from "@services/export.service";
+import { ToastService } from "@services/services.toast.service";
+import { ExportService } from "@services/services.export.service";
 import { formatJsonLines, highlightJsonLine } from "@shared/utils/json.utils";
 import { RecordFormComponent } from "@features/data/record-form/record-form.component";
-import { ColumnInfo, RowData } from "@app/models/connection.config";
+import { ColumnInfo, RowData } from "@entities/entities.connection.config";
 import { getRecordId } from "@shared/utils/record.utils";
 
 @Component({

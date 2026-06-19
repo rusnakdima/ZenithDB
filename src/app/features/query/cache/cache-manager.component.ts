@@ -9,12 +9,10 @@ import {
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { QueryCacheService, CacheEntry } from "./cache.service";
-import { ToastService } from "@services/toast.service";
+import { ToastService } from "@services/services.toast.service";
 import { TIME_CONSTANTS } from "@shared/utils/constants";
 import { formatTimeAgo } from "@shared/utils/time.utils";
 import { formatBytes } from "@shared/utils/number.utils";
-import { logger } from "@core/services/logger.service";
-
 @Component({
   selector: "app-cache-manager",
   standalone: true,
@@ -57,13 +55,11 @@ export class CacheManagerComponent {
   }
 
   clearEntry(key: string): void {
-    logger.debug("[QUERY_CACHE]", "UI clearing cache entry", { key });
     this.cacheService.clearCache(key);
     this.toast.success(`Cache entry cleared`);
   }
 
   clearAllCache(): void {
-    logger.debug("[QUERY_CACHE]", "UI clearing all cache");
     this.cacheService.clearCache();
     this.toast.success(`All cache cleared`);
   }

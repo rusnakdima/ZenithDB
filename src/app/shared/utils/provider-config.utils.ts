@@ -1,4 +1,4 @@
-import { ProviderType } from "@app/models/provider.model";
+import { ProviderType } from "@entities/entities.provider.entity";
 
 export interface ProviderFormData {
   path: string;

@@ -11,10 +11,8 @@ import {
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
-import { ColumnInfo, RowData } from "@app/models/connection.config";
+import { ColumnInfo, RowData } from "@entities/entities.connection.config";
 import { isNullOrUndefined } from "@shared/utils/collection.utils";
-import { logger } from "@core/services/logger.service";
-
 @Component({
   selector: "app-record-form",
   standalone: true,
@@ -188,7 +186,6 @@ export class RecordFormComponent {
       }
     }
 
-    logger.debug("[DATA]", `Form submitted: ${this.isEditMode() ? "edit" : "create"}`);
     this.saved.emit(result);
   }
 
@@ -209,7 +206,6 @@ export class RecordFormComponent {
   }
 
   onDeleteConfirm() {
-    logger.info("[DATA]", "Delete confirmed in form");
     this.saved.emit({ ...this.formData(), __delete: true } as RowData);
     this.showDeleteConfirm.set(false);
   }

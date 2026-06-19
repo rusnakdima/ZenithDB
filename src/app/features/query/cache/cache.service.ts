@@ -1,6 +1,4 @@
 import { Injectable, signal, computed, inject } from "@angular/core";
-import { logger } from "@core/services/logger.service";
-
 export interface CacheEntry<T = unknown> {
   key: string;
   value: T;
@@ -53,7 +51,6 @@ export class QueryCacheService {
     if (!entry) {
       this.totalMisses++;
       this.updateStats();
-      logger.debug("[QUERY_CACHE]", "Cache miss", { key });
       return null;
     }
 
@@ -61,7 +58,6 @@ export class QueryCacheService {
       this.cache.delete(key);
       this.totalMisses++;
       this.updateStats();
-      logger.debug("[QUERY_CACHE]", "Cache expired", { key });
       return null;
     }
 
@@ -69,7 +65,6 @@ export class QueryCacheService {
     entry.lastAccessed = Date.now();
     this.totalHits++;
     this.updateStats();
-    logger.debug("[QUERY_CACHE]", "Cache hit", { key, hitCount: entry.hitCount });
     return entry.value as T;
   }
 
@@ -86,15 +81,12 @@ export class QueryCacheService {
 
     this.cache.set(key, entry as CacheEntry);
     this.updateStats();
-    logger.debug("[QUERY_CACHE]", "Cached result", { key, ttlSeconds });
   }
 
   clearCache(key?: string): void {
     if (key) {
-      logger.debug("[QUERY_CACHE]", "Clearing cache entry", { key });
       this.cache.delete(key);
     } else {
-      logger.debug("[QUERY_CACHE]", "Clearing all cache");
       this.cache.clear();
     }
     this.updateStats();

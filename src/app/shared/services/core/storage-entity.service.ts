@@ -5,7 +5,7 @@ import {
   ColumnInfo,
   RowData,
   CollectionStats,
-} from "@app/models/connection.config";
+} from "@entities/entities.connection.config";
 
 export interface DatabaseMeta {
   name: string;

@@ -5,9 +5,9 @@ import {
   IndexRecommendation,
 } from "../services/hint-analyzer.service";
 import { IndexService } from "@features/indexes/index.service";
-import { FilterExpression } from "@app/models/connection.config";
+import { FilterExpression } from "@entities/entities.connection.config";
 import { SchemaCompletionService } from "../services/schema-completion.service";
-import { IndexInfo } from "@app/models/connection.config";
+import { IndexInfo } from "@entities/entities.connection.config";
 
 export interface ExecutionPlanNode {
   id: string;

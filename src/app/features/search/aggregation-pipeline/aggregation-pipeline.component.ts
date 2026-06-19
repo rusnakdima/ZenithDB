@@ -19,8 +19,6 @@ import {
 } from "./pipeline-builder.service";
 import { PipelineStageComponent } from "./pipeline-stage.component";
 import { PipelineJsonEditorComponent } from "./pipeline-json-editor.component";
-import { logger } from "@core/services/logger.service";
-
 @Component({
   selector: "app-aggregation-pipeline",
   standalone: true,
@@ -47,19 +45,13 @@ export class AggregationPipelineComponent implements OnInit {
   pipelineJson = computed(() => this.pipelineService.toJson());
   jsonError = signal<string | null>(null);
 
-  ngOnInit(): void {
-    logger.debug("[SEARCH_PIPELINE]", "Aggregation pipeline component initialized", {
-      collectionName: this.collectionName,
-    });
-  }
+  ngOnInit(): void {}
 
   addStage(type: StageType): void {
-    logger.debug("[SEARCH_PIPELINE]", "Adding stage", { type });
     this.pipelineService.addStage(type);
   }
 
   removeStage(id: string): void {
-    logger.debug("[SEARCH_PIPELINE]", "Removing stage", { id });
     this.pipelineService.removeStage(id);
   }
 
@@ -76,7 +68,6 @@ export class AggregationPipelineComponent implements OnInit {
   }
 
   clearAll(): void {
-    logger.info("[SEARCH_PIPELINE]", "Clearing all pipeline stages");
     this.pipelineService.clearAll();
   }
 
@@ -91,13 +82,11 @@ export class AggregationPipelineComponent implements OnInit {
   }
 
   onCancel(): void {
-    logger.debug("[SEARCH_PIPELINE]", "Pipeline execution cancelled");
     this.cancel.emit();
   }
 
   onExecute(): void {
     const pipeline = this.pipelineService.buildPipeline();
-    logger.info("[SEARCH_PIPELINE]", "Executing aggregation pipeline", { pipeline });
     this.execute.emit(pipeline);
   }
 }

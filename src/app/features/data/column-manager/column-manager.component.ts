@@ -19,13 +19,11 @@ import {
   CdkDragPlaceholder,
   moveItemInArray,
 } from "@angular/cdk/drag-drop";
-import { ColumnInfo, RowData } from "@app/models/connection.config";
+import { ColumnInfo, RowData } from "@entities/entities.connection.config";
 import { isNullOrUndefined } from "@shared/utils/collection.utils";
 import { SortableHeaderComponent } from "@shared/components/sortable-header/sortable-header.component";
 import { DataTypeBadgeComponent } from "@shared/components/data-type-badge/data-type-badge.component";
 import { CheckboxComponent } from "@shared/components/checkbox/checkbox.component";
-import { logger } from "@core/services/logger.service";
-
 @Component({
   selector: "app-column-manager",
   standalone: true,
@@ -97,7 +95,6 @@ export class ColumnManagerComponent {
   }
 
   onToggleColumnVisibility(col: string) {
-    logger.debug("[DATA]", `Column visibility toggled: ${col}`);
     this.toggleColumnVisibility.emit(col);
   }
 

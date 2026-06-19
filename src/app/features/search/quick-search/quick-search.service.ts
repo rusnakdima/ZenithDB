@@ -1,9 +1,8 @@
 import { Injectable, inject, signal } from "@angular/core";
-import { SchemaService } from "@services/schema.service";
-import { ConnectionStateService } from "@services/connection-state.service";
-import { ApiProvider } from "@providers/api.provider";
-import { CollectionMeta, FilterExpression, RowData } from "@app/models/connection.config";
-import { logger } from "@core/services/logger.service";
+import { SchemaService } from "@services/services.schema.service";
+import { ConnectionStateService } from "@services/services.connection-state.service";
+import { ApiProvider } from "@providers/providers.api.provider";
+import { CollectionMeta, FilterExpression, RowData } from "@entities/entities.connection.config";
 
 export interface QuickSearchResult {
   collection: string;
@@ -52,18 +51,12 @@ export class QuickSearchService {
 
     this.debounceTimeoutId = setTimeout(async () => {
       try {
-        logger.info("[SEARCH_QUICK]", "Executing quick search", { query });
         const results = await this.performSearch(query);
         this.searchResultsSignal.set(results);
-        logger.info("[SEARCH_QUICK]", "Quick search completed", {
-          resultCount: results.length,
-          collections: results.map((r) => r.collection),
-        });
       } catch (e: unknown) {
         const error = e instanceof Error ? e.message : "Search failed";
         this.errorSignal.set(error);
         this.searchResultsSignal.set([]);
-        logger.error("[SEARCH_QUICK]", "Quick search failed", { error });
       } finally {
         this.isSearchingSignal.set(false);
       }
@@ -173,7 +166,6 @@ export class QuickSearchService {
   }
 
   clearResults(): void {
-    logger.debug("[SEARCH_QUICK]", "Quick search results cleared");
     this.searchResultsSignal.set([]);
     this.errorSignal.set(null);
   }

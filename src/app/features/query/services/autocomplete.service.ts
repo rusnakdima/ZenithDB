@@ -5,10 +5,8 @@ import {
   SchemaCompletionService,
 } from "./schema-completion.service";
 import { ProviderDetectorService } from "./provider-detector.service";
-import { FilterOperator } from "@app/models/connection.config";
+import { FilterOperator } from "@entities/entities.connection.config";
 import { FieldType, FIELD_OPERATORS } from "../models";
-import { logger } from "@core/services/logger.service";
-
 const KEYWORDS_SQL = [
   "SELECT",
   "FROM",
@@ -145,17 +143,10 @@ export class AutocompleteService {
   });
 
   async triggerCompletion(context: CompletionContext, collectionName?: string): Promise<void> {
-    logger.debug("[QUERY_AUTOCOMPLETE]", "Triggering completion", {
-      triggerKind: context.triggerKind,
-      collectionName,
-    });
     const items = await this.buildCompletionItems(context, collectionName);
     this.itemsSignal.set(items);
     this.isActiveSignal.set(items.length > 0);
     this.selectedIndexSignal.set(0);
-    logger.debug("[QUERY_AUTOCOMPLETE]", "Completion items built", {
-      itemCount: items.length,
-    });
   }
 
   async triggerCompletionWithFields(
@@ -163,10 +154,6 @@ export class AutocompleteService {
     collectionName: string,
     currentField?: string
   ): Promise<void> {
-    logger.debug("[QUERY_AUTOCOMPLETE]", "Triggering field completion", {
-      collectionName,
-      currentField,
-    });
     const items = await this.buildFieldCompletionItems(collectionName, currentField);
     this.itemsSignal.set(items);
     this.isActiveSignal.set(items.length > 0);
@@ -342,10 +329,6 @@ export class AutocompleteService {
   confirmSelection(): CompletionItem | null {
     const item = this.selectedItem();
     if (item) {
-      logger.debug("[QUERY_AUTOCOMPLETE]", "Item selected", {
-        label: item.label,
-        kind: item.kind,
-      });
     }
     this.close();
     return item;

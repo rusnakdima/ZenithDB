@@ -1,10 +1,8 @@
 import { Injectable, inject } from "@angular/core";
-import { FilterExpression, FilterOperator } from "@app/models/connection.config";
+import { FilterExpression, FilterOperator } from "@entities/entities.connection.config";
 import { FilterBuilderService } from "./filter-builder.service";
 import { ProviderDetectorService } from "./provider-detector.service";
 import { MONGO_OPERATOR_MAP } from "@shared/utils/operator.utils";
-import { logger } from "@core/services/logger.service";
-
 export interface ValidationError {
   line: number;
   column: number;
@@ -28,7 +26,6 @@ export class QueryValidatorService {
     const warnings: ValidationError[] = [];
 
     if (!query || query.trim().length === 0) {
-      logger.debug("[QUERY]", "Empty query validation");
       return {
         isValid: false,
         errors: [{ line: 1, column: 1, message: "Query cannot be empty", severity: "error" }],
@@ -36,7 +33,6 @@ export class QueryValidatorService {
       };
     }
 
-    logger.debug("[QUERY]", "Validating query", { queryLength: query.length });
     const syntaxMode = this.providerDetector.currentSyntaxMode();
 
     switch (syntaxMode) {
@@ -61,7 +57,6 @@ export class QueryValidatorService {
   }
 
   validateFilter(filter: FilterExpression): ValidationResult {
-    logger.debug("[QUERY]", "Validating filter expression");
     const result = this.filterBuilder.validateFilter(filter);
     return {
       isValid: result.isValid,

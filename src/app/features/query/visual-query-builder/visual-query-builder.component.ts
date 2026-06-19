@@ -15,9 +15,7 @@ import { FormsModule } from "@angular/forms";
 import { QueryGroupComponent } from "./query-group/query-group.component";
 import { ConditionGroup, SortConfig, createEmptyGroup } from "../models";
 import { FilterBuilderService, SchemaCompletionService } from "../services";
-import { FilterExpression } from "@app/models/connection.config";
-import { logger } from "@core/services/logger.service";
-
+import { FilterExpression } from "@entities/entities.connection.config";
 @Component({
   selector: "app-visual-query-builder",
   standalone: true,
@@ -156,7 +154,6 @@ export class VisualQueryBuilderComponent implements OnInit, OnChanges {
   }
 
   onApply(): void {
-    logger.debug("[QUERY]", "Visual query builder apply");
     const filter = this.filterBuilder.buildFilter([this.rootGroup()]);
     const validSorts = this.sorts().filter((s) => s.field);
 

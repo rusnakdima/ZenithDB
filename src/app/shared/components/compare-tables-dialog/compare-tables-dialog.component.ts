@@ -2,8 +2,8 @@ import { Component, input, output, signal, computed, inject } from "@angular/cor
 import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
 import { DataStoreService } from "@core/services/unified-storage.service";
-import { ToastService } from "@services/toast.service";
-import { CollectionMeta, ColumnInfo } from "@app/models/connection.config";
+import { ToastService } from "@services/services.toast.service";
+import { CollectionMeta, ColumnInfo } from "@entities/entities.connection.config";
 
 interface ColumnComparison {
   name: string;

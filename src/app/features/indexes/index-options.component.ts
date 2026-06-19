@@ -3,8 +3,6 @@ import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { IndexOptions } from "./index.service";
 import { IndexType } from "./create-index-dialog.component";
-import { logger } from "@core/services/logger.service";
-
 @Component({
   selector: "app-index-options",
   standalone: true,
@@ -17,22 +15,18 @@ export class IndexOptionsComponent {
   @Output() optionsChange = new EventEmitter<IndexOptions>();
 
   onUniqueChange(unique: boolean): void {
-    logger.debug("[INDEX]", "Index unique option changed", { unique });
     this.optionsChange.emit({ ...this.options, unique });
   }
 
   onSparseChange(sparse: boolean): void {
-    logger.debug("[INDEX]", "Index sparse option changed", { sparse });
     this.optionsChange.emit({ ...this.options, sparse });
   }
 
   onTtlSecondsChange(ttlSeconds: number): void {
-    logger.debug("[INDEX]", "Index TTL option changed", { ttlSeconds });
     this.optionsChange.emit({ ...this.options, ttlSeconds });
   }
 
   onDefaultLanguageChange(defaultLanguage: string): void {
-    logger.debug("[INDEX]", "Index default language changed", { defaultLanguage });
     this.optionsChange.emit({ ...this.options, defaultLanguage });
   }
 }

@@ -25,7 +25,7 @@ import {
   CdkDragPlaceholder,
   moveItemInArray,
 } from "@angular/cdk/drag-drop";
-import { ColumnInfo, RowData } from "@app/models/connection.config";
+import { ColumnInfo, RowData } from "@entities/entities.connection.config";
 import { FormatValuePipe } from "@shared/pipes/format-value.pipe";
 import { trackByRow, isNullOrUndefined } from "@shared/utils/collection.utils";
 import {
@@ -37,8 +37,6 @@ import { RecordFormComponent } from "@features/data/record-form/record-form.comp
 import { BulkActionBarComponent } from "@features/data/bulk-action-bar/bulk-action-bar.component";
 import { DataTableGridStore } from "./store/data-table-grid.store";
 import { DataTableGridService } from "./services/data-table-grid.service";
-import { logger } from "@core/services/logger.service";
-
 @Component({
   selector: "app-data-table-grid",
   standalone: true,
@@ -451,7 +449,6 @@ export class DataTableGridComponent implements OnInit, OnChanges, OnDestroy, Aft
 
   async exportData(format: ExportFormat) {
     try {
-      logger.info("[DATA_GRID]", `Exporting ${this.collectionName} as ${format.toUpperCase()}`);
       await this.service.exportData(this.collectionName, format);
     } catch {
       // error handled in service
@@ -488,7 +485,6 @@ export class DataTableGridComponent implements OnInit, OnChanges, OnDestroy, Aft
     if ((record as any).__delete) {
       delete (record as any).__delete;
       try {
-        logger.info("[DATA_GRID]", `Deleting record in ${this.collectionName}`);
         await this.service.deleteRecord(this.collectionName, record);
         this.closeRecordForm();
         this.dataChange.emit();
@@ -499,10 +495,6 @@ export class DataTableGridComponent implements OnInit, OnChanges, OnDestroy, Aft
     } else {
       try {
         const isEdit = this.recordFormMode() === "edit";
-        logger.info(
-          "[DATA_GRID]",
-          `${isEdit ? "Updating" : "Creating"} record in ${this.collectionName}`
-        );
         await this.service.saveRecord(this.collectionName, record);
         this.closeRecordForm();
         this.dataChange.emit();
@@ -524,7 +516,6 @@ export class DataTableGridComponent implements OnInit, OnChanges, OnDestroy, Aft
   async confirmBulkDelete() {
     try {
       const count = this.store.selectedRows().size;
-      logger.info("[DATA_GRID]", `Bulk deleting ${count} records from ${this.collectionName}`);
       await this.service.bulkDelete(this.collectionName);
       this.store.clearSelection();
       this.showBulkDeleteConfirm.set(false);

@@ -4,8 +4,6 @@ import { FormsModule } from "@angular/forms";
 import { PerformanceService, PerformanceMetrics } from "./performance.service";
 import { TIME_CONSTANTS } from "@shared/utils/constants";
 import { MetricsChartComponent } from "./metrics-chart.component";
-import { logger } from "@core/services/logger.service";
-
 type TimeRange = "1h" | "6h" | "24h" | "7d";
 
 @Component({
@@ -42,7 +40,6 @@ export class PerformanceDashboardComponent implements OnInit, OnDestroy {
   }
 
   onTimeRangeChange(range: TimeRange): void {
-    logger.debug("[PERFORMANCE]", "Dashboard time range changing", { range });
     this.selectedTimeRange.set(range);
     this.performanceService.setTimeRange(range);
     this.loadMetrics();

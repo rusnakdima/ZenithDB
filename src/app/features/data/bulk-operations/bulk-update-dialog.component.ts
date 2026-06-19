@@ -13,9 +13,7 @@ import { FormsModule } from "@angular/forms";
 import { ModalComponent } from "@shared/components/modal/modal.component";
 import { BulkOperationsService, BulkUpdateRequest } from "./bulk-operations.service";
 import { FieldInfo } from "@features/query/models";
-import { ToastService } from "@services/toast.service";
-import { logger } from "@core/services/logger.service";
-
+import { ToastService } from "@services/services.toast.service";
 @Component({
   selector: "app-bulk-update-dialog",
   standalone: true,
@@ -99,10 +97,6 @@ export class BulkUpdateDialogComponent implements OnInit {
     this.isProcessing.set(true);
 
     try {
-      logger.info(
-        "[DATA_BULK]",
-        `Confirm bulk update: ${this.documentIds.length} records, field=${this.selectedField()}`
-      );
       const request: BulkUpdateRequest = {
         collectionName: this.collectionName,
         documentIds: this.documentIds,

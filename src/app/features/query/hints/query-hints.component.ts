@@ -10,8 +10,6 @@ import {
 } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { HintAnalyzerService, QueryHint } from "../services";
-import { logger } from "@core/services/logger.service";
-
 @Component({
   selector: "app-query-hints",
   standalone: true,
@@ -40,11 +38,9 @@ export class QueryHintsComponent implements OnInit {
     }
 
     try {
-      logger.debug("[QUERY]", "Loading query hints", { collectionName: this.collectionName });
       const parsed = JSON.parse(this.filterText);
       const hints = await this.hintAnalyzer.analyzeQuery(parsed, this.collectionName);
       this.hints.set(hints);
-      logger.debug("[QUERY]", "Query hints loaded", { hintCount: hints.length });
     } catch {
       this.hints.set([]);
     }

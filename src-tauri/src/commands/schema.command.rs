@@ -6,7 +6,7 @@ use crate::commands::validate_conn_id;
 use crate::commands::validate_name;
 use crate::dispatch_provider;
 use crate::models::response::ResponseModel;
-use crate::utils::logger::{redact_sensitive_data, DataflowTimer};
+use crate::utils::metrics::{redact_sensitive_data, DataflowTimer};
 use nosql_orm::prelude::*;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -65,7 +65,7 @@ pub async fn collection_list(
     }
   };
 
-  timer.finish(&result);
+  timer.finish_success();
   Ok(result)
 }
 
@@ -107,7 +107,7 @@ pub async fn collection_stats(
     }
   };
 
-  timer.finish(&result);
+  timer.finish_success();
   Ok(result)
 }
 
@@ -147,7 +147,7 @@ pub async fn collection_create(
     }
   };
 
-  timer.finish(&result);
+  timer.finish_success();
   Ok(result)
 }
 
@@ -187,7 +187,7 @@ pub async fn collection_drop(
     }
   };
 
-  timer.finish(&result);
+  timer.finish_success();
   Ok(result)
 }
 
@@ -232,7 +232,7 @@ pub async fn collection_rename(
     }
   };
 
-  timer.finish(&result);
+  timer.finish_success();
   Ok(result)
 }
 
@@ -286,7 +286,7 @@ pub async fn describe_collection(
   })()
   .await;
   match &result {
-    Ok(resp) => timer.finish(resp),
+    Ok(resp) => timer.finish_success(),
     Err(err) => timer.finish_error(&err.message),
   }
   result

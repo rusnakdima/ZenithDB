@@ -1,7 +1,7 @@
 /// <reference lib="webworker" />
 
 import { highlightJsonLine } from "@shared/utils/json.utils";
-import { RowData } from "@app/models/connection.config";
+import { RowData } from "@entities/entities.connection.config";
 
 export interface WorkerMessage {
   type: "process";

@@ -2,12 +2,10 @@ import { Component, inject, signal, computed } from "@angular/core";
 import { Router } from "@angular/router";
 import { CommonModule } from "@angular/common";
 import { MatIconModule } from "@angular/material/icon";
-import { ConnectionStateService } from "@services/connection-state.service";
+import { ConnectionStateService } from "@services/services.connection-state.service";
 import { DataStoreService } from "@core/services/unified-storage.service";
-import { ConnectionSummary } from "@app/models/connection.config";
-import { ToastService } from "@services/toast.service";
-import { logger } from "@core/services/logger.service";
-
+import { ConnectionSummary } from "@entities/entities.connection.config";
+import { ToastService } from "@services/services.toast.service";
 interface ConnectionItem {
   connection: ConnectionSummary;
   isActive: boolean;
@@ -48,7 +46,6 @@ export class ConnectionModalComponent {
   });
 
   open() {
-    logger.debug("[CONNECTION_MODAL]", "Opening connection modal");
     this.isOpen.set(true);
     this.searchQuery.set("");
     this.selectedIndex.set(0);
@@ -94,10 +91,6 @@ export class ConnectionModalComponent {
   }
 
   selectItem(item: ConnectionItem) {
-    logger.info("[CONNECTION_MODAL]", "Selecting connection", {
-      id: item.connection.id,
-      name: item.connection.name,
-    });
     this.connState.setActiveConnection(item.connection);
     this.router.navigate(["/connections", item.connection.id]);
     this.close();
@@ -105,7 +98,6 @@ export class ConnectionModalComponent {
 
   disconnect(item: ConnectionItem, event: MouseEvent) {
     event.stopPropagation();
-    logger.info("[CONNECTION_MODAL]", "Disconnecting", { name: item.connection.name });
     this.connState.activeConnectionId.set(null);
     this.connState.activeConnectionName.set(null);
     this.connState.activeProvider.set(null);
@@ -115,9 +107,6 @@ export class ConnectionModalComponent {
 
   viewDetails(item: ConnectionItem, event: MouseEvent) {
     event.stopPropagation();
-    logger.debug("[CONNECTION_MODAL]", "Viewing connection details", {
-      id: item.connection.id,
-    });
     this.router.navigate(["/connections", item.connection.id]);
     this.close();
   }

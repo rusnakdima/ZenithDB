@@ -9,8 +9,6 @@ import {
 } from "@angular/core";
 import { MatIconModule } from "@angular/material/icon";
 import { AuditService } from "./audit.service";
-import { logger } from "@core/services/logger.service";
-
 @Component({
   selector: "app-change-detail",
   standalone: true,
@@ -28,17 +26,14 @@ export class ChangeDetailComponent {
 
   diffs = computed(() => {
     const result = this.auditService.computeDiff(this.before, this.after);
-    logger.debug("[ChangeDetail]", "Change diff computed", { diffCount: result.length });
     return result;
   });
 
   onClose(): void {
-    logger.debug("[ChangeDetail]", "Change detail closed");
     this.close.emit();
   }
 
   onExport(): void {
-    logger.info("[ChangeDetail]", "Change details exported");
     this.exportChange.emit();
   }
 

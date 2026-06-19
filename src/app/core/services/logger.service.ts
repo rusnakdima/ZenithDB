@@ -1,33 +1,16 @@
-import { tauriInvoke } from "@shared/utils/tauri-invoke.util";
-
-export type LogLevel = "debug" | "warn" | "error" | "info";
-
-export interface LogEntry {
-  level: string;
-  component: string;
-  message: string;
-  timestamp: string;
+export enum LogLevel {
+  Debug = "debug",
+  Info = "info",
+  Warn = "warn",
+  Error = "error",
 }
 
+const noop = () => {};
+
 export const logger = {
-  debug(component: string, message: string, metadata?: object): void {
-    console.debug(`[${component}]`, message, metadata ?? "");
-    tauriInvoke("log_message", { level: "debug", component, message, metadata }).catch(console.error);
-  },
-  warn(component: string, message: string, metadata?: object): void {
-    console.warn(`[${component}]`, message, metadata ?? "");
-    tauriInvoke("log_message", { level: "warn", component, message, metadata }).catch(console.error);
-  },
-  error(component: string, message: string, metadata?: object): void {
-    console.error(`[${component}]`, message, metadata ?? "");
-    tauriInvoke("log_message", { level: "error", component, message, metadata }).catch(console.error);
-  },
-  info(component: string, message: string, metadata?: object): void {
-    console.info(`[${component}]`, message, metadata ?? "");
-    tauriInvoke("log_message", { level: "info", component, message, metadata }).catch(console.error);
-  },
-  log(component: string, message: string, metadata?: object): void {
-    console.log(`[${component}]`, message, metadata ?? "");
-    tauriInvoke("log_message", { level: "info", component, message, metadata }).catch(console.error);
-  },
+  debug: noop,
+  info: noop,
+  warn: noop,
+  error: noop,
+  log: noop,
 };

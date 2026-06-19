@@ -3,9 +3,7 @@ import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { ModalComponent } from "@shared/components/modal/modal.component";
 import { BulkOperationsService, BulkDeleteRequest } from "./bulk-operations.service";
-import { ToastService } from "@services/toast.service";
-import { logger } from "@core/services/logger.service";
-
+import { ToastService } from "@services/services.toast.service";
 @Component({
   selector: "app-bulk-delete-dialog",
   standalone: true,
@@ -43,7 +41,6 @@ export class BulkDeleteDialogComponent {
     this.isProcessing.set(true);
 
     try {
-      logger.info("[DATA_BULK]", `Confirm bulk delete: ${this.documentIds.length} records`);
       const request: BulkDeleteRequest = {
         collectionName: this.collectionName,
         documentIds: this.documentIds,

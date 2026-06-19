@@ -1,9 +1,7 @@
 import { Injectable, inject } from "@angular/core";
-import { FilterExpression } from "@app/models/connection.config";
+import { FilterExpression } from "@entities/entities.connection.config";
 import { SchemaCompletionService } from "./schema-completion.service";
 import { ProviderDetectorService } from "./provider-detector.service";
-import { logger } from "@core/services/logger.service";
-
 export interface QueryHint {
   type: "info" | "warning" | "error";
   message: string;
@@ -169,16 +167,9 @@ export class HintAnalyzerService {
     return `idx_${field.toLowerCase()}`;
   }
 
-  private createCompoundIndexSuggestion(collectionName: string, fields: string[]): void {
-    logger.info("[HINT_ANALYZER]", "Creating compound index", {
-      collectionName,
-      fields: fields.join(", "),
-    });
-  }
+  private createCompoundIndexSuggestion(collectionName: string, fields: string[]): void {}
 
-  private createIndexSuggestion(collectionName: string, field: string): void {
-    logger.info("[HINT_ANALYZER]", "Creating index", { collectionName, field });
-  }
+  private createIndexSuggestion(collectionName: string, field: string): void {}
 
   analyzeSort(sortField: string, collectionName: string): QueryHint[] {
     const hints: QueryHint[] = [];

@@ -12,7 +12,7 @@ import {
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { CommandPaletteService } from "./command-palette.service";
-import { Command } from "./command.model";
+import { Command } from "./command.entity";
 
 @Component({
   selector: "app-command-palette",

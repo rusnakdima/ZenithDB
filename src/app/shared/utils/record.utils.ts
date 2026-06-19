@@ -1,4 +1,4 @@
-import { RowData } from "@app/models/connection.config";
+import { RowData } from "@entities/entities.connection.config";
 
 export function getRecordId(record: RowData): string | null {
   return (record["_id"] as string) || (record["id"] as string) || null;

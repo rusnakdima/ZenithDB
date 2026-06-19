@@ -1,8 +1,6 @@
 import { Component, Input, Output, EventEmitter, inject } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { QueryTemplate, TEMPLATE_CATEGORIES } from "../../models";
-import { logger } from "@core/services/logger.service";
-
 @Component({
   selector: "app-template-card",
   standalone: true,
@@ -26,7 +24,6 @@ export class TemplateCardComponent {
   }
 
   onFavoriteClick(event: MouseEvent): void {
-    logger.debug("[QUERY_TEMPLATE]", "Toggle favorite from card", { id: this.template.id });
     event.stopPropagation();
     this.toggleFavorite.emit(this.template.id);
   }

@@ -1,8 +1,6 @@
 import { ErrorHandlerService } from "@shared/services/error-handler.service";
-import { ToastService } from "@services/toast.service";
-import { AppError, ErrorCode } from "@app/models/error.model";
-import { logger, LogLevel } from "@core/services/logger.service";
-
+import { ToastService } from "@services/services.toast.service";
+import { AppError, ErrorCode } from "@entities/entities.error.entity";
 interface Result<T> {
   success: boolean;
   data?: T;
@@ -53,7 +51,12 @@ export function withErrorHandling<T>(
   services?: {
     errorHandler?: ErrorHandlerService;
     toastService?: ToastService;
-    logger?: Pick<typeof logger, "debug" | "info" | "warn" | "error">;
+    logger?: {
+      debug: (...args: unknown[]) => void;
+      info: (...args: unknown[]) => void;
+      warn: (...args: unknown[]) => void;
+      error: (...args: unknown[]) => void;
+    };
   }
 ): Promise<Result<T>> {
   const errorHandler = services?.errorHandler;

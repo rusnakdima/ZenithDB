@@ -14,10 +14,8 @@ import {
 import { CommonModule } from "@angular/common";
 import { QueryAnalyzerService, QueryAnalysisResult } from "./query-analyzer.service";
 import { QueryHint, IndexRecommendation } from "../services/hint-analyzer.service";
-import { FilterExpression } from "@app/models/connection.config";
+import { FilterExpression } from "@entities/entities.connection.config";
 import { ErrorHandlerService } from "@shared/services/error-handler.service";
-import { logger } from "@core/services/logger.service";
-
 @Component({
   selector: "app-performance-hints",
   standalone: true,
@@ -59,10 +57,6 @@ export class PerformanceHintsComponent implements OnInit, OnChanges {
     }
 
     this.isLoading.set(true);
-    logger.debug("[QUERY]", "Starting performance analysis", {
-      collectionName: this.collectionName,
-    });
-
     try {
       let filter: FilterExpression;
       try {
@@ -82,10 +76,6 @@ export class PerformanceHintsComponent implements OnInit, OnChanges {
       this.hints.set(result.hints);
       this.recommendations.set(result.recommendations);
       this.score.set(result.score);
-      logger.debug("[QUERY]", "Performance analysis complete", {
-        score: result.score,
-        hintCount: result.hints.length,
-      });
     } catch (e) {
       this.errorHandler.handleError(e, "PerformanceHintsComponent.analyze");
       this.hints.set([]);

@@ -4,8 +4,8 @@ export type {
   NoSqlDialect,
   SyntaxMode,
   ProviderInfo,
-} from "./provider-info.model";
-export { PROVIDER_METADATA } from "./provider-info.model";
+} from "./provider-info.entity";
+export { PROVIDER_METADATA } from "./provider-info.entity";
 export type {
   TemplateCategory,
   TemplateVariableType,
@@ -13,8 +13,8 @@ export type {
   QueryTemplate,
   QueryTemplateFilter,
   QueryTemplateCondition,
-} from "./query-template.model";
-export { TEMPLATE_CATEGORIES } from "./query-template.model";
+} from "./query-template.entity";
+export { TEMPLATE_CATEGORIES } from "./query-template.entity";
 export type {
   FieldInfo,
   FieldType,
@@ -23,10 +23,10 @@ export type {
   SortConfig,
   ProjectionConfig,
   QueryBuilderState,
-} from "./query-builder.model";
+} from "./query-builder.entity";
 export {
   FIELD_OPERATORS,
   OPERATOR_LABELS,
   createEmptyCondition,
   createEmptyGroup,
-} from "./query-builder.model";
+} from "./query-builder.entity";

@@ -6,9 +6,7 @@ import {
   createEmptyGroup,
   FieldType,
 } from "../../query/models";
-import { FilterOperator } from "@app/models/connection.config";
-import { logger } from "@core/services/logger.service";
-
+import { FilterOperator } from "@entities/entities.connection.config";
 export type StageType =
   | "$match"
   | "$group"
@@ -92,12 +90,10 @@ export class PipelineBuilderService {
       config: config ?? this.getDefaultConfig(type),
       order: this._stages().length,
     };
-    logger.info("[SEARCH_PIPELINE]", "Pipeline stage added", { type, config });
     this._stages.update((stages) => [...stages, stage]);
   }
 
   removeStage(id: string): void {
-    logger.debug("[SEARCH_PIPELINE]", "Pipeline stage removed", { id });
     this._stages.update((stages) => {
       const filtered = stages.filter((s) => s.id !== id);
       return filtered.map((s, i) => ({ ...s, order: i }));
@@ -105,7 +101,6 @@ export class PipelineBuilderService {
   }
 
   reorderStages(fromIndex: number, toIndex: number): void {
-    logger.debug("[SEARCH_PIPELINE]", "Pipeline stages reordered", { fromIndex, toIndex });
     this._stages.update((stages) => {
       const newStages = [...stages];
       const [moved] = newStages.splice(fromIndex, 1);
@@ -115,7 +110,6 @@ export class PipelineBuilderService {
   }
 
   updateStageConfig(id: string, config: StageConfig): void {
-    logger.debug("[SEARCH_PIPELINE]", "Pipeline stage config updated", { id, config });
     this._stages.update((stages) => stages.map((s) => (s.id === id ? { ...s, config } : s)));
   }
 
@@ -132,7 +126,6 @@ export class PipelineBuilderService {
   }
 
   clearAll(): void {
-    logger.info("[SEARCH_PIPELINE]", "All pipeline stages cleared");
     this._stages.set([]);
   }
 
@@ -149,9 +142,6 @@ export class PipelineBuilderService {
       }
       const stages = this.parsePipeline(parsed);
       this._stages.set(stages);
-      logger.info("[SEARCH_PIPELINE]", "Pipeline loaded from JSON", {
-        stageCount: stages.length,
-      });
       return true;
     } catch {
       return false;

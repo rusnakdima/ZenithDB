@@ -1,10 +1,8 @@
 import { Injectable, inject, signal, computed } from "@angular/core";
 import { PersistentStorageService } from "@shared/services/persistent-storage.service";
 import { QueryTemplate, TemplateCategory, QueryTemplateFilter } from "../models";
-import { FilterOperator } from "@app/models/connection.config";
+import { FilterOperator } from "@entities/entities.connection.config";
 import { findById } from "@shared/utils/array.utils";
-import { logger } from "@core/services/logger.service";
-
 const TEMPLATES_STORAGE_KEY = "zenith_query_templates";
 const FAVORITES_STORAGE_KEY = "zenith_template_favorites";
 
@@ -102,10 +100,6 @@ export class TemplateService {
       isBuiltIn: false,
     };
 
-    logger.debug("[QUERY_TEMPLATE]", "Adding custom template", {
-      id: newTemplate.id,
-      name: newTemplate.name,
-    });
     this.templatesSignal.update((templates) => [...templates, newTemplate]);
     this.saveTemplates();
 
@@ -123,7 +117,6 @@ export class TemplateService {
     const template = this.getTemplateById(id);
     if (template?.isBuiltIn) return;
 
-    logger.debug("[QUERY_TEMPLATE]", "Deleting template", { id });
     this.templatesSignal.update((templates) => templates.filter((t) => t.id !== id));
     this.favoritesSignal.update((favs) => {
       const newFavs = new Set(favs);
@@ -137,7 +130,6 @@ export class TemplateService {
 
   toggleFavorite(id: string): void {
     const isFav = this.favoritesSignal().has(id);
-    logger.debug("[QUERY_TEMPLATE]", "Toggling template favorite", { id, isFavorite: !isFav });
     this.favoritesSignal.update((favs) => {
       const newFavs = new Set(favs);
       if (newFavs.has(id)) {
@@ -162,11 +154,6 @@ export class TemplateService {
     sort?: { field: string; direction: "asc" | "desc" }[];
     limit?: number;
   } {
-    logger.debug("[QUERY_TEMPLATE]", "Applying template", {
-      templateId: template.id,
-      name: template.name,
-      variables,
-    });
     const filter = this.substituteVariables(template.filterTemplate, variables);
 
     return {

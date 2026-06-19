@@ -22,7 +22,7 @@ use commands::ipc_commands::{
   initialize_app, insert_document, is_connected, rebuild_index, rollback_transaction,
   soft_delete_document, update_document,
 };
-use commands::logger::log_message;
+
 use commands::query_command::{
   query_delete, query_execute, query_raw, query_save, query_server_version,
 };
@@ -40,8 +40,6 @@ use commands::settings_command::{
 use state::AppState;
 
 pub fn run() -> Result<(), String> {
-  utils::logger::init_logger("zenithdb", log::LevelFilter::Info).ok();
-
   std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
   std::env::set_var("__NV_DISABLE_EXPLICIT_SYNC", "1");
 
@@ -94,7 +92,6 @@ pub fn run() -> Result<(), String> {
       capture_screenshot,
       save_log_file,
       append_log_file,
-      log_message,
       initialize_app,
       get_version,
       is_connected,

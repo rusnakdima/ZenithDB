@@ -1,10 +1,8 @@
 import { Injectable, inject, signal } from "@angular/core";
 import { DataStoreService } from "@core/services/unified-storage.service";
-import { ToastService } from "@services/toast.service";
-import { RowData } from "@app/models/connection.config";
+import { ToastService } from "@services/services.toast.service";
+import { RowData } from "@entities/entities.connection.config";
 import { getRecordId } from "@shared/utils/record.utils";
-import { logger } from "@core/services/logger.service";
-
 export interface DeletedRecord extends RowData {
   _deletedAt: string;
   _originalValues?: RowData;
@@ -33,7 +31,6 @@ export class SoftDeleteService {
       throw new Error("Record has no ID");
     }
 
-    logger.info("[DATA]", `Soft deleting record ${id} from ${collection}`);
     const deletedRecord: RowData = {
       ...record,
       _deletedAt: new Date().toISOString(),
@@ -49,7 +46,6 @@ export class SoftDeleteService {
       throw new Error("Record has no ID");
     }
 
-    logger.info("[DATA]", `Restoring record ${id} to ${collection}`);
     const restoredRecord: RowData = { ...record };
     delete restoredRecord["_deletedAt"];
     delete restoredRecord["_originalValues"];
@@ -64,7 +60,6 @@ export class SoftDeleteService {
       throw new Error("Record has no ID");
     }
 
-    logger.info("[DATA]", `Permanently deleting record ${id} from ${collection}`);
     await this.dataStore.deleteRow(collection, String(id));
     this.toast.success("Record permanently deleted");
   }
@@ -76,7 +71,6 @@ export class SoftDeleteService {
     let restored = 0;
     let failed = 0;
 
-    logger.info("[DATA]", `Bulk restoring ${records.length} records from ${collection}`);
     for (const record of records) {
       try {
         await this.restore(collection, record);
@@ -96,7 +90,6 @@ export class SoftDeleteService {
     let deleted = 0;
     let failed = 0;
 
-    logger.info("[DATA]", `Bulk permanently deleting ${records.length} records from ${collection}`);
     for (const record of records) {
       try {
         await this.permanentDelete(collection, record);

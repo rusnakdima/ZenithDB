@@ -1,6 +1,6 @@
 import { Component, input, output } from "@angular/core";
 import { MatIconModule } from "@angular/material/icon";
-import { RowData } from "@app/models/connection.config";
+import { RowData } from "@entities/entities.connection.config";
 import { JsonDocumentItemComponent } from "../json-document-item/json-document-item.component";
 import { trackByIndex } from "@shared/utils/collection.utils";
 

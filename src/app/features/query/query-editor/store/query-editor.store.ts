@@ -1,7 +1,5 @@
 import { Injectable, signal, computed, inject } from "@angular/core";
 import { PersistentStorageService } from "@shared/services/persistent-storage.service";
-import { logger } from "@core/services/logger.service";
-
 export interface HistoryItem {
   id: string;
   query: string;
@@ -41,7 +39,6 @@ export class QueryEditorStore {
   }
 
   addToHistory(query: string, success: boolean): void {
-    logger.debug("[QUERY]", "Adding to history", { queryLength: query.length, success });
     const item: HistoryItem = {
       id: crypto.randomUUID(),
       query,
@@ -59,7 +56,6 @@ export class QueryEditorStore {
   }
 
   clearAllHistory(): void {
-    logger.debug("[QUERY]", "Clearing all query history");
     this.history.set([]);
     this.storage.remove("zenith_query_history");
   }

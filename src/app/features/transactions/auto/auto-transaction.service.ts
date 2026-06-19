@@ -1,10 +1,8 @@
 import { Injectable, inject, signal, computed } from "@angular/core";
 import { TransactionService, TransactionOperationType } from "../transaction.service";
-import { ToastService } from "@services/toast.service";
-import { RowData } from "@app/models/connection.config";
+import { ToastService } from "@services/services.toast.service";
+import { RowData } from "@entities/entities.connection.config";
 import { generateBatchId } from "@shared/utils/id.utils";
-import { logger } from "@core/services/logger.service";
-
 export type PendingOperationType = "insert" | "update" | "delete";
 
 export interface PendingOperation {
@@ -47,7 +45,6 @@ export class AutoTransactionService {
   });
 
   queueInsert(collection: string, data: RowData): void {
-    logger.debug("[TRANSACTION]", "Queueing insert", { collection });
     const operation: PendingOperation = {
       id: generateBatchId(),
       type: "insert",
@@ -59,7 +56,6 @@ export class AutoTransactionService {
   }
 
   queueUpdate(collection: string, documentId: string, data: RowData): void {
-    logger.debug("[TRANSACTION]", "Queueing update", { collection, documentId });
     const operation: PendingOperation = {
       id: generateBatchId(),
       type: "update",
@@ -72,7 +68,6 @@ export class AutoTransactionService {
   }
 
   queueDelete(collection: string, documentId: string): void {
-    logger.debug("[TRANSACTION]", "Queueing delete", { collection, documentId });
     const operation: PendingOperation = {
       id: generateBatchId(),
       type: "delete",
@@ -100,7 +95,6 @@ export class AutoTransactionService {
     }
 
     try {
-      logger.info("[TRANSACTION]", "Starting batch commit", { count: queue.length });
       await this.transactionService.beginTransaction();
 
       for (const op of queue) {
@@ -120,7 +114,6 @@ export class AutoTransactionService {
       return true;
     } catch (e) {
       const error = e as Error;
-      logger.error("[TRANSACTION]", "Batch commit failed", { error: error.message });
       this.toast.error(`Batch failed: ${error.message}`);
       await this.rollbackOnError();
       return false;

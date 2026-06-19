@@ -1,10 +1,8 @@
 import { Component, signal, computed, inject, OnInit, OnDestroy } from "@angular/core";
 import { CommonModule } from "@angular/common";
-import { MetricsApiService } from "@services/metrics-api.service";
-import { ConnectionStateService } from "@services/connection-state.service";
+import { MetricsApiService } from "@services/services.metrics-api.service";
+import { ConnectionStateService } from "@services/services.connection-state.service";
 import { TIME_CONSTANTS } from "@shared/utils/constants";
-import { logger } from "@core/services/logger.service";
-
 @Component({
   selector: "app-connection-health",
   standalone: true,
@@ -83,7 +81,6 @@ export class ConnectionHealthComponent implements OnInit, OnDestroy {
     this.error.set(null);
 
     try {
-      logger.debug("[HEALTH]", "Loading connection health metrics");
       const metrics = await this.metricsService.fetchMetricsWithRefresh();
 
       this.metricsSignal.set({
@@ -105,7 +102,6 @@ export class ConnectionHealthComponent implements OnInit, OnDestroy {
   }
 
   refresh(): void {
-    logger.debug("[HEALTH]", "User refreshing health metrics");
     this.loadMetrics();
   }
 

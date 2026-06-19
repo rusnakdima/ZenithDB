@@ -11,8 +11,6 @@ import {
   inject,
 } from "@angular/core";
 import { CommonModule } from "@angular/common";
-import { logger } from "@core/services/logger.service";
-
 export interface ChartDataPoint {
   timestamp: number;
   value: number;
@@ -40,26 +38,17 @@ export class MetricsChartComponent implements AfterViewInit, OnDestroy, OnChange
   ngAfterViewInit(): void {
     this.initCanvas();
     this.drawChart();
-    logger.debug("[MetricsChart]", "Chart rendered", {
-      type: this.type(),
-      label: this.label(),
-      dataPoints: this.data().length,
-    });
   }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes["data"] && !changes["data"].firstChange) {
       this.drawChart();
-      logger.debug("[MetricsChart]", "Chart data updated", { dataPoints: this.data().length });
     }
     if (changes["data"] && changes["data"].currentValue !== changes["data"].previousValue) {
       const prevTimeRange = this.getTimeRange(changes["data"]?.previousValue);
       const currTimeRange = this.getTimeRange(changes["data"]?.currentValue);
       if (prevTimeRange !== currTimeRange) {
-        logger.info("[MetricsChart]", "Time range changed", {
-          from: prevTimeRange,
-          to: currTimeRange,
-        });
+        this.drawChart();
       }
     }
   }

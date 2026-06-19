@@ -16,18 +16,18 @@ import {
 } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
-import { ConnectionStateService } from "@services/connection-state.service";
+import { ConnectionStateService } from "@services/services.connection-state.service";
 import { DataStoreService } from "@core/services/unified-storage.service";
-import { ToastService } from "@services/toast.service";
+import { ToastService } from "@services/services.toast.service";
 import { PersistentStorageService } from "@shared/services/persistent-storage.service";
-import { ExportService } from "@services/export.service";
-import { TabService } from "@services/tab.service";
-import { QueryExecutionService } from "@services/query-execution.service";
-import { QueryResult } from "@app/models/connection.config";
+import { ExportService } from "@services/services.export.service";
+import { TabService } from "@services/services.tab.service";
+import { QueryExecutionService } from "@services/services.query-execution.service";
+import { QueryResult } from "@entities/entities.connection.config";
 import { formatSQL } from "@shared/utils";
-import { QueryTab } from "@app/models/query.model";
-import { FilterExpression } from "@app/models/connection.config";
-import { QueryTemplate } from "../models/query-template.model";
+import { QueryTab } from "@entities/entities.query.entity";
+import { FilterExpression } from "@entities/entities.connection.config";
+import { QueryTemplate } from "../models/query-template.entity";
 
 import {
   ProviderDetectorService,
@@ -37,8 +37,6 @@ import {
   TemplateService,
   HintAnalyzerService,
 } from "../services";
-import { logger } from "@core/services/logger.service";
-
 import { VisualQueryBuilderComponent } from "../visual-query-builder/visual-query-builder.component";
 import { QueryTemplatesComponent } from "../query-templates/query-templates.component";
 import { QueryHintsComponent } from "../hints/query-hints.component";
@@ -99,7 +97,6 @@ export class UniversalQueryEditorComponent implements OnInit, OnChanges {
   ngOnInit(): void {
     this.loadHistory();
     this.updateProviderFromConnection();
-    logger.debug("[QUERY]", "Universal query editor initialized");
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -148,10 +145,6 @@ export class UniversalQueryEditorComponent implements OnInit, OnChanges {
   }
 
   onSelectTemplate(template: QueryTemplate): void {
-    logger.debug("[QUERY_TEMPLATE]", "Applying template in editor", {
-      id: template.id,
-      name: template.name,
-    });
     this.activePanel.set("none");
 
     const variables: Record<string, unknown> = {};
@@ -214,7 +207,6 @@ export class UniversalQueryEditorComponent implements OnInit, OnChanges {
     const currentQuery = this.query();
     if (!currentQuery.trim()) return;
 
-    logger.debug("[QUERY]", "Executing query", { queryLength: currentQuery.length });
     this.isLoading.set(true);
     const startTime = performance.now();
 
@@ -223,18 +215,13 @@ export class UniversalQueryEditorComponent implements OnInit, OnChanges {
       this.executionTime.set(performance.now() - startTime);
 
       if (result.success) {
-        logger.debug("[QUERY]", "Query execution successful", {
-          executionTime: this.executionTime(),
-        });
         this.addToHistory(currentQuery, true);
       } else {
-        logger.debug("[QUERY]", "Query execution failed", { error: result.error });
         this.addToHistory(currentQuery, false, result.error);
       }
 
       this.queryExecuted.emit();
     } catch (e) {
-      logger.error("[QUERY]", "Query execution error", { error: (e as Error).message });
       this.toast.error((e as Error).message);
       this.addToHistory(currentQuery, false, (e as Error).message);
     } finally {

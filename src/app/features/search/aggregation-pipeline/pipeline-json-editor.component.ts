@@ -1,8 +1,6 @@
 import { Component, Input, Output, EventEmitter, signal, computed, inject } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
-import { logger } from "@core/services/logger.service";
-
 @Component({
   selector: "app-pipeline-json-editor",
   standalone: true,
@@ -59,14 +57,12 @@ export class PipelineJsonEditorComponent {
     try {
       const parsed = JSON.parse(this.jsonContent());
       const formatted = JSON.stringify(parsed, null, 2);
-      logger.debug("[SEARCH_PIPELINE]", "JSON formatted");
       this.jsonContent.set(formatted);
       this.jsonChange.emit(formatted);
     } catch {}
   }
 
   copyToClipboard(): void {
-    logger.debug("[SEARCH_PIPELINE]", "Pipeline JSON copied to clipboard");
     navigator.clipboard
       .writeText(this.jsonContent())
       .then(() => {})

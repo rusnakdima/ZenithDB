@@ -9,11 +9,9 @@ import {
 import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
 import { AuditService, AuditEntry, AuditOperation, AuditFilter } from "./audit.service";
-import { ExportService } from "@services/export.service";
-import { ToastService } from "@services/toast.service";
+import { ExportService } from "@services/services.export.service";
+import { ToastService } from "@services/services.toast.service";
 import { ChangeDetailComponent } from "./change-detail.component";
-import { logger } from "@core/services/logger.service";
-
 @Component({
   selector: "app-audit-log",
   standalone: true,
@@ -59,7 +57,6 @@ export class AuditLogComponent implements OnInit {
   async loadAuditLog(): Promise<void> {
     this.loading.set(true);
     try {
-      logger.debug("[AUDIT]", "Loading audit log");
       const entries = await this.auditService.fetchAuditLog();
       this.auditLog.set(entries);
     } catch (e) {
@@ -116,7 +113,6 @@ export class AuditLogComponent implements OnInit {
     };
 
     try {
-      logger.info("[AUDIT]", "Exporting audit log", { format });
       const { filename, content } = await this.auditService.exportAuditLog(format, filter);
       const data = format === "json" ? JSON.parse(content) : [];
       await this.exportService.export({ format, filename }, data as Record<string, unknown>[]);

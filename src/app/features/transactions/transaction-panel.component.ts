@@ -2,10 +2,9 @@ import { Component, inject, signal, computed, ChangeDetectionStrategy } from "@a
 import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
 import { TransactionService, IsolationLevel } from "./transaction.service";
-import { ToastService } from "@services/toast.service";
+import { ToastService } from "@services/services.toast.service";
 import { ConfirmService } from "@shared/services/confirm.service";
 import { TransactionLogComponent } from "./transaction-log.component";
-import { logger } from "@core/services/logger.service";
 
 @Component({
   selector: "app-transaction-panel",
@@ -33,9 +32,6 @@ export class TransactionPanelComponent {
 
   async onBeginTransaction(): Promise<void> {
     try {
-      logger.info("[TRANSACTION]", "User initiating transaction", {
-        isolationLevel: this.isolationLevel(),
-      });
       await this.transactionService.beginTransaction(this.isolationLevel());
     } catch (e) {
       this.toast.error(`Failed to start transaction: ${(e as Error).message}`);
@@ -52,7 +48,6 @@ export class TransactionPanelComponent {
     if (!confirmed) return;
 
     try {
-      logger.info("[TRANSACTION]", "User committing transaction");
       await this.transactionService.commitTransaction();
     } catch (e) {
       this.toast.error(`Failed to commit: ${(e as Error).message}`);
@@ -69,7 +64,6 @@ export class TransactionPanelComponent {
     if (!confirmed) return;
 
     try {
-      logger.info("[TRANSACTION]", "User rolling back transaction");
       await this.transactionService.rollbackTransaction();
     } catch (e) {
       this.toast.error(`Failed to rollback: ${(e as Error).message}`);
@@ -81,7 +75,6 @@ export class TransactionPanelComponent {
     if (!name) return;
 
     try {
-      logger.debug("[TRANSACTION]", "User creating savepoint", { name });
       await this.transactionService.createSavepoint(name);
     } catch (e) {
       this.toast.error(`Failed to create savepoint: ${(e as Error).message}`);
@@ -101,7 +94,6 @@ export class TransactionPanelComponent {
     if (!name) return;
 
     try {
-      logger.debug("[TRANSACTION]", "User rolling back to savepoint", { name });
       await this.transactionService.rollbackToSavepoint(name);
     } catch (e) {
       this.toast.error(`Failed to rollback to savepoint: ${(e as Error).message}`);
@@ -113,12 +105,10 @@ export class TransactionPanelComponent {
   }
 
   onUndoLast(): void {
-    logger.debug("[TRANSACTION]", "User undoing last operation");
     this.transactionService.undoLastOperation();
   }
 
   onClearLog(): void {
-    logger.debug("[TRANSACTION]", "User clearing operation log");
     this.transactionService.clearOperationLog();
   }
 }

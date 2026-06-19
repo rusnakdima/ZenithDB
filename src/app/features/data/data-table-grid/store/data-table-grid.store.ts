@@ -1,5 +1,5 @@
 import { Injectable, signal, computed } from "@angular/core";
-import { RowData, ColumnInfo } from "@app/models/connection.config";
+import { RowData, ColumnInfo } from "@entities/entities.connection.config";
 
 @Injectable({ providedIn: "root" })
 export class DataTableGridStore {

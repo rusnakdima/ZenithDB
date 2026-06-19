@@ -7,8 +7,6 @@ import { GroupConfigComponent } from "./stage-config/group-config.component";
 import { SortConfigComponent } from "./stage-config/sort-config.component";
 import { ProjectConfigComponent } from "./stage-config/project-config.component";
 import { LimitConfigComponent } from "./stage-config/limit-config.component";
-import { logger } from "@core/services/logger.service";
-
 @Component({
   selector: "app-pipeline-stage",
   standalone: true,
@@ -157,31 +155,22 @@ export class PipelineStageComponent {
   @Output() configChange = new EventEmitter<StageConfig>();
 
   onRemove(): void {
-    logger.debug("[SEARCH_PIPELINE]", "Pipeline stage removed", {
-      stageType: this.stage.type,
-    });
     this.remove.emit();
   }
 
   onMoveUp(): void {
-    logger.debug("[SEARCH_PIPELINE]", "Pipeline stage move up", { index: this.index });
     this.moveUp.emit();
   }
 
   onMoveDown(): void {
-    logger.debug("[SEARCH_PIPELINE]", "Pipeline stage move down", { index: this.index });
     this.moveDown.emit();
   }
 
   onConfigChange(config: StageConfig): void {
-    logger.debug("[SEARCH_PIPELINE]", "Pipeline stage config changed", {
-      stageType: this.stage.type,
-    });
     this.configChange.emit(config);
   }
 
   onReplaceRootChange(expression: string): void {
-    logger.debug("[SEARCH_PIPELINE]", "ReplaceRoot expression changed");
     this.configChange.emit({ expression });
   }
 
