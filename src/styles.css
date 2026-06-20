@@ -254,8 +254,8 @@
   --bg-deep: #090e14;
   --bg-sidebar: rgba(15, 23, 42, 0.85);
   --bg-header: rgba(9, 14, 20, 0.85);
-  --bg-card: transparent;
-  --bg-elevated: rgba(51, 65, 85, 0.6);
+  --bg-card: #111827;
+  --bg-elevated: #1a2332;
   --bg-input: rgba(51, 65, 85, 0.6);
   --bg-modal: rgba(15, 23, 42, 0.95);
   --bg-toast: rgba(15, 23, 42, 0.95);
@@ -277,6 +277,10 @@
   --type-object: #fbbf24;
   --type-array: #fb923c;
   --type-null: #94a3b8;
+  --accent-100: rgba(99, 102, 241, 0.1);
+  --accent-200: rgba(99, 102, 241, 0.2);
+  --accent-400: rgba(99, 102, 241, 0.4);
+  --accent-800: rgba(99, 102, 241, 0.55);
   color-scheme: dark;
 }
 
@@ -285,8 +289,8 @@ html.light {
   --bg-deep: #ffffff;
   --bg-sidebar: rgba(255, 255, 255, 0.9);
   --bg-header: rgba(255, 255, 255, 0.9);
-  --bg-card: transparent;
-  --bg-elevated: rgba(241, 245, 249, 0.7);
+  --bg-card: #ffffff;
+  --bg-elevated: #f1f5f9;
   --bg-input: rgba(241, 245, 249, 0.9);
   --bg-modal: rgba(255, 255, 255, 0.98);
   --bg-toast: rgba(255, 255, 255, 0.95);
@@ -328,6 +332,10 @@ html.light {
   --type-object: #d97706;
   --type-array: #ea580c;
   --type-null: #64748b;
+  --accent-100: rgba(99, 102, 241, 0.1);
+  --accent-200: rgba(99, 102, 241, 0.2);
+  --accent-400: rgba(99, 102, 241, 0.4);
+  --accent-800: rgba(99, 102, 241, 0.55);
   color-scheme: light;
 }
 
@@ -803,6 +811,31 @@ html.light .json-key {
 
   .form-btn:disabled {
     @apply cursor-not-allowed opacity-50;
+  }
+
+  /* ============================================
+     Buttons
+     ============================================ */
+  .btn-accent {
+    @apply flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-[var(--accent)] bg-[var(--accent)] px-4 py-2 text-sm font-medium text-black transition-all hover:opacity-90;
+  }
+  .dark .btn-accent {
+    @apply text-white;
+  }
+
+  .btn-secondary {
+    @apply flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-[var(--accent)] bg-transparent px-4 py-2 text-sm font-medium text-[var(--text-main)] transition-all hover:bg-[var(--accent)]/10;
+  }
+
+  .btn-danger {
+    @apply flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-[var(--color-error)] bg-[var(--color-error-bg)] px-4 py-2 text-sm font-medium text-[var(--color-error)] transition-all hover:opacity-90;
+  }
+  .dark .btn-danger {
+    @apply text-[var(--color-error-light)];
+  }
+
+  .btn-cancel {
+    @apply flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-[var(--border-color)] bg-transparent px-4 py-2 text-sm font-medium text-[var(--text-main)] transition-all hover:bg-[var(--bg-elevated)];
   }
 
   /* ============================================

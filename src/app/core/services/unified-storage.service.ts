@@ -305,6 +305,7 @@ export class DataStoreService {
   async saveDatabase(connId: string, name: string, path?: string): Promise<DatabaseMetadata> {
     try {
       const result = await this.decentralizationApi.saveDatabase(connId, name, path);
+      await this.collectionsApi.createDatabase(connId, name);
       await this.refreshDatabases(connId);
       return result;
     } catch (err) {
