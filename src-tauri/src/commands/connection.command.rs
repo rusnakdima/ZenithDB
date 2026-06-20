@@ -1,9 +1,9 @@
 use crate::commands::validate_conn_id;
-use crate::models::response::ResponseModel;
+use crate::models::response::{Response, ResponseModel};
 use crate::state::AppState;
 use crate::utils::metrics::{redact_sensitive_data, DataflowTimer};
+use serde_json::Value;
 use tauri::State;
-
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, ts_rs::TS)]
 #[serde(tag = "type")]
 pub enum ConnectionConfigEnum {
@@ -35,13 +35,11 @@ pub enum ConnectionConfigEnum {
     uri: String,
   },
 }
-
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, ts_rs::TS)]
 pub struct ConnectionConfig {
   pub name: String,
   pub config: ConnectionConfigEnum,
 }
-
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct ConnectionSummary {
   pub id: String,
@@ -49,7 +47,6 @@ pub struct ConnectionSummary {
   pub provider: String,
   pub status: String,
 }
-
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct ConnectionHealth {
   pub healthy: bool,
@@ -57,7 +54,6 @@ pub struct ConnectionHealth {
   pub server_version: Option<String>,
   pub latency_ms: Option<u64>,
 }
-
 impl ConnectionHealth {
   pub fn ok(provider: &str) -> Self {
     Self {
@@ -76,174 +72,158 @@ impl ConnectionHealth {
     }
   }
 }
-
 #[tauri::command]
 pub async fn save_connection(
   state: State<'_, AppState>,
   config: ConnectionConfig,
-) -> Result<ResponseModel, ResponseModel> {
+) -> Result<Response, String> {
   let timer = DataflowTimer::new("save_connection");
   let params = serde_json::json!({ "config": &config });
-  log::debug!(
-    "command = save_connection, params = {} [COMMAND_ENTRY]",
-    redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default())
-  );
-  let result = state.connection_service.save_connection(config).await;
-  match &result {
-    Ok(r) => timer.finish_success(),
-    Err(e) => timer.finish_error(&e.message),
+  match state.connection_service.save_connection(config).await {
+    Ok(r) => {
+      timer.finish_success();
+      Ok(r)
+    }
+    Err(e) => {
+      timer.finish_error(&e);
+      Err(e)
+    }
   }
-  result
 }
-
 #[tauri::command]
-pub async fn list_connections(state: State<'_, AppState>) -> Result<ResponseModel, ResponseModel> {
+pub async fn list_connections(state: State<'_, AppState>) -> Result<Response, String> {
   let timer = DataflowTimer::new("list_connections");
-  log::debug!("command = list_connections [COMMAND_ENTRY]");
-  let result = state.connection_service.list_connections().await;
-  match &result {
-    Ok(r) => timer.finish_success(),
-    Err(e) => timer.finish_error(&e.message),
+  match state.connection_service.list_connections().await {
+    Ok(r) => {
+      timer.finish_success();
+      Ok(r)
+    }
+    Err(e) => {
+      timer.finish_error(&e);
+      Err(e)
+    }
   }
-  result
 }
-
 #[tauri::command]
 pub async fn test_connection_status(
   state: State<'_, AppState>,
   id: &str,
-) -> Result<ResponseModel, ResponseModel> {
+) -> Result<Response, String> {
   let timer = DataflowTimer::new("test_connection_status");
   if let Err(e) = validate_conn_id(id) {
-    let err = ResponseModel::error(&e);
     timer.finish_error(&e);
-    return Err(err);
+    return Err(e);
   }
   let params = serde_json::json!({ "id": id });
-  log::debug!(
-    "command = test_connection_status, params = {} [COMMAND_ENTRY]",
-    redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default())
-  );
-  let result = state.connection_service.test_connection_status(id).await;
-  match &result {
-    Ok(r) => timer.finish_success(),
-    Err(e) => timer.finish_error(&e.message),
+  match state.connection_service.test_connection_status(id).await {
+    Ok(r) => {
+      timer.finish_success();
+      Ok(r)
+    }
+    Err(e) => {
+      timer.finish_error(&e);
+      Err(e)
+    }
   }
-  result
 }
-
 #[tauri::command(rename_all = "camelCase")]
 pub async fn check_health(
   state: State<'_, AppState>,
   connection_id: &str,
-) -> Result<ResponseModel, ResponseModel> {
+) -> Result<Response, String> {
   let timer = DataflowTimer::new("check_health");
   if let Err(e) = validate_conn_id(connection_id) {
-    let err = ResponseModel::error(&e);
     timer.finish_error(&e);
-    return Err(err);
+    return Err(e);
   }
   let params = serde_json::json!({ "connection_id": connection_id });
-  log::debug!(
-    "command = check_health, params = {} [COMMAND_ENTRY]",
-    redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default())
-  );
-  let result = state.connection_service.check_health(connection_id).await;
-  match &result {
-    Ok(r) => timer.finish_success(),
-    Err(e) => timer.finish_error(&e.message),
+  match state.connection_service.check_health(connection_id).await {
+    Ok(r) => {
+      timer.finish_success();
+      Ok(r)
+    }
+    Err(e) => {
+      timer.finish_error(&e);
+      Err(e)
+    }
   }
-  result
 }
-
 #[tauri::command]
-pub async fn delete_connection(
-  state: State<'_, AppState>,
-  id: &str,
-) -> Result<ResponseModel, ResponseModel> {
+pub async fn delete_connection(state: State<'_, AppState>, id: &str) -> Result<Response, String> {
   let timer = DataflowTimer::new("delete_connection");
   if let Err(e) = validate_conn_id(id) {
-    let err = ResponseModel::error(&e);
     timer.finish_error(&e);
-    return Err(err);
+    return Err(e);
   }
   let params = serde_json::json!({ "id": id });
-  log::debug!(
-    "command = delete_connection, params = {} [COMMAND_ENTRY]",
-    redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default())
-  );
-  let result = state.connection_service.delete_connection(id).await;
-  match &result {
-    Ok(r) => timer.finish_success(),
-    Err(e) => timer.finish_error(&e.message),
+  match state.connection_service.delete_connection(id).await {
+    Ok(r) => {
+      timer.finish_success();
+      Ok(r)
+    }
+    Err(e) => {
+      timer.finish_error(&e);
+      Err(e)
+    }
   }
-  result
 }
-
 #[tauri::command]
 pub async fn update_connection(
   state: State<'_, AppState>,
   id: &str,
   config: ConnectionConfig,
-) -> Result<ResponseModel, ResponseModel> {
+) -> Result<Response, String> {
   let timer = DataflowTimer::new("update_connection");
   if let Err(e) = validate_conn_id(id) {
-    let err = ResponseModel::error(&e);
     timer.finish_error(&e);
-    return Err(err);
+    return Err(e);
   }
   let params = serde_json::json!({ "id": id, "config": &config });
-  log::debug!(
-    "command = update_connection, params = {} [COMMAND_ENTRY]",
-    redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default())
-  );
-  let result = state.connection_service.update_connection(id, config).await;
-  match &result {
-    Ok(r) => timer.finish_success(),
-    Err(e) => timer.finish_error(&e.message),
+  match state.connection_service.update_connection(id, config).await {
+    Ok(r) => {
+      timer.finish_success();
+      Ok(r)
+    }
+    Err(e) => {
+      timer.finish_error(&e);
+      Err(e)
+    }
   }
-  result
 }
-
 #[tauri::command]
-pub async fn get_connection(
-  state: State<'_, AppState>,
-  id: &str,
-) -> Result<ResponseModel, ResponseModel> {
+pub async fn get_connection(state: State<'_, AppState>, id: &str) -> Result<Response, String> {
   let timer = DataflowTimer::new("get_connection");
   if let Err(e) = validate_conn_id(id) {
-    let err = ResponseModel::error(&e);
     timer.finish_error(&e);
-    return Err(err);
+    return Err(e);
   }
   let params = serde_json::json!({ "id": id });
-  log::debug!(
-    "command = get_connection, params = {} [COMMAND_ENTRY]",
-    redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default())
-  );
-  let result = state.connection_service.get_connection(id).await;
-  match &result {
-    Ok(r) => timer.finish_success(),
-    Err(e) => timer.finish_error(&e.message),
+  match state.connection_service.get_connection(id).await {
+    Ok(r) => {
+      timer.finish_success();
+      Ok(r)
+    }
+    Err(e) => {
+      timer.finish_error(&e);
+      Err(e)
+    }
   }
-  result
 }
-
 #[tauri::command]
 pub async fn test_connection(
   state: State<'_, AppState>,
   config: ConnectionConfig,
-) -> Result<ResponseModel, ResponseModel> {
+) -> Result<Response, String> {
   let timer = DataflowTimer::new("test_connection");
   let params = serde_json::json!({ "config": &config });
-  log::debug!(
-    "command = test_connection, params = {} [COMMAND_ENTRY]",
-    redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default())
-  );
-  let result = state.connection_service.test_connection(config).await;
-  match &result {
-    Ok(r) => timer.finish_success(),
-    Err(e) => timer.finish_error(&e.message),
+  match state.connection_service.test_connection(config).await {
+    Ok(r) => {
+      timer.finish_success();
+      Ok(r)
+    }
+    Err(e) => {
+      timer.finish_error(&e);
+      Err(e)
+    }
   }
-  result
 }

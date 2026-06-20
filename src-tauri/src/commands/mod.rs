@@ -1,18 +1,17 @@
-use crate::models::response::ResponseModel;
 use crate::services::connection_service::ConnectionService;
 use crate::utils::metrics::DataflowTimer;
-
 #[path = "connection.command.rs"]
 pub mod connection_command;
 #[path = "connection-entity.command.rs"]
 pub mod connection_entity;
+#[path = "crud.macro.rs"]
+pub mod crud_macro;
 #[path = "database.command.rs"]
 pub mod database_command;
 #[path = "error-utils.command.rs"]
 pub mod error_utils;
 #[path = "ipc_commands.rs"]
 pub mod ipc_commands;
-
 #[path = "provider.command.rs"]
 pub mod provider;
 #[path = "query.command.rs"]
@@ -25,14 +24,11 @@ pub mod screenshot_command;
 pub mod settings_command;
 #[path = "types.command.rs"]
 pub mod types;
-
 pub use connection_command::ConnectionConfig;
-
 #[derive(Debug, Clone)]
 pub struct ConnectionEntry {
   pub config: ConnectionConfig,
 }
-
 pub async fn get_connection_entry(conn_id: &str) -> Result<ConnectionEntry, String> {
   let service = ConnectionService::get_instance().await;
   let entity = service
@@ -44,23 +40,20 @@ pub async fn get_connection_entry(conn_id: &str) -> Result<ConnectionEntry, Stri
     serde_json::from_str(&entity.config).map_err(|e| format!("Failed to parse config: {}", e))?;
   Ok(ConnectionEntry { config })
 }
-
 pub async fn get_connection_entry_with_timer(
   conn_id: &str,
   timer: &DataflowTimer,
-) -> Result<ConnectionEntry, ResponseModel> {
+) -> Result<ConnectionEntry, String> {
   get_connection_entry(conn_id).await.map_err(|e| {
     timer.clone().finish_error(&e);
-    ResponseModel::error(e)
+    e
   })
 }
-
 pub fn validate_conn_id(id: &str) -> Result<(), String> {
   uuid::Uuid::parse_str(id)
     .map(|_| ())
     .map_err(|e| format!("Invalid connection ID: {}", e))
 }
-
 pub fn validate_name(name: &str) -> Result<(), String> {
   if name.is_empty() {
     return Err("Name cannot be empty".to_string());
@@ -84,7 +77,6 @@ pub fn validate_name(name: &str) -> Result<(), String> {
   }
   Ok(())
 }
-
 #[macro_export]
 macro_rules! dispatch_provider {
   ($entry:expr, $provider:ident => $body:block) => {

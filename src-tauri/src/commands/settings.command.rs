@@ -1,18 +1,18 @@
 use crate::constants::LIST_TIMEOUT_SECS;
-use crate::models::response::ResponseModel;
+use crate::models::response::{Response, ResponseModel};
 use crate::utils::metrics::{redact_sensitive_data, DataflowTimer};
 use chrono::{DateTime, Local, Utc};
 use nosql_orm::prelude::*;
 use nosql_orm::providers::sql::SqliteProvider;
 use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::PathBuf;
 use std::sync::Arc;
 use sysinfo::{Disks, Networks, System};
 use tokio::sync::Mutex;
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DatabaseMetadata {
   pub id: i64,
@@ -23,7 +23,6 @@ pub struct DatabaseMetadata {
   pub updated_at: i64,
   pub metadata: Option<String>,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize, Validate)]
 pub struct DatabaseMetadataEntity {
   pub id: Option<String>,
@@ -34,7 +33,6 @@ pub struct DatabaseMetadataEntity {
   pub updated_at: Option<DateTime<Utc>>,
   pub metadata: Option<String>,
 }
-
 impl Entity for DatabaseMetadataEntity {
   fn meta() -> EntityMeta {
     EntityMeta::new("database_metadata")
@@ -46,13 +44,11 @@ impl Entity for DatabaseMetadataEntity {
     self.id = Some(id);
   }
 }
-
 impl WithRelations for DatabaseMetadataEntity {
   fn relations() -> Vec<RelationDef> {
     vec![]
   }
 }
-
 impl Timestamps for DatabaseMetadataEntity {
   fn created_at(&self) -> Option<DateTime<Utc>> {
     self.created_at
@@ -79,14 +75,12 @@ impl Timestamps for DatabaseMetadataEntity {
     self.updated_at = Some(Utc::now());
   }
 }
-
 impl SoftDeletable for DatabaseMetadataEntity {
   fn deleted_at(&self) -> Option<DateTime<Utc>> {
     None
   }
   fn set_deleted_at(&mut self, _t: Option<DateTime<Utc>>) {}
 }
-
 impl From<DatabaseMetadataEntity> for DatabaseMetadata {
   fn from(entity: DatabaseMetadataEntity) -> Self {
     let created_at = entity
@@ -108,12 +102,10 @@ impl From<DatabaseMetadataEntity> for DatabaseMetadata {
     }
   }
 }
-
 struct MetadataDb {
   repo: Repository<DatabaseMetadataEntity, SqliteProvider>,
   provider: SqliteProvider,
 }
-
 impl MetadataDb {
   async fn new() -> Result<Self, String> {
     let db_path = Self::path()?;
@@ -128,7 +120,6 @@ impl MetadataDb {
     db.init().await?;
     Ok(db)
   }
-
   fn path() -> Result<PathBuf, String> {
     let path = dirs::home_dir()
       .ok_or("Failed to get home dir")?
@@ -136,7 +127,6 @@ impl MetadataDb {
       .join("metadata.db");
     Ok(path)
   }
-
   async fn init(&self) -> Result<(), String> {
     let db_path = Self::path()?;
     let conn = Connection::open(&db_path).map_err(|e| e.to_string())?;
@@ -154,10 +144,8 @@ impl MetadataDb {
         [],
       )
       .map_err(|e| e.to_string())?;
-    log::trace!("Database metadata table ready");
     Ok(())
   }
-
   async fn save(&self, entity: &DatabaseMetadataEntity) -> Result<DatabaseMetadataEntity, String> {
     self
       .repo
@@ -165,11 +153,9 @@ impl MetadataDb {
       .await
       .map_err(|e| e.to_string())
   }
-
   async fn find_by_id(&self, id: &str) -> Result<Option<DatabaseMetadataEntity>, String> {
     self.repo.find_by_id(id).await.map_err(|e| e.to_string())
   }
-
   async fn find_by_connection_id(
     &self,
     connection_id: &str,
@@ -182,7 +168,6 @@ impl MetadataDb {
         .collect(),
     )
   }
-
   async fn update(
     &self,
     id: &str,
@@ -202,12 +187,10 @@ impl MetadataDb {
     entity.apply_timestamps_for_update();
     self.repo.save(entity).await.map_err(|e| e.to_string())
   }
-
   async fn delete(&self, id: &str) -> Result<(), String> {
     self.repo.delete(id).await.map_err(|e| e.to_string())?;
     Ok(())
   }
-
   async fn delete_by_connection_id(connection_id: &str) -> Result<(), String> {
     let db = Self::get_instance().await?;
     let guard = db.lock().await;
@@ -219,7 +202,6 @@ impl MetadataDb {
     }
     Ok(())
   }
-
   async fn get_instance() -> Result<Arc<Mutex<MetadataDb>>, String> {
     static SERVICE: tokio::sync::OnceCell<Arc<Mutex<MetadataDb>>> =
       tokio::sync::OnceCell::const_new();
@@ -230,15 +212,12 @@ impl MetadataDb {
       .map(|arc| arc.clone())
   }
 }
-
 pub struct DecentralizedStorage;
-
 impl DecentralizedStorage {
   pub async fn init() -> Result<(), String> {
     MetadataDb::new().await?;
     Ok(())
   }
-
   pub async fn save_database(
     connection_id: &str,
     name: &str,
@@ -260,21 +239,18 @@ impl DecentralizedStorage {
     let saved = guard.save(&entity).await?;
     Ok(saved.into())
   }
-
   pub async fn list_databases(connection_id: &str) -> Result<Vec<DatabaseMetadata>, String> {
     let db = MetadataDb::get_instance().await?;
     let guard = db.lock().await;
     let entities = guard.find_by_connection_id(connection_id).await?;
     Ok(entities.into_iter().map(|e| e.into()).collect())
   }
-
   pub async fn get_database(id: i64) -> Result<Option<DatabaseMetadata>, String> {
     let db = MetadataDb::get_instance().await?;
     let guard = db.lock().await;
     let entity = guard.find_by_id(&id.to_string()).await?;
     Ok(entity.map(|e| e.into()))
   }
-
   pub async fn update_database(
     id: i64,
     name: &str,
@@ -286,18 +262,15 @@ impl DecentralizedStorage {
     let updated = guard.update(&id.to_string(), name, path, metadata).await?;
     Ok(updated.into())
   }
-
   pub async fn delete_database(id: i64) -> Result<(), String> {
     let db = MetadataDb::get_instance().await?;
     let guard = db.lock().await;
     guard.delete(&id.to_string()).await
   }
-
   pub async fn delete_connection_databases(connection_id: &str) -> Result<(), String> {
     MetadataDb::delete_by_connection_id(connection_id).await
   }
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SystemMetrics {
   pub cpu_usage: f32,
@@ -310,19 +283,15 @@ pub struct SystemMetrics {
   pub uptime: u64,
   pub status: String,
 }
-
 fn calculate_status(cpu_usage: f32, ram_used: u64, ram_total: u64) -> String {
   let ram_usage = if ram_total > 0 {
     (ram_used as f32 / ram_total as f32) * 100.0
   } else {
     0.0
   };
-
   let cpu_usage = if cpu_usage.is_nan() { 0.0 } else { cpu_usage };
   let ram_usage = if ram_usage.is_nan() { 0.0 } else { ram_usage };
-
   let max_usage = cpu_usage.max(ram_usage);
-
   if max_usage >= 90.0 {
     "critical".to_string()
   } else if max_usage >= 70.0 {
@@ -331,7 +300,6 @@ fn calculate_status(cpu_usage: f32, ram_used: u64, ram_total: u64) -> String {
     "optimal".to_string()
   }
 }
-
 fn get_logs_dir() -> Result<PathBuf, String> {
   let home = dirs::home_dir().ok_or("Could not find home directory")?;
   let logs_dir = home.join(".zenithdb").join("logs");
@@ -340,11 +308,9 @@ fn get_logs_dir() -> Result<PathBuf, String> {
   }
   Ok(logs_dir)
 }
-
 #[tauri::command]
 pub async fn init_decentralized_storage() -> Result<(), String> {
   let timer = DataflowTimer::new("init_decentralized_storage");
-  log::debug!("command = init_decentralized_storage [COMMAND_ENTRY]");
   match DecentralizedStorage::init().await {
     Ok(()) => {
       timer.finish_success();
@@ -356,7 +322,6 @@ pub async fn init_decentralized_storage() -> Result<(), String> {
     }
   }
 }
-
 #[tauri::command]
 pub async fn save_database_metadata(
   connection_id: String,
@@ -366,10 +331,6 @@ pub async fn save_database_metadata(
 ) -> Result<DatabaseMetadata, String> {
   let timer = DataflowTimer::new("save_database_metadata");
   let params = serde_json::json!({ "connection_id": &connection_id, "name": &name, "path": path, "metadata": metadata });
-  log::debug!(
-    "command = save_database_metadata, params = {} [COMMAND_ENTRY]",
-    redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default())
-  );
   match DecentralizedStorage::save_database(
     &connection_id,
     &name,
@@ -388,17 +349,12 @@ pub async fn save_database_metadata(
     }
   }
 }
-
 #[tauri::command]
 pub async fn list_databases_metadata(
   connection_id: String,
 ) -> Result<Vec<DatabaseMetadata>, String> {
   let timer = DataflowTimer::new("list_databases_metadata");
   let params = serde_json::json!({ "connection_id": &connection_id });
-  log::debug!(
-    "command = list_databases_metadata, params = {} [COMMAND_ENTRY]",
-    redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default())
-  );
   match tokio::time::timeout(
     std::time::Duration::from_secs(LIST_TIMEOUT_SECS),
     DecentralizedStorage::list_databases(&connection_id),
@@ -420,15 +376,10 @@ pub async fn list_databases_metadata(
     }
   }
 }
-
 #[tauri::command]
 pub async fn get_database_metadata(id: i64) -> Result<Option<DatabaseMetadata>, String> {
   let timer = DataflowTimer::new("get_database_metadata");
   let params = serde_json::json!({ "id": id });
-  log::debug!(
-    "command = get_database_metadata, params = {} [COMMAND_ENTRY]",
-    redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default())
-  );
   match DecentralizedStorage::get_database(id).await {
     Ok(result) => {
       timer.finish_success();
@@ -440,7 +391,6 @@ pub async fn get_database_metadata(id: i64) -> Result<Option<DatabaseMetadata>, 
     }
   }
 }
-
 #[tauri::command]
 pub async fn update_database_metadata(
   id: i64,
@@ -450,10 +400,6 @@ pub async fn update_database_metadata(
 ) -> Result<DatabaseMetadata, String> {
   let timer = DataflowTimer::new("update_database_metadata");
   let params = serde_json::json!({ "id": id, "name": &name, "path": path, "metadata": metadata });
-  log::debug!(
-    "command = update_database_metadata, params = {} [COMMAND_ENTRY]",
-    redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default())
-  );
   match DecentralizedStorage::update_database(id, &name, path.as_deref(), metadata.as_deref()).await
   {
     Ok(result) => {
@@ -466,15 +412,10 @@ pub async fn update_database_metadata(
     }
   }
 }
-
 #[tauri::command]
 pub async fn delete_database_metadata(id: i64) -> Result<(), String> {
   let timer = DataflowTimer::new("delete_database_metadata");
   let params = serde_json::json!({ "id": id });
-  log::debug!(
-    "command = delete_database_metadata, params = {} [COMMAND_ENTRY]",
-    redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default())
-  );
   match DecentralizedStorage::delete_database(id).await {
     Ok(()) => {
       timer.finish_success();
@@ -486,15 +427,10 @@ pub async fn delete_database_metadata(id: i64) -> Result<(), String> {
     }
   }
 }
-
 #[tauri::command]
 pub async fn delete_connection_databases_metadata(connection_id: String) -> Result<(), String> {
   let timer = DataflowTimer::new("delete_connection_databases_metadata");
   let params = serde_json::json!({ "connection_id": &connection_id });
-  log::debug!(
-    "command = delete_connection_databases_metadata, params = {} [COMMAND_ENTRY]",
-    redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default())
-  );
   match DecentralizedStorage::delete_connection_databases(&connection_id).await {
     Ok(()) => {
       timer.finish_success();
@@ -506,20 +442,16 @@ pub async fn delete_connection_databases_metadata(connection_id: String) -> Resu
     }
   }
 }
-
 #[tauri::command]
-pub async fn get_system_status() -> Result<ResponseModel, ResponseModel> {
+pub async fn get_system_status() -> Result<Response, String> {
   let timer = DataflowTimer::new("get_system_status");
-  log::debug!("command = get_system_status, [COMMAND_ENTRY]");
   let sys = tokio::task::spawn_blocking(|| {
     let mut sys = System::new_all();
     sys.refresh_cpu_all();
     sys.refresh_memory();
-
     let cpu_usage = sys.global_cpu_usage();
     let ram_used = sys.used_memory();
     let ram_total = sys.total_memory();
-
     let disks = Disks::new_with_refreshed_list();
     let (disk_used, disk_total) = disks.iter().fold((0u64, 0u64), |(used, total), disk| {
       let disk_used = disk.total_space().saturating_sub(disk.available_space());
@@ -528,7 +460,6 @@ pub async fn get_system_status() -> Result<ResponseModel, ResponseModel> {
         total.saturating_add(disk.total_space()),
       )
     });
-
     let networks = Networks::new_with_refreshed_list();
     let (network_received, network_transmitted) =
       networks
@@ -539,10 +470,8 @@ pub async fn get_system_status() -> Result<ResponseModel, ResponseModel> {
             trans.saturating_add(data.total_transmitted()),
           )
         });
-
     let uptime = System::uptime();
     let status = calculate_status(cpu_usage, ram_used, ram_total);
-
     SystemMetrics {
       cpu_usage,
       ram_used,
@@ -560,40 +489,37 @@ pub async fn get_system_status() -> Result<ResponseModel, ResponseModel> {
     timer
       .clone()
       .finish_error(&format!("Task join error: {}", e));
-    ResponseModel::error(format!("Task join error: {}", e))
+    format!("Task join error: {}", e)
   })?;
-
   timer.finish_success();
-  Ok(ResponseModel::success(sys))
+  Ok(Response::success(
+    "System status retrieved",
+    serde_json::to_value(sys).unwrap_or(serde_json::Value::Null),
+  ))
 }
-
 #[tauri::command]
-pub async fn save_log_file(filename: String, data: String) -> Result<ResponseModel, ResponseModel> {
+pub async fn save_log_file(filename: String, data: String) -> Result<Response, String> {
   let timer = DataflowTimer::new("save_log_file");
   let logs_dir = get_logs_dir()?;
   let file_path = logs_dir.join(&filename);
-
   fs::write(&file_path, &data).map_err(|e| {
     timer
       .clone()
       .finish_error(&format!("Failed to write log file: {}", e));
-    ResponseModel::error(format!("Failed to write log file: {}", e))
+    format!("Failed to write log file: {}", e)
   })?;
-
-  log::debug!("command = save_log_file, filename = {}", filename);
-  Ok(ResponseModel::success(
-    file_path.to_string_lossy().to_string(),
+  Ok(Response::success(
+    "Log file saved",
+    serde_json::Value::String(file_path.to_string_lossy().to_string()),
   ))
 }
-
 #[tauri::command]
-pub async fn append_log_file(data: String) -> Result<ResponseModel, ResponseModel> {
+pub async fn append_log_file(data: String) -> Result<Response, String> {
   let timer = DataflowTimer::new("append_log_file");
   let logs_dir = get_logs_dir()?;
   let date = Local::now().format("%Y-%m-%d").to_string();
   let filename = format!("dataflow-{}.jsonl", date);
   let file_path = logs_dir.join(&filename);
-
   let mut file = OpenOptions::new()
     .create(true)
     .append(true)
@@ -602,18 +528,16 @@ pub async fn append_log_file(data: String) -> Result<ResponseModel, ResponseMode
       timer
         .clone()
         .finish_error(&format!("Failed to open log file: {}", e));
-      ResponseModel::error(format!("Failed to open log file: {}", e))
+      format!("Failed to open log file: {}", e)
     })?;
-
   writeln!(file, "{}", data).map_err(|e| {
     timer
       .clone()
       .finish_error(&format!("Failed to write to log file: {}", e));
-    ResponseModel::error(format!("Failed to write to log file: {}", e))
+    format!("Failed to write to log file: {}", e)
   })?;
-
-  log::debug!("command = append_log_file, date = {}", date);
-  Ok(ResponseModel::success(
-    file_path.to_string_lossy().to_string(),
+  Ok(Response::success(
+    "Log appended",
+    serde_json::Value::String(file_path.to_string_lossy().to_string()),
   ))
 }

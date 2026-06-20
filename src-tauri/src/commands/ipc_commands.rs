@@ -3,29 +3,22 @@ use crate::commands::get_connection_entry;
 use crate::commands::validate_conn_id;
 use crate::commands::validate_name;
 use crate::dispatch_provider;
-use crate::models::response::ResponseModel;
+use crate::models::response::{Response, ResponseModel};
 use crate::utils::metrics::{redact_sensitive_data, DataflowTimer};
 use nosql_orm::prelude::*;
 use serde_json::Value;
-
 #[tauri::command]
 pub async fn initialize_app() -> Result<(), String> {
-  log::info!("[initialize_app] called");
   Ok(())
 }
-
 #[tauri::command]
 pub async fn get_version() -> Result<String, String> {
-  log::info!("[get_version] called");
   Ok(env!("CARGO_PKG_VERSION").to_string())
 }
-
 #[tauri::command]
 pub async fn is_connected() -> Result<bool, String> {
-  log::info!("[is_connected] called");
   Ok(true)
 }
-
 #[tauri::command(rename_all = "camelCase")]
 pub async fn rebuild_index(
   conn_id: String,
@@ -34,10 +27,6 @@ pub async fn rebuild_index(
 ) -> Result<(), String> {
   let timer = DataflowTimer::new("rebuild_index");
   let params = serde_json::json!({ "conn_id": &conn_id, "collection": &collection, "index_name": &index_name });
-  log::debug!(
-    "command = rebuild_index, params = {} [COMMAND_ENTRY]",
-    redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default())
-  );
   if let Err(e) = validate_conn_id(&conn_id) {
     timer.clone().finish_error(&e);
     return Err(e);
@@ -56,7 +45,6 @@ pub async fn rebuild_index(
   timer.finish_success();
   Ok(())
 }
-
 #[tauri::command(rename_all = "camelCase")]
 pub async fn create_index(
   conn_id: String,
@@ -68,10 +56,6 @@ pub async fn create_index(
       "conn_id": &conn_id,
       "collection": &collection,
   });
-  log::debug!(
-    "command = create_index, params = {} [COMMAND_ENTRY]",
-    redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default())
-  );
   if let Err(e) = validate_conn_id(&conn_id) {
     timer.clone().finish_error(&e);
     return Err(e);
@@ -90,7 +74,6 @@ pub async fn create_index(
   timer.finish_success();
   Ok(())
 }
-
 #[tauri::command(rename_all = "camelCase")]
 pub async fn drop_index(
   conn_id: String,
@@ -99,10 +82,6 @@ pub async fn drop_index(
 ) -> Result<(), String> {
   let timer = DataflowTimer::new("drop_index");
   let params = serde_json::json!({ "conn_id": &conn_id, "collection": &collection, "index_name": &index_name });
-  log::debug!(
-    "command = drop_index, params = {} [COMMAND_ENTRY]",
-    redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default())
-  );
   if let Err(e) = validate_conn_id(&conn_id) {
     timer.clone().finish_error(&e);
     return Err(e);
@@ -121,7 +100,6 @@ pub async fn drop_index(
   timer.finish_success();
   Ok(())
 }
-
 #[tauri::command(rename_all = "camelCase")]
 pub async fn insert_document(
   conn_id: String,
@@ -130,10 +108,6 @@ pub async fn insert_document(
 ) -> Result<Value, String> {
   let timer = DataflowTimer::new("insert_document");
   let params = serde_json::json!({ "conn_id": &conn_id, "collection": &collection, "data": &data });
-  log::debug!(
-    "command = insert_document, params = {} [COMMAND_ENTRY]",
-    redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default())
-  );
   if let Err(e) = validate_conn_id(&conn_id) {
     timer.clone().finish_error(&e);
     return Err(e);
@@ -161,7 +135,6 @@ pub async fn insert_document(
     }
   }
 }
-
 #[tauri::command(rename_all = "camelCase")]
 pub async fn update_document(
   conn_id: String,
@@ -172,10 +145,6 @@ pub async fn update_document(
   let timer = DataflowTimer::new("update_document");
   let params =
     serde_json::json!({ "conn_id": &conn_id, "collection": &collection, "id": &id, "data": &data });
-  log::debug!(
-    "command = update_document, params = {} [COMMAND_ENTRY]",
-    redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default())
-  );
   if let Err(e) = validate_conn_id(&conn_id) {
     timer.clone().finish_error(&e);
     return Err(e);
@@ -203,7 +172,6 @@ pub async fn update_document(
     }
   }
 }
-
 #[tauri::command(rename_all = "camelCase")]
 pub async fn delete_document(
   conn_id: String,
@@ -212,10 +180,6 @@ pub async fn delete_document(
 ) -> Result<(), String> {
   let timer = DataflowTimer::new("delete_document");
   let params = serde_json::json!({ "conn_id": &conn_id, "collection": &collection, "id": &id });
-  log::debug!(
-    "command = delete_document, params = {} [COMMAND_ENTRY]",
-    redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default())
-  );
   if let Err(e) = validate_conn_id(&conn_id) {
     timer.clone().finish_error(&e);
     return Err(e);
@@ -243,7 +207,6 @@ pub async fn delete_document(
     }
   }
 }
-
 #[tauri::command(rename_all = "camelCase")]
 pub async fn soft_delete_document(
   conn_id: String,
@@ -252,10 +215,6 @@ pub async fn soft_delete_document(
 ) -> Result<(), String> {
   let timer = DataflowTimer::new("soft_delete_document");
   let params = serde_json::json!({ "conn_id": &conn_id, "collection": &collection, "id": &id });
-  log::debug!(
-    "command = soft_delete_document, params = {} [COMMAND_ENTRY]",
-    redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default())
-  );
   if let Err(e) = validate_conn_id(&conn_id) {
     timer.clone().finish_error(&e);
     return Err(e);
@@ -287,12 +246,10 @@ pub async fn soft_delete_document(
     }
   }
 }
-
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct TransactionResult {
   pub transaction_id: String,
 }
-
 #[tauri::command(rename_all = "camelCase")]
 pub async fn begin_transaction(
   conn_id: String,
@@ -300,10 +257,6 @@ pub async fn begin_transaction(
 ) -> Result<TransactionResult, String> {
   let timer = DataflowTimer::new("begin_transaction");
   let params = serde_json::json!({ "conn_id": &conn_id });
-  log::debug!(
-    "command = begin_transaction, params = {} [COMMAND_ENTRY]",
-    redact_sensitive_data(&serde_json::to_string(&params).unwrap_or_default())
-  );
   if let Err(e) = validate_conn_id(&conn_id) {
     timer.clone().finish_error(&e);
     return Err(e);
@@ -331,23 +284,15 @@ pub async fn begin_transaction(
     }
   }
 }
-
 #[tauri::command(rename_all = "camelCase")]
 pub async fn commit_transaction(_transaction_id: String) -> Result<(), String> {
   let timer = DataflowTimer::new("commit_transaction");
-  log::debug!(
-    "command = commit_transaction, params = {{ \"transaction_id\": \"***\" }} [COMMAND_ENTRY]"
-  );
   timer.finish_success();
   Ok(())
 }
-
 #[tauri::command(rename_all = "camelCase")]
 pub async fn rollback_transaction(_transaction_id: String) -> Result<(), String> {
   let timer = DataflowTimer::new("rollback_transaction");
-  log::debug!(
-    "command = rollback_transaction, params = {{ \"transaction_id\": \"***\" }} [COMMAND_ENTRY]"
-  );
   timer.finish_success();
   Ok(())
 }

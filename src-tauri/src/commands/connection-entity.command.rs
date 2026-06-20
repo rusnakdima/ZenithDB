@@ -4,7 +4,6 @@ use nosql_orm::prelude::*;
 use nosql_orm::soft_delete::SoftDeletable;
 use nosql_orm::validators::Validate;
 use serde::{Deserialize, Serialize};
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConnectionEntity {
   pub id: Option<String>,
@@ -15,7 +14,6 @@ pub struct ConnectionEntity {
   pub created_at: Option<DateTime<Utc>>,
   pub updated_at: Option<DateTime<Utc>>,
 }
-
 impl Entity for ConnectionEntity {
   fn meta() -> EntityMeta {
     EntityMeta::new("connections")
@@ -27,19 +25,16 @@ impl Entity for ConnectionEntity {
     self.id = Some(id);
   }
 }
-
 impl WithRelations for ConnectionEntity {
   fn relations() -> Vec<RelationDef> {
     vec![]
   }
 }
-
 impl Validate for ConnectionEntity {
   fn validate(&self) -> OrmResult<()> {
     Ok(())
   }
 }
-
 impl Timestamps for ConnectionEntity {
   fn created_at(&self) -> Option<DateTime<Utc>> {
     self.created_at
@@ -66,14 +61,12 @@ impl Timestamps for ConnectionEntity {
     self.updated_at = Some(Utc::now());
   }
 }
-
 impl SoftDeletable for ConnectionEntity {
   fn deleted_at(&self) -> Option<DateTime<Utc>> {
     None
   }
   fn set_deleted_at(&mut self, _t: Option<DateTime<Utc>>) {}
 }
-
 impl ConnectionEntity {
   pub fn new(id: String, type_: String, name: String, config: ConnectionConfig) -> Self {
     let config_json = serde_json::to_string(&config).unwrap_or_else(|_| "{}".to_string());
