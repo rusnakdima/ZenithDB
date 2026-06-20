@@ -1,11 +1,11 @@
 <div
-  class="flex w-full items-center justify-between border-t border-[var(--border-subtle)] bg-[var(--bg-sidebar)] px-6 py-3"
+  class="flex w-full items-center justify-between border-t border-[var(--border-subtle)] bg-transparent px-6 py-3"
 >
   <div class="flex items-center gap-6">
     <span class="text-sm text-[var(--text-dim)]">
-      Showing <span class="font-bold text-[var(--accent)]">{{ startIndex }}</span
-      >-<span class="font-bold text-[var(--accent)]">{{ endIndex }}</span> of
-      <span class="font-bold text-[var(--accent)]">{{ totalItems }}</span>
+      Showing <span class="font-bold text-[var(--text-main)]">{{ startIndex }}</span
+      >-<span class="font-bold text-[var(--text-main)]">{{ endIndex }}</span> of
+      <span class="font-bold text-[var(--text-main)]">{{ totalItems }}</span>
     </span>
     <div class="flex items-center gap-3">
       <span class="text-xs text-[var(--text-muted)]">Rows per page:</span>
@@ -24,7 +24,7 @@
 
   <div class="flex items-center gap-2">
     <button
-      class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-[var(--bg-card)] hover:text-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-30"
+      class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-[var(--bg-card)] hover:text-[var(--text-main)] disabled:cursor-not-allowed disabled:opacity-30"
       [disabled]="!hasPrevPage"
       (click)="firstPage()"
       title="First page"
@@ -32,7 +32,7 @@
       <mat-icon fontIcon="first_page" class="!text-base"></mat-icon>
     </button>
     <button
-      class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-[var(--bg-card)] hover:text-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-30"
+      class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-[var(--bg-card)] hover:text-[var(--text-main)] disabled:cursor-not-allowed disabled:opacity-30"
       [disabled]="!hasPrevPage"
       (click)="prevPage()"
       title="Previous page"
@@ -43,7 +43,7 @@
       >Page {{ currentPage + 1 }} of {{ totalPages || 1 }}</span
     >
     <button
-      class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-[var(--bg-card)] hover:text-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-30"
+      class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-[var(--bg-card)] hover:text-[var(--text-main)] disabled:cursor-not-allowed disabled:opacity-30"
       [disabled]="!hasNextPage"
       (click)="nextPage()"
       title="Next page"
@@ -51,7 +51,7 @@
       <mat-icon fontIcon="chevron_right" class="!text-base"></mat-icon>
     </button>
     <button
-      class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-[var(--bg-card)] hover:text-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-30"
+      class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-[var(--bg-card)] hover:text-[var(--text-main)] disabled:cursor-not-allowed disabled:opacity-30"
       [disabled]="!hasNextPage"
       (click)="lastPage()"
       title="Last page"

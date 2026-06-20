@@ -1,18 +1,20 @@
-<article class="mb-4 overflow-hidden rounded-lg border border-[var(--accent)] bg-[var(--bg-card)]">
+<article
+  class="mb-4 overflow-hidden rounded-lg border border-[var(--border-visible)] bg-transparent"
+>
   <header
-    class="flex items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--bg-sidebar)] px-4 py-2"
+    class="flex items-center justify-between border-b border-[var(--border-subtle)] bg-transparent px-4 py-2"
   >
     <span class="mono text-sm text-[var(--text-dim)]">Document {{ docIndex() + 1 }}</span>
     <div class="flex items-center gap-1">
       <button
-        class="flex items-center gap-1 rounded px-2 py-1 text-xs text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--accent)]"
+        class="flex items-center gap-1 rounded px-2 py-1 text-xs text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--text-main)]"
         title="Copy JSON"
         (click)="copyRowJson()"
       >
         <mat-icon fontIcon="content_copy" class="h-4! w-3! text-xs!" />
       </button>
       <button
-        class="flex items-center gap-1 rounded px-2 py-1 text-xs text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--accent)]"
+        class="flex items-center gap-1 rounded px-2 py-1 text-xs text-[var(--text-dim)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--text-main)]"
         (click)="openInspector()"
       >
         <mat-icon fontIcon="visibility" class="h-4! w-3! text-xs!" />

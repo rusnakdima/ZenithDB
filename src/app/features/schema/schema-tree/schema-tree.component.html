@@ -1,4 +1,4 @@
-<div class="flex h-full flex-col border-r border-[var(--accent)] bg-[var(--bg-sidebar)]">
+<div class="flex h-full flex-col border-r border-[var(--border-subtle)] bg-transparent">
   <div class="flex items-center justify-between border-b border-[var(--border-subtle)] px-4 py-3">
     <h2 class="text-xs font-semibold tracking-wider text-[var(--text-dim)] uppercase">
       Collections
@@ -23,7 +23,7 @@
         [value]="searchQuery()"
         (input)="setFilter($any($event.target).value)"
         placeholder="Search collections..."
-        class="w-full rounded-md border border-[var(--border-color)] bg-[var(--bg-input)] py-2 pr-4 pl-10 text-sm text-[var(--text-main)] placeholder-[var(--text-muted)] focus:border-[var(--accent)] focus:outline-none"
+        class="w-full rounded-md border border-[var(--border-color)] bg-[var(--bg-input)] py-2 pr-4 pl-10 text-sm text-[var(--text-main)] placeholder-[var(--text-muted)] focus:border-[var(--border-visible)] focus:outline-none"
       />
     </div>
   </div>
@@ -88,7 +88,7 @@
                 (keyup.enter)="confirmRename()"
                 (keyup.escape)="cancelRename()"
                 (blur)="confirmRename()"
-                class="flex-1 rounded bg-[var(--bg-input)] px-2 py-1 text-sm text-[var(--text-main)] focus:ring-1 focus:ring-[var(--accent)] focus:outline-none"
+                class="flex-1 rounded bg-[var(--bg-input)] px-2 py-1 text-sm text-[var(--text-main)] focus:ring-1 focus:ring-[var(--border-visible)] focus:outline-none"
                 autofocus
               />
             </div>
@@ -105,13 +105,13 @@
               <mat-icon
                 fontIcon="table_chart"
                 class="h-6! w-5! flex-shrink-0 text-xl! text-[var(--text-dim)] group-hover:text-[var(--text-main)]"
-                [class.text-[var(--accent)]]="selectedCollection() === col.name"
+                [class.text-[var(--text-main)]]="selectedCollection() === col.name"
               ></mat-icon>
               <span class="flex-1 truncate text-sm">{{ col.name }}</span>
               <span class="text-xs text-[var(--text-dim)]">{{ col.count || 0 }}</span>
               <button
                 type="button"
-                class="pointer-events-auto min-w-[24px] rounded p-1 transition-colors hover:bg-transparent hover:text-[var(--accent)]"
+                class="pointer-events-auto min-w-[24px] rounded p-1 transition-colors hover:bg-transparent hover:text-[var(--text-main)]"
                 (click)="viewData(col); $event.stopPropagation()"
                 title="Browse Data"
               >
@@ -121,7 +121,7 @@
                 fontIcon="chevron_right"
                 class="h-6! w-5! flex-shrink-0 text-xl! text-[var(--text-dim)] transition-transform duration-200"
                 [class.rotate-90]="isExpanded(col.name)"
-                [class.text-[var(--accent)]]="isExpanded(col.name)"
+                [class.text-[var(--text-main)]]="isExpanded(col.name)"
               ></mat-icon>
             </div>
           }
@@ -157,7 +157,7 @@
               } @else {
                 <div class="flex items-center gap-2 px-3 py-1.5 text-sm text-[var(--text-dim)]">
                   <div
-                    class="h-3 w-3 animate-spin rounded-full border border-[var(--accent)] border-t-transparent"
+                    class="h-3 w-3 animate-spin rounded-full border border-[var(--border-visible)] border-t-transparent"
                   ></div>
                   Loading fields...
                 </div>
@@ -172,7 +172,7 @@
 
 @if (contextMenu().show) {
   <div
-    class="fixed z-50 min-w-[160px] rounded-lg border border-[var(--accent)] bg-transparent py-1 shadow-xl"
+    class="fixed z-50 min-w-[160px] rounded-lg border border-[var(--border-visible)] bg-transparent py-1 shadow-xl"
     [style.left.px]="contextMenu().x"
     [style.top.px]="contextMenu().y"
   >
@@ -211,14 +211,14 @@
 @if (showNewCollectionModal()) {
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-[var(--bg-backdrop-light)]">
     <div
-      class="w-full max-w-md rounded-xl border border-[var(--accent)] bg-[var(--bg-modal)] p-6 shadow-2xl"
+      class="w-full max-w-md rounded-xl border border-[var(--border-visible)] bg-[var(--bg-modal)] p-6 shadow-2xl"
     >
       <h3 class="mb-4 text-lg font-semibold text-[var(--text-main)]">Create New Collection</h3>
       <input
         type="text"
         [(ngModel)]="newCollectionName"
         placeholder="Collection name"
-        class="mb-4 w-full rounded-lg border border-[var(--border-color)] bg-[var(--bg-input)] px-4 py-2.5 text-sm text-[var(--text-main)] placeholder-[var(--text-muted)] focus:border-[var(--accent)] focus:outline-none"
+        class="mb-4 w-full rounded-lg border border-[var(--border-color)] bg-[var(--bg-input)] px-4 py-2.5 text-sm text-[var(--text-main)] placeholder-[var(--text-muted)] focus:border-[var(--border-visible)] focus:outline-none"
         (keyup.enter)="createCollection()"
         (keyup.escape)="closeNewCollectionModal()"
         autofocus
@@ -226,7 +226,7 @@
       <div class="flex justify-end gap-3">
         <button
           (click)="closeNewCollectionModal()"
-          class="rounded-lg border border-[var(--accent)] px-4 py-2 text-sm text-[var(--text-main)] hover:bg-transparent"
+          class="rounded-lg border border-[var(--border-visible)] px-4 py-2 text-sm text-[var(--text-main)] hover:bg-[var(--bg-elevated)]"
         >
           Cancel
         </button>

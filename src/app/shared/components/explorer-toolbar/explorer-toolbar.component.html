@@ -3,7 +3,7 @@
 >
   <div class="flex items-center gap-4">
     <button
-      class="flex items-center rounded-lg border border-[var(--accent)] bg-transparent p-2 transition-all hover:text-[var(--accent)]"
+      class="flex items-center rounded-lg border border-[var(--border-visible)] bg-transparent p-2 transition-all hover:border-[var(--accent)] hover:text-[var(--accent)]"
       (click)="toggleTreeCollapse.emit()"
       [title]="treeCollapsed() ? 'Expand sidebar' : 'Collapse sidebar'"
     >
@@ -13,14 +13,14 @@
   </div>
   <div class="flex items-center gap-3">
     <button
-      class="flex items-center gap-2 rounded-lg border border-[var(--accent)] bg-transparent px-3 py-2 text-sm font-medium text-[var(--text-dim)] transition-all hover:text-[var(--accent)]"
+      class="flex items-center gap-2 rounded-lg border border-[var(--border-visible)] bg-transparent px-3 py-2 text-sm font-medium text-[var(--text-dim)] transition-all hover:border-[var(--accent)] hover:text-[var(--accent)]"
       (click)="openCompareTables.emit()"
     >
       <mat-icon fontIcon="compare_arrows" class="h-5! w-4! text-base!" />
       <span class="hidden lg:inline">Compare</span>
     </button>
     <button
-      class="flex items-center gap-2 rounded-lg border border-[var(--accent)] bg-transparent px-3 py-2 text-sm font-medium text-[var(--text-dim)] transition-all hover:text-[var(--accent)]"
+      class="flex items-center gap-2 rounded-lg border border-[var(--border-visible)] bg-transparent px-3 py-2 text-sm font-medium text-[var(--text-dim)] transition-all hover:border-[var(--accent)] hover:text-[var(--accent)]"
       (click)="onImport.emit()"
     >
       <mat-icon fontIcon="upload" class="h-5! w-4! text-base!" />
@@ -35,7 +35,7 @@
     </button>
     <div class="relative">
       <button
-        class="flex items-center gap-2 rounded-lg border border-[var(--accent)] bg-transparent px-3 py-2 text-sm font-medium text-[var(--text-dim)] transition-all hover:text-[var(--accent)]"
+        class="flex items-center gap-2 rounded-lg border border-[var(--border-visible)] bg-transparent px-3 py-2 text-sm font-medium text-[var(--text-dim)] transition-all hover:border-[var(--accent)] hover:text-[var(--accent)]"
         (click)="toggleExportMenu.emit()"
       >
         <mat-icon fontIcon="download" class="h-5! w-4! text-base!" />

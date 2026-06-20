@@ -33,7 +33,7 @@
 @if (loading()) {
   <div class="flex h-64 items-center justify-center">
     <div
-      class="h-8 w-8 animate-spin rounded-full border-2 border-[var(--accent)] border-t-transparent"
+      class="h-8 w-8 animate-spin rounded-full border-2 border-[var(--border-visible)] border-t-transparent"
     ></div>
   </div>
 } @else if (data().length === 0) {
@@ -206,7 +206,7 @@
     class="fixed inset-0 z-50 flex items-center justify-center bg-[var(--bg-backdrop-light)] backdrop-blur-sm"
   >
     <div
-      class="w-full max-w-md rounded-2xl border border-[var(--accent)] bg-[var(--bg-modal)] p-6 shadow-2xl"
+      class="w-full max-w-md rounded-2xl border border-[var(--border-visible)] bg-[var(--bg-modal)] p-6 shadow-2xl"
     >
       <div class="mb-4 flex items-center gap-3">
         <div
@@ -234,7 +234,7 @@
           Delete {{ selectedRows().size === 1 ? "Record" : selectedRows().size + " Records" }}
         </button>
         <button
-          class="flex-1 rounded-xl border border-[var(--accent)] bg-transparent px-4 py-2.5 text-sm font-bold text-[var(--text-dim)] transition-all hover:text-[var(--text-main)]"
+          class="flex-1 rounded-xl border border-[var(--border-visible)] bg-transparent px-4 py-2.5 text-sm font-bold text-[var(--text-dim)] transition-all hover:border-[var(--border-color)] hover:text-[var(--text-main)]"
           (click)="cancelBulkDelete()"
         >
           Cancel

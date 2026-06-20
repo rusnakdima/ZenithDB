@@ -1,5 +1,5 @@
 <div
-  class="filter-bar relative flex min-w-0 flex-1 flex-wrap items-center gap-2 border-b border-[var(--border-subtle)] bg-[var(--bg-sidebar)] px-4 py-2 md:gap-3"
+  class="filter-bar relative flex min-w-0 flex-1 flex-wrap items-center gap-2 border-b border-[var(--border-subtle)] bg-transparent px-4 py-2 md:gap-3"
   (click)="closeDropdowns($event)"
 >
   <div
@@ -17,7 +17,7 @@
       (keydown)="onFilterKeydown($event)"
       (focus)="showHistory.set(false)"
       placeholder='{ "status": "active" }'
-      class="min-w-0 flex-1 rounded-md border bg-[var(--bg-input)] px-2 py-1.5 font-mono text-xs transition-colors focus:border-[var(--accent)] focus:outline-none md:px-3 md:py-2 md:text-sm"
+      class="min-w-0 flex-1 rounded-md border border-[var(--border-subtle)] bg-[var(--bg-input)] px-2 py-1.5 font-mono text-xs transition-colors focus:border-[var(--border-visible)] focus:outline-none md:px-3 md:py-2 md:text-sm"
       [class.border-[var(--accent)]]="isValidFilter()"
       [class.border-[var(--color-error)]]="!isValidFilter()"
       [class.text-[var(--text-main)]]="isValidFilter()"
@@ -26,7 +26,7 @@
   </div>
   @if (showFieldDropdown()) {
     <div
-      class="dropdown-container absolute top-full left-0 z-[1000] mt-1 w-72 rounded-lg border border-[var(--accent)] bg-[var(--bg-card)] shadow-xl"
+      class="dropdown-container absolute top-full left-0 z-[1000] mt-1 w-72 rounded-lg border border-[var(--border-visible)] bg-[var(--bg-card)] shadow-xl"
     >
       <div class="border-b border-[var(--border-subtle)] px-3 py-2">
         <span class="text-xs font-semibold text-[var(--text-dim)]">Available Fields</span>
@@ -70,7 +70,7 @@
     </button>
     @if (showHistory()) {
       <div
-        class="absolute left-0 z-[100] mt-1 w-80 rounded-lg border border-[var(--accent)] bg-[var(--bg-card)] shadow-xl"
+        class="absolute left-0 z-[100] mt-1 w-80 rounded-lg border border-[var(--border-visible)] bg-[var(--bg-card)] shadow-xl"
       >
         <div class="flex items-center justify-between border-b border-[var(--border-subtle)] p-2">
           <span class="text-xs font-semibold text-[var(--text-dim)]">Recent Filters</span>

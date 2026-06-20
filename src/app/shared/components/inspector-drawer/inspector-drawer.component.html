@@ -10,7 +10,7 @@
       <div class="flex items-center gap-3">
         <mat-icon
           [fontIcon]="isCreateMode() ? 'add' : 'visibility'"
-          class="h-6! w-5! text-xl! text-[var(--accent)]"
+          class="h-6! w-5! text-xl! text-[var(--text-dim)]"
         />
         <h3 class="text-sm font-black text-[var(--text-main)]">
           {{ isCreateMode() ? "New Document" : "Document Detail" }}
@@ -44,7 +44,7 @@
             <div class="flex items-center gap-1">
               @if (!isEditMode()) {
                 <button
-                  class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-[var(--accent)]/10 hover:text-[var(--accent)]"
+                  class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-[var(--bg-elevated)] hover:text-[var(--text-main)]"
                   title="Edit"
                   (click)="onEdit()"
                 >
@@ -52,14 +52,14 @@
                 </button>
               }
               <button
-                class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-[var(--accent)]/10 hover:text-[var(--accent)]"
+                class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-[var(--bg-elevated)] hover:text-[var(--text-main)]"
                 title="Copy JSON"
                 (click)="copyJson()"
               >
                 <mat-icon fontIcon="content_copy" class="h-6! w-5! text-xl!" />
               </button>
               <button
-                class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-[var(--accent)]/10 hover:text-[var(--accent)]"
+                class="rounded-lg p-2 text-[var(--text-dim)] transition-all hover:bg-[var(--bg-elevated)] hover:text-[var(--text-main)]"
                 title="Export JSON"
                 (click)="exportDocument('json')"
               >
@@ -77,7 +77,7 @@
                   JSON
                 </button>
                 <button
-                  class="flex-1 rounded-lg border border-[var(--border-visible)] bg-transparent px-4 py-2.5 text-xs font-bold text-[var(--text-dim)] transition-all hover:bg-[var(--accent)]/10 hover:text-[var(--text-main)]"
+                  class="flex-1 rounded-lg border border-[var(--border-visible)] bg-transparent px-4 py-2.5 text-xs font-bold text-[var(--text-dim)] transition-all hover:bg-[var(--bg-elevated)] hover:text-[var(--text-main)]"
                   (click)="exportDocument('csv')"
                 >
                   CSV
@@ -200,7 +200,7 @@
               Delete Permanently
             </button>
             <button
-              class="rounded-xl border border-[var(--border-visible)] bg-transparent px-4 py-2.5 text-sm font-bold text-[var(--text-dim)] transition-all hover:bg-[var(--accent)]/10 hover:text-[var(--text-main)]"
+              class="rounded-xl border border-[var(--border-visible)] bg-transparent px-4 py-2.5 text-sm font-bold text-[var(--text-dim)] transition-all hover:bg-[var(--bg-elevated)] hover:text-[var(--text-main)]"
               (click)="cancelDelete()"
             >
               Cancel
