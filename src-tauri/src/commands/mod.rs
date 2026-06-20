@@ -79,10 +79,11 @@ pub fn validate_name(name: &str) -> Result<(), String> {
 }
 #[macro_export]
 macro_rules! dispatch_provider {
-  ($entry:expr, $provider:ident => $body:block) => {
+  ($entry:expr, $conn_id:expr, $provider:ident => $body:block) => {
     match &$entry.config.config {
       $crate::commands::connection_command::ConnectionConfigEnum::Json { path, .. } => {
-        let $provider = $crate::commands::provider::create_json_provider(&path).await?;
+        let $provider =
+          $crate::commands::provider::get_or_create_json_provider(&$conn_id, &path).await?;
         $body
       }
       $crate::commands::connection_command::ConnectionConfigEnum::Mongo {

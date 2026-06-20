@@ -32,7 +32,7 @@ pub async fn collection_list(
     Ok(e) => e,
     Err(e) => return Err(e),
   };
-  let result = match dispatch_provider!(entry, provider => {
+  let result = match dispatch_provider!(entry, conn_id, provider => {
       let collections = provider.list_collections().await.map_err_string()?;
       let total_count = collections.len();
       let offset = offset.unwrap_or(0);
@@ -74,7 +74,7 @@ pub async fn collection_stats(connection_id: String, name: String) -> Result<Res
     Ok(e) => e,
     Err(e) => return Err(e),
   };
-  let result = match dispatch_provider!(entry, provider => {
+  let result = match dispatch_provider!(entry, connection_id, provider => {
       let stats = provider.get_collection_stats(&name).await.map_err_string()?;
       Ok::<_, String>(CollectionStats {
           name,
@@ -111,7 +111,7 @@ pub async fn collection_create(connection_id: String, name: String) -> Result<Re
     Ok(e) => e,
     Err(e) => return Err(e),
   };
-  let result = match dispatch_provider!(entry, provider => {
+  let result = match dispatch_provider!(entry, connection_id, provider => {
       provider.create_collection(&name, None).await.map_err_string()
   }) {
     Ok(_) => Response::success("Collection created", Value::Null),
@@ -139,7 +139,7 @@ pub async fn collection_drop(connection_id: String, name: String) -> Result<Resp
     Ok(e) => e,
     Err(e) => return Err(e),
   };
-  let result = match dispatch_provider!(entry, provider => {
+  let result = match dispatch_provider!(entry, connection_id, provider => {
       provider.drop_collection(&name).await.map_err_string()
   }) {
     Ok(_) => Response::success("Collection dropped", Value::Null),
@@ -154,11 +154,12 @@ pub async fn collection_drop(connection_id: String, name: String) -> Result<Resp
 #[tauri::command(rename_all = "camelCase")]
 pub async fn collection_rename(
   connection_id: String,
+  db_name: Option<String>,
   oldName: String,
   newName: String,
 ) -> Result<Response, String> {
   let timer = DataflowTimer::new("collection_rename");
-  let params = serde_json::json!({ "connection_id": &connection_id, "oldName": &oldName, "newName": &newName });
+  let params = serde_json::json!({ "connection_id": &connection_id, "db_name": &db_name, "oldName": &oldName, "newName": &newName });
   if let Err(e) = validate_conn_id(&connection_id) {
     timer.clone().finish_error(&e);
     return Err(e);
@@ -175,7 +176,7 @@ pub async fn collection_rename(
     Ok(e) => e,
     Err(e) => return Err(e),
   };
-  let result = match dispatch_provider!(entry, provider => {
+  let result = match dispatch_provider!(entry, connection_id, provider => {
       provider.rename_collection(&oldName, &newName).await.map_err_string()
   }) {
     Ok(_) => Response::success("Collection renamed", Value::Null),
@@ -199,7 +200,7 @@ pub async fn describe_collection(
     let entry = get_connection_entry(connection_id)
       .await
       .map_err(|e| e.to_string())?;
-    let (schema, indexes) = dispatch_provider!(entry, provider => {
+    let (schema, indexes) = dispatch_provider!(entry, connection_id, provider => {
         let schema = provider.describe_collection(collection).await.map_err_string()?;
         let indexes = nosql_orm::provider::SchemaIntrospection::list_indexes(&provider, collection)
             .await

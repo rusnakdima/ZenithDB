@@ -49,11 +49,14 @@ impl<T: Clone> TypedProviderCache<T> {
 pub type MongoProviderCache = TypedProviderCache<nosql_orm::providers::MongoProvider>;
 pub type PostgresProviderCache = TypedProviderCache<nosql_orm::providers::sql::PostgresProvider>;
 pub type MysqlProviderCache = TypedProviderCache<nosql_orm::providers::sql::MySqlProvider>;
+pub type JsonProviderCache = TypedProviderCache<nosql_orm::providers::JsonProvider>;
 static MONGO_PROVIDER_CACHE: std::sync::OnceLock<Arc<MongoProviderCache>> =
   std::sync::OnceLock::new();
 static POSTGRES_PROVIDER_CACHE: std::sync::OnceLock<Arc<PostgresProviderCache>> =
   std::sync::OnceLock::new();
 static MYSQL_PROVIDER_CACHE: std::sync::OnceLock<Arc<MysqlProviderCache>> =
+  std::sync::OnceLock::new();
+static JSON_PROVIDER_CACHE: std::sync::OnceLock<Arc<JsonProviderCache>> =
   std::sync::OnceLock::new();
 macro_rules! define_provider_cache_getter {
   ($fn_name:ident, $static_var:ident, $cache_type:ty, $name:literal) => {
@@ -81,6 +84,12 @@ define_provider_cache_getter!(
   MYSQL_PROVIDER_CACHE,
   MysqlProviderCache,
   "MySQL"
+);
+define_provider_cache_getter!(
+  get_json_provider_cache,
+  JSON_PROVIDER_CACHE,
+  JsonProviderCache,
+  "JSON"
 );
 pub async fn get_or_create_mongo_provider(
   conn_id: &str,
@@ -119,16 +128,23 @@ pub async fn get_or_create_mysql_provider(
   cache.insert(conn_id.to_string(), provider.clone()).await;
   Ok(provider)
 }
-pub async fn create_json_provider(
+pub async fn get_or_create_json_provider(
+  conn_id: &str,
   path: &str,
 ) -> Result<nosql_orm::providers::JsonProvider, String> {
-  time::timeout(
+  let cache = get_json_provider_cache();
+  if let Some(provider) = cache.get(conn_id).await {
+    return Ok(provider);
+  }
+  let provider = time::timeout(
     Duration::from_secs(CONNECTION_TIMEOUT_SECS),
     nosql_orm::providers::JsonProvider::new(path),
   )
   .await
   .map_err(|e| timeout_err("JSON", e.to_string()))?
-  .map_err(|e| format!("JSON connection error: {}", e))
+  .map_err(|e| format!("JSON connection error: {}", e))?;
+  cache.insert(conn_id.to_string(), provider.clone()).await;
+  Ok(provider)
 }
 pub async fn create_mongo_provider(
   uri: &str,

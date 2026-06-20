@@ -78,7 +78,7 @@ pub async fn query_execute(
     .as_deref()
     .map(|d| d == "asc")
     .unwrap_or(true);
-  let (data, total) = match dispatch_provider!(entry, provider => {
+  let (data, total) = match dispatch_provider!(entry, connectionId, provider => {
       let total = provider.count(&collection, filter.as_ref()).await.map_err_string()?;
       let data = provider
           .find_many(&collection, filter.as_ref(), skip.map(|s| s as u64), limit.map(|l| l as u64), sort_by, sort_asc)
@@ -129,7 +129,7 @@ pub async fn query_save(
       return Err(e);
     }
   };
-  let result: Value = match dispatch_provider!(entry, provider => {
+  let result: Value = match dispatch_provider!(entry, connectionId, provider => {
       let value = if let Some(id) = data.get("id").and_then(|v| v.as_str()) {
           if provider.exists(&collection, id).await.map_err_string()? {
               provider.update(&collection, id, data.clone()).await.map_err_string()?
@@ -174,7 +174,7 @@ pub async fn query_delete(
       return Err(e);
     }
   };
-  match dispatch_provider!(entry, provider => {
+  match dispatch_provider!(entry, connectionId, provider => {
       provider.delete(&collection, &id).await.map_err_string()
   }) {
     Ok(_) => {}
@@ -201,7 +201,7 @@ pub async fn query_raw(connectionId: String, sql: String) -> Result<RawResult, S
       return Err(e);
     }
   };
-  let result = match dispatch_provider!(entry, provider => {
+  let result = match dispatch_provider!(entry, connectionId, provider => {
       let result = provider.execute_raw(&sql, vec![]).await.map_err_string()?;
       Ok::<_, String>(RawResult {
           columns: result.columns,
@@ -238,7 +238,7 @@ pub async fn query_server_version(connectionId: String) -> Result<String, String
     ConnectionConfigEnum::Mongo { .. } => Ok("MongoDB".to_string()),
     ConnectionConfigEnum::Redis { .. } => Ok("Redis".to_string()),
     ConnectionConfigEnum::Postgres { .. } => {
-      match dispatch_provider!(entry, provider => {
+      match dispatch_provider!(entry, connectionId, provider => {
           provider.get_server_version().await.map_err_string()
       }) {
         Ok(r) => Ok(r),
@@ -250,7 +250,7 @@ pub async fn query_server_version(connectionId: String) -> Result<String, String
     }
     ConnectionConfigEnum::Sqlite { .. } => Ok("SQLite".to_string()),
     ConnectionConfigEnum::MySql { .. } => {
-      match dispatch_provider!(entry, provider => {
+      match dispatch_provider!(entry, connectionId, provider => {
           provider.get_server_version().await.map_err_string()
       }) {
         Ok(r) => Ok(r),

@@ -35,9 +35,8 @@ nosql_orm = { git = "https://github.com/rusnakdima/nosql_orm", branch = "main", 
     "sql-postgres",
     "sql-sqlite",
     "sql-mysql",
-    "query_cache",
-    "validators",
-] }
+    "sql",
+  ] }
 rusqlite = { version = "0.33", features = ["bundled"] }
 ts-rs = "8"
 chrono = "0.4"

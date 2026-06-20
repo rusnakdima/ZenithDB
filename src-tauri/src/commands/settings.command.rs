@@ -144,6 +144,50 @@ impl MetadataDb {
         [],
       )
       .map_err(|e| e.to_string())?;
+
+    let has_old_schema = conn
+      .query_row(
+        "SELECT 1 FROM sqlite_master WHERE type='table' AND name='database_metadata' AND sql LIKE '%INTEGER%PRIMARY*'",
+        [],
+        |_| Ok(()),
+      )
+      .is_ok();
+
+    if has_old_schema {
+      conn
+        .execute("DROP TABLE IF EXISTS database_metadata_tmp", [])
+        .map_err(|e| e.to_string())?;
+      conn
+        .execute(
+          "CREATE TABLE database_metadata_tmp (
+            id TEXT PRIMARY KEY,
+            connection_id TEXT NOT NULL,
+            name TEXT NOT NULL,
+            path TEXT,
+            created_at TEXT,
+            updated_at TEXT,
+            metadata TEXT
+          )",
+          [],
+        )
+        .map_err(|e| e.to_string())?;
+      conn
+        .execute(
+          "INSERT INTO database_metadata_tmp (id, connection_id, name, path, created_at, updated_at, metadata) SELECT CAST(id AS TEXT), connection_id, name, path, CAST(created_at AS TEXT), CAST(updated_at AS TEXT), metadata FROM database_metadata",
+          [],
+        )
+        .map_err(|e| e.to_string())?;
+      conn
+        .execute("DROP TABLE database_metadata", [])
+        .map_err(|e| e.to_string())?;
+      conn
+        .execute(
+          "ALTER TABLE database_metadata_tmp RENAME TO database_metadata",
+          [],
+        )
+        .map_err(|e| e.to_string())?;
+    }
+
     Ok(())
   }
   async fn save(&self, entity: &DatabaseMetadataEntity) -> Result<DatabaseMetadataEntity, String> {
@@ -226,9 +270,8 @@ impl DecentralizedStorage {
   ) -> Result<DatabaseMetadata, String> {
     let db = MetadataDb::get_instance().await?;
     let guard = db.lock().await;
-    let id = uuid::Uuid::new_v4().to_string();
     let entity = DatabaseMetadataEntity {
-      id: Some(id),
+      id: None,
       connection_id: connection_id.to_string(),
       name: name.to_string(),
       path: path.map(|p| p.to_string()),

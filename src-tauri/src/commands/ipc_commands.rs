@@ -123,7 +123,7 @@ pub async fn insert_document(
       return Err(e);
     }
   };
-  match dispatch_provider!(entry, provider => { provider.insert(&collection, data).await.map_err_string() })
+  match dispatch_provider!(entry, conn_id, provider => { provider.insert(&collection, data).await.map_err_string() })
   {
     Ok(result) => {
       timer.finish_success();
@@ -160,7 +160,7 @@ pub async fn update_document(
       return Err(e);
     }
   };
-  match dispatch_provider!(entry, provider => { provider.update(&collection, &id, data).await.map_err_string() })
+  match dispatch_provider!(entry, conn_id, provider => { provider.update(&collection, &id, data).await.map_err_string() })
   {
     Ok(result) => {
       timer.finish_success();
@@ -195,7 +195,7 @@ pub async fn delete_document(
       return Err(e);
     }
   };
-  match dispatch_provider!(entry, provider => { provider.delete(&collection, &id).await.map_err_string() })
+  match dispatch_provider!(entry, conn_id, provider => { provider.delete(&collection, &id).await.map_err_string() })
   {
     Ok(_) => {
       timer.finish_success();
@@ -234,7 +234,7 @@ pub async fn soft_delete_document(
     "_deleted": true,
     "_deleted_at": chrono::Utc::now().to_rfc3339()
   });
-  match dispatch_provider!(entry, provider => { provider.update(&collection, &id, deleted_data).await.map_err_string() })
+  match dispatch_provider!(entry, conn_id, provider => { provider.update(&collection, &id, deleted_data).await.map_err_string() })
   {
     Ok(_) => {
       timer.finish_success();
@@ -268,7 +268,7 @@ pub async fn begin_transaction(
       return Err(e);
     }
   };
-  match dispatch_provider!(entry, provider => {
+  match dispatch_provider!(entry, conn_id, provider => {
       provider.begin_transaction().await.map_err_string()
   }) {
     Ok(transaction_id) => {
