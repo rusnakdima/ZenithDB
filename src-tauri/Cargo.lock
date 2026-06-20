@@ -7887,6 +7887,7 @@ dependencies = [
  "image",
  "log",
  "nosql_orm",
+ "paste",
  "regex",
  "rusqlite",
  "serde",
