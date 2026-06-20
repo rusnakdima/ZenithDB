@@ -1,8 +1,6 @@
 import { Routes } from "@angular/router";
-
 export const routes: Routes = [
   { path: "", redirectTo: "connections", pathMatch: "full" },
-
   // Connections
   {
     path: "connections",
@@ -45,14 +43,12 @@ export const routes: Routes = [
     path: "connections/:id/:dbName/explorer/collection/:collection",
     loadComponent: () => import("./pages/explorer/explorer.view").then((m) => m.ExplorerComponent),
   },
-
   // Query (Workbench)
   {
     path: "query",
     loadComponent: () =>
       import("./pages/workbench/workbench.view").then((m) => m.WorkbenchComponent),
   },
-
   // Settings
   {
     path: "settings",

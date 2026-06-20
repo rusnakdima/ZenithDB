@@ -25,7 +25,6 @@ import { ConfirmDialogComponent } from "@shared/components/confirm-dialog/confir
 import { ConnectionFormComponent } from "@pages/connections/connection-form/connection-form.component";
 import { FloatingBottomNavComponent } from "@components/floating-bottom-nav/floating-bottom-nav.component";
 import { AppHeaderComponent } from "@components/header/header.component";
-
 @Component({
   selector: "app-root",
   standalone: true,
@@ -46,35 +45,28 @@ import { AppHeaderComponent } from "@components/header/header.component";
 })
 export class AppComponent implements OnInit, OnDestroy {
   @ViewChild("connectionModal") connectionModal!: ConnectionModalComponent;
-
   private boundToggleTheme: (() => void) | null = null;
   private boundCloseTopModal: (() => void) | null = null;
   private boundOpenConnectionModal: (() => void) | null = null;
   private boundVisibilityChange: (() => void) | null = null;
   private visibilityDebounceTimer: ReturnType<typeof setTimeout> | null = null;
   private routeSub: Subscription | null = null;
-
   isExplorerRoute = signal(false);
   private router = inject(Router);
-
   connectionState = inject(ConnectionStateService);
   shortcutsService = inject(KeyboardShortcutsService);
   dialogService = inject(DialogService);
   themeService = inject(ThemeService);
-
   @HostBinding("class.dark")
   get darkMode(): boolean {
     return this.themeService.isDarkMode();
   }
-
   @HostBinding("class.light")
   get lightMode(): boolean {
     return !this.themeService.isDarkMode();
   }
-
   ngOnInit(): void {
     this.themeService.initFromSettings();
-
     this.boundToggleTheme = () => this.themeService.toggle();
     this.boundCloseTopModal = () => this.shortcutsService.shortcutsHelpVisible.set(false);
     this.boundOpenConnectionModal = () => this.connectionModal?.open();
@@ -86,7 +78,6 @@ export class AppComponent implements OnInit, OnDestroy {
         this.visibilityDebounceTimer = setTimeout(() => {}, 1000);
       }
     };
-
     document.addEventListener("zenith:toggle-theme", this.boundToggleTheme);
     document.addEventListener("zenith:close-top-modal", this.boundCloseTopModal);
     document.addEventListener("zenith:open-connection-modal", this.boundOpenConnectionModal);
@@ -97,7 +88,6 @@ export class AppComponent implements OnInit, OnDestroy {
         this.isExplorerRoute.set(this.router.url.includes("/explorer"));
       });
   }
-
   ngOnDestroy(): void {
     if (this.boundToggleTheme) {
       document.removeEventListener("zenith:toggle-theme", this.boundToggleTheme);

@@ -253,6 +253,7 @@
 :root {
   --bg-deep: #090e14;
   --bg-sidebar: rgba(15, 23, 42, 0.85);
+  --bg-header: rgba(9, 14, 20, 0.85);
   --bg-card: transparent;
   --bg-elevated: rgba(51, 65, 85, 0.6);
   --bg-input: rgba(51, 65, 85, 0.6);
@@ -276,6 +277,7 @@
 html.light {
   --bg-deep: #ffffff;
   --bg-sidebar: rgba(255, 255, 255, 0.9);
+  --bg-header: rgba(255, 255, 255, 0.9);
   --bg-card: transparent;
   --bg-elevated: rgba(241, 245, 249, 0.7);
   --bg-input: rgba(241, 245, 249, 0.9);
@@ -370,7 +372,7 @@ html.light .json-key {
      Glass Card
      ============================================ */
   .glass-card {
-    @apply rounded-2xl border border-[var(--accent)] bg-[var(--bg-modal)] backdrop-blur-md;
+    @apply rounded-2xl border border-[var(--border-visible)] bg-[var(--bg-modal)] backdrop-blur-md;
   }
 
   /* ============================================
@@ -1396,7 +1398,7 @@ html.light .json-key {
   }
 
   .nav-item.nav-item-active {
-    @apply border border-[var(--accent)]/30 bg-transparent text-[var(--accent)];
+    @apply border border-[var(--accent)]/30 bg-[var(--accent)]/10 text-[var(--accent)];
   }
 
   .nav-icon {
@@ -1633,5 +1635,69 @@ html.light .json-key {
 
   .checkbox-gray {
     @apply text-[var(--text-main)];
+  }
+
+  /* ============================================
+     Workbench / Query Page
+     ============================================ */
+  .workbench-page {
+    @apply flex h-screen flex-col;
+  }
+
+  .workbench-toolbar {
+    @apply flex items-center justify-between gap-2 border-b border-[var(--border-subtle)] bg-[var(--bg-sidebar)] px-4 py-3;
+  }
+
+  .workbench-toolbar-group {
+    @apply flex items-center gap-2;
+  }
+
+  .workbench-tabs-bar {
+    @apply flex items-center gap-1 overflow-x-auto border-b border-[var(--border-subtle)] bg-[var(--bg-sidebar)]/50 px-2;
+  }
+
+  .workbench-tab {
+    @apply relative flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm transition-colors;
+  }
+
+  .workbench-tab-active {
+    @apply border-[var(--accent)] text-[var(--accent)];
+  }
+
+  .workbench-tab-inactive {
+    @apply border-transparent text-[var(--text-dim)] hover:text-[var(--text-main)];
+  }
+
+  .workbench-content {
+    @apply flex flex-1 flex-col overflow-hidden;
+  }
+
+  .workbench-editor-pane {
+    @apply flex min-h-[150px] flex-col overflow-hidden;
+  }
+
+  .workbench-results-pane {
+    @apply flex flex-1 overflow-hidden;
+  }
+
+  .workbench-status-bar {
+    @apply flex items-center justify-between border-t border-[var(--border-subtle)] bg-[var(--bg-sidebar)] px-4 py-1.5 text-xs text-[var(--text-dim)];
+  }
+
+  .workbench-resize-handle {
+    @apply h-2 w-full cursor-row-resize border-y border-[var(--border-subtle)] bg-transparent transition-colors hover:border-[var(--accent)];
+  }
+
+  .workbench-editor-gutter {
+    @apply flex min-h-full w-12 shrink-0 flex-col bg-transparent/30 pt-3 pr-4 text-right text-[var(--text-muted)] select-none;
+  }
+
+  .workbench-keywords-bar {
+    @apply flex items-center gap-4 border-t border-[var(--border-subtle)] px-4 py-2 text-xs text-[var(--text-dim)];
+  }
+
+  .workbench-keyword {
+    @apply rounded px-1.5 py-0.5;
+    color: var(--text-dim);
   }
 }
