@@ -9,8 +9,10 @@
         <label class="mb-1.5 block text-sm text-[var(--text-dim)]">Database Name</label>
         <input
           type="text"
-          [ngModel]="dbName()"
-          (ngModelChange)="dbName.set($event)"
+          [value]="dbName()"
+          (input)="onDbNameInput($event)"
+          (change)="onDbNameInput($event)"
+          (blur)="onDbNameInput($event)"
           placeholder="my_database"
           class="form-input w-full"
         />
@@ -27,8 +29,10 @@
         <div class="flex gap-2">
           <input
             type="text"
-            [ngModel]="dbPath()"
-            (ngModelChange)="dbPath.set($event)"
+            [value]="dbPath()"
+            (input)="onDbPathInput($event)"
+            (change)="onDbPathInput($event)"
+            (blur)="onDbPathInput($event)"
             [placeholder]="provider() === 'json' ? '/path/to/folder' : '/path/to/database.db'"
             class="form-input flex-1"
           />

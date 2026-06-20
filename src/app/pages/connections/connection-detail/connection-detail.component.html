@@ -1,84 +1,60 @@
 <div class="connections-container min-h-0 flex-1">
   <div class="connections-max-width">
     @if (loading()) {
-      <div class="glass-card p-12">
-        <div class="flex flex-col items-center justify-center gap-4">
-          <div
-            class="h-16 w-16 animate-spin rounded-full border-4 border-[var(--accent)]/20 border-t-[var(--accent)]"
-          ></div>
-          <p class="text-sm text-[var(--text-dim)]">Loading connection...</p>
-        </div>
+      <div class="flex items-center justify-center gap-3 py-12 text-[var(--text-dim)]">
+        <mat-icon fontIcon="sync" class="h-6! w-5! text-xl!" />
+        <span>Loading connection...</span>
       </div>
     } @else {
-      <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <div class="glass-card p-6">
-          <div class="flex items-start justify-between">
-            <div>
-              <span class="text-xs font-semibold tracking-wider text-[var(--text-dim)] uppercase"
-                >Status</span
-              >
-              <div class="mt-3 flex items-center gap-2">
-                <span
-                  class="h-3 w-3 rounded-full"
-                  [class.bg-green-500]="health()?.healthy"
-                  [style.background-color]="!health()?.healthy ? 'var(--color-error)' : ''"
-                ></span>
-                <app-connection-status-badge [status]="connectionStatus" size="md" />
-              </div>
-            </div>
-          </div>
-        </div>
-
+      <div class="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-4">
+        <app-stats-card
+          label="Status"
+          [value]="health()?.healthy ? 'Connected' : 'Disconnected'"
+          [icon]="health()?.healthy ? 'check_circle' : 'error'"
+          [iconBgClass]="health()?.healthy ? 'bg-green-500' : 'bg-red-500'"
+          iconColorClass="text-white"
+        />
         @if (serverVersion()) {
-          <div class="glass-card p-6">
-            <span class="text-xs font-semibold tracking-wider text-[var(--text-dim)] uppercase"
-              >Server Version</span
-            >
-            <div class="mt-3 flex items-center gap-2">
-              <mat-icon fontIcon="code" class="h-5! w-5! text-xl! text-[var(--accent)]" />
-              <span class="font-mono text-lg text-[var(--text-main)]">{{ serverVersion() }}</span>
-            </div>
-          </div>
+          <app-stats-card
+            label="Server Version"
+            [value]="serverVersion() || ''"
+            icon="code"
+            iconBgClass="bg-blue-500"
+            iconColorClass="text-white"
+          />
         }
       </div>
 
-      <div class="mt-6 flex flex-wrap items-center gap-3">
-        <button
-          (click)="testConnection()"
-          [disabled]="testing()"
-          class="form-btn form-btn-secondary"
-        >
+      <div class="flex flex-wrap items-center gap-3">
+        <button (click)="testConnection()" [disabled]="testing()" class="btn-secondary">
           @if (testing()) {
-            <mat-icon fontIcon="sync" class="mr-2 h-5! w-5! text-xl!" /> Testing...
+            <mat-icon fontIcon="sync" class="h-5! w-5! min-w-5 text-xl!" /> Testing...
           } @else {
-            <mat-icon fontIcon="link" class="mr-2 h-5! w-5! text-xl!" /> Test Connection
+            <mat-icon fontIcon="link" class="h-5! w-5! min-w-5 text-xl!" /> Test Connection
           }
         </button>
 
-        <button (click)="refresh()" class="form-btn form-btn-secondary">
-          <mat-icon fontIcon="refresh" class="mr-2 h-5! w-5! text-xl!" />
+        <button (click)="refresh()" class="btn-secondary">
+          <mat-icon fontIcon="refresh" class="h-5! w-5! min-w-5 text-xl!" />
           Refresh
         </button>
 
-        <button (click)="editConnection()" class="form-btn form-btn-secondary">
-          <mat-icon fontIcon="edit" class="mr-2 h-5! w-5! text-xl!" />
+        <button (click)="editConnection()" class="btn-secondary">
+          <mat-icon fontIcon="edit" class="h-5! w-5! min-w-5 text-xl!" />
           Edit
         </button>
 
-        <button
-          (click)="deleteConnection()"
-          class="ml-auto rounded-xl border border-[var(--border-subtle)] bg-[var(--color-error-bg)] px-4 py-3 text-sm font-medium text-[var(--color-error)] transition-colors hover:bg-[var(--color-error-bg)]"
-        >
-          <mat-icon fontIcon="delete" class="mr-2 h-5! w-5! text-xl!" />
+        <button (click)="deleteConnection()" class="btn-danger">
+          <mat-icon fontIcon="delete" class="h-5! w-5! min-w-5 text-xl!" />
           Delete
         </button>
       </div>
 
-      <div class="mt-8">
-        <div class="mb-4 flex items-center justify-between">
+      <div class="mt-8 flex flex-col gap-4">
+        <div class="flex items-center justify-between">
           <h3 class="text-lg font-semibold text-[var(--text-main)]">Databases</h3>
-          <button (click)="showAddDbModal.set(true)" class="form-btn form-btn-secondary">
-            <mat-icon fontIcon="add" class="mr-2 h-5! w-5! text-xl!" />
+          <button (click)="showAddDbModal.set(true)" class="btn-accent">
+            <mat-icon fontIcon="add" class="h-5! w-5! min-w-5 text-xl!" />
             Add Database
           </button>
         </div>
@@ -98,41 +74,58 @@
           </div>
         }
 
-        <div class="space-y-2">
+        <div class="flex flex-col gap-3">
           @for (db of databases(); track db.name) {
             <div
-              class="cursor-pointer rounded-xl border border-[var(--border-visible)] bg-transparent p-4 transition-colors hover:border-[var(--accent)] hover:bg-transparent"
+              class="group cursor-pointer rounded-xl border border-[var(--border-visible)] bg-[var(--bg-card)] p-4 transition-all duration-200 hover:border-[var(--accent)] hover:bg-[var(--bg-elevated)]"
               (click)="openDatabase(db.name)"
             >
-              <div class="flex items-center gap-3">
-                <mat-icon fontIcon="storage" class="h-5! w-5! text-xl! text-[var(--accent)]/70" />
-                <span class="flex-1 font-medium text-[var(--text-main)]">{{ db.name }}</span>
-                @if (db.path) {
-                  <span class="text-xs text-[var(--text-muted)]">{{ db.path }}</span>
-                }
-                <button
-                  type="button"
-                  (click)="startEditDb(db.name); $event.stopPropagation()"
-                  class="rounded p-1 text-[var(--text-dim)] hover:text-[var(--accent)]"
+              <div class="flex items-center gap-4">
+                <div
+                  class="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--accent)]/10"
                 >
-                  <mat-icon fontIcon="edit" class="h-5! w-5! text-xl!" />
-                </button>
-                <button
-                  type="button"
-                  (click)="deleteDatabase(db.name); $event.stopPropagation()"
-                  class="rounded p-1 text-[var(--text-dim)] hover:text-[var(--color-error)]"
+                  <mat-icon
+                    fontIcon="storage"
+                    class="h-6 w-6 min-w-6 text-2xl! text-[var(--accent)]"
+                  />
+                </div>
+                <div class="flex flex-1 items-center gap-3">
+                  <div class="flex flex-col">
+                    <span class="font-medium text-[var(--text-main)]">{{ db.name }}</span>
+                    @if (db.path) {
+                      <span class="text-xs text-[var(--text-muted)]">{{ db.path }}</span>
+                    }
+                  </div>
+                </div>
+                <div
+                  class="flex items-center gap-2 opacity-0 transition-opacity group-hover:opacity-100"
                 >
-                  <mat-icon fontIcon="delete" class="h-5! w-5! text-xl!" />
-                </button>
+                  <button
+                    type="button"
+                    (click)="startEditDb(db.name); $event.stopPropagation()"
+                    class="btn-secondary p-2"
+                  >
+                    <mat-icon fontIcon="edit" class="h-5! w-5! min-w-5 text-xl!" />
+                  </button>
+                  <button
+                    type="button"
+                    (click)="deleteDatabase(db.name); $event.stopPropagation()"
+                    class="btn-danger p-2"
+                  >
+                    <mat-icon fontIcon="delete" class="h-5! w-5! min-w-5 text-xl!" />
+                  </button>
+                </div>
               </div>
             </div>
           } @empty {
-            <div
-              class="rounded-xl border border-[var(--border-subtle)] bg-transparent p-8 text-center"
-            >
-              <p class="text-sm text-[var(--text-muted)]">No databases added</p>
-              <p class="mt-1 text-xs text-[var(--text-dim)]">Click "Add Database" to add one</p>
-            </div>
+            <app-empty-state
+              icon="folder_open"
+              title="No databases found"
+              message="Click 'Add Database' to add one"
+              actionLabel="Add Database"
+              actionIcon="add"
+              (action)="showAddDbModal.set(true)"
+            />
           }
         </div>
       </div>

@@ -8,18 +8,21 @@ import {
 } from "@angular/core";
 import { Router } from "@angular/router";
 import { MatIconModule } from "@angular/material/icon";
-import { ConnectionCardComponent } from "@pages/connections/connection-card/connection-card.component";
+
 import { ConnectionStateService } from "@services/services.connection-state.service";
 import { DataStoreService } from "@core/services/unified-storage.service";
 import { ConnectionSummary } from "@entities/entities.connection.config";
 import { ConfirmService } from "@shared/services/confirm.service";
 import { withErrorHandling } from "@shared/utils/error-handler.utils";
 import { ConnectionFormService } from "@services/services.connection-form.service";
+import { ProviderUtils } from "@shared/utils/provider.utils";
+import { StatsCardComponent } from "@shared/components/stats-card/stats-card.component";
+import { EmptyStateComponent } from "@shared/components/empty-state/empty-state.component";
 @Component({
   selector: "app-connections",
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ConnectionCardComponent, MatIconModule],
+  imports: [MatIconModule, StatsCardComponent, EmptyStateComponent],
   templateUrl: "./connections.view.html",
 })
 export class ConnectionsComponent implements OnInit {
@@ -30,6 +33,7 @@ export class ConnectionsComponent implements OnInit {
   private confirm = inject(ConfirmService);
   private connectionFormService = inject(ConnectionFormService);
   private cdr = inject(ChangeDetectorRef);
+  private providerUtils = inject(ProviderUtils);
   connections = this.store.connections;
   private readonly page = "Connections";
   get connectionsEmpty(): boolean {
@@ -41,6 +45,9 @@ export class ConnectionsComponent implements OnInit {
       toast: true,
       errorMessage: "Failed to load connections",
     });
+  }
+  getProviderIcon(provider: string): string {
+    return this.providerUtils.getProviderIcon(provider);
   }
   onConnect(connection: ConnectionSummary): void {
     this.connState.setActiveConnection(connection);

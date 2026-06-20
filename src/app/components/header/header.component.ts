@@ -12,6 +12,7 @@ import { filter, Subscription } from "rxjs";
 import { MatIconModule } from "@angular/material/icon";
 import { ThemeService } from "@shared/services/theme.service";
 import { ConnectionStateService } from "@services/services.connection-state.service";
+import { ProviderUtils } from "@shared/utils/provider.utils";
 
 interface Breadcrumb {
   label: string;
@@ -30,6 +31,7 @@ export class AppHeaderComponent implements OnInit, OnDestroy {
   private locationService = inject(Location);
   private themeService = inject(ThemeService);
   private connectionState = inject(ConnectionStateService);
+  private providerUtils = inject(ProviderUtils);
   private routerSub?: Subscription;
 
   pageTitle = signal("ZenithDB");
@@ -125,6 +127,31 @@ export class AppHeaderComponent implements OnInit, OnDestroy {
 
   toggleTheme(): void {
     this.themeService.toggle();
+  }
+
+  getProviderIcon(): string {
+    const provider = this.connectionState.activeProvider();
+    return provider ? this.providerUtils.getProviderIcon(provider) : "storage";
+  }
+
+  getActiveProvider(): string {
+    const provider = this.connectionState.activeProvider();
+    if (!provider) return "";
+    return provider.charAt(0).toUpperCase() + provider.slice(1);
+  }
+
+  getProviderBadgeClass(): string {
+    const provider = this.connectionState.activeProvider();
+    if (!provider) return "";
+    const colorMap: Record<string, string> = {
+      json: "bg-yellow-500/20 text-yellow-500",
+      mongo: "bg-green-500/20 text-green-500",
+      redis: "bg-red-500/20 text-red-500",
+      postgres: "bg-blue-500/20 text-blue-500",
+      sqlite: "bg-slate-500/20 text-slate-400",
+      mysql: "bg-[var(--accent)]/20 text-[var(--accent)]",
+    };
+    return colorMap[provider] || "bg-gray-500/20 text-gray-400";
   }
 
   ngOnDestroy(): void {

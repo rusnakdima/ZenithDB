@@ -1,0 +1,15 @@
+<div class="stats-card rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-elevated)] p-5">
+  <div class="flex items-center gap-4">
+    <div class="flex h-12 w-12 items-center justify-center rounded-xl" [class]="iconBgClass">
+      <mat-icon [fontIcon]="icon" class="h-6 w-6 min-w-6 text-2xl!" [class]="iconColorClass" />
+    </div>
+    <div class="flex flex-col">
+      <span class="text-xs font-medium tracking-wider text-[var(--text-muted)] uppercase">
+        {{ label }}
+      </span>
+      <span class="mt-1 font-mono text-2xl font-bold text-[var(--text-main)]">
+        {{ value }}
+      </span>
+    </div>
+  </div>
+</div>

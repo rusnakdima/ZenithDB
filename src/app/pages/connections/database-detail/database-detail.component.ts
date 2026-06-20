@@ -23,11 +23,19 @@ import { QUERY_CONSTANTS } from "@shared/utils/constants";
 import { AddDatabasePathComponent } from "../add-database-path/add-database-path.component";
 import { Subscription } from "rxjs";
 import { filter, distinctUntilChanged } from "rxjs/operators";
+import { StatsCardComponent } from "@shared/components/stats-card/stats-card.component";
+import { EmptyStateComponent } from "@shared/components/empty-state/empty-state.component";
 @Component({
   selector: "app-database-detail",
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatIconModule, FormsModule, AddDatabasePathComponent],
+  imports: [
+    MatIconModule,
+    FormsModule,
+    AddDatabasePathComponent,
+    StatsCardComponent,
+    EmptyStateComponent,
+  ],
   templateUrl: "./database-detail.component.html",
 })
 export class DatabaseDetailComponent implements OnInit, OnDestroy {

@@ -30,6 +30,8 @@ import { findById } from "@shared/utils/array.utils";
 import { AddDatabasePathComponent } from "../add-database-path/add-database-path.component";
 import { Subscription } from "rxjs";
 import { distinctUntilChanged, debounceTime } from "rxjs/operators";
+import { StatsCardComponent } from "@shared/components/stats-card/stats-card.component";
+import { EmptyStateComponent } from "@shared/components/empty-state/empty-state.component";
 interface DbNode {
   id?: number;
   name: string;
@@ -39,7 +41,13 @@ interface DbNode {
   selector: "app-connection-detail",
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ConnectionStatusBadgeComponent, MatIconModule, FormsModule, AddDatabasePathComponent],
+  imports: [
+    MatIconModule,
+    FormsModule,
+    AddDatabasePathComponent,
+    StatsCardComponent,
+    EmptyStateComponent,
+  ],
   templateUrl: "./connection-detail.component.html",
 })
 export class ConnectionDetailComponent implements OnInit, OnDestroy {

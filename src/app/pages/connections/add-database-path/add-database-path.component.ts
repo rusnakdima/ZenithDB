@@ -1,11 +1,10 @@
 import { Component, input, output, signal, inject } from "@angular/core";
-import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
 import { ToastService } from "@services/services.toast.service";
 @Component({
   selector: "app-add-database-path",
   standalone: true,
-  imports: [FormsModule, MatIconModule],
+  imports: [MatIconModule],
   templateUrl: "./add-database-path.component.html",
 })
 export class AddDatabasePathComponent {
@@ -54,5 +53,17 @@ export class AddDatabasePathComponent {
   }
   onCancel() {
     this.cancelled.emit();
+  }
+  onDbNameInput(event: Event): void {
+    const value = (event.target as HTMLInputElement).value;
+    this.dbName.set(value);
+  }
+  onDbPathInput(event: Event): void {
+    const value = (event.target as HTMLInputElement).value;
+    this.dbPath.set(value);
+  }
+  testSetValues(name: string, path: string): void {
+    this.dbName.set(name);
+    this.dbPath.set(path);
   }
 }

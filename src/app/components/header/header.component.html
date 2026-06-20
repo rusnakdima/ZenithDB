@@ -16,12 +16,29 @@
         <div
           class="flex h-9 items-center gap-2 rounded-full border border-[var(--border-visible)] bg-[var(--bg-elevated)] px-3 py-2 shadow-lg backdrop-blur-xl"
         >
-          <div
-            class="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-[var(--accent)] to-[#FF8533]"
-          >
-            <mat-icon class="h-4! w-4! text-base! text-black!" fontIcon="storage" />
-          </div>
+          @if (
+            pageTitle() !== "Connections" && pageTitle() !== "Query" && pageTitle() !== "Settings"
+          ) {
+            <div
+              class="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-[var(--accent)] to-[#FF8533]"
+            >
+              <mat-icon class="h-4! w-4! text-base! text-black!" [fontIcon]="getProviderIcon()" />
+            </div>
+          }
           <h1 class="text-base font-semibold text-[var(--text-main)]">{{ pageTitle() }}</h1>
+          @if (
+            pageTitle() !== "Connections" &&
+            pageTitle() !== "Query" &&
+            pageTitle() !== "Settings" &&
+            getActiveProvider()
+          ) {
+            <span
+              class="rounded-full px-2 py-0.5 text-xs font-semibold"
+              [ngClass]="getProviderBadgeClass()"
+            >
+              {{ getActiveProvider() }}
+            </span>
+          }
         </div>
 
         @if (breadcrumbs().length > 0) {

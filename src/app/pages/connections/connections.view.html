@@ -1,22 +1,24 @@
-<div class="page-container p-6">
-  <header class="mb-6 flex items-center justify-between">
+<div class="flex flex-col gap-6 p-6">
+  <div class="flex items-center justify-between">
     <div>
-      <h1 class="text-2xl font-bold">My <span class="text-[var(--accent)]">Connections</span></h1>
+      <h1 class="text-2xl font-bold text-white">
+        My <span class="text-[var(--accent)]">Connections</span>
+      </h1>
       <p class="mt-1 text-sm text-[var(--text-dim)]">
         Manage and monitor your database clusters across regions.
       </p>
     </div>
     <div class="flex items-center gap-3">
-      <button class="connections-btn-secondary" (click)="onRefresh()">
-        <mat-icon fontIcon="refresh" class="h-5! w-5!" />
+      <button class="btn-secondary" (click)="onRefresh()">
+        <mat-icon fontIcon="refresh" class="h-5! w-5! min-w-5 text-xl!" />
         Refresh
       </button>
-      <button class="connections-btn" (click)="openNewConnection()">
-        <mat-icon fontIcon="add" class="h-5! w-5!" />
+      <button class="btn-accent" (click)="openNewConnection()">
+        <mat-icon fontIcon="add" class="h-5! w-5! min-w-5 text-xl!" />
         New Connection
       </button>
     </div>
-  </header>
+  </div>
 
   @if (loading()) {
     <div class="flex items-center justify-center gap-3 py-12 text-[var(--text-dim)]">
@@ -26,29 +28,79 @@
   }
 
   @if (!loading() && connections().length === 0) {
-    <div class="empty-state">
-      <div class="empty-icon">
-        <mat-icon fontIcon="link_off" class="h-12! w-12! text-xl!" />
-      </div>
-      <h3 class="empty-title">No Connections Yet</h3>
-      <p class="empty-description">Create your first database connection to get started.</p>
-      <button class="connections-btn" (click)="openNewConnection()">
-        <mat-icon fontIcon="add" class="h-5! w-5!" />
-        Create Connection
-      </button>
-    </div>
+    <app-empty-state
+      icon="link_off"
+      title="No Connections Yet"
+      message="Create your first database connection to get started."
+      actionLabel="Create Connection"
+      actionIcon="add"
+      (action)="openNewConnection()"
+    />
   }
 
   @if (!loading() && connections().length > 0) {
-    <div class="connections-grid">
+    <div class="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-4">
+      <app-stats-card
+        label="Connections"
+        [value]="connections().length"
+        icon="link"
+        iconBgClass="bg-[var(--accent)]"
+        iconColorClass="text-black"
+      />
+    </div>
+
+    <div class="flex items-center justify-between">
+      <h3 class="text-lg font-semibold text-[var(--text-main)]">Connections</h3>
+    </div>
+
+    <div class="flex flex-col gap-3">
       @for (connection of connections(); track connection.id) {
-        <app-connection-card
-          [connection]="connection"
-          (connect)="onConnect($event)"
-          (delete)="onDelete($event)"
-          (edit)="onEdit($event)"
-          (duplicate)="onDuplicate($event)"
-        />
+        <div
+          class="group cursor-pointer rounded-xl border border-[var(--border-visible)] bg-[var(--bg-card)] p-4 transition-all duration-200 hover:border-[var(--accent)] hover:bg-[var(--bg-elevated)]"
+          (click)="onConnect(connection)"
+        >
+          <div class="flex items-center gap-4">
+            <div
+              class="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--accent)]/10"
+            >
+              <mat-icon
+                [fontIcon]="getProviderIcon(connection.provider)"
+                class="h-6 w-6 min-w-6 text-2xl! text-[var(--accent)]"
+              />
+            </div>
+            <div class="flex flex-1 items-center gap-3">
+              <div class="flex flex-col">
+                <span class="font-medium text-[var(--text-main)]">{{ connection.name }}</span>
+                <span class="text-xs text-[var(--text-dim)]">{{ connection.provider }}</span>
+              </div>
+            </div>
+            <div
+              class="flex items-center gap-2 opacity-0 transition-opacity group-hover:opacity-100"
+            >
+              <button
+                type="button"
+                (click)="onEdit(connection); $event.stopPropagation()"
+                class="btn-secondary p-2"
+              >
+                <mat-icon fontIcon="edit" class="h-5! w-5! min-w-5 text-xl!" />
+              </button>
+              <button
+                type="button"
+                (click)="onDuplicate(connection); $event.stopPropagation()"
+                class="btn-secondary p-2"
+              >
+                <mat-icon fontIcon="content_copy" class="h-5! w-5! min-w-5 text-xl!" />
+              </button>
+              <button
+                type="button"
+                (click)="onDelete(connection); $event.stopPropagation()"
+                class="btn-danger p-2"
+              >
+                <mat-icon fontIcon="delete" class="h-5! w-5! min-w-5 text-xl!" />
+              </button>
+            </div>
+          </div>
+        </div>
       }
     </div>
   }

@@ -1,144 +1,128 @@
 <div class="connections-container min-h-0 flex-1">
   <div class="connections-max-width">
     @if (loading()) {
-      <div class="glass-card p-12">
-        <div class="flex flex-col items-center justify-center gap-4">
-          <div
-            class="h-16 w-16 animate-spin rounded-full border-4 border-[var(--border-subtle)] border-t-[var(--border-subtle)]"
-          ></div>
-          <p class="text-sm text-[var(--text-dim)]">Loading collections...</p>
-        </div>
+      <div class="flex items-center justify-center gap-3 py-12 text-[var(--text-dim)]">
+        <mat-icon fontIcon="sync" class="h-6! w-5! text-xl!" />
+        <span>Loading collections...</span>
       </div>
     } @else {
-      <div class="mb-4 flex items-center gap-2">
-        <button (click)="openCreateCollectionModal()" class="form-btn form-btn-secondary">
-          <mat-icon fontIcon="add" class="mr-2 h-5! w-5! text-xl!" />
+      <div class="flex flex-wrap items-center gap-3">
+        <button (click)="openCreateCollectionModal()" class="btn-accent">
+          <mat-icon fontIcon="add" class="h-5! w-5! min-w-5 text-xl!" />
           Create Collection
         </button>
-        <button (click)="refresh()" class="form-btn form-btn-secondary">
-          <mat-icon fontIcon="refresh" class="mr-2 h-5! w-5! text-xl!" />
+        <button (click)="refresh()" class="btn-secondary">
+          <mat-icon fontIcon="refresh" class="h-5! w-5! min-w-5 text-xl!" />
           Refresh
         </button>
       </div>
 
-      <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <div class="glass-card p-6">
-          <span class="text-xs font-semibold tracking-wider text-[var(--text-dim)] uppercase"
-            >Collections</span
-          >
-          <div class="mt-3 flex items-center gap-2">
-            <mat-icon fontIcon="storage" class="h-5! w-5! text-xl! text-[var(--accent)]" />
-            <span class="font-mono text-lg text-[var(--text-main)]">{{
-              collections().length
-            }}</span>
-          </div>
-        </div>
-
-        <div class="glass-card p-6">
-          <span class="text-xs font-semibold tracking-wider text-[var(--text-dim)] uppercase"
-            >Total Documents</span
-          >
-          <div class="mt-3 flex items-center gap-2">
-            <mat-icon fontIcon="description" class="h-5! w-5! text-xl! text-[var(--accent)]" />
-            <span class="font-mono text-lg text-[var(--text-main)]">{{ totalDocuments() }}</span>
-          </div>
-        </div>
+      <div class="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-4">
+        <app-stats-card
+          label="Collections"
+          [value]="collections().length"
+          icon="storage"
+          iconBgClass="bg-[var(--accent)]"
+          iconColorClass="text-black"
+        />
+        <app-stats-card
+          label="Total Documents"
+          [value]="totalDocuments()"
+          icon="description"
+          iconBgClass="bg-green-500"
+          iconColorClass="text-white"
+        />
       </div>
 
       @if (collections().length > 0) {
-        <div class="mt-8">
-          <h3 class="mb-4 text-lg font-semibold text-[var(--text-main)]">Collections</h3>
-          <div class="rounded-xl border border-[var(--accent)] bg-transparent">
-            <table class="w-full">
-              <thead class="border-b border-[var(--border-subtle)] bg-transparent">
-                <tr
-                  class="text-left text-xs font-semibold tracking-wider text-[var(--text-dim)] uppercase"
-                >
-                  <th class="px-4 py-3">Name</th>
-                  <th class="px-4 py-3 text-right">Documents</th>
-                  <th class="px-4 py-3 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-[var(--border-subtle)]">
-                @for (col of collections(); track col.name) {
-                  <tr class="border-b border-[var(--border-subtle)] hover:bg-transparent">
-                    <td class="px-4 py-3">
-                      <div class="flex items-center gap-3">
-                        @if (editingCollection() === col.name) {
-                          <input
-                            type="text"
-                            [(ngModel)]="editCollectionName"
-                            class="form-input flex-1"
-                            (keyup.enter)="saveEditCollection()"
-                            (keyup.escape)="cancelEditCollection()"
-                          />
-                        } @else {
-                          <mat-icon
-                            fontIcon="insert_drive_file"
-                            class="h-5! w-5! text-xl! text-[var(--accent)]/70"
-                          />
-                          <span
-                            class="cursor-pointer font-medium text-[var(--text-main)]"
-                            (click)="openCollection(col.name)"
-                            >{{ col.name }}</span
-                          >
-                        }
-                      </div>
-                    </td>
-                    <td class="px-4 py-3 text-right">
-                      <span class="font-mono text-sm text-[var(--text-dim)]">{{ col.count }}</span>
-                    </td>
-                    <td class="px-4 py-3 text-right">
-                      @if (editingCollection() === col.name) {
-                        <button
-                          (click)="saveEditCollection()"
-                          class="rounded p-1 text-[var(--accent)] hover:bg-transparent"
-                        >
-                          <mat-icon fontIcon="check" class="h-5! w-5! text-xl!" />
-                        </button>
-                        <button
-                          (click)="cancelEditCollection()"
-                          class="rounded p-1 text-[var(--text-dim)] hover:bg-transparent"
-                        >
-                          <mat-icon fontIcon="close" class="h-5! w-5! text-xl!" />
-                        </button>
-                      } @else {
-                        <button
-                          (click)="startEditCollection(col.name)"
-                          class="rounded p-1 text-[var(--text-dim)] hover:text-[var(--accent)]"
-                        >
-                          <mat-icon fontIcon="edit" class="h-5! w-5! text-xl!" />
-                        </button>
-                        <button
-                          (click)="deleteCollection(col.name)"
-                          class="rounded p-1 text-[var(--text-dim)] hover:text-[var(--color-error)]"
-                        >
-                          <mat-icon fontIcon="delete" class="h-5! w-5! text-xl!" />
-                        </button>
-                        <button
+        <div class="mt-8 flex flex-col gap-4">
+          <h3 class="text-lg font-semibold text-[var(--text-main)]">Collections</h3>
+          <div class="flex flex-col gap-3">
+            @for (col of collections(); track col.name) {
+              <div
+                class="group cursor-pointer rounded-xl border border-[var(--border-visible)] bg-[var(--bg-card)] p-4 transition-all duration-200 hover:border-[var(--accent)] hover:bg-[var(--bg-elevated)]"
+                [class.border-[var(--accent)]]="editingCollection() === col.name"
+              >
+                <div class="flex items-center gap-4">
+                  <div
+                    class="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--accent)]/10"
+                  >
+                    <mat-icon
+                      fontIcon="insert_drive_file"
+                      class="h-6 w-6 min-w-6 text-2xl! text-[var(--accent)]"
+                    />
+                  </div>
+                  <div class="flex flex-1 items-center gap-3">
+                    @if (editingCollection() === col.name) {
+                      <input
+                        type="text"
+                        [(ngModel)]="editCollectionName"
+                        class="form-input flex-1"
+                        (keyup.enter)="saveEditCollection()"
+                        (keyup.escape)="cancelEditCollection()"
+                        (click)="$event.stopPropagation()"
+                      />
+                    } @else {
+                      <div class="flex flex-col">
+                        <span
+                          class="font-medium text-[var(--text-main)]"
                           (click)="openCollection(col.name)"
-                          class="rounded-lg px-3 py-1 text-xs font-medium text-[var(--accent)] hover:bg-transparent"
+                          >{{ col.name }}</span
                         >
-                          Explore
-                        </button>
-                      }
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
+                        <span class="text-xs text-[var(--text-muted)]">{{ col.count }} docs</span>
+                      </div>
+                    }
+                  </div>
+                  @if (editingCollection() === col.name) {
+                    <div class="flex items-center gap-1">
+                      <button
+                        (click)="saveEditCollection(); $event.stopPropagation()"
+                        class="btn-accent p-2"
+                      >
+                        <mat-icon fontIcon="check" class="h-5! w-5! min-w-5 text-xl!" />
+                      </button>
+                      <button
+                        (click)="cancelEditCollection(); $event.stopPropagation()"
+                        class="btn-secondary p-2"
+                      >
+                        <mat-icon fontIcon="close" class="h-5! w-5! min-w-5 text-xl!" />
+                      </button>
+                    </div>
+                  } @else {
+                    <div
+                      class="flex items-center gap-2 opacity-0 transition-opacity group-hover:opacity-100"
+                    >
+                      <button
+                        (click)="startEditCollection(col.name); $event.stopPropagation()"
+                        class="btn-secondary p-2"
+                      >
+                        <mat-icon fontIcon="edit" class="h-5! w-5! min-w-5 text-xl!" />
+                      </button>
+                      <button
+                        (click)="deleteCollection(col.name); $event.stopPropagation()"
+                        class="btn-danger p-2"
+                      >
+                        <mat-icon fontIcon="delete" class="h-5! w-5! min-w-5 text-xl!" />
+                      </button>
+                      <button
+                        (click)="openCollection(col.name); $event.stopPropagation()"
+                        class="btn-accent"
+                      >
+                        Explore
+                      </button>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
           </div>
         </div>
       } @else {
-        <div class="mt-8 rounded-xl border border-[var(--accent)] bg-transparent p-12">
-          <div class="flex flex-col items-center justify-center gap-4 text-center">
-            <mat-icon
-              fontIcon="folder_open"
-              class="h-12! w-12! text-xl! text-[var(--text-muted)]"
-            />
-            <p class="text-[var(--text-dim)]">No collections found in this database.</p>
-          </div>
-        </div>
+        <app-empty-state
+          icon="folder_open"
+          title="No collections found"
+          message="This database doesn't have any collections yet."
+        />
       }
     }
   </div>
@@ -161,10 +145,8 @@
         />
       </div>
       <div class="flex justify-end gap-3">
-        <button (click)="closeCreateCollectionModal()" class="form-btn form-btn-secondary">
-          Cancel
-        </button>
-        <button (click)="createCollection()" class="form-btn form-btn-primary">Create</button>
+        <button (click)="closeCreateCollectionModal()" class="btn-secondary">Cancel</button>
+        <button (click)="createCollection()" class="btn-accent">Create</button>
       </div>
     </div>
   </div>
