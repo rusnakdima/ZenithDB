@@ -365,14 +365,14 @@ export class DataTableGridComponent implements OnInit, OnChanges, OnDestroy, Aft
   }
   getTypeColor(dataType: string): string {
     const t = dataType.toLowerCase();
-    if (t === "string" || t === "text") return "text-blue-400";
+    if (t === "string" || t === "text") return "text-[var(--type-string)]";
     if (t === "number" || t === "integer" || t === "decimal" || t === "float")
-      return "text-[var(--accent)]";
-    if (t === "boolean") return "text-[var(--accent)]";
-    if (t === "date" || t === "datetime" || t === "timestamp") return "text-purple-400";
-    if (t === "object" || t === "json") return "text-yellow-400";
-    if (t === "array") return "text-pink-400";
-    return "text-slate-400";
+      return "text-[var(--type-number)]";
+    if (t === "boolean") return "text-[var(--type-boolean)]";
+    if (t === "date" || t === "datetime" || t === "timestamp") return "text-[var(--type-date)]";
+    if (t === "object" || t === "json") return "text-[var(--type-object)]";
+    if (t === "array") return "text-[var(--type-array)]";
+    return "text-[var(--type-null)]";
   }
   onPageChange(newPage: number) {
     this.page = newPage;

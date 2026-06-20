@@ -8,6 +8,7 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   computed,
+  effect,
 } from "@angular/core";
 import { Router, ActivatedRoute } from "@angular/router";
 import { FormsModule } from "@angular/forms";
@@ -67,6 +68,11 @@ export class ConnectionFormComponent implements OnInit {
   saving = signal(false);
   constructor() {
     this.checkFormState();
+    effect(() => {
+      if (this.connectionFormService.isOpen()) {
+        this.checkFormState();
+      }
+    });
   }
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get("id");
@@ -118,6 +124,7 @@ export class ConnectionFormComponent implements OnInit {
   }
   onClose() {
     this.closed.emit();
+    this.isFormOpen.set(false);
     this.connectionFormService.close();
   }
   private async loadConnection(id: string, forDuplicate: boolean) {

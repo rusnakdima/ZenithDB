@@ -270,6 +270,13 @@
   --border-light: rgba(255, 255, 255, 0.1);
   --border-subtle: rgba(255, 255, 255, 0.06);
   --border-visible: rgba(255, 255, 255, 0.12);
+  --type-string: #60a5fa;
+  --type-number: #34d399;
+  --type-boolean: #a78bfa;
+  --type-date: #f472b6;
+  --type-object: #fbbf24;
+  --type-array: #fb923c;
+  --type-null: #94a3b8;
   color-scheme: dark;
 }
 
@@ -314,6 +321,13 @@ html.light {
   --border-light: rgba(0, 0, 0, 0.08);
   --border-subtle: rgba(0, 0, 0, 0.06);
   --border-visible: rgba(0, 0, 0, 0.12);
+  --type-string: #2563eb;
+  --type-number: #059669;
+  --type-boolean: #7c3aed;
+  --type-date: #db2777;
+  --type-object: #d97706;
+  --type-array: #ea580c;
+  --type-null: #64748b;
   color-scheme: light;
 }
 
@@ -795,7 +809,7 @@ html.light .json-key {
      Filter Bar & Data Tabs
      ============================================ */
   .filter-bar {
-    @apply flex flex-wrap items-center gap-3 border-b border-[var(--accent)] bg-transparent p-3;
+    @apply flex flex-wrap items-center gap-3 border-b border-[var(--border-subtle)] bg-transparent p-3;
   }
   .dark .filter-bar,
   html.dark .filter-bar {
@@ -803,7 +817,7 @@ html.light .json-key {
   }
 
   .data-tabs-bar {
-    @apply flex shrink-0 items-center gap-1 border-b border-[var(--accent)] bg-transparent p-2 pt-0;
+    @apply flex shrink-0 items-center gap-1 border-b border-[var(--border-subtle)] bg-transparent p-2 pt-0;
   }
   .dark .data-tabs-bar,
   html.dark .data-tabs-bar {
@@ -814,17 +828,17 @@ html.light .json-key {
     @apply flex cursor-pointer items-center gap-2 rounded-t-lg border border-b-0 border-transparent bg-transparent px-3 py-2 text-xs text-slate-500 transition-colors duration-150;
   }
   .data-tab:hover {
-    @apply bg-transparent text-[var(--accent)];
+    @apply bg-transparent text-[var(--text-main)];
   }
   .dark .data-tab:hover {
     @apply bg-transparent;
   }
 
   .data-tab-active {
-    @apply border-[var(--accent)] border-b-white bg-white text-[var(--accent)];
+    @apply border-[var(--border-visible)] border-b-white bg-white text-[var(--text-main)];
   }
   .dark .data-tab-active {
-    @apply border-[var(--accent)] border-b-[var(--bg-card)] bg-[var(--bg-card)] text-[var(--accent)];
+    @apply border-[var(--border-visible)] border-b-[var(--bg-card)] bg-[var(--bg-card)] text-[var(--text-main)];
   }
 
   /* ============================================
@@ -1057,21 +1071,21 @@ html.light .json-key {
   /* Header Cells */
   .data-table-grid > .header-cell {
     @apply sticky flex items-center overflow-hidden;
-    @apply h-11 gap-2 border-b-2 border-[var(--accent)] bg-[var(--bg-elevated)]/80 px-3 backdrop-blur-sm;
+    @apply h-11 gap-2 border-b-2 border-[var(--border-subtle)] bg-transparent px-3;
     top: 0;
     z-index: 20;
   }
 
   .data-table-grid > .header-cell.checkbox-cell {
     @apply sticky flex w-10 max-w-10 min-w-10 shrink-0 justify-center p-0;
-    @apply border-b-2 border-[var(--accent)] bg-[var(--bg-elevated)]/80 backdrop-blur-sm;
+    @apply border-b-2 border-[var(--border-subtle)] bg-transparent;
     left: 0;
     z-index: 30;
   }
 
   .data-table-grid > .header-cell.actions-cell {
-    @apply sticky flex w-10 max-w-10 min-w-10 shrink-0 justify-center p-0;
-    @apply border-b-2 border-[var(--accent)] bg-[var(--bg-elevated)]/80 backdrop-blur-sm;
+    @apply sticky flex w-20 max-w-20 min-w-20 shrink-0 justify-center p-0;
+    @apply border-b-2 border-[var(--border-subtle)] bg-transparent;
     right: 0;
     z-index: 30;
   }
@@ -1080,34 +1094,34 @@ html.light .json-key {
   .data-table-grid > .data-cell {
     @apply flex items-center overflow-hidden;
     @apply h-11 truncate px-3 font-mono text-[13px] text-[var(--text-main)];
-    border-bottom: 1px solid var(--accent);
+    border-bottom: 1px solid var(--border-subtle);
   }
 
   .data-table-grid > .data-cell.checkbox-cell {
     @apply sticky flex w-10 max-w-10 min-w-10 shrink-0 justify-center p-0;
-    @apply border-b border-[var(--accent)] bg-[var(--bg-elevated)]/50 backdrop-blur-sm;
+    @apply border-b border-[var(--border-subtle)] bg-transparent backdrop-blur-sm;
     left: 0;
     z-index: 25;
   }
 
   .data-table-grid > .data-cell.actions-cell {
-    @apply sticky flex w-10 max-w-10 min-w-10 shrink-0 justify-center p-0;
-    @apply border-b border-[var(--accent)] bg-[var(--bg-elevated)]/50 backdrop-blur-sm;
+    @apply sticky flex w-20 max-w-20 min-w-20 shrink-0 justify-center p-0;
+    @apply border-b border-[var(--border-subtle)] bg-transparent backdrop-blur-sm;
     right: 0;
     z-index: 25;
   }
 
   /* Row States */
   .data-table-grid > .data-cell.zebra {
-    background-color: rgba(255, 255, 255, 0.02);
+    background-color: rgba(255, 255, 255, 0.015);
   }
   .data-table-grid > .data-cell.checkbox-cell.zebra,
   .data-table-grid > .data-cell.actions-cell.zebra {
-    @apply bg-[var(--bg-elevated)];
+    @apply bg-transparent;
   }
 
   .data-table-grid > .data-cell.hovered {
-    background-color: var(--accent-50);
+    background-color: rgba(255, 255, 255, 0.04);
   }
   .data-table-grid > .data-cell.checkbox-cell.hovered,
   .data-table-grid > .data-cell.actions-cell.hovered {
@@ -1115,11 +1129,11 @@ html.light .json-key {
   }
 
   .data-table-grid > .data-cell.selected {
-    background-color: var(--accent-100);
+    background-color: rgba(255, 255, 255, 0.07);
   }
   .data-table-grid > .data-cell.checkbox-cell.selected,
   .data-table-grid > .data-cell.actions-cell.selected {
-    background-color: var(--accent-200);
+    background-color: var(--bg-elevated);
   }
 
   /* Resize Handle */
@@ -1233,10 +1247,15 @@ html.light .json-key {
   }
 
   /* Cell Types */
-  .checkbox-cell,
-  .actions-cell {
+  .checkbox-cell {
     @apply relative shrink-0 justify-center;
     @apply w-10 max-w-10 min-w-10 bg-[var(--bg-elevated)];
+    z-index: 10;
+  }
+
+  .actions-cell {
+    @apply relative shrink-0 justify-center;
+    @apply w-20 max-w-20 min-w-20 bg-[var(--bg-elevated)];
     z-index: 10;
   }
 
