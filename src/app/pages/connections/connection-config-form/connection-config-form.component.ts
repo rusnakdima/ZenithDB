@@ -13,7 +13,6 @@ import {
 import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
 import { ProviderType } from "@entities/entities.provider.entity";
-
 export interface ConnectionFormData {
   name: string;
   path: string;
@@ -24,7 +23,6 @@ export interface ConnectionFormData {
   database: string;
   useSsl: boolean;
 }
-
 @Component({
   selector: "app-connection-config-form",
   standalone: true,
@@ -44,10 +42,8 @@ export class ConnectionConfigFormComponent implements OnInit, OnChanges {
     database: "",
     useSsl: false,
   });
-
   browseFile = output<boolean>();
   dataChange = output<ConnectionFormData>();
-
   data: ConnectionFormData = {
     name: "",
     path: "",
@@ -58,9 +54,7 @@ export class ConnectionConfigFormComponent implements OnInit, OnChanges {
     database: "",
     useSsl: false,
   };
-
   private isFirstInit = true;
-
   ngOnInit() {
     this.data = { ...this.initialData() };
     this.isFirstInit = false;
@@ -68,7 +62,6 @@ export class ConnectionConfigFormComponent implements OnInit, OnChanges {
       this.setDefaultsForProvider();
     }
   }
-
   ngOnChanges(changes: SimpleChanges): void {
     if (changes["initialData"] && !this.isFirstInit) {
       const newData = this.initialData();
@@ -87,7 +80,6 @@ export class ConnectionConfigFormComponent implements OnInit, OnChanges {
       this.resetDataForProvider();
     }
   }
-
   private resetDataForProvider(): void {
     const currentName = this.data.name;
     this.data = {
@@ -102,7 +94,6 @@ export class ConnectionConfigFormComponent implements OnInit, OnChanges {
     };
     this.setDefaultsForProvider();
   }
-
   setDefaultsForProvider(): void {
     switch (this.provider()) {
       case "mongo":
@@ -124,15 +115,12 @@ export class ConnectionConfigFormComponent implements OnInit, OnChanges {
     }
     this.emitChange();
   }
-
   onFieldChange(): void {
     this.emitChange();
   }
-
   private emitChange(): void {
     this.dataChange.emit({ ...this.data });
   }
-
   isValid(): boolean {
     if (!this.data.name.trim()) return false;
     switch (this.provider()) {

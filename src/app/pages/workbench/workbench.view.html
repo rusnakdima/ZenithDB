@@ -1,59 +1,87 @@
-<div class="workbench-page flex h-screen flex-col">
+<div class="workbench-page">
+  <!-- Mobile Content Tabs -->
+  <div class="flex border-b border-[var(--border-subtle)] bg-[var(--bg-sidebar)] lg:hidden">
+    <button
+      (click)="setMobileView('editor')"
+      class="flex-1 py-3 text-sm font-medium transition-colors"
+      [class.text-[var(--accent)]]="mobileView() === 'editor'"
+      [class.text-[var(--text-dim)]]="mobileView() !== 'editor'"
+      [class.border-b-2]="mobileView() === 'editor'"
+      [class.border-[var(--accent)]]="mobileView() === 'editor'"
+    >
+      Editor
+    </button>
+    <button
+      (click)="setMobileView('results')"
+      class="flex-1 py-3 text-sm font-medium transition-colors"
+      [class.text-[var(--accent)]]="mobileView() === 'results'"
+      [class.text-[var(--text-dim)]]="mobileView() !== 'results'"
+      [class.border-b-2]="mobileView() === 'results'"
+      [class.border-[var(--accent)]]="mobileView() === 'results'"
+    >
+      Results
+    </button>
+  </div>
+
   <!-- toolbar -->
-  <div
-    class="toolbar flex items-center gap-2 border-b border-[var(--border-subtle)] bg-[var(--bg-sidebar)] px-4 py-3"
-  >
-    <div class="flex items-center gap-2">
+  <div class="workbench-toolbar">
+    <div class="workbench-toolbar-group">
       <button
         (click)="runCurrentTab()"
         [disabled]="activeTab().loading || !activeTab().query.trim()"
-        class="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold text-black transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+        class="connections-btn"
       >
         @if (activeTab().loading) {
           <div
             class="h-4 w-4 animate-spin rounded-full border-2 border-black border-t-transparent"
           ></div>
         } @else {
-          <mat-icon fontIcon="play_arrow" class="h-6! w-5! text-xl!" />
+          <mat-icon fontIcon="play_arrow" class="h-5! w-5!" />
         }
-        Run
-        <span class="text-xs font-medium text-black/60">Ctrl+Enter</span>
+        <span class="hidden sm:inline">Run</span>
+        <span class="hidden text-xs font-medium text-black/60 md:inline">Ctrl+Enter</span>
       </button>
       <button
         (click)="runAllTabs()"
-        class="rounded-lg px-3 py-2 text-sm font-medium text-[var(--text-dim)] transition-colors hover:bg-transparent hover:text-[var(--text-main)]"
+        class="connections-btn-secondary px-3 py-2"
+        title="Run All Tabs"
       >
-        <mat-icon fontIcon="sync" class="h-6! w-5! text-xl!" />
+        <mat-icon fontIcon="sync" class="h-5! w-5!" />
       </button>
       <button
         (click)="formatAllSQL()"
-        class="rounded-lg px-3 py-2 text-sm font-medium text-[var(--text-dim)] transition-colors hover:bg-transparent hover:text-[var(--text-main)]"
+        class="connections-btn-secondary px-3 py-2"
+        title="Format SQL"
       >
-        <mat-icon fontIcon="format_align_left" class="h-6! w-5! text-xl!" />
+        <mat-icon fontIcon="format_align_left" class="h-5! w-5!" />
       </button>
       <button
         (click)="clearEditor()"
-        class="rounded-lg px-3 py-2 text-sm font-medium text-[var(--text-dim)] transition-colors hover:bg-transparent hover:text-[var(--text-main)]"
+        class="connections-btn-secondary px-3 py-2"
+        title="Clear Editor"
       >
-        <mat-icon fontIcon="delete" class="h-6! w-5! text-xl!" />
+        <mat-icon fontIcon="delete" class="h-5! w-5!" />
       </button>
+    </div>
+    <div class="hidden items-center gap-2 text-sm text-[var(--text-dim)] lg:flex">
+      @if (connState.activeConnectionName()) {
+        <span class="flex items-center gap-1.5">
+          <span class="h-2 w-2 animate-pulse rounded-full bg-green-500"></span>
+          {{ connState.activeConnectionName() }}
+        </span>
+      }
     </div>
   </div>
 
   <!-- tabs bar -->
-  <div
-    class="tabs-bar flex items-center gap-1 border-b border-[var(--border-subtle)] bg-[var(--bg-sidebar)]/50 px-2"
-  >
+  <div class="workbench-tabs-bar">
     <div class="flex items-center gap-1 overflow-x-auto">
       @for (tab of tabs(); track trackByTabId($index, tab)) {
         <button
           (click)="selectTab(tab.id)"
-          class="group relative flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm transition-colors"
-          [class.border-[var(--accent)]]="activeTabId() === tab.id"
-          [class.text-[var(--accent)]]="activeTabId() === tab.id"
-          [class.border-transparent]="activeTabId() !== tab.id"
-          [class.text-[var(--text-dim)]]="activeTabId() !== tab.id"
-          [class.hover:text-[var(--text-main)]]="activeTabId() !== tab.id"
+          class="workbench-tab"
+          [class.workbench-tab-active]="activeTabId() === tab.id"
+          [class.workbench-tab-inactive]="activeTabId() !== tab.id"
         >
           @if (tab.modified) {
             <span
@@ -66,7 +94,7 @@
               (click)="closeTab(tab.id, $event)"
               class="ml-1 opacity-0 transition-opacity group-hover:opacity-100"
             >
-              <mat-icon fontIcon="close" class="h-6! w-5! text-xl!" />
+              <mat-icon fontIcon="close" class="h-4! w-4!" />
             </span>
           }
         </button>
@@ -75,30 +103,38 @@
         (click)="addTab()"
         class="rounded p-1.5 text-[var(--text-dim)] transition-colors hover:bg-transparent hover:text-[var(--text-main)]"
       >
-        <mat-icon fontIcon="add" class="h-6! w-5! text-xl!" />
+        <mat-icon fontIcon="add" class="h-5! w-5!" />
       </button>
     </div>
   </div>
 
   <!-- main content -->
-  <div class="flex-1 overflow-hidden">
-    <div class="flex h-full flex-col">
-      <!-- editor -->
-      <div [style.height.px]="editorHeight()" class="overflow-hidden">
-        <app-sql-editor
-          [query]="activeTab().query || ''"
-          (queryChange)="updateQuery($event)"
-        ></app-sql-editor>
+  <div class="workbench-content">
+    <!-- editor pane (desktop always visible, mobile by tab) -->
+    <div
+      [style.display]="mobileView() === 'results' ? 'none' : 'flex'"
+      class="workbench-editor-pane lg:flex"
+      [style.height.px]="editorHeight()"
+    >
+      <div class="flex-1 overflow-hidden p-3">
+        <div class="glass-card h-full overflow-hidden">
+          <app-sql-editor
+            [query]="activeTab().query || ''"
+            (queryChange)="updateQuery($event)"
+          ></app-sql-editor>
+        </div>
       </div>
+    </div>
 
-      <!-- resize handle -->
-      <div
-        class="h-1.5 w-full cursor-row-resize bg-[var(--border-subtle)] transition-colors hover:bg-transparent"
-        (mousedown)="startResize($event)"
-      ></div>
+    <!-- resize handle (desktop only) -->
+    <div class="workbench-resize-handle hidden lg:block" (mousedown)="startResize($event)"></div>
 
-      <!-- results -->
-      <div class="flex-1 overflow-hidden">
+    <!-- results pane (desktop always visible, mobile by tab) -->
+    <div
+      [style.display]="mobileView() === 'editor' ? 'none' : 'flex'"
+      class="workbench-results-pane p-3 lg:flex"
+    >
+      <div class="glass-card flex-1 overflow-hidden">
         <app-output-console
           [results]="activeTab().results || null"
           [loading]="activeTab().loading || false"
@@ -111,14 +147,12 @@
   </div>
 
   <!-- status bar -->
-  <div
-    class="status-bar flex items-center justify-between border-t border-[var(--border-subtle)] bg-[var(--bg-sidebar)] px-4 py-1.5 text-xs text-[var(--text-dim)]"
-  >
+  <div class="workbench-status-bar">
     <div class="flex items-center gap-4">
       @if (connState.activeConnectionName()) {
         <span class="flex items-center gap-1.5">
-          <span class="h-2 w-2 rounded-full bg-green-500"></span>
-          {{ connState.activeConnectionName() }}
+          <span class="h-2 w-2 animate-pulse rounded-full bg-green-500"></span>
+          <span class="hidden sm:inline">{{ connState.activeConnectionName() }}</span>
         </span>
       }
     </div>

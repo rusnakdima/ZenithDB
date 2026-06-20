@@ -1,214 +1,133 @@
 import {
   Component,
-  inject,
-  computed,
   signal,
-  ElementRef,
-  viewChild,
+  ChangeDetectionStrategy,
+  inject,
+  OnInit,
   OnDestroy,
 } from "@angular/core";
-import { Router, NavigationEnd } from "@angular/router";
-import { filter, map } from "rxjs/operators";
+import { CommonModule, Location } from "@angular/common";
+import { Router, NavigationEnd, RouterModule } from "@angular/router";
+import { filter, Subscription } from "rxjs";
 import { MatIconModule } from "@angular/material/icon";
-import { ConnectionStateService } from "@services/services.connection-state.service";
 import { ThemeService } from "@shared/services/theme.service";
-import { DataStoreService } from "@core/services/unified-storage.service";
-import { ErrorHandlerService } from "@shared/services/error-handler.service";
-import { toSignal } from "@angular/core/rxjs-interop";
-import { findById } from "@shared/utils/array.utils";
+import { ConnectionStateService } from "@services/services.connection-state.service";
 
-export interface Breadcrumb {
+interface Breadcrumb {
   label: string;
-  route: string | null;
-  isLast: boolean;
+  url: string;
 }
 
 @Component({
   selector: "app-header",
   standalone: true,
-  imports: [MatIconModule],
+  imports: [CommonModule, RouterModule, MatIconModule],
   templateUrl: "./header.component.html",
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AppHeaderComponent implements OnDestroy {
-  connectionState = inject(ConnectionStateService);
-  themeService = inject(ThemeService);
-  router = inject(Router);
-  private dataStore = inject(DataStoreService);
-  private errorHandler = inject(ErrorHandlerService);
+export class AppHeaderComponent implements OnInit, OnDestroy {
+  private router = inject(Router);
+  private locationService = inject(Location);
+  private themeService = inject(ThemeService);
+  private connectionState = inject(ConnectionStateService);
+  private routerSub?: Subscription;
 
-  private searchInputRef = viewChild<ElementRef<HTMLInputElement>>("searchInput");
+  pageTitle = signal("ZenithDB");
+  breadcrumbs = signal<Breadcrumb[]>([]);
+  historyLength = signal(0);
 
-  private routerUrl = toSignal(
-    this.router.events.pipe(
-      filter((e): e is NavigationEnd => e instanceof NavigationEnd),
-      map((e) => e.urlAfterRedirects)
-    ),
-    { initialValue: this.router.url }
-  );
-
-  searchQuery = signal("");
-  searchResults = signal<Array<{ name: string; count: number }>>([]);
-  isSearching = signal(false);
-  selectedIndex = signal(-1);
-
-  private searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
-
-  private getUrlSegments(url: string): string[] {
-    return url.split("/").filter((s) => s);
+  ngOnInit(): void {
+    this.historyLength.set(window.history.length);
+    this.updateFromRoute(this.router.url);
+    this.routerSub = this.router.events
+      .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
+      .subscribe((event) => {
+        this.historyLength.set(window.history.length);
+        this.updateFromRoute(event.urlAfterRedirects);
+      });
   }
 
-  getBreadcrumbs(): Breadcrumb[] {
-    const url = this.routerUrl() || "";
-    const segments = this.getUrlSegments(url);
-    const breadcrumbs: Breadcrumb[] = [];
+  private formatSegment(segment: string, index: number, segments: string[]): string {
+    if (!segment) return "";
 
-    if (segments.length === 0 || (segments.length === 1 && segments[0] === "connections")) {
-      return [{ label: "Connections", route: null, isLast: true }];
+    if (segment === "explorer") {
+      return "Explorer";
     }
+
+    if (segment.length === 36 && segment.includes("-")) {
+      if (segments[index - 1] === "connections") {
+        return this.connectionState.activeConnectionName() || "Connection";
+      }
+      return "Details";
+    }
+
+    if (index === 2 && segments[0] === "connections") {
+      return this.connectionState.activeDatabaseName() || "Database";
+    }
+
+    if (/^\d+$/.test(segment)) {
+      return "Item " + segment;
+    }
+
+    return segment.charAt(0).toUpperCase() + segment.slice(1).replace(/-/g, " ");
+  }
+
+  private updateFromRoute(url: string): void {
+    const [pathOnly] = url.split("?");
+    const segments = pathOnly.split("/").filter(Boolean);
+    const crumbs: Breadcrumb[] = [];
+    let currentUrl = "";
 
     for (let i = 0; i < segments.length; i++) {
       const segment = segments[i];
-      const isLast = i === segments.length - 1;
+      currentUrl += "/" + segment;
 
-      if (segment === "connections") {
-        if (segments[i + 1] === "new") {
-          breadcrumbs.push({ label: "Connections", route: "/connections", isLast: false });
-          breadcrumbs.push({ label: "New Connection", route: "/connections/new", isLast: true });
-          break;
-        } else if (segments[i + 1]) {
-          const connId = segments[i + 1];
-          const connName = this.getConnectionName(connId);
-          if (segments[i + 2] === "explorer") {
-            breadcrumbs.push({ label: "Connections", route: "/connections", isLast: false });
-            breadcrumbs.push({ label: connName, route: `/connections/${connId}`, isLast: false });
-            breadcrumbs.push({ label: "Explorer", route: null, isLast: true });
-            break;
-          } else {
-            breadcrumbs.push({ label: "Connections", route: "/connections", isLast: false });
-            breadcrumbs.push({ label: connName, route: null, isLast: true });
-            break;
-          }
-        } else {
-          breadcrumbs.push({ label: "Connections", route: null, isLast: true });
-        }
-      } else if (segment === "query") {
-        breadcrumbs.push({ label: "Workbench", route: "/query", isLast: true });
+      if (i === 0 && segments.length > 1) {
+        crumbs.push({ label: "Connections", url: "/connections" });
+        continue;
+      }
+
+      const label = this.formatSegment(segment, i, segments);
+      if (label) {
+        crumbs.push({ label, url: currentUrl });
       }
     }
 
-    if (breadcrumbs.length === 0) {
-      return [{ label: "Connections", route: null, isLast: true }];
+    const basePath = "/" + (segments[0] || "");
+    let title = "ZenithDB";
+
+    if (basePath === "/connections") {
+      title =
+        segments.length > 1
+          ? this.connectionState.activeConnectionName() || "Connection"
+          : "Connections";
+    } else if (basePath === "/query") {
+      title = "Query";
+    } else if (basePath === "/settings") {
+      title = "Settings";
     }
 
-    return breadcrumbs;
-  }
-
-  private getConnectionName(connId: string): string {
-    const conn = findById(this.dataStore.getConnections(), connId);
-    return conn?.name || connId;
-  }
-
-  navigateToBreadcrumb(route: string | null): void {
-    if (route) {
-      this.router.navigate([route]);
-    }
-  }
-
-  isDarkMode = computed(() => this.themeService.isDarkMode());
-
-  goHome() {
-    this.router.navigate(["/connections"]);
-  }
-
-  onSearchBlur(): void {
-    this.isSearching.set(false);
-  }
-
-  onSearchFocus(): void {
-    if (this.searchQuery()) {
-      this.isSearching.set(true);
-    }
-  }
-
-  async onSearchInput(event: Event): Promise<void> {
-    const query = (event.target as HTMLInputElement).value.trim().toLowerCase();
-    this.searchQuery.set(query);
-    this.selectedIndex.set(-1);
-
-    if (this.searchDebounceTimer) {
-      clearTimeout(this.searchDebounceTimer);
+    if (url.includes("/explorer")) {
+      title = "Explorer";
     }
 
-    if (!query) {
-      this.searchResults.set([]);
-      this.isSearching.set(false);
-      return;
-    }
-
-    this.searchDebounceTimer = setTimeout(async () => {
-      this.isSearching.set(true);
-
-      let collections = this.dataStore.getCollections() || [];
-      if (collections.length === 0) {
-        const connId = this.connectionState.activeConnectionId();
-        if (connId) {
-          try {
-            const result = await this.dataStore.listCollectionsPaginated(connId);
-            collections = result.collections || [];
-          } catch (e) {
-            this.errorHandler.handleError(e, "HeaderComponent.onSearch");
-            collections = [];
-          }
-        } else {
-          collections = [];
-        }
-      }
-
-      const filtered = collections.filter((c) => c.name.toLowerCase().includes(query)).slice(0, 10);
-      this.searchResults.set(filtered);
-    }, 300);
+    this.pageTitle.set(title);
+    this.breadcrumbs.set(crumbs);
   }
 
-  onSearchKeydown(event: KeyboardEvent): void {
-    const results = this.searchResults();
-    if (results.length === 0) return;
-
-    if (event.key === "ArrowDown") {
-      event.preventDefault();
-      this.selectedIndex.update((i) => Math.min(i + 1, results.length - 1));
-    } else if (event.key === "ArrowUp") {
-      event.preventDefault();
-      this.selectedIndex.update((i) => Math.max(i - 1, -1));
-    } else if (event.key === "Enter" && this.selectedIndex() >= 0) {
-      event.preventDefault();
-      this.navigateToCollection(results[this.selectedIndex()].name);
-    } else if (event.key === "Escape") {
-      this.clearSearch();
-    }
+  goBack(): void {
+    this.locationService.back();
   }
 
-  navigateToCollection(name: string): void {
-    const connId = this.connectionState.activeConnectionId();
-    const dbName = this.connectionState.activeDatabaseName();
-    if (connId && dbName) {
-      this.router.navigate(["/connections", connId, dbName, "explorer"], {
-        queryParams: { collection: name },
-      });
-    }
-    this.clearSearch();
+  navigateTo(url: string): void {
+    this.router.navigateByUrl(url);
   }
 
-  clearSearch(): void {
-    this.searchQuery.set("");
-    this.searchResults.set([]);
-    this.isSearching.set(false);
-    this.selectedIndex.set(-1);
-    this.searchInputRef()?.nativeElement?.blur();
+  toggleTheme(): void {
+    this.themeService.toggle();
   }
 
   ngOnDestroy(): void {
-    if (this.searchDebounceTimer) {
-      clearTimeout(this.searchDebounceTimer);
-    }
+    this.routerSub?.unsubscribe();
   }
 }

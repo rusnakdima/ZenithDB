@@ -22,8 +22,6 @@ import { TabService } from "@services/services.tab.service";
 import { QueryExecutionService } from "@services/services.query-execution.service";
 import { formatSQL } from "@shared/utils/sql-formatter.utils";
 import { findById } from "@shared/utils/array.utils";
-;
-;
 @Component({
   selector: "app-workbench",
   standalone: true,
@@ -38,12 +36,13 @@ export class WorkbenchComponent implements OnDestroy {
   protected tabService = inject(TabService);
   private readonly queryExecution = inject(QueryExecutionService);
   private cdr = inject(ChangeDetectorRef);
-private readonly page = "Workbench";
+  private readonly page = "Workbench";
   @ViewChild("splitContainer") splitContainer!: ElementRef<HTMLDivElement>;
   readonly tabs = this.tabService.tabs;
   readonly activeTabId = this.tabService.activeTabId;
   readonly activeTab = this.tabService.activeTab;
   editorHeight = signal(250);
+  mobileView = signal<"editor" | "results">("editor");
   isResizing = false;
   private boundOnMove: ((e: MouseEvent) => void) | null = null;
   private boundOnUp: (() => void) | null = null;
@@ -55,28 +54,26 @@ private readonly page = "Workbench";
     }
   }
   addTab() {
-    ;
     this.tabService.addTab();
   }
   closeTab(tabId: string, event?: MouseEvent) {
-    ;
     this.tabService.closeTab(tabId, event);
   }
   selectTab(tabId: string) {
-    ;
     this.tabService.selectTab(tabId);
+  }
+  setMobileView(view: "editor" | "results") {
+    this.mobileView.set(view);
   }
   updateQuery(query: string) {
     this.tabService.updateQuery(query);
   }
   async runCurrentTab() {
     const tab = this.activeTab();
-    ;
     if (!tab || !tab.query.trim()) return;
     await this.queryExecution.executeWithTiming(tab.query);
   }
   runAllTabs() {
-    .length });
     this.tabs().forEach((tab) => {
       if (tab.query.trim() && !tab.loading) {
         this.executeTab(tab.id);
@@ -86,7 +83,9 @@ private readonly page = "Workbench";
   private async executeTab(tabId: string) {
     const tab = findById(this.tabs(), tabId);
     if (!tab || !tab.query.trim()) return;
-    this.tabService.updateTab(tabId, { loading: true, error: "" });try {
+    this.tabService.updateTab(tabId, { loading: true, error: "" });
+    const startTime = performance.now();
+    try {
       const results = await this.store.executeRaw(tab.query);
       const executionTime = performance.now() - startTime;
       this.tabService.updateTab(tabId, {
@@ -107,7 +106,6 @@ private readonly page = "Workbench";
     }
   }
   formatAllSQL() {
-    ;
     this.tabService.updateAllTabs({
       modified: true,
     });
@@ -116,7 +114,6 @@ private readonly page = "Workbench";
     });
   }
   clearEditor() {
-    ;
     this.tabService.updateActiveTab({
       query: "",
       results: null,

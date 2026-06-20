@@ -15,7 +15,6 @@ import { ConnectionSummary } from "@entities/entities.connection.config";
 import { ConfirmService } from "@shared/services/confirm.service";
 import { withErrorHandling } from "@shared/utils/error-handler.utils";
 import { ConnectionFormService } from "@services/services.connection-form.service";
-
 @Component({
   selector: "app-connections",
   standalone: true,
@@ -31,14 +30,11 @@ export class ConnectionsComponent implements OnInit {
   private confirm = inject(ConfirmService);
   private connectionFormService = inject(ConnectionFormService);
   private cdr = inject(ChangeDetectorRef);
-
   connections = this.store.connections;
   private readonly page = "Connections";
-
   get connectionsEmpty(): boolean {
     return this.connections().length === 0 && !this.loading();
   }
-
   async ngOnInit() {
     await withErrorHandling(() => this.store.refreshConnections(), {
       loading: this.loading,
@@ -46,12 +42,10 @@ export class ConnectionsComponent implements OnInit {
       errorMessage: "Failed to load connections",
     });
   }
-
   onConnect(connection: ConnectionSummary): void {
     this.connState.setActiveConnection(connection);
     this.router.navigate(["/connections", connection.id]);
   }
-
   async onDelete(connection: ConnectionSummary): Promise<void> {
     if (await this.confirm.confirmDelete(connection.name)) {
       await withErrorHandling(() => this.store.deleteConnection(connection.id), {
@@ -60,19 +54,15 @@ export class ConnectionsComponent implements OnInit {
       });
     }
   }
-
   onEdit(connection: ConnectionSummary): void {
     this.connectionFormService.openForEdit(connection.id);
   }
-
   onDuplicate(connection: ConnectionSummary): void {
     this.connectionFormService.openForDuplicate(connection.id);
   }
-
   openNewConnection(): void {
     this.connectionFormService.openNew();
   }
-
   async onRefresh(): Promise<void> {
     await withErrorHandling(() => this.store.refreshConnections(), {
       loading: this.loading,

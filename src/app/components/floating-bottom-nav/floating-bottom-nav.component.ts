@@ -9,11 +9,8 @@ import {
 } from "@angular/core";
 import { NavigationEnd, Router, RouterModule } from "@angular/router";
 import { filter, Subscription } from "rxjs";
-
 import { MatIconModule } from "@angular/material/icon";
-
 import { FloatingNavItem, NavRouteConfig } from "./floating-bottom-nav.entity";
-
 @Component({
   selector: "app-floating-bottom-nav",
   standalone: true,
@@ -24,9 +21,7 @@ import { FloatingNavItem, NavRouteConfig } from "./floating-bottom-nav.entity";
 export class FloatingBottomNavComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private routerSub?: Subscription;
-
   url = signal("");
-
   get listNavs(): Array<FloatingNavItem> {
     return [
       {
@@ -55,7 +50,6 @@ export class FloatingBottomNavComponent implements OnInit, OnDestroy {
       { url: "/settings", icon: "settings", label: "Settings" },
     ];
   }
-
   getLabel(nav: FloatingNavItem): string {
     if (nav.childRoutes) {
       const match = this.findRouteMatch(nav.childRoutes);
@@ -63,7 +57,6 @@ export class FloatingBottomNavComponent implements OnInit, OnDestroy {
     }
     return nav.label;
   }
-
   getIcon(nav: FloatingNavItem): string {
     if (nav.childRoutes) {
       const match = this.findRouteMatch(nav.childRoutes);
@@ -71,11 +64,9 @@ export class FloatingBottomNavComponent implements OnInit, OnDestroy {
     }
     return nav.icon;
   }
-
   private findRouteMatch(routes: NavRouteConfig[]): NavRouteConfig | undefined {
     return routes.find((r) => r.pattern.test(this.url()));
   }
-
   isActiveRoute(nav: FloatingNavItem): boolean {
     if (this.url() === nav.url) return true;
     if (nav.childRoutes) {
@@ -83,7 +74,6 @@ export class FloatingBottomNavComponent implements OnInit, OnDestroy {
     }
     return false;
   }
-
   ngOnInit(): void {
     this.url.set(this.router.url);
     this.routerSub = this.router.events
@@ -92,7 +82,6 @@ export class FloatingBottomNavComponent implements OnInit, OnDestroy {
         this.url.set(this.router.url);
       });
   }
-
   ngOnDestroy(): void {
     this.routerSub?.unsubscribe();
   }

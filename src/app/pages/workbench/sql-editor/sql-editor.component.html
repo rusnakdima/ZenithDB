@@ -1,9 +1,7 @@
 <div class="flex h-full flex-col font-mono text-sm">
   <div class="flex flex-1 overflow-hidden">
     <!-- Line Numbers Gutter -->
-    <div
-      class="flex min-h-full w-12 shrink-0 flex-col bg-transparent/30 pt-3 pr-4 text-right text-[var(--text-muted)] select-none"
-    >
+    <div class="workbench-editor-gutter">
       @for (line of lines; track $index) {
         <span class="px-2 font-mono text-xs leading-6">{{ $index + 1 }}</span>
       }
@@ -12,30 +10,34 @@
       }
     </div>
 
-    <!-- Editor Area -->
+    <!-- Editor Area with Completion Popup -->
     <div class="relative flex-1 overflow-auto">
       <textarea
+        #editor
         class="absolute inset-0 z-10 h-full w-full cursor-text resize-none border-none bg-transparent px-4 py-3 font-mono text-sm leading-6 text-[var(--text-main)] outline-none placeholder:text-[var(--text-dim)]"
         [value]="query"
         (input)="onInput($event)"
         (keydown)="handleKeydown($event)"
         spellcheck="false"
-        placeholder="Enter SQL query... (e.g., SELECT * FROM users LIMIT 10)"
+        placeholder="Enter query... (Press Ctrl+Space for suggestions)"
       ></textarea>
-      <!-- Overlay for visual display (optional, for syntax highlighting placeholder) -->
-      <div class="pointer-events-none invisible h-full"></div>
+      <app-completion-popup
+        [items]="completionItems()"
+        [position]="completionPosition()"
+        [isVisible]="completionVisible()"
+        (select)="onCompletionSelect($event)"
+        (close)="onCompletionClose()"
+      ></app-completion-popup>
     </div>
   </div>
 
-  <!-- SQL Keywords Reference -->
-  <div
-    class="flex items-center gap-4 border-t border-[var(--accent)]/50 px-4 py-2 text-xs text-[var(--text-dim)]"
-  >
-    <span>Keywords:</span>
-    <span class="rounded bg-transparent px-1.5 py-0.5 text-[var(--text-dim)]">SELECT</span>
-    <span class="rounded bg-transparent px-1.5 py-0.5 text-[var(--text-dim)]">FROM</span>
-    <span class="rounded bg-transparent px-1.5 py-0.5 text-[var(--text-dim)]">WHERE</span>
-    <span class="rounded bg-transparent px-1.5 py-0.5 text-[var(--text-dim)]">JOIN</span>
-    <span class="rounded bg-transparent px-1.5 py-0.5 text-[var(--text-dim)]">LIMIT</span>
+  <!-- SQL Keywords Reference (collapsed, shown via tooltip) -->
+  <div class="workbench-keywords-bar">
+    <span class="text-[var(--text-muted)]">Keywords:</span>
+    <span class="workbench-keyword">SELECT</span>
+    <span class="workbench-keyword">FROM</span>
+    <span class="workbench-keyword">WHERE</span>
+    <span class="workbench-keyword">JOIN</span>
+    <span class="workbench-keyword">LIMIT</span>
   </div>
 </div>

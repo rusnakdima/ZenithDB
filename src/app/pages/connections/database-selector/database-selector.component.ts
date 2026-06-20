@@ -11,50 +11,39 @@ import { ToastService } from "@services/services.toast.service";
 })
 export class DatabaseSelectorComponent {
   private toast = inject(ToastService);
-
   provider = input.required<string>();
   uri = input.required<string>();
   selectedDatabases = input<string[]>([]);
-
   databasesChange = output<string[]>();
-
   editingDb = signal<string | null>(null);
   editDbName = "";
   manualDatabase = "";
-
   startEdit(dbName: string) {
     this.editingDb.set(dbName);
     this.editDbName = dbName;
   }
-
   saveEdit() {
     const oldName = this.editingDb();
     if (!oldName) return;
-
     const newName = this.editDbName.trim();
     if (!newName || newName === oldName) {
       this.cancelEdit();
       return;
     }
-
     if (this.selectedDatabases().includes(newName)) {
       this.cancelEdit();
       return;
     }
-
     this.databasesChange.emit(this.selectedDatabases().map((d) => (d === oldName ? newName : d)));
     this.cancelEdit();
   }
-
   cancelEdit() {
     this.editingDb.set(null);
     this.editDbName = "";
   }
-
   remove(dbName: string) {
     this.databasesChange.emit(this.selectedDatabases().filter((d) => d !== dbName));
   }
-
   addManual() {
     const name = this.manualDatabase.trim();
     if (name && !this.selectedDatabases().includes(name)) {

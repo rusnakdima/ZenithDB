@@ -2,7 +2,6 @@ import { Component, input, output, signal, inject } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
 import { ToastService } from "@services/services.toast.service";
-
 @Component({
   selector: "app-add-database-path",
   standalone: true,
@@ -11,16 +10,12 @@ import { ToastService } from "@services/services.toast.service";
 })
 export class AddDatabasePathComponent {
   private toast = inject(ToastService);
-
   provider = input.required<string>();
   connectionId = input.required<string>();
-
   added = output<{ name: string; path: string }>();
   cancelled = output<void>();
-
   dbName = signal("");
   dbPath = signal("");
-
   async onBrowsePath() {
     try {
       const { open } = await import("@tauri-apps/plugin-dialog");
@@ -41,7 +36,6 @@ export class AddDatabasePathComponent {
       this.toast.error("Failed to open file dialog");
     }
   }
-
   private extractName(path: string, isJson: boolean): string {
     if (isJson) {
       const parts = path.split("/");
@@ -52,14 +46,12 @@ export class AddDatabasePathComponent {
       return lastDot > 0 ? filename.substring(0, lastDot) : filename;
     }
   }
-
   onAdd() {
     const name = this.dbName().trim();
     const path = this.dbPath().trim();
     if (!name) return;
     this.added.emit({ name, path });
   }
-
   onCancel() {
     this.cancelled.emit();
   }

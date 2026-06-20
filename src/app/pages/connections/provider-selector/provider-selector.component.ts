@@ -7,7 +7,6 @@ interface ProviderOption {
   icon: string;
   description: string;
 }
-
 @Component({
   selector: "app-provider-selector",
   standalone: true,
@@ -16,11 +15,9 @@ interface ProviderOption {
 })
 export class ProviderSelectorComponent {
   selected = input<ProviderType | null>(null);
-
   next = output<void>();
   cancelled = output<void>();
   providerSelected = output<ProviderType>();
-
   providers: ProviderOption[] = [
     { type: "json", label: "JSON", icon: "description", description: "Local JSON file storage" },
     { type: "mongo", label: "MongoDB", icon: "eco", description: "MongoDB document database" },
@@ -39,7 +36,6 @@ export class ProviderSelectorComponent {
     },
     { type: "mysql", label: "MySQL", icon: "storage", description: "MySQL relational DB" },
   ];
-
   selectProvider(type: ProviderType) {
     this.providerSelected.emit(type);
   }

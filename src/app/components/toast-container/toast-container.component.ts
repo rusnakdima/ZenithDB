@@ -2,7 +2,6 @@ import { Component, inject, computed, Input } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { ToastService } from "@services/services.toast.service";
 import { ToastComponent } from "../toast/toast.component";
-
 @Component({
   selector: "app-toast-container",
   standalone: true,
@@ -12,7 +11,6 @@ import { ToastComponent } from "../toast/toast.component";
 export class ToastContainerComponent {
   private toastService = inject(ToastService);
   protected maxVisible = 5;
-
   @Input() position:
     | "top-right"
     | "top-left"
@@ -20,15 +18,12 @@ export class ToastContainerComponent {
     | "bottom-left"
     | "top-center"
     | "bottom-center" = "top-right";
-
   visibleToasts = computed(() => {
     return this.toastService.toasts().slice(0, this.maxVisible);
   });
-
   dismiss(id: string): void {
     this.toastService.dismiss(id);
   }
-
   get positionClass(): string {
     switch (this.position) {
       case "top-left":

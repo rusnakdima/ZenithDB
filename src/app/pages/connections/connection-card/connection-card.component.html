@@ -1,5 +1,5 @@
 <div
-  class="card group cursor-pointer rounded-3xl border-2 border-[var(--accent)] bg-transparent p-5 transition-all duration-300 hover:shadow-lg"
+  class="card group cursor-pointer rounded-3xl border border-[var(--border-visible)] bg-transparent p-5 transition-all duration-300 hover:border-[var(--accent)] hover:shadow-lg"
   (mouseenter)="showCardActions()"
   (mouseleave)="hideCardActions()"
   (click)="onConnect()"
@@ -53,7 +53,7 @@
     </button>
     <button
       (click)="onDelete($event)"
-      class="rounded-lg bg-[var(--color-error-bg)] p-2 text-[var(--color-error)] transition-colors hover:bg-[var(--color-error-bg)]"
+      class="rounded-lg bg-[var(--color-error)]/20 p-2 text-[var(--color-error)] transition-colors hover:bg-[var(--color-error)]/30"
       title="Delete"
     >
       <mat-icon fontIcon="delete" class="h-5! w-5! text-xl!" />

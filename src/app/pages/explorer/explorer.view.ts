@@ -19,9 +19,7 @@ import { ToastService } from "@services/services.toast.service";
 import { ClipboardService } from "@shared/services/clipboard.service";
 import { ExportService } from "@services/services.export.service";
 import { PersistentStorageService } from "@shared/services/persistent-storage.service";
-
 import { ErrorHandlerService } from "@shared/services/error-handler.service";
-
 import {
   CollectionMeta,
   CollectionStats,
@@ -79,8 +77,8 @@ export class ExplorerComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private cdr = inject(ChangeDetectorRef);
-private errorHandler = inject(ErrorHandlerService);
-private readonly pageName = "Explorer";
+  private errorHandler = inject(ErrorHandlerService);
+  private readonly pageName = "Explorer";
   private queryParamsSub: Subscription | null = null;
   private routeSub: Subscription | null = null;
   private routeParamSub: Subscription | null = null;
@@ -218,7 +216,8 @@ private readonly pageName = "Explorer";
     const t0 = Date.now();
     this.store
       .ensureCollectionsLoaded(this.currentConnectionId!)
-      .then((cols) => {this.collections.set(cols);
+      .then((cols) => {
+        this.collections.set(cols);
         this.applyCollectionSelection(selectedCollection ?? null);
       })
       .catch(() => {
@@ -246,7 +245,8 @@ private readonly pageName = "Explorer";
     if (!collection) return [];
     try {
       const t0 = Date.now();
-      const columns = await this.store.loadColumns(collection);const cols = columns.map((c) => c.name);
+      const columns = await this.store.loadColumns(collection);
+      const cols = columns.map((c) => c.name);
       this.availableColumns.set(cols);
       this.availableColumnsMeta.set(columns);
       this.selectedColumns.set([...cols]);
@@ -309,7 +309,8 @@ private readonly pageName = "Explorer";
         filter: filterObj,
       });
       const allData = result.data as RowData[];
-      const totalRows = allData.length;this.jsonHasMore.set(result.has_more);
+      const totalRows = allData.length;
+      this.jsonHasMore.set(result.has_more);
       this.jsonOffset.set(totalRows);
       if (this.worker) {
         const totalProcessed = { count: 0 };
@@ -397,7 +398,8 @@ private readonly pageName = "Explorer";
         skip: this.jsonOffset(),
         limit: 50,
         filter: filterObj,
-      });this.fullJsonData.update((current) => [...current, ...(result.data as RowData[])]);
+      });
+      this.fullJsonData.update((current) => [...current, ...(result.data as RowData[])]);
       this.jsonHasMore.set(result.has_more);
       this.jsonOffset.update((o) => o + result.data.length);
       this.cdr.markForCheck();
@@ -483,11 +485,10 @@ private readonly pageName = "Explorer";
       this.loadFullJsonData();
     }
   }
-onFilterClear() {
+  onFilterClear() {
     this.filterText.set("");
     this.page.set(0);
   }
-
   onRefresh() {
     this.reloadCounter.update((c) => c + 1);
     this.page.set(0);
@@ -496,13 +497,11 @@ onFilterClear() {
       this.loadFullJsonData();
     }
   }
-
   onCreateDocument() {
     this.isCreatingDocument.set(true);
     this.inspectorDocument.set({} as RowData);
     this.showInspector.set(true);
   }
-
   async onExport(format: ExportFormat) {
     try {
       let filterObj: FilterExpression | undefined;
@@ -619,7 +618,7 @@ onFilterClear() {
     this.inspectorDocument.set(null);
     this.isCreatingDocument.set(false);
   }
-async saveDocument(doc: RowData) {
+  async saveDocument(doc: RowData) {
     if (!doc || !this.activeCollection()) return;
     try {
       await this.store.saveRow(this.activeCollection(), doc);
@@ -630,7 +629,6 @@ async saveDocument(doc: RowData) {
       this.toast.error("Failed to save document: " + (e as Error).message);
     }
   }
-
   async deleteDocument(doc: RowData) {
     const id = getRecordId(doc);
     if (!id) {
