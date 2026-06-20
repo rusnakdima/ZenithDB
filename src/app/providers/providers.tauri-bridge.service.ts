@@ -3,13 +3,11 @@ import { invoke, InvokeOptions as TauriInvokeOptions } from "@tauri-apps/api/cor
 import { ErrorHandlerService } from "@shared/services/error-handler.service";
 import { SettingsService } from "@shared/services/settings.service";
 const DEFAULT_TIMEOUT_MS = 30000;
-
 export interface InvokeOptions {
   timeoutMs?: number;
   suppressError?: boolean;
   signal?: AbortSignal;
 }
-
 export class ApiException extends Error {
   constructor(
     message: string,
@@ -20,26 +18,21 @@ export class ApiException extends Error {
     this.name = "ApiException";
   }
 }
-
 interface ResponseModel {
   status: "success" | "error" | "info" | "warning";
   message: string;
   data: unknown;
 }
-
 @Injectable({ providedIn: "root" })
 export class TauriBridgeService {
   private errorHandler = inject(ErrorHandlerService);
   private settingsService = inject(SettingsService);
-
   getConnectionTimeoutMs(): number {
     return this.settingsService.currentSettings.connections.connectionTimeout * 1000;
   }
-
   private getDefaultTimeoutMs(): number {
     return this.settingsService.currentSettings.connections.connectionTimeout * 1000;
   }
-
   async invoke<T>(
     command: string,
     args?: Record<string, unknown>,
@@ -47,7 +40,6 @@ export class TauriBridgeService {
   ): Promise<T> {
     const timeoutMs = options.timeoutMs ?? this.getDefaultTimeoutMs();
     const { signal, suppressError } = options;
-
     try {
       const tauriOptions = signal ? { signal: signal as unknown as AbortSignal } : {};
       const response = await Promise.race([
@@ -67,11 +59,9 @@ export class TauriBridgeService {
           }
         }),
       ]);
-
       if (response.status === "success") {
         return response.data as T;
       }
-
       throw new ApiException(response.message || `Operation failed: ${command}`, command);
     } catch (error: unknown) {
       if (!suppressError) {

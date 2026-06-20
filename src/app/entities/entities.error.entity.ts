@@ -12,7 +12,6 @@ export enum ErrorCode {
   PARSE_ERROR = "PARSE_ERROR",
   OFFLINE = "OFFLINE",
 }
-
 export interface AppError {
   code: ErrorCode;
   message: string;
@@ -22,7 +21,6 @@ export interface AppError {
   timestamp: Date;
   retryable: boolean;
 }
-
 export interface ErrorResponse {
   error?: {
     code?: string;
@@ -32,19 +30,16 @@ export interface ErrorResponse {
   message?: string;
   status?: number;
 }
-
 export interface RetryConfig {
   maxAttempts: number;
   delayMs: number;
   backoffMultiplier: number;
 }
-
 export const DEFAULT_RETRY_CONFIG: RetryConfig = {
   maxAttempts: 3,
   delayMs: 1000,
   backoffMultiplier: 2,
 };
-
 export interface ErrorLogEntry {
   id: string;
   error: AppError;

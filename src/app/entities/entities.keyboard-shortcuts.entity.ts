@@ -1,12 +1,10 @@
 export type ShortcutCategory = "navigation" | "actions" | "editor" | "table";
-
 type Shortcut = {
   key: string;
   description: string;
   category: ShortcutCategory;
   modifiers?: ("ctrl" | "meta" | "shift" | "alt")[];
 };
-
 export const SHORTCUT_CONFIG: Record<string, Shortcut> = {
   "new-connection": {
     key: "n",
@@ -86,11 +84,9 @@ export const SHORTCUT_CONFIG: Record<string, Shortcut> = {
     modifiers: ["ctrl"],
   },
 };
-
 export function formatShortcut(key: string, modifiers?: string[]): string {
   const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
   const parts: string[] = [];
-
   if (modifiers?.includes("ctrl") || modifiers?.includes("meta")) {
     parts.push(isMac ? "⌘" : "Ctrl");
   }
@@ -100,7 +96,6 @@ export function formatShortcut(key: string, modifiers?: string[]): string {
   if (modifiers?.includes("alt")) {
     parts.push(isMac ? "⌥" : "Alt");
   }
-
   let displayKey = key;
   switch (key) {
     case "ArrowUp":
@@ -128,11 +123,9 @@ export function formatShortcut(key: string, modifiers?: string[]): string {
       displayKey = "Del";
       break;
   }
-
   parts.push(displayKey);
   return parts.join(isMac ? "" : "+");
 }
-
 export function parseKeyEvent(event: KeyboardEvent): string {
   const parts: string[] = [];
   if (event.ctrlKey) parts.push("ctrl");

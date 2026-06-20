@@ -1,6 +1,6 @@
 import { Injectable, inject, Injector } from "@angular/core";
-import { TauriBridgeService } from "./tauri-bridge.service";
-import { RequestCancellationService } from "./request-cancellation.service";
+import { TauriBridgeService } from "@providers/providers.tauri-bridge.service";
+import { RequestCancellationService } from "@providers/providers.request-cancellation.service";
 import { DataStoreService } from "@core/services/unified-storage.service";
 import { ConnectionsApiService } from "@services/services.connections-api.service";
 import { CollectionsApiService } from "@services/services.collections-api.service";
@@ -9,7 +9,6 @@ import { TransactionApiService } from "@services/services.transaction-api.servic
 import { MetricsApiService } from "@services/services.metrics-api.service";
 import { ToastService } from "@services/services.toast.service";
 import { ErrorHandlerService } from "@shared/services/error-handler.service";
-
 import {
   ConnectionSummary,
   ConnectionConfig,

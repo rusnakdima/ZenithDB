@@ -4,7 +4,6 @@ import { ToastService } from "@services/services.toast.service";
 export class ResponseSizeGuardService {
   private readonly MAX_RESPONSE_SIZE_MB = 10;
   private readonly MAX_RESPONSE_SIZE_BYTES = this.MAX_RESPONSE_SIZE_MB * 1024 * 1024;
-
   checkResponseSize(data: unknown): { truncated: boolean; message?: string } {
     try {
       const jsonStr = JSON.stringify(data);
@@ -21,11 +20,9 @@ export class ResponseSizeGuardService {
     }
     return { truncated: false };
   }
-
   getMaxItems(): number {
     return Math.floor(this.MAX_RESPONSE_SIZE_BYTES / 500);
   }
-
   getMaxSizeBytes(): number {
     return this.MAX_RESPONSE_SIZE_BYTES;
   }

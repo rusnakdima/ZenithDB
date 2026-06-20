@@ -4,13 +4,11 @@ export interface IndexDefinition {
   fields: IndexField[];
   options: IndexOptions;
 }
-
 export interface IndexField {
   name: string;
   direction: "asc" | "desc";
   weight?: number;
 }
-
 export interface IndexOptions {
   unique?: boolean;
   sparse?: boolean;

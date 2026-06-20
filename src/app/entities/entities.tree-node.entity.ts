@@ -1,5 +1,4 @@
 import { CollectionMeta } from "./entities.connection.config";
-
 export interface TreeNode {
   name: string;
   type: "database" | "collection" | "field";
@@ -10,7 +9,6 @@ export interface TreeNode {
   fields?: FieldNode[];
   selected?: boolean;
 }
-
 export interface FieldNode {
   name: string;
   dataType: string;
