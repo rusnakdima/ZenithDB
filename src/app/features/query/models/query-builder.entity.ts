@@ -1,7 +1,5 @@
 import { FilterOperator } from "@entities/entities.connection.config";
-
 export type FieldType = "string" | "number" | "boolean" | "date" | "array" | "object";
-
 export interface FieldInfo {
   name: string;
   type: FieldType;
@@ -10,14 +8,12 @@ export interface FieldInfo {
   defaultValue?: unknown;
   description?: string;
 }
-
 export interface ConditionGroup {
   id: string;
   operator: "and" | "or";
   conditions: Condition[];
   groups?: ConditionGroup[];
 }
-
 export interface Condition {
   id: string;
   field: string;
@@ -25,17 +21,14 @@ export interface Condition {
   value: unknown;
   valueType: FieldType;
 }
-
 export interface SortConfig {
   field: string;
   direction: "asc" | "desc";
 }
-
 export interface ProjectionConfig {
   fields: string[];
   exclude: boolean;
 }
-
 export interface QueryBuilderState {
   filter: ConditionGroup | null;
   sort: SortConfig[];
@@ -43,7 +36,6 @@ export interface QueryBuilderState {
   skip: number | null;
   limit: number | null;
 }
-
 export const FIELD_OPERATORS: Record<FieldType, FilterOperator[]> = {
   string: [
     "eq",
@@ -63,7 +55,6 @@ export const FIELD_OPERATORS: Record<FieldType, FilterOperator[]> = {
   array: ["isNull", "isNotNull", "eq", "neq"],
   object: ["isNull", "isNotNull", "eq", "neq"],
 };
-
 export const OPERATOR_LABELS: Record<FilterOperator, string> = {
   eq: "equals",
   neq: "not equals",
@@ -84,7 +75,6 @@ export const OPERATOR_LABELS: Record<FilterOperator, string> = {
   or: "or",
   not: "not",
 };
-
 export function createEmptyCondition(fieldType: FieldType = "string"): Condition {
   return {
     id: crypto.randomUUID(),
@@ -94,7 +84,6 @@ export function createEmptyCondition(fieldType: FieldType = "string"): Condition
     valueType: fieldType,
   };
 }
-
 export function createEmptyGroup(operator: "and" | "or" = "and"): ConditionGroup {
   return {
     id: crypto.randomUUID(),

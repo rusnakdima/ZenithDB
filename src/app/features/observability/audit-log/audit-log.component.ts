@@ -23,22 +23,17 @@ export class AuditLogComponent implements OnInit {
   private auditService = inject(AuditService);
   private exportService = inject(ExportService);
   private toast = inject(ToastService);
-
   auditLog = signal<AuditEntry[]>([]);
   loading = signal(false);
   selectedEntry = signal<AuditEntry | null>(null);
   expandedRows = signal<Set<string>>(new Set());
-
   filterOperation = signal<AuditOperation[]>([]);
   filterCollection = signal("");
   filterStartDate = signal("");
   filterEndDate = signal("");
   searchQuery = signal("");
-
   showExportDialog = signal(false);
-
   operations: AuditOperation[] = ["Insert", "Update", "Delete", "SoftDelete", "Restore"];
-
   filteredEntries = computed(() => {
     const filter: AuditFilter = {
       operations: this.filterOperation().length > 0 ? this.filterOperation() : undefined,
@@ -49,11 +44,9 @@ export class AuditLogComponent implements OnInit {
     };
     return this.auditService.filterEntries(this.auditLog(), filter);
   });
-
   async ngOnInit(): Promise<void> {
     await this.loadAuditLog();
   }
-
   async loadAuditLog(): Promise<void> {
     this.loading.set(true);
     try {
@@ -65,7 +58,6 @@ export class AuditLogComponent implements OnInit {
       this.loading.set(false);
     }
   }
-
   onToggleOperationFilter(op: AuditOperation): void {
     this.filterOperation.update((ops) => {
       if (ops.includes(op)) {
@@ -74,11 +66,9 @@ export class AuditLogComponent implements OnInit {
       return [...ops, op];
     });
   }
-
   isOperationSelected(op: AuditOperation): boolean {
     return this.filterOperation().includes(op);
   }
-
   onToggleExpand(id: string): void {
     this.expandedRows.update((rows) => {
       const newRows = new Set(rows);
@@ -90,19 +80,15 @@ export class AuditLogComponent implements OnInit {
       return newRows;
     });
   }
-
   isExpanded(id: string): boolean {
     return this.expandedRows().has(id);
   }
-
   onSelectEntry(entry: AuditEntry): void {
     this.selectedEntry.set(entry);
   }
-
   onCloseDetail(): void {
     this.selectedEntry.set(null);
   }
-
   async onExport(format: "csv" | "json"): Promise<void> {
     const filter: AuditFilter = {
       operations: this.filterOperation().length > 0 ? this.filterOperation() : undefined,
@@ -111,7 +97,6 @@ export class AuditLogComponent implements OnInit {
       endDate: this.filterEndDate() || undefined,
       searchQuery: this.searchQuery() || undefined,
     };
-
     try {
       const { filename, content } = await this.auditService.exportAuditLog(format, filter);
       const data = format === "json" ? JSON.parse(content) : [];
@@ -121,7 +106,6 @@ export class AuditLogComponent implements OnInit {
     }
     this.showExportDialog.set(false);
   }
-
   clearFilters(): void {
     this.filterOperation.set([]);
     this.filterCollection.set("");
@@ -129,11 +113,9 @@ export class AuditLogComponent implements OnInit {
     this.filterEndDate.set("");
     this.searchQuery.set("");
   }
-
   formatDate(dateStr: string): string {
     return new Date(dateStr).toLocaleString();
   }
-
   getOperationClass(operation: AuditOperation): string {
     const classMap: Record<AuditOperation, string> = {
       Insert: "text-green-400",

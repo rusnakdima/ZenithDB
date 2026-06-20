@@ -14,17 +14,13 @@ export class IndexRecommendationsComponent {
   @Output() createIndex = new EventEmitter<void>();
   @Output() acceptRecommendation = new EventEmitter<unknown>();
   @Output() dismissRecommendation = new EventEmitter<unknown>();
-
   private _recommendations: unknown[] = [];
-
   onAcceptRecommendation(recommendation: unknown): void {
     this.acceptRecommendation.emit(recommendation);
   }
-
   onDismissRecommendation(recommendation: unknown): void {
     this.dismissRecommendation.emit(recommendation);
   }
-
   onCreateIndex(): void {
     this.createIndex.emit();
   }

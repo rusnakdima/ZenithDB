@@ -7,7 +7,6 @@ interface IndexTypeOption {
   description: string;
   icon: string;
 }
-
 const INDEX_TYPES: IndexTypeOption[] = [
   {
     type: "single",
@@ -46,7 +45,6 @@ const INDEX_TYPES: IndexTypeOption[] = [
     icon: "#",
   },
 ];
-
 @Component({
   selector: "app-index-type-selector",
   standalone: true,
@@ -56,13 +54,10 @@ const INDEX_TYPES: IndexTypeOption[] = [
 export class IndexTypeSelectorComponent {
   @Input() selectedType: IndexType = "single";
   @Output() typeChange = new EventEmitter<IndexType>();
-
   indexTypes = INDEX_TYPES;
-
   onTypeSelect(type: IndexType): void {
     this.typeChange.emit(type);
   }
-
   isSelected(type: IndexType): boolean {
     return this.selectedType === type;
   }

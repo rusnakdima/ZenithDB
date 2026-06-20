@@ -4,7 +4,6 @@ import { ToastService } from "@services/services.toast.service";
 import { RowData } from "@entities/entities.connection.config";
 import { generateBatchId } from "@shared/utils/id.utils";
 export type PendingOperationType = "insert" | "update" | "delete";
-
 export interface PendingOperation {
   id: string;
   type: PendingOperationType;
@@ -13,26 +12,20 @@ export interface PendingOperation {
   data?: RowData;
   timestamp: string;
 }
-
 export interface BatchError {
   operation: PendingOperation;
   error: string;
 }
-
 @Injectable({ providedIn: "root" })
 export class AutoTransactionService {
   private transactionService = inject(TransactionService);
   private toast = inject(ToastService);
-
   private queueSignal = signal<PendingOperation[]>([]);
   private errorSignal = signal<BatchError | null>(null);
-
   readonly queue = this.queueSignal.asReadonly();
   readonly error = this.errorSignal.asReadonly();
-
   readonly queueCount = computed(() => this.queueSignal().length);
   readonly hasErrors = computed(() => this.errorSignal() !== null);
-
   readonly pendingByCollection = computed(() => {
     const queue = this.queueSignal();
     const byCollection = new Map<string, PendingOperation[]>();
@@ -43,7 +36,6 @@ export class AutoTransactionService {
     }
     return byCollection;
   });
-
   queueInsert(collection: string, data: RowData): void {
     const operation: PendingOperation = {
       id: generateBatchId(),
@@ -54,7 +46,6 @@ export class AutoTransactionService {
     };
     this.queueSignal.update((q) => [...q, operation]);
   }
-
   queueUpdate(collection: string, documentId: string, data: RowData): void {
     const operation: PendingOperation = {
       id: generateBatchId(),
@@ -66,7 +57,6 @@ export class AutoTransactionService {
     };
     this.queueSignal.update((q) => [...q, operation]);
   }
-
   queueDelete(collection: string, documentId: string): void {
     const operation: PendingOperation = {
       id: generateBatchId(),
@@ -77,26 +67,21 @@ export class AutoTransactionService {
     };
     this.queueSignal.update((q) => [...q, operation]);
   }
-
   removeFromQueue(operationId: string): void {
     this.queueSignal.update((q) => q.filter((op) => op.id !== operationId));
   }
-
   clearQueue(): void {
     this.queueSignal.set([]);
     this.errorSignal.set(null);
   }
-
   async commitAll(): Promise<boolean> {
     const queue = this.queueSignal();
     if (queue.length === 0) {
       this.toast.warning("No operations to commit");
       return false;
     }
-
     try {
       await this.transactionService.beginTransaction();
-
       for (const op of queue) {
         this.transactionService.queueOperation(
           op.type as TransactionOperationType,
@@ -105,10 +90,8 @@ export class AutoTransactionService {
           op.documentId
         );
       }
-
       await this.transactionService.executeQueuedOperations();
       await this.transactionService.commitTransaction();
-
       this.toast.success(`Committed ${queue.length} operations`);
       this.queueSignal.set([]);
       return true;
@@ -119,7 +102,6 @@ export class AutoTransactionService {
       return false;
     }
   }
-
   private async rollbackOnError(): Promise<void> {
     try {
       await this.transactionService.rollbackTransaction();
@@ -128,7 +110,6 @@ export class AutoTransactionService {
       this.toast.error(`Rollback failed: ${(e as Error).message}`);
     }
   }
-
   getOperationClass(type: PendingOperationType): string {
     const classMap: Record<PendingOperationType, string> = {
       insert: "text-green-400",
@@ -137,7 +118,6 @@ export class AutoTransactionService {
     };
     return classMap[type] || "text-[var(--text-main)]";
   }
-
   getOperationIcon(type: PendingOperationType): string {
     const iconMap: Record<PendingOperationType, string> = {
       insert: "add",

@@ -59,10 +59,8 @@ import { DataTableGridService } from "./services/data-table-grid.service";
 export class DataTableGridComponent implements OnInit, OnChanges, OnDestroy, AfterViewInit {
   private store = inject(DataTableGridStore);
   private service = inject(DataTableGridService);
-
   @ViewChild("headerScroll") headerScrollRef!: ElementRef<HTMLDivElement>;
   @ViewChild("bodyScroll") bodyScrollRef!: ElementRef<HTMLDivElement>;
-
   @Input() collectionName = "";
   @Input() filter = "";
   @Input() page = 0;
@@ -70,12 +68,10 @@ export class DataTableGridComponent implements OnInit, OnChanges, OnDestroy, Aft
   @Input() inputVisibleColumns: string[] = [];
   @Input() reloadTrigger = 0;
   @Input() columns: ColumnInfo[] = [];
-
   @Output() documentClick = new EventEmitter<RowData>();
   @Output() pageChange = new EventEmitter<number>();
   @Output() columnsOrderChange = new EventEmitter<string[]>();
   @Output() dataChange = new EventEmitter<void>();
-
   private lastCollectionName = "";
   private lastFilter = "";
   private lastPageNum = -1;
@@ -83,33 +79,26 @@ export class DataTableGridComponent implements OnInit, OnChanges, OnDestroy, Aft
   private lastReloadTrigger = 0;
   private hasInitialized = false;
   private hasLoadedColumnOrder = false;
-
   data = this.store.data;
   total = this.store.total;
   loading = this.store.loading;
   error = this.store.error;
-
   sortColumn = this.store.sortColumn;
   sortDirection = this.store.sortDirection;
-
   selectedRows = this.store.selectedRows;
   visibleColumns = this.store.visibleColumns;
   columnOrder = this.store.columnOrder;
   showColumnMenu = signal(false);
   resizingColumn = signal<string | null>(null);
   columnWidths = this.store.columnWidths;
-
   showExportDialog = signal(false);
   showRecordForm = signal(false);
   recordFormMode = signal<"add" | "edit">("add");
   editingRecord = signal<RowData | null>(null);
   showBulkDeleteConfirm = signal(false);
-
   allSelected = this.store.allSelected;
-
   startIndex = computed(() => this.page * this.pageSize + 1);
   endIndex = computed(() => Math.min((this.page + 1) * this.pageSize, this.total()));
-
   visibleColumnsList = computed(() => {
     const all = this.columns.map((c) => c.name);
     const visible = this.visibleColumns();
@@ -120,7 +109,6 @@ export class DataTableGridComponent implements OnInit, OnChanges, OnDestroy, Aft
     if (visible.size === 0) return [];
     return all.filter((c) => visible.has(c));
   });
-
   visibleColumnsFiltered = computed(() => {
     const order = this.columnOrder();
     const visible = this.visibleColumns();
@@ -132,7 +120,6 @@ export class DataTableGridComponent implements OnInit, OnChanges, OnDestroy, Aft
     }
     return this.columns.filter((c) => visible.has(c.name));
   });
-
   gridTemplateColumns = computed(() => {
     const widths = this.columnWidths();
     const cols = this.visibleColumnsList().map((col) => {
@@ -141,23 +128,18 @@ export class DataTableGridComponent implements OnInit, OnChanges, OnDestroy, Aft
     });
     return `40px ${cols.join(" ")} 40px`;
   });
-
   gridTemplateRows = computed(() => {
     const rowCount = this.data().length;
     return `44px repeat(${rowCount}, 44px)`;
   });
-
   previewRows = computed(() => this.data().slice(0, 5));
-
   hoveredRowIndex = signal<number | null>(null);
   draggedColumnName = signal<string>("");
   previewWidth = signal<number>(150);
-
   ngOnChanges(changes: SimpleChanges) {
     if (!this.collectionName) {
       return;
     }
-
     const collectionChanged =
       this.hasInitialized && changes["collectionName"]?.currentValue !== this.lastCollectionName;
     const filterChanged = changes["filter"]?.currentValue !== this.lastFilter;
@@ -166,7 +148,6 @@ export class DataTableGridComponent implements OnInit, OnChanges, OnDestroy, Aft
     const visibleColumnsChanged = changes["inputVisibleColumns"]?.currentValue !== undefined;
     const reloadTriggerChanged = changes["reloadTrigger"]?.currentValue !== this.lastReloadTrigger;
     const columnsChanged = changes["columns"]?.currentValue !== undefined;
-
     if (collectionChanged) {
       this.lastCollectionName = this.collectionName;
       this.lastFilter = this.filter;
@@ -184,31 +165,24 @@ export class DataTableGridComponent implements OnInit, OnChanges, OnDestroy, Aft
       this.onLoadData();
       return;
     }
-
     if (reloadTriggerChanged) {
       this.lastReloadTrigger = this.reloadTrigger;
       this.onLoadData(true);
     }
   }
-
   ngAfterViewInit() {
     this.setupScrollSync();
   }
-
   private setupScrollSync() {
     const headerEl = this.headerScrollRef?.nativeElement;
     const bodyEl = this.bodyScrollRef?.nativeElement;
-
     if (!headerEl || !bodyEl) return;
-
     const syncScroll = (source: HTMLElement, target: HTMLElement) => {
       target.scrollLeft = source.scrollLeft;
     };
-
     bodyEl.addEventListener("scroll", () => syncScroll(bodyEl, headerEl));
     headerEl.addEventListener("scroll", () => syncScroll(headerEl, bodyEl));
   }
-
   async ngOnInit() {
     this.hasInitialized = true;
     if (this.collectionName) {
@@ -221,15 +195,12 @@ export class DataTableGridComponent implements OnInit, OnChanges, OnDestroy, Aft
       await this.onLoadData();
     }
   }
-
   ngOnDestroy() {
     this.store.reset();
   }
-
   initColumnWidths() {
     const allColumnNames = this.columns.map((c) => c.name);
     const defaultOrder = allColumnNames;
-
     if (!this.hasLoadedColumnOrder) {
       const savedOrder = this.service.loadColumnOrder(this.collectionName, this.columns);
       if (savedOrder.length > 0) {
@@ -247,10 +218,8 @@ export class DataTableGridComponent implements OnInit, OnChanges, OnDestroy, Aft
         this.store.setColumnOrder(defaultOrder);
       }
     }
-
     this.store.initColumns(this.columns);
   }
-
   private async onLoadData(forceRefresh?: boolean) {
     const filterObj = this.service.parseFilter(this.filter);
     if (filterObj === undefined && this.filter) {
@@ -272,7 +241,6 @@ export class DataTableGridComponent implements OnInit, OnChanges, OnDestroy, Aft
       // error handled in service
     }
   }
-
   private async onLoadColumnsFallback() {
     try {
       const columns = await this.service.loadColumnsFallback(this.collectionName);
@@ -282,22 +250,18 @@ export class DataTableGridComponent implements OnInit, OnChanges, OnDestroy, Aft
       // error handled in service
     }
   }
-
   onSort(event: { column: string; direction: "asc" | "desc" }) {
     this.store.setSort(event.column, event.direction);
     this.onLoadData();
   }
-
   onSortByColumn(column: string) {
     this.store.toggleSort(column);
     this.sortChange.emit({ column, direction: this.sortDirection() });
   }
-
   getSortIcon(column: string): "asc" | "desc" | "none" {
     if (this.sortColumn() !== column) return "none";
     return this.sortDirection();
   }
-
   onColumnDrop(event: CdkDragDrop<string[]>) {
     if (event.previousIndex === event.currentIndex) return;
     const currentOrder = [...this.visibleColumnsList()];
@@ -316,14 +280,12 @@ export class DataTableGridComponent implements OnInit, OnChanges, OnDestroy, Aft
     this.hasLoadedColumnOrder = true;
     this.columnsOrderChange.emit(newOrder);
   }
-
   onColumnResizeStart(col: string, event: MouseEvent) {
     event.preventDefault();
     this.resizingColumn.set(col);
     const startX = event.clientX;
     const startWidth = this.columnWidths()[col] || 150;
     let resizeLastWidth = startWidth;
-
     const moveHandler = (e: MouseEvent) => {
       const newWidth = Math.max(80, startWidth + (e.clientX - startX));
       if (Math.abs(newWidth - resizeLastWidth) >= 5) {
@@ -331,33 +293,26 @@ export class DataTableGridComponent implements OnInit, OnChanges, OnDestroy, Aft
         this.store.setColumnWidth(col, newWidth);
       }
     };
-
     const upHandler = () => {
       this.resizingColumn.set(null);
       document.removeEventListener("mousemove", moveHandler);
       document.removeEventListener("mouseup", upHandler);
     };
-
     document.addEventListener("mousemove", moveHandler);
     document.addEventListener("mouseup", upHandler);
   }
-
   onToggleSelectAll() {
     this.store.toggleSelectAll();
   }
-
   onToggleRow(index: number) {
     this.store.toggleRow(index);
   }
-
   onRowHover(rowIndex: number) {
     this.hoveredRowIndex.set(rowIndex);
   }
-
   onRowLeave() {
     this.hoveredRowIndex.set(null);
   }
-
   onRowClick(row: RowData, event: MouseEvent, rowIndex: number) {
     const target = event.target as HTMLElement;
     if (target.tagName === "INPUT" && (target as HTMLInputElement).type === "checkbox") {
@@ -366,49 +321,38 @@ export class DataTableGridComponent implements OnInit, OnChanges, OnDestroy, Aft
     }
     this.documentClick.emit(row);
   }
-
   onViewJson(row: RowData) {
     this.documentClick.emit(row);
   }
-
   onToggleColumnMenu() {
     this.showColumnMenu.update((v) => !v);
   }
-
   showAllCols() {
     this.store.showAllColumns(this.columns);
   }
-
   hideAllCols() {
     this.store.hideAllColumns();
   }
-
   toggleColVisibility(colName: string) {
     this.store.toggleColumnVisibility(colName);
   }
-
   onDragStarted(columnName: string, width: number) {
     this.draggedColumnName.set(columnName);
     this.previewWidth.set(width || 150);
   }
-
   onDragReleased() {
     this.draggedColumnName.set("");
   }
-
   getCellValue(row: RowData, columnName: string): string {
     const value = row[columnName];
     if (isNullOrUndefined(value)) return "null";
     if (typeof value === "object") return JSON.stringify(value);
     return String(value);
   }
-
   trackRow = trackByRow;
-
   isSelected(index: number): boolean {
     return this.store.isSelected(index);
   }
-
   getTypeIcon(dataType: string): string {
     const t = dataType.toLowerCase();
     if (t === "string" || t === "text") return "Aa";
@@ -419,7 +363,6 @@ export class DataTableGridComponent implements OnInit, OnChanges, OnDestroy, Aft
     if (t === "array") return "[]";
     return "?";
   }
-
   getTypeColor(dataType: string): string {
     const t = dataType.toLowerCase();
     if (t === "string" || t === "text") return "text-blue-400";
@@ -431,22 +374,18 @@ export class DataTableGridComponent implements OnInit, OnChanges, OnDestroy, Aft
     if (t === "array") return "text-pink-400";
     return "text-slate-400";
   }
-
   onPageChange(newPage: number) {
     this.page = newPage;
     this.pageChange.emit(this.page);
   }
-
   changePageSize(size: number) {
     this.pageSize = size;
     this.page = 0;
     this.pageChange.emit(this.page);
   }
-
   getSelectedData(): RowData[] {
     return this.store.getSelectedData();
   }
-
   async exportData(format: ExportFormat) {
     try {
       await this.service.exportData(this.collectionName, format);
@@ -455,32 +394,26 @@ export class DataTableGridComponent implements OnInit, OnChanges, OnDestroy, Aft
     }
     this.showExportDialog.set(false);
   }
-
   toggleExportDialog() {
     this.showExportDialog.update((v) => !v);
   }
-
   closeExportDialog() {
     this.showExportDialog.set(false);
   }
-
   openAddRecordModal() {
     this.recordFormMode.set("add");
     this.editingRecord.set(null);
     this.showRecordForm.set(true);
   }
-
   openEditRecordModal(row: RowData) {
     this.recordFormMode.set("edit");
     this.editingRecord.set(row);
     this.showRecordForm.set(true);
   }
-
   closeRecordForm() {
     this.showRecordForm.set(false);
     this.editingRecord.set(null);
   }
-
   async handleRecordSave(record: RowData) {
     if ((record as any).__delete) {
       delete (record as any).__delete;
@@ -504,15 +437,12 @@ export class DataTableGridComponent implements OnInit, OnChanges, OnDestroy, Aft
       }
     }
   }
-
   onBulkExport() {
     this.showExportDialog.set(true);
   }
-
   onBulkDelete() {
     this.showBulkDeleteConfirm.set(true);
   }
-
   async confirmBulkDelete() {
     try {
       const count = this.store.selectedRows().size;
@@ -525,23 +455,18 @@ export class DataTableGridComponent implements OnInit, OnChanges, OnDestroy, Aft
       // error handled in service
     }
   }
-
   cancelBulkDelete() {
     this.showBulkDeleteConfirm.set(false);
   }
-
   clearSelection() {
     this.store.clearSelection();
   }
-
   clearError() {
     this.store.clearError();
   }
-
   getIdField(): string | null {
     return this.service.getIdField(this.columns);
   }
-
   sortChange = new EventEmitter<{ column: string; direction: "asc" | "desc" }>();
   columnDrop = new EventEmitter<CdkDragDrop<ColumnInfo[]>>();
 }

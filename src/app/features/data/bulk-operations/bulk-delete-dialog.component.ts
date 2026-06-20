@@ -13,40 +13,30 @@ import { ToastService } from "@services/services.toast.service";
 export class BulkDeleteDialogComponent {
   private readonly bulkOps = inject(BulkOperationsService);
   private readonly toast = inject(ToastService);
-
   @Input() collectionName = "";
   @Input() documentIds: string[] = [];
-
   @Output() closed = new EventEmitter<void>();
   @Output() deleted = new EventEmitter<void>();
-
   softDelete = signal(false);
   isProcessing = signal(false);
-
   recordCount = computed(() => this.documentIds.length);
-
   onSoftDeleteChange(value: boolean): void {
     this.softDelete.set(value);
   }
-
   getConfirmMessage(): string {
     return `Delete ${this.recordCount()} selected record${this.recordCount() !== 1 ? "s" : ""}?`;
   }
-
   onCancel(): void {
     this.closed.emit();
   }
-
   async onConfirm(): Promise<void> {
     this.isProcessing.set(true);
-
     try {
       const request: BulkDeleteRequest = {
         collectionName: this.collectionName,
         documentIds: this.documentIds,
         softDelete: this.softDelete(),
       };
-
       await this.bulkOps.executeBulkDelete(request);
       this.deleted.emit();
       this.closed.emit();

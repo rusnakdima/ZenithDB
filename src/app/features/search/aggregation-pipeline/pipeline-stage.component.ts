@@ -31,7 +31,6 @@ import { LimitConfigComponent } from "./stage-config/limit-config.component";
             {{ stage.type }}
           </span>
         </div>
-
         <div class="ml-auto flex items-center gap-1">
           <button
             type="button"
@@ -80,7 +79,6 @@ import { LimitConfigComponent } from "./stage-config/limit-config.component";
           </button>
         </div>
       </div>
-
       <!-- Stage Config -->
       <div class="p-4">
         @switch (stage.type) {
@@ -148,52 +146,40 @@ export class PipelineStageComponent {
   @Input() collectionName = "";
   @Input() index = 0;
   @Input() totalCount = 1;
-
   @Output() remove = new EventEmitter<void>();
   @Output() moveUp = new EventEmitter<void>();
   @Output() moveDown = new EventEmitter<void>();
   @Output() configChange = new EventEmitter<StageConfig>();
-
   onRemove(): void {
     this.remove.emit();
   }
-
   onMoveUp(): void {
     this.moveUp.emit();
   }
-
   onMoveDown(): void {
     this.moveDown.emit();
   }
-
   onConfigChange(config: StageConfig): void {
     this.configChange.emit(config);
   }
-
   onReplaceRootChange(expression: string): void {
     this.configChange.emit({ expression });
   }
-
   asMatchConfig(): import("./pipeline-builder.service").MatchConfig {
     return this.stage.config as import("./pipeline-builder.service").MatchConfig;
   }
-
   asGroupConfig(): import("./pipeline-builder.service").GroupConfig {
     return this.stage.config as import("./pipeline-builder.service").GroupConfig;
   }
-
   asSortConfig(): import("./pipeline-builder.service").SortStageConfig {
     return this.stage.config as import("./pipeline-builder.service").SortStageConfig;
   }
-
   asSkipLimitConfig(): import("./pipeline-builder.service").SkipLimitConfig {
     return this.stage.config as import("./pipeline-builder.service").SkipLimitConfig;
   }
-
   asProjectConfig(): import("./pipeline-builder.service").ProjectConfig {
     return this.stage.config as import("./pipeline-builder.service").ProjectConfig;
   }
-
   asReplaceRootConfig(): import("./pipeline-builder.service").ReplaceRootConfig {
     return this.stage.config as import("./pipeline-builder.service").ReplaceRootConfig;
   }

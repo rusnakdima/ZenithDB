@@ -11,19 +11,15 @@ import { NamedFilter } from "./complex-filter.component";
 })
 export class FilterHistoryComponent implements OnInit {
   private readonly storage = inject(PersistentStorageService);
-
   @Input() namedFilters: NamedFilter[] = [];
   @Output() historySelect = new EventEmitter<FilterExpression>();
   @Output() historyDelete = new EventEmitter<FilterExpression>();
   @Output() namedFilterApply = new EventEmitter<NamedFilter>();
   @Output() namedFilterDelete = new EventEmitter<string>();
-
   historyItems = signal<FilterExpression[]>([]);
-
   ngOnInit(): void {
     this.loadHistory();
   }
-
   private loadHistory(): void {
     const history = this.storage.getFilterHistory();
     const items: FilterExpression[] = [];
@@ -34,29 +30,23 @@ export class FilterHistoryComponent implements OnInit {
     }
     this.historyItems.set(items);
   }
-
   onHistoryItemSelect(item: FilterExpression): void {
     this.historySelect.emit(item);
   }
-
   onHistoryItemDelete(item: FilterExpression, event: MouseEvent): void {
     event.stopPropagation();
     this.historyDelete.emit(item);
     this.loadHistory();
   }
-
   onNamedFilterApply(namedFilter: NamedFilter): void {
     this.namedFilterApply.emit(namedFilter);
   }
-
   onNamedFilterDelete(id: string, event: MouseEvent): void {
     event.stopPropagation();
     this.namedFilterDelete.emit(id);
   }
-
   formatFilterPreview(filter: FilterExpression): string {
     const parts: string[] = [];
-
     if (filter.and) {
       parts.push(`AND (${filter.and.length} conditions)`);
     }
@@ -66,10 +56,8 @@ export class FilterHistoryComponent implements OnInit {
     if (filter.field) {
       parts.push(`${filter.field} ${filter.operator || "eq"} ${filter.value ?? "null"}`);
     }
-
     return parts.slice(0, 3).join(", ") || "Empty filter";
   }
-
   trackByFilter(index: number, filter: FilterExpression): string {
     const serialized = JSON.stringify(filter);
     return serialized || String(index);

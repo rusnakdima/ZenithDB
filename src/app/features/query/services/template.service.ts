@@ -5,17 +5,13 @@ import { FilterOperator } from "@entities/entities.connection.config";
 import { findById } from "@shared/utils/array.utils";
 const TEMPLATES_STORAGE_KEY = "zenith_query_templates";
 const FAVORITES_STORAGE_KEY = "zenith_template_favorites";
-
 @Injectable({ providedIn: "root" })
 export class TemplateService {
   private readonly storage = inject(PersistentStorageService);
-
   private readonly templatesSignal = signal<QueryTemplate[]>([]);
   private readonly favoritesSignal = signal<Set<string>>(new Set());
-
   readonly templates = this.templatesSignal.asReadonly();
   readonly favorites = this.favoritesSignal.asReadonly();
-
   readonly templatesByCategory = computed(() => {
     const templates = this.templatesSignal();
     const categories: Record<TemplateCategory, QueryTemplate[]> = {
@@ -24,26 +20,21 @@ export class TemplateService {
       aggregate: [],
       admin: [],
     };
-
     for (const template of templates) {
       if (categories[template.category]) {
         categories[template.category].push(template);
       }
     }
-
     return categories;
   });
-
   readonly favoriteTemplates = computed(() => {
     const favs = this.favoritesSignal();
     return this.templatesSignal().filter((t) => favs.has(t.id));
   });
-
   constructor() {
     this.loadTemplates();
     this.loadFavorites();
   }
-
   private loadTemplates(): void {
     const stored = this.storage.get<QueryTemplate[]>(TEMPLATES_STORAGE_KEY);
     if (stored && stored.length > 0) {
@@ -52,37 +43,30 @@ export class TemplateService {
       this.templatesSignal.set(BUILT_IN_TEMPLATES);
     }
   }
-
   private loadFavorites(): void {
     const stored = this.storage.get<string[]>(FAVORITES_STORAGE_KEY);
     if (stored) {
       this.favoritesSignal.set(new Set(stored));
     }
   }
-
   private saveTemplates(): void {
     const userTemplates = this.templatesSignal().filter((t) => !t.isBuiltIn);
     this.storage.set(TEMPLATES_STORAGE_KEY, userTemplates);
   }
-
   private saveFavorites(): void {
     this.storage.set(FAVORITES_STORAGE_KEY, Array.from(this.favoritesSignal()));
   }
-
   getTemplateById(id: string): QueryTemplate | undefined {
     return findById(this.templatesSignal(), id);
   }
-
   getTemplatesByCategory(category: TemplateCategory): QueryTemplate[] {
     return this.templatesSignal().filter((t) => t.category === category);
   }
-
   getTemplatesByProvider(providerType: string): QueryTemplate[] {
     return this.templatesSignal().filter(
       (t) => t.providerTypes.includes(providerType as any) || t.providerTypes.length === 0
     );
   }
-
   searchTemplates(query: string): QueryTemplate[] {
     const lower = query.toLowerCase();
     return this.templatesSignal().filter(
@@ -92,42 +76,34 @@ export class TemplateService {
         t.keywords?.some((k) => k.toLowerCase().includes(lower))
     );
   }
-
   addTemplate(template: Omit<QueryTemplate, "id" | "isBuiltIn">): QueryTemplate {
     const newTemplate: QueryTemplate = {
       ...template,
       id: crypto.randomUUID(),
       isBuiltIn: false,
     };
-
     this.templatesSignal.update((templates) => [...templates, newTemplate]);
     this.saveTemplates();
-
     return newTemplate;
   }
-
   updateTemplate(id: string, updates: Partial<QueryTemplate>): void {
     this.templatesSignal.update((templates) =>
       templates.map((t) => (t.id === id ? { ...t, ...updates } : t))
     );
     this.saveTemplates();
   }
-
   deleteTemplate(id: string): void {
     const template = this.getTemplateById(id);
     if (template?.isBuiltIn) return;
-
     this.templatesSignal.update((templates) => templates.filter((t) => t.id !== id));
     this.favoritesSignal.update((favs) => {
       const newFavs = new Set(favs);
       newFavs.delete(id);
       return newFavs;
     });
-
     this.saveTemplates();
     this.saveFavorites();
   }
-
   toggleFavorite(id: string): void {
     const isFav = this.favoritesSignal().has(id);
     this.favoritesSignal.update((favs) => {
@@ -141,11 +117,9 @@ export class TemplateService {
     });
     this.saveFavorites();
   }
-
   isFavorite(id: string): boolean {
     return this.favoritesSignal().has(id);
   }
-
   applyTemplate(
     template: QueryTemplate,
     variables: Record<string, unknown>
@@ -155,14 +129,12 @@ export class TemplateService {
     limit?: number;
   } {
     const filter = this.substituteVariables(template.filterTemplate, variables);
-
     return {
       filter,
       sort: template.variables.find((v) => v.name === "sort")?.defaultValue as any,
       limit: template.variables.find((v) => v.name === "limit")?.defaultValue as number,
     };
   }
-
   private substituteVariables(
     filter: QueryTemplateFilter,
     variables: Record<string, unknown>
@@ -177,7 +149,6 @@ export class TemplateService {
       groups: filter.groups?.map((g) => this.substituteVariables(g, variables)),
     };
   }
-
   private substituteVariable(str: string, variables: Record<string, unknown>): string {
     const match = str.match(/^\{\{(\w+)\}\}$/);
     if (match) {
@@ -186,7 +157,6 @@ export class TemplateService {
     return str;
   }
 }
-
 const BUILT_IN_TEMPLATES: QueryTemplate[] = [
   {
     id: "find-all",

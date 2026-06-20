@@ -12,31 +12,25 @@ import { FieldInfo } from "../../../query/models";
 })
 export class GroupConfigComponent implements OnInit {
   private readonly schemaCompletion = inject(SchemaCompletionService);
-
   @Input() config!: GroupConfig;
   @Input() collectionName = "";
   @Output() configChange = new EventEmitter<GroupConfig>();
-
   fields = signal<FieldInfo[]>([]);
-
   ngOnInit(): void {
     this.loadFields();
   }
-
   private async loadFields(): Promise<void> {
     if (this.collectionName) {
       const fields = await this.schemaCompletion.getFields(this.collectionName);
       this.fields.set(fields);
     }
   }
-
   onGroupByChange(field: string): void {
     this.configChange.emit({
       ...this.config,
       groupByField: field,
     });
   }
-
   addAccumulator(): void {
     const newAcc: GroupAccumulator = {
       id: crypto.randomUUID(),
@@ -49,25 +43,21 @@ export class GroupConfigComponent implements OnInit {
       accumulators: [...this.config.accumulators, newAcc],
     });
   }
-
   updateAccumulatorField(index: number, field: string): void {
     const accumulators = [...this.config.accumulators];
     accumulators[index] = { ...accumulators[index], field };
     this.configChange.emit({ ...this.config, accumulators });
   }
-
   updateAccumulatorOperator(index: number, operator: GroupAccumulator["operator"]): void {
     const accumulators = [...this.config.accumulators];
     accumulators[index] = { ...accumulators[index], operator };
     this.configChange.emit({ ...this.config, accumulators });
   }
-
   updateAccumulatorValue(index: number, value: string): void {
     const accumulators = [...this.config.accumulators];
     accumulators[index] = { ...accumulators[index], value };
     this.configChange.emit({ ...this.config, accumulators });
   }
-
   removeAccumulator(index: number): void {
     this.configChange.emit({
       ...this.config,

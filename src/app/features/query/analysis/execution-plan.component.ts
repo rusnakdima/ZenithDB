@@ -1,7 +1,6 @@
 import { Component, Input, signal, computed } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { ExecutionPlanNode } from "./query-analyzer.service";
-
 @Component({
   selector: "app-execution-plan",
   standalone: true,
@@ -13,43 +12,35 @@ export class ExecutionPlanComponent {
     this.nodes.set(value);
     this.initializeExpanded();
   }
-
   @Input() set analysisScore(value: number) {
     this.score.set(value);
   }
-
   nodes = signal<ExecutionPlanNode[]>([]);
   score = signal(100);
   expandedNodes = signal<Set<string>>(new Set());
-
   totalCost = computed(() => {
     return this.nodes().reduce((sum, node) => sum + node.cost, 0);
   });
-
   scoreColor = computed(() => {
     const s = this.score();
     if (s >= 80) return "text-emerald-400";
     if (s >= 50) return "text-amber-400";
     return "text-red-400";
   });
-
   scoreBgColor = computed(() => {
     return "border border-[var(--accent)]/30";
   });
-
   private initializeExpanded(): void {
     const allIds = new Set<string>();
     this.collectNodeIds(this.nodes(), allIds);
     this.expandedNodes.set(allIds);
   }
-
   private collectNodeIds(nodes: ExecutionPlanNode[], ids: Set<string>): void {
     for (const node of nodes) {
       ids.add(node.id);
       this.collectNodeIds(node.children, ids);
     }
   }
-
   toggleNode(nodeId: string): void {
     this.expandedNodes.update((set) => {
       const newSet = new Set(set);
@@ -61,15 +52,12 @@ export class ExecutionPlanComponent {
       return newSet;
     });
   }
-
   isExpanded(nodeId: string): boolean {
     return this.expandedNodes().has(nodeId);
   }
-
   hasChildren(node: ExecutionPlanNode): boolean {
     return node.children.length > 0;
   }
-
   getOperationColor(operation: string): string {
     switch (operation) {
       case "COLLECTION_SCAN":
@@ -85,13 +73,11 @@ export class ExecutionPlanComponent {
         return "text-slate-400 bg-slate-500/10";
     }
   }
-
   getCostColor(cost: number): string {
     if (cost >= 80) return "text-red-400";
     if (cost >= 30) return "text-amber-400";
     return "text-emerald-400";
   }
-
   trackByNodeId(index: number, node: ExecutionPlanNode): string {
     return node.id || String(index);
   }

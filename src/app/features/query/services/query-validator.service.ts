@@ -9,22 +9,18 @@ export interface ValidationError {
   message: string;
   severity: "error" | "warning";
 }
-
 export interface ValidationResult {
   isValid: boolean;
   errors: ValidationError[];
   warnings: ValidationError[];
 }
-
 @Injectable({ providedIn: "root" })
 export class QueryValidatorService {
   private readonly filterBuilder = inject(FilterBuilderService);
   private readonly providerDetector = inject(ProviderDetectorService);
-
   validateQuery(query: string): ValidationResult {
     const errors: ValidationError[] = [];
     const warnings: ValidationError[] = [];
-
     if (!query || query.trim().length === 0) {
       return {
         isValid: false,
@@ -32,9 +28,7 @@ export class QueryValidatorService {
         warnings: [],
       };
     }
-
     const syntaxMode = this.providerDetector.currentSyntaxMode();
-
     switch (syntaxMode) {
       case "sql":
         this.validateSql(query, errors, warnings);
@@ -48,14 +42,12 @@ export class QueryValidatorService {
       default:
         this.validateSql(query, errors, warnings);
     }
-
     return {
       isValid: errors.filter((e) => e.severity === "error").length === 0,
       errors: errors.filter((e) => e.severity === "error"),
       warnings: [...errors.filter((e) => e.severity === "warning"), ...warnings],
     };
   }
-
   validateFilter(filter: FilterExpression): ValidationResult {
     const result = this.filterBuilder.validateFilter(filter);
     return {
@@ -74,11 +66,9 @@ export class QueryValidatorService {
       })),
     };
   }
-
   private validateSql(query: string, errors: ValidationError[], warnings: ValidationError[]): void {
     const sqlKeywords = ["SELECT", "INSERT", "UPDATE", "DELETE", "CREATE", "DROP", "ALTER"];
     const hasKeyword = sqlKeywords.some((kw) => query.toUpperCase().includes(kw));
-
     if (!hasKeyword && !query.toUpperCase().includes("WHERE")) {
       warnings.push({
         line: 1,
@@ -87,7 +77,6 @@ export class QueryValidatorService {
         severity: "warning",
       });
     }
-
     const unclosedParens = this.countUnclosedParens(query);
     if (unclosedParens !== 0) {
       errors.push({
@@ -97,7 +86,6 @@ export class QueryValidatorService {
         severity: "error",
       });
     }
-
     const unclosedStrings = this.findUnclosedStrings(query);
     if (unclosedStrings.length > 0) {
       errors.push(
@@ -109,7 +97,6 @@ export class QueryValidatorService {
         }))
       );
     }
-
     const invalidChars = this.findInvalidSqlChars(query);
     if (invalidChars.length > 0) {
       errors.push({
@@ -120,7 +107,6 @@ export class QueryValidatorService {
       });
     }
   }
-
   private validateMongoDB(
     query: string,
     errors: ValidationError[],
@@ -128,7 +114,6 @@ export class QueryValidatorService {
   ): void {
     try {
       const parsed = JSON.parse(query);
-
       if (typeof parsed !== "object" || parsed === null) {
         errors.push({
           line: 1,
@@ -137,7 +122,6 @@ export class QueryValidatorService {
           severity: "error",
         });
       }
-
       const validOps = [
         "$and",
         "$or",
@@ -154,7 +138,6 @@ export class QueryValidatorService {
         "$regex",
       ];
       const usedOps = this.extractMongoOperators(parsed);
-
       for (const op of usedOps) {
         if (!validOps.includes(op) && !op.startsWith("$")) {
           warnings.push({
@@ -174,7 +157,6 @@ export class QueryValidatorService {
       });
     }
   }
-
   private validateJson(
     query: string,
     errors: ValidationError[],
@@ -182,7 +164,6 @@ export class QueryValidatorService {
   ): void {
     try {
       const parsed = JSON.parse(query);
-
       if (typeof parsed !== "object") {
         errors.push({
           line: 1,
@@ -200,56 +181,45 @@ export class QueryValidatorService {
       });
     }
   }
-
   private countUnclosedParens(query: string): number {
     let count = 0;
     let inString = false;
     let escaped = false;
-
     for (const char of query) {
       if (escaped) {
         escaped = false;
         continue;
       }
-
       if (char === "\\") {
         escaped = true;
         continue;
       }
-
       if (char === "'" || char === '"') {
         inString = !inString;
         continue;
       }
-
       if (!inString) {
         if (char === "(") count++;
         if (char === ")") count--;
       }
     }
-
     return count;
   }
-
   private findUnclosedStrings(query: string): number[] {
     const positions: number[] = [];
     let inString = false;
     let stringChar = "";
     let escaped = false;
-
     for (let i = 0; i < query.length; i++) {
       const char = query[i];
-
       if (escaped) {
         escaped = false;
         continue;
       }
-
       if (char === "\\") {
         escaped = true;
         continue;
       }
-
       if (!inString && (char === "'" || char === '"')) {
         inString = true;
         stringChar = char;
@@ -257,18 +227,14 @@ export class QueryValidatorService {
         inString = false;
       }
     }
-
     if (inString) {
       positions.push(query.length);
     }
-
     return positions;
   }
-
   private findInvalidSqlChars(query: string): string[] {
     const invalid: string[] = [];
     const validPattern = /[a-zA-Z0-9_\s.,;'<>=!()+-]/;
-
     for (const char of query) {
       if (!validPattern.test(char) && char !== "\n" && char !== "\r" && char !== "\t") {
         if (!invalid.includes(char)) {
@@ -276,15 +242,11 @@ export class QueryValidatorService {
         }
       }
     }
-
     return invalid;
   }
-
   private extractMongoOperators(obj: unknown, path: string[] = []): string[] {
     const operators: string[] = [];
-
     if (typeof obj !== "object" || obj === null) return operators;
-
     if (Array.isArray(obj)) {
       for (const item of obj) {
         operators.push(...this.extractMongoOperators(item, path));
@@ -297,23 +259,18 @@ export class QueryValidatorService {
         operators.push(...this.extractMongoOperators(value, [...path, key]));
       }
     }
-
     return operators;
   }
-
   private findLineNumber(query: string, position: number): number {
     const lines = query.substring(0, position).split("\n");
     return lines.length;
   }
-
   private findColumn(query: string, position: number): number {
     const lastNewline = query.lastIndexOf("\n", position);
     return position - lastNewline;
   }
-
   parseQueryToFilter(query: string): FilterExpression | null {
     const syntaxMode = this.providerDetector.currentSyntaxMode();
-
     if (syntaxMode === "mongodb" || syntaxMode === "json") {
       try {
         const parsed = JSON.parse(query);
@@ -322,10 +279,8 @@ export class QueryValidatorService {
         return null;
       }
     }
-
     return null;
   }
-
   private jsonToFilter(obj: Record<string, unknown>): FilterExpression | null {
     if (obj["$and"]) {
       return { and: obj["$and"] as FilterExpression[] };
@@ -333,10 +288,8 @@ export class QueryValidatorService {
     if (obj["$or"]) {
       return { or: obj["$or"] as FilterExpression[] };
     }
-
     for (const [key, value] of Object.entries(obj)) {
       if (key.startsWith("$")) continue;
-
       if (typeof value === "object" && value !== null) {
         const inner = value as Record<string, unknown>;
         for (const [op, opValue] of Object.entries(inner)) {
@@ -347,13 +300,10 @@ export class QueryValidatorService {
           };
         }
       }
-
       return { field: key, operator: "eq", value };
     }
-
     return null;
   }
-
   private mapOperator(op: string): FilterOperator {
     return (MONGO_OPERATOR_MAP[op] as FilterOperator) ?? "eq";
   }

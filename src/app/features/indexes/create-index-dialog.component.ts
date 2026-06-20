@@ -10,7 +10,6 @@ import { SchemaCompletionService } from "@features/query/services";
 import { FieldInfo } from "@features/query/models";
 import { ToastService } from "@services/services.toast.service";
 export type IndexType = "single" | "compound" | "text" | "geospatial" | "ttl" | "hashed";
-
 @Component({
   selector: "app-create-index-dialog",
   standalone: true,
@@ -28,40 +27,31 @@ export class CreateIndexDialogComponent implements OnInit {
   private readonly indexService = inject(IndexService);
   private readonly schemaCompletion = inject(SchemaCompletionService);
   private readonly toast = inject(ToastService);
-
   @Input() collectionName = "";
-
   @Output() closed = new EventEmitter<void>();
   @Output() create = new EventEmitter<IndexDefinition>();
-
   indexType = signal<IndexType>("single");
   selectedFields = signal<IndexField[]>([]);
   indexName = signal("");
   options = signal<IndexOptions>({});
   availableFields = signal<FieldInfo[]>([]);
-
   ngOnInit(): void {
     this.loadFields();
   }
-
   private async loadFields(): Promise<void> {
     const fields = await this.schemaCompletion.getFields(this.collectionName);
     this.availableFields.set(fields);
   }
-
   onIndexTypeChange(type: IndexType): void {
     this.indexType.set(type);
   }
-
   onFieldsChange(fields: IndexField[]): void {
     this.selectedFields.set(fields);
     this.updateIndexName();
   }
-
   onOptionsChange(options: IndexOptions): void {
     this.options.set(options);
   }
-
   private updateIndexName(): void {
     const fields = this.selectedFields();
     if (fields.length > 0) {
@@ -72,11 +62,9 @@ export class CreateIndexDialogComponent implements OnInit {
       this.indexName.set(name);
     }
   }
-
   onIndexNameChange(name: string): void {
     this.indexName.set(name);
   }
-
   get previewDefinition(): IndexDefinition {
     return {
       name: this.indexName() || "unnamed_index",
@@ -85,31 +73,26 @@ export class CreateIndexDialogComponent implements OnInit {
       options: this.options(),
     };
   }
-
   onCancel(): void {
     this.closed.emit();
   }
-
   onCreate(): void {
     const fields = this.selectedFields();
     if (fields.length === 0) {
       this.toast.error("Please select at least one field");
       return;
     }
-
     const name = this.indexName().trim();
     if (!name) {
       this.toast.error("Please enter an index name");
       return;
     }
-
     const indexDef: IndexDefinition = {
       name,
       type: this.indexType(),
       fields,
       options: this.options(),
     };
-
     this.create.emit(indexDef);
   }
 }

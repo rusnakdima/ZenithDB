@@ -7,9 +7,7 @@ import { RowData } from "@entities/entities.connection.config";
 import { withConnectionAndLoading } from "@shared/utils/api-wrapper.util";
 import { generateId, generateTransactionId } from "@shared/utils/id.utils";
 export type IsolationLevel = "Read Committed" | "Read Uncommitted" | "Repeatable Read";
-
 export type TransactionOperationType = "insert" | "update" | "delete" | "soft_delete";
-
 export interface TransactionOperation {
   id: string;
   type: TransactionOperationType;
@@ -19,13 +17,11 @@ export interface TransactionOperation {
   timestamp: string;
   undoable: boolean;
 }
-
 export interface Savepoint {
   name: string;
   timestamp: string;
   operations: TransactionOperation[];
 }
-
 export interface Transaction {
   id?: string;
   isolationLevel: IsolationLevel;
@@ -35,30 +31,24 @@ export interface Transaction {
   startedAt?: string;
   status: "active" | "committed" | "rolled_back";
 }
-
 @Injectable({ providedIn: "root" })
 export class TransactionService {
   private connectionState = inject(ConnectionStateService);
   private api = inject(ApiProvider);
   private loadingService = inject(LoadingService);
   private toast = inject(ToastService);
-
   private transactionSignal = signal<Transaction | null>(null);
   private operationLogSignal = signal<TransactionOperation[]>([]);
-
   readonly transaction = this.transactionSignal.asReadonly();
   readonly operationLog = this.operationLogSignal.asReadonly();
-
   readonly isActive = computed(() => this.transactionSignal()?.status === "active");
   readonly activeCollections = computed(() => this.transactionSignal()?.collections || new Set());
   readonly operationCount = computed(() => this.operationLogSignal().length);
-
   async beginTransaction(isolationLevel: IsolationLevel = "Read Committed"): Promise<void> {
     const connId = this.connectionState.activeConnectionId();
     if (!connId) {
       throw new Error("No active connection");
     }
-
     try {
       const result = await this.api.beginTransaction(connId, isolationLevel);
       this.transactionSignal.set({
@@ -86,13 +76,11 @@ export class TransactionService {
       this.toast.success("Transaction started (local mode)");
     }
   }
-
   async commitTransaction(): Promise<void> {
     const tx = this.transactionSignal();
     if (!tx) {
       throw new Error("No active transaction");
     }
-
     try {
       await this.api.commitTransaction(tx.id!);
       this.toast.success(`Transaction committed with ${tx.operations.length} operations`);
@@ -103,13 +91,11 @@ export class TransactionService {
     }
     this.resetTransaction();
   }
-
   async rollbackTransaction(): Promise<void> {
     const tx = this.transactionSignal();
     if (!tx) {
       throw new Error("No active transaction");
     }
-
     try {
       await this.api.rollbackTransaction(tx.id!);
       this.toast.success("Transaction rolled back");
@@ -118,19 +104,16 @@ export class TransactionService {
     }
     this.resetTransaction();
   }
-
   async createSavepoint(name: string): Promise<void> {
     const tx = this.transactionSignal();
     if (!tx || tx.status !== "active") {
       throw new Error("No active transaction");
     }
-
     const savepoint: Savepoint = {
       name,
       timestamp: new Date().toISOString(),
       operations: [...this.operationLogSignal()],
     };
-
     this.transactionSignal.update((t) => {
       if (!t) return t;
       return {
@@ -138,25 +121,20 @@ export class TransactionService {
         savepoints: [...t.savepoints, savepoint],
       };
     });
-
     this.toast.success(`Savepoint "${name}" created`);
   }
-
   async rollbackToSavepoint(name: string): Promise<void> {
     const tx = this.transactionSignal();
     if (!tx || tx.status !== "active") {
       throw new Error("No active transaction");
     }
-
     const savepoint = tx.savepoints.find((s) => s.name === name);
     if (!savepoint) {
       throw new Error(`Savepoint "${name}" not found`);
     }
-
     this.operationLogSignal.set([...savepoint.operations]);
     this.toast.success(`Rolled back to savepoint "${name}"`);
   }
-
   queueOperation(
     type: TransactionOperationType,
     collection: string,
@@ -166,7 +144,6 @@ export class TransactionService {
     if (!this.isActive()) {
       throw new Error("No active transaction");
     }
-
     const operation: TransactionOperation = {
       id: generateId("op_"),
       type,
@@ -176,7 +153,6 @@ export class TransactionService {
       timestamp: new Date().toISOString(),
       undoable: type !== "soft_delete",
     };
-
     this.operationLogSignal.update((ops) => [...ops, operation]);
     this.transactionSignal.update((tx) => {
       if (!tx) return tx;
@@ -189,22 +165,18 @@ export class TransactionService {
       };
     });
   }
-
   async executeQueuedOperations(): Promise<void> {
     const connId = this.connectionState.activeConnectionId();
     const tx = this.transactionSignal();
     if (!connId || !tx) {
       throw new Error("No active transaction");
     }
-
     const operations = this.operationLogSignal();
     if (operations.length === 0) {
       this.toast.warning("No operations to execute");
       return;
     }
-
     this.loadingService.show(`Executing ${operations.length} operations...`);
-
     try {
       for (const op of operations) {
         switch (op.type) {
@@ -238,25 +210,20 @@ export class TransactionService {
       this.loadingService.hide();
     }
   }
-
   undoLastOperation(): void {
     const operations = this.operationLogSignal();
     if (operations.length === 0) return;
-
     const lastOp = operations[operations.length - 1];
     if (!lastOp.undoable) {
       this.toast.warning("Last operation cannot be undone");
       return;
     }
-
     this.operationLogSignal.update((ops) => ops.slice(0, -1));
     this.toast.info(`Undid operation: ${lastOp.type}`);
   }
-
   clearOperationLog(): void {
     this.operationLogSignal.set([]);
   }
-
   private resetTransaction(): void {
     this.transactionSignal.set(null);
     this.operationLogSignal.set([]);

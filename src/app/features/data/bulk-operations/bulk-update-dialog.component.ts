@@ -23,24 +23,18 @@ import { ToastService } from "@services/services.toast.service";
 export class BulkUpdateDialogComponent implements OnInit {
   private readonly bulkOps = inject(BulkOperationsService);
   private readonly toast = inject(ToastService);
-
   @Input() collectionName = "";
   @Input() documentIds: string[] = [];
-
   @Output() closed = new EventEmitter<void>();
   @Output() updated = new EventEmitter<void>();
-
   availableFields = signal<FieldInfo[]>([]);
   selectedField = signal<string>("");
   newValue = signal<string>("");
   isProcessing = signal(false);
-
   recordCount = computed(() => this.documentIds.length);
-
   ngOnInit(): void {
     this.loadFields();
   }
-
   private async loadFields(): Promise<void> {
     const fields = await this.bulkOps.getFields(this.collectionName);
     this.availableFields.set(fields);
@@ -48,23 +42,18 @@ export class BulkUpdateDialogComponent implements OnInit {
       this.selectedField.set(fields[0].name);
     }
   }
-
   onFieldChange(fieldName: string): void {
     this.selectedField.set(fieldName);
   }
-
   onValueChange(value: string): void {
     this.newValue.set(value);
   }
-
   getValueForField(): unknown {
     const fieldName = this.selectedField();
     const fields = this.availableFields();
     const field = fields.find((f) => f.name === fieldName);
     const value = this.newValue();
-
     if (!field) return value;
-
     switch (field.type) {
       case "number":
         return Number(value);
@@ -74,28 +63,22 @@ export class BulkUpdateDialogComponent implements OnInit {
         return value;
     }
   }
-
   getPreviewText(): string {
     return `Will update ${this.recordCount()} record${this.recordCount() !== 1 ? "s" : ""}`;
   }
-
   onCancel(): void {
     this.closed.emit();
   }
-
   async onConfirm(): Promise<void> {
     if (!this.selectedField()) {
       this.toast.error("Please select a field to update");
       return;
     }
-
     if (this.newValue() === "") {
       this.toast.error("Please enter a new value");
       return;
     }
-
     this.isProcessing.set(true);
-
     try {
       const request: BulkUpdateRequest = {
         collectionName: this.collectionName,
@@ -103,7 +86,6 @@ export class BulkUpdateDialogComponent implements OnInit {
         field: this.selectedField(),
         value: this.getValueForField(),
       };
-
       await this.bulkOps.executeBulkUpdate(request);
       this.updated.emit();
       this.closed.emit();

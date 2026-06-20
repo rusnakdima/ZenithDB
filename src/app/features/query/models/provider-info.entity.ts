@@ -2,7 +2,6 @@ export type ProviderType = "sql" | "mongodb" | "redis" | "json";
 export type SqlDialect = "postgresql" | "mysql" | "sqlite";
 export type NoSqlDialect = "mongodb" | "redis" | "json";
 export type SyntaxMode = "sql" | "mongodb" | "json" | "keyvalue";
-
 export interface ProviderInfo {
   type: ProviderType;
   dialect: SqlDialect | NoSqlDialect;
@@ -14,7 +13,6 @@ export interface ProviderInfo {
   syntaxMode: SyntaxMode;
   icon: string;
 }
-
 export const PROVIDER_METADATA: Record<string, ProviderInfo> = {
   postgresql: {
     type: "sql",

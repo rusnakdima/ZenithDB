@@ -14,7 +14,6 @@ export class MatchConfigComponent {
   @Input() config!: MatchConfig;
   @Input() collectionName = "";
   @Output() configChange = new EventEmitter<MatchConfig>();
-
   onGroupChange(group: ConditionGroup): void {
     this.configChange.emit({
       ...this.config,

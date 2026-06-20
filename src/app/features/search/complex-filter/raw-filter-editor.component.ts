@@ -11,29 +11,23 @@ export class RawFilterEditorComponent implements OnInit {
   @Input() initialJson = "";
   @Output() jsonChange = new EventEmitter<string>();
   @Output() jsonApply = new EventEmitter<string>();
-
   isValid = signal(true);
   validationError = signal("");
-
   protected jsonInput = signal("");
-
   ngOnInit(): void {
     this.jsonInput.set(this.initialJson);
   }
-
   onJsonInput(value: string): void {
     this.jsonInput.set(value);
     this.jsonChange.emit(value);
     this.validateJson(value);
   }
-
   private validateJson(json: string): void {
     if (!json.trim()) {
       this.isValid.set(true);
       this.validationError.set("");
       return;
     }
-
     try {
       JSON.parse(json);
       this.isValid.set(true);
@@ -43,13 +37,11 @@ export class RawFilterEditorComponent implements OnInit {
       this.validationError.set((e as Error).message);
     }
   }
-
   onApply(): void {
     if (this.isValid()) {
       this.jsonApply.emit(this.jsonInput());
     }
   }
-
   onToggleToVisual(): void {
     this.jsonChange.emit(this.jsonInput());
   }

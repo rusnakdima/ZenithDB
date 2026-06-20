@@ -19,33 +19,26 @@ import { isNullOrUndefined } from "@shared/utils/collection.utils";
 })
 export class CellEditorComponent {
   private cdr = inject(ChangeDetectorRef);
-
   @Input() value: unknown = null;
   @Input() isEditing = false;
   @Input() editValue = "";
-
   @Output() startEdit = new EventEmitter<void>();
   @Output() saveEdit = new EventEmitter<string>();
   @Output() cancelEdit = new EventEmitter<void>();
-
   get displayValue(): string {
     if (isNullOrUndefined(this.value)) return "null";
     if (typeof this.value === "object") return JSON.stringify(this.value);
     return String(this.value);
   }
-
   get isModified(): boolean {
     return this.isEditing;
   }
-
   onStart() {
     this.startEdit.emit();
   }
-
   onSave() {
     this.saveEdit.emit(this.editValue);
   }
-
   onCancel() {
     this.cancelEdit.emit();
   }

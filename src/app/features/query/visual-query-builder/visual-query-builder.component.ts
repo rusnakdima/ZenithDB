@@ -25,13 +25,11 @@ import { FilterExpression } from "@entities/entities.connection.config";
 export class VisualQueryBuilderComponent implements OnInit, OnChanges {
   private readonly filterBuilder = inject(FilterBuilderService);
   private readonly schemaCompletion = inject(SchemaCompletionService);
-
   @Input() collectionName = "";
   @Input() initialFilter: FilterExpression | null = null;
   @Input() initialSort: SortConfig[] = [];
   @Input() initialSkip: number | null = null;
   @Input() initialLimit: number | null = null;
-
   @Output() filterChange = new EventEmitter<FilterExpression>();
   @Output() sortChange = new EventEmitter<SortConfig[]>();
   @Output() paginationChange = new EventEmitter<{ skip: number | null; limit: number | null }>();
@@ -42,41 +40,34 @@ export class VisualQueryBuilderComponent implements OnInit, OnChanges {
     skip: number | null;
     limit: number | null;
   }>();
-
   rootGroup = signal<ConditionGroup>(createEmptyGroup());
   sorts = signal<SortConfig[]>([]);
   skip = signal<number | null>(null);
   limit = signal<number | null>(null);
   fields = signal<{ name: string; type: string }[]>([]);
-
   hasConditions = computed(() => {
     const group = this.rootGroup();
     return group.conditions.length > 0 || (group.groups?.length ?? 0) > 0;
   });
-
   conditionCount = computed(() => {
     const group = this.rootGroup();
     return this.countConditions(group);
   });
-
   ngOnInit(): void {
     this.loadFields();
     this.initializeFromInputs();
   }
-
   ngOnChanges(changes: SimpleChanges): void {
     if (changes["initialFilter"] && !changes["initialFilter"].firstChange) {
       this.initializeFilter();
     }
   }
-
   private async loadFields(): Promise<void> {
     if (this.collectionName) {
       const fields = await this.schemaCompletion.getFields(this.collectionName);
       this.fields.set(fields);
     }
   }
-
   private initializeFromInputs(): void {
     if (this.initialFilter) {
       this.initializeFilter();
@@ -91,7 +82,6 @@ export class VisualQueryBuilderComponent implements OnInit, OnChanges {
       this.limit.set(this.initialLimit);
     }
   }
-
   private initializeFilter(): void {
     if (this.initialFilter) {
       const groups = this.filterBuilder.parseFilter(this.initialFilter);
@@ -100,7 +90,6 @@ export class VisualQueryBuilderComponent implements OnInit, OnChanges {
       }
     }
   }
-
   private countConditions(group: ConditionGroup): number {
     let count = group.conditions.length;
     if (group.groups) {
@@ -110,15 +99,12 @@ export class VisualQueryBuilderComponent implements OnInit, OnChanges {
     }
     return count;
   }
-
   onGroupChange(group: ConditionGroup): void {
     this.rootGroup.set(group);
   }
-
   addSort(): void {
     this.sorts.update((s) => [...s, { field: "", direction: "asc" }]);
   }
-
   updateSortField(index: number, field: string): void {
     this.sorts.update((sorts) => {
       const newSorts = [...sorts];
@@ -126,7 +112,6 @@ export class VisualQueryBuilderComponent implements OnInit, OnChanges {
       return newSorts;
     });
   }
-
   toggleSortDirection(index: number): void {
     this.sorts.update((sorts) => {
       const newSorts = [...sorts];
@@ -137,26 +122,21 @@ export class VisualQueryBuilderComponent implements OnInit, OnChanges {
       return newSorts;
     });
   }
-
   removeSort(index: number): void {
     this.sorts.update((sorts) => sorts.filter((_, i) => i !== index));
   }
-
   clearAll(): void {
     this.rootGroup.set(createEmptyGroup());
     this.sorts.set([]);
     this.skip.set(null);
     this.limit.set(null);
   }
-
   onCancel(): void {
     this.cancel.emit();
   }
-
   onApply(): void {
     const filter = this.filterBuilder.buildFilter([this.rootGroup()]);
     const validSorts = this.sorts().filter((s) => s.field);
-
     this.apply.emit({
       filter: filter ?? null,
       sort: validSorts,

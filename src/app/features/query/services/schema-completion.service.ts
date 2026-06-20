@@ -11,25 +11,20 @@ export interface CompletionItem {
   filterText?: string;
   sortText?: string;
 }
-
 export interface CompletionContext {
   position: number;
   text: string;
   triggerKind: "invoked" | "triggerCharacter" | "triggerForIncompleteCompletions";
   triggerCharacter?: string;
 }
-
 @Injectable({ providedIn: "root" })
 export class SchemaCompletionService {
   private readonly schemaService = inject(SchemaService);
   private readonly connectionState = inject(ConnectionStateService);
-
   private readonly schemaCacheSignal = signal<Map<string, FieldInfo[]>>(new Map());
-
   async getCollections(): Promise<string[]> {
     const connId = this.connectionState.activeConnectionId();
     if (!connId) return [];
-
     try {
       const collections = await this.schemaService.listCollections(connId);
       return collections.map((c) => c.name);
@@ -37,14 +32,11 @@ export class SchemaCompletionService {
       return [];
     }
   }
-
   async getFields(collectionName: string): Promise<FieldInfo[]> {
     const cached = this.schemaCacheSignal().get(collectionName);
     if (cached) return cached;
-
     const connId = this.connectionState.activeConnectionId();
     if (!connId) return [];
-
     try {
       const schema = await this.schemaService.describeCollection(collectionName);
       const fields = schema.columns.map((col) => ({
@@ -53,22 +45,18 @@ export class SchemaCompletionService {
         nullable: col.nullable,
         isPrimaryKey: col.is_primary_key,
       }));
-
       this.schemaCacheSignal.update((cache) => {
         const newCache = new Map(cache);
         newCache.set(collectionName, fields);
         return newCache;
       });
-
       return fields;
     } catch {
       return [];
     }
   }
-
   async getCompletionItems(collectionName?: string): Promise<CompletionItem[]> {
     const items: CompletionItem[] = [];
-
     const collections = await this.getCollections();
     for (const collection of collections) {
       items.push({
@@ -80,7 +68,6 @@ export class SchemaCompletionService {
         sortText: "1",
       });
     }
-
     if (collectionName) {
       const fields = await this.getFields(collectionName);
       for (const field of fields) {
@@ -95,10 +82,8 @@ export class SchemaCompletionService {
         });
       }
     }
-
     return items;
   }
-
   invalidateCache(collectionName?: string): void {
     if (collectionName) {
       this.schemaCacheSignal.update((cache) => {
@@ -110,7 +95,6 @@ export class SchemaCompletionService {
       this.schemaCacheSignal.set(new Map());
     }
   }
-
   private mapColumnType(type: string): FieldType {
     const lower = type.toLowerCase();
     if (

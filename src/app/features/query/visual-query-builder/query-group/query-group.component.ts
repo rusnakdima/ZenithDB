@@ -17,24 +17,19 @@ import { SchemaCompletionService } from "../../services";
 })
 export class QueryGroupComponent implements OnInit {
   private readonly schemaCompletion = inject(SchemaCompletionService);
-
   @Input() group!: ConditionGroup;
   @Input() collectionName = "";
   @Input() isNested = false;
   @Input() isRoot = false;
-
   @Output() groupChange = new EventEmitter<ConditionGroup>();
   @Output() removeGroup = new EventEmitter<void>();
-
   ngOnInit(): void {}
-
   setOperator(operator: "and" | "or"): void {
     this.groupChange.emit({
       ...this.group,
       operator,
     });
   }
-
   onConditionChange(condition: Condition, conditionId: string): void {
     const conditions = this.group.conditions.map((c) => (c.id === conditionId ? condition : c));
     this.groupChange.emit({
@@ -42,7 +37,6 @@ export class QueryGroupComponent implements OnInit {
       conditions,
     });
   }
-
   onRemoveCondition(conditionId: string): void {
     const conditions = this.group.conditions.filter((c) => c.id !== conditionId);
     if (conditions.length === 0 && !this.isRoot) {
@@ -54,7 +48,6 @@ export class QueryGroupComponent implements OnInit {
       });
     }
   }
-
   addCondition(): void {
     const conditions = [...this.group.conditions, createEmptyCondition()];
     this.groupChange.emit({
@@ -62,7 +55,6 @@ export class QueryGroupComponent implements OnInit {
       conditions,
     });
   }
-
   onSubGroupChange(subGroup: ConditionGroup, subGroupId: string): void {
     const groups = this.group.groups?.map((g) => (g.id === subGroupId ? subGroup : g)) ?? [];
     this.groupChange.emit({
@@ -70,7 +62,6 @@ export class QueryGroupComponent implements OnInit {
       groups,
     });
   }
-
   onRemoveSubGroup(subGroupId: string): void {
     const groups = this.group.groups?.filter((g) => g.id !== subGroupId) ?? [];
     this.groupChange.emit({
@@ -78,7 +69,6 @@ export class QueryGroupComponent implements OnInit {
       groups,
     });
   }
-
   addNestedGroup(): void {
     const groups = [
       ...(this.group.groups ?? []),
@@ -89,7 +79,6 @@ export class QueryGroupComponent implements OnInit {
       groups,
     });
   }
-
   onRemoveGroup(): void {
     this.removeGroup.emit();
   }

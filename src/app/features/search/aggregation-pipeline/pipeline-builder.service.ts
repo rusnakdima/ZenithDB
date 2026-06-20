@@ -15,45 +15,36 @@ export type StageType =
   | "$limit"
   | "$project"
   | "$replaceRoot";
-
 export interface MatchConfig {
   conditionGroup: ConditionGroup;
 }
-
 export interface GroupAccumulator {
   id: string;
   field: string;
   operator: "sum" | "avg" | "min" | "max" | "count" | "push" | "addToSet";
   value?: string;
 }
-
 export interface GroupConfig {
   groupByField: string;
   accumulators: GroupAccumulator[];
 }
-
 export interface SortStageConfig {
   sorts: SortConfig[];
 }
-
 export interface SkipLimitConfig {
   value: number;
 }
-
 export interface ProjectField {
   name: string;
   include: boolean;
   expression?: string;
 }
-
 export interface ProjectConfig {
   fields: ProjectField[];
 }
-
 export interface ReplaceRootConfig {
   expression: string;
 }
-
 export type StageConfig =
   | MatchConfig
   | GroupConfig
@@ -61,28 +52,21 @@ export type StageConfig =
   | SkipLimitConfig
   | ProjectConfig
   | ReplaceRootConfig;
-
 export interface PipelineStage {
   id: string;
   type: StageType;
   config: StageConfig;
   order: number;
 }
-
 export interface AggregationPipeline {
   stages: PipelineStage[];
 }
-
 @Injectable({ providedIn: "root" })
 export class PipelineBuilderService {
   private readonly _stages = signal<PipelineStage[]>([]);
-
   readonly stages = this._stages.asReadonly();
-
   readonly stageCount = computed(() => this._stages().length);
-
   readonly isEmpty = computed(() => this._stages().length === 0);
-
   addStage(type: StageType, config?: StageConfig): void {
     const stage: PipelineStage = {
       id: crypto.randomUUID(),
@@ -92,14 +76,12 @@ export class PipelineBuilderService {
     };
     this._stages.update((stages) => [...stages, stage]);
   }
-
   removeStage(id: string): void {
     this._stages.update((stages) => {
       const filtered = stages.filter((s) => s.id !== id);
       return filtered.map((s, i) => ({ ...s, order: i }));
     });
   }
-
   reorderStages(fromIndex: number, toIndex: number): void {
     this._stages.update((stages) => {
       const newStages = [...stages];
@@ -108,32 +90,26 @@ export class PipelineBuilderService {
       return newStages.map((s, i) => ({ ...s, order: i }));
     });
   }
-
   updateStageConfig(id: string, config: StageConfig): void {
     this._stages.update((stages) => stages.map((s) => (s.id === id ? { ...s, config } : s)));
   }
-
   moveStageUp(index: number): void {
     if (index > 0) {
       this.reorderStages(index, index - 1);
     }
   }
-
   moveStageDown(index: number): void {
     if (index < this._stages().length - 1) {
       this.reorderStages(index, index + 1);
     }
   }
-
   clearAll(): void {
     this._stages.set([]);
   }
-
   toJson(): string {
     const pipeline = this.buildPipeline();
     return JSON.stringify(pipeline, null, 2);
   }
-
   fromJson(json: string): boolean {
     try {
       const parsed = JSON.parse(json);
@@ -147,11 +123,9 @@ export class PipelineBuilderService {
       return false;
     }
   }
-
   buildPipeline(): object[] {
     return this._stages().map((stage) => this.stageToAggregation(stage));
   }
-
   private stageToAggregation(stage: PipelineStage): object {
     switch (stage.type) {
       case "$match": {
@@ -192,31 +166,23 @@ export class PipelineBuilderService {
         return {};
     }
   }
-
   private conditionGroupToQuery(group: ConditionGroup): object {
     const conditions = group.conditions.filter((c) => c.field && c.operator);
     const subGroups = group.groups ?? [];
-
     const expressions: object[] = [];
-
     for (const cond of conditions) {
       expressions.push(this.conditionToQuery(cond));
     }
-
     for (const subGroup of subGroups) {
       expressions.push(this.conditionGroupToQuery(subGroup));
     }
-
     if (expressions.length === 0) return {};
     if (expressions.length === 1) return expressions[0];
-
     return group.operator === "and" ? { $and: expressions } : { $or: expressions };
   }
-
   private conditionToQuery(cond: Condition): object {
     const field = cond.field;
     const value = cond.value;
-
     switch (cond.operator) {
       case "eq":
         return { [field]: value };
@@ -255,19 +221,15 @@ export class PipelineBuilderService {
         return { [field]: value };
     }
   }
-
   private groupConfigToAggregation(config: GroupConfig): object {
     const result: Record<string, unknown> = {};
-
     if (config.groupByField) {
       result["_id"] = `$${config.groupByField}`;
     } else {
       result["_id"] = null;
     }
-
     for (const acc of config.accumulators) {
       if (!acc.field) continue;
-
       switch (acc.operator) {
         case "sum":
           result[acc.field] = { $sum: acc.value ? `$${acc.value}` : 1 };
@@ -292,13 +254,10 @@ export class PipelineBuilderService {
           break;
       }
     }
-
     return result;
   }
-
   private projectConfigToAggregation(config: ProjectConfig): object {
     const result: Record<string, unknown> = {};
-
     for (const field of config.fields) {
       if (field.expression) {
         result[field.name] = JSON.parse(field.expression);
@@ -306,25 +265,18 @@ export class PipelineBuilderService {
         result[field.name] = field.include ? 1 : 0;
       }
     }
-
     return result;
   }
-
   private parsePipeline(pipeline: object[]): PipelineStage[] {
     const stages: PipelineStage[] = [];
-
     for (let i = 0; i < pipeline.length; i++) {
       const stage = pipeline[i];
       const stageKeys = Object.keys(stage);
-
       if (stageKeys.length === 0) continue;
-
       const type = stageKeys[0] as StageType;
       const value = (stage as Record<string, unknown>)[type];
-
       let config: StageConfig | undefined;
       let parsed = false;
-
       switch (type) {
         case "$match":
           config = { conditionGroup: this.queryToConditionGroup(value as Record<string, unknown>) };
@@ -356,7 +308,6 @@ export class PipelineBuilderService {
           parsed = true;
           break;
       }
-
       if (parsed) {
         stages.push({
           id: crypto.randomUUID(),
@@ -366,18 +317,13 @@ export class PipelineBuilderService {
         });
       }
     }
-
     return stages;
   }
-
   private queryToConditionGroup(query: Record<string, unknown>): ConditionGroup {
     const group = createEmptyGroup();
-
     if (!query) return group;
-
     const queryAnd = query["$and"];
     const queryOr = query["$or"];
-
     if (queryAnd) {
       group.operator = "and";
       group.conditions = [];
@@ -420,10 +366,8 @@ export class PipelineBuilderService {
         }
       }
     }
-
     return group;
   }
-
   private mapOperator(op: string): FilterOperator {
     const opMap: Record<string, FilterOperator> = {
       $eq: "eq",
@@ -438,10 +382,8 @@ export class PipelineBuilderService {
     };
     return opMap[op] || "eq";
   }
-
   private aggregationToGroupConfig(agg: Record<string, unknown>): GroupConfig {
     const config: GroupConfig = { groupByField: "", accumulators: [] };
-
     const aggId = agg["_id"];
     if (aggId !== undefined) {
       const idStr = String(aggId);
@@ -449,17 +391,13 @@ export class PipelineBuilderService {
         config.groupByField = idStr.substring(1);
       }
     }
-
     for (const [key, value] of Object.entries(agg)) {
       if (key === "_id") continue;
       if (!value || typeof value !== "object") continue;
-
       const op = Object.keys(value as object)[0];
       const opValue = (value as Record<string, unknown>)[op];
-
       let operator: GroupAccumulator["operator"] = "sum";
       let fieldValue = "";
-
       switch (op) {
         case "$sum":
           operator = "sum";
@@ -486,7 +424,6 @@ export class PipelineBuilderService {
           fieldValue = String(opValue).replace(/^\$/, "");
           break;
       }
-
       config.accumulators.push({
         id: crypto.randomUUID(),
         field: key,
@@ -494,26 +431,20 @@ export class PipelineBuilderService {
         value: fieldValue,
       });
     }
-
     return config;
   }
-
   private aggregationToSortConfig(sort: Record<string, unknown>): SortStageConfig {
     const sorts: SortConfig[] = [];
-
     for (const [field, direction] of Object.entries(sort)) {
       sorts.push({
         field,
         direction: direction === 1 ? "asc" : "desc",
       });
     }
-
     return { sorts };
   }
-
   private aggregationToProjectConfig(proj: Record<string, unknown>): ProjectConfig {
     const fields: ProjectField[] = [];
-
     for (const [name, value] of Object.entries(proj)) {
       if (value === 1) {
         fields.push({ name, include: true });
@@ -523,10 +454,8 @@ export class PipelineBuilderService {
         fields.push({ name, include: true, expression: JSON.stringify(value) });
       }
     }
-
     return { fields };
   }
-
   private getDefaultConfig(type: StageType): StageConfig {
     switch (type) {
       case "$match":

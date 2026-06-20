@@ -11,7 +11,6 @@ import { SkipLimitConfig } from "../pipeline-builder.service";
 export class LimitConfigComponent {
   @Input() config!: SkipLimitConfig;
   @Output() configChange = new EventEmitter<SkipLimitConfig>();
-
   onValueChange(value: number): void {
     this.configChange.emit({
       ...this.config,

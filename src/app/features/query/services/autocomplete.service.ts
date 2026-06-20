@@ -43,7 +43,6 @@ const KEYWORDS_SQL = [
   "TRUE",
   "FALSE",
 ];
-
 const KEYWORDS_MONGODB = [
   "db.collection.find",
   "db.collection.insertOne",
@@ -65,7 +64,6 @@ const KEYWORDS_MONGODB = [
   "$pull",
   "$addToSet",
 ];
-
 const OPERATORS_BY_TYPE: Record<FieldType, { operator: FilterOperator; label: string }[]> = {
   string: [
     { operator: "eq", label: "equals" },
@@ -122,33 +120,27 @@ const OPERATORS_BY_TYPE: Record<FieldType, { operator: FilterOperator; label: st
     { operator: "neq", label: "not equals" },
   ],
 };
-
 @Injectable({ providedIn: "root" })
 export class AutocompleteService {
   private readonly schemaCompletion = inject(SchemaCompletionService);
   private readonly providerDetector = inject(ProviderDetectorService);
-
   private readonly isActiveSignal = signal(false);
   private readonly itemsSignal = signal<CompletionItem[]>([]);
   private readonly selectedIndexSignal = signal(0);
-
   readonly isActive = this.isActiveSignal.asReadonly();
   readonly items = this.itemsSignal.asReadonly();
   readonly selectedIndex = this.selectedIndexSignal.asReadonly();
-
   readonly selectedItem = computed(() => {
     const items = this.itemsSignal();
     const index = this.selectedIndexSignal();
     return items[index] ?? null;
   });
-
   async triggerCompletion(context: CompletionContext, collectionName?: string): Promise<void> {
     const items = await this.buildCompletionItems(context, collectionName);
     this.itemsSignal.set(items);
     this.isActiveSignal.set(items.length > 0);
     this.selectedIndexSignal.set(0);
   }
-
   async triggerCompletionWithFields(
     context: CompletionContext,
     collectionName: string,
@@ -159,7 +151,6 @@ export class AutocompleteService {
     this.isActiveSignal.set(items.length > 0);
     this.selectedIndexSignal.set(0);
   }
-
   private async buildCompletionItems(
     context: CompletionContext,
     collectionName?: string
@@ -167,11 +158,8 @@ export class AutocompleteService {
     const text = context.text.substring(0, context.position);
     const lastWord = this.getLastWord(text);
     const prefix = lastWord.toLowerCase();
-
     if (!prefix) return [];
-
     const items: CompletionItem[] = [];
-
     const collections = await this.schemaCompletion.getCollections();
     for (const collection of collections) {
       if (collection.toLowerCase().includes(prefix)) {
@@ -185,7 +173,6 @@ export class AutocompleteService {
         });
       }
     }
-
     if (collectionName) {
       const fields = await this.schemaCompletion.getFields(collectionName);
       for (const field of fields) {
@@ -202,10 +189,8 @@ export class AutocompleteService {
         }
       }
     }
-
     const keywords =
       this.providerDetector.currentSyntaxMode() === "mongodb" ? KEYWORDS_MONGODB : KEYWORDS_SQL;
-
     for (const keyword of keywords) {
       if (keyword.toLowerCase().includes(prefix)) {
         items.push({
@@ -218,17 +203,14 @@ export class AutocompleteService {
         });
       }
     }
-
     return items.sort((a, b) => (a.sortText ?? "").localeCompare(b.sortText ?? ""));
   }
-
   private async buildFieldCompletionItems(
     collectionName: string,
     currentField?: string
   ): Promise<CompletionItem[]> {
     const fields = await this.schemaCompletion.getFields(collectionName);
     const items: CompletionItem[] = [];
-
     for (const field of fields) {
       items.push({
         label: field.name,
@@ -240,11 +222,9 @@ export class AutocompleteService {
         sortText: field.name,
       });
     }
-
     const operators = currentField
       ? this.getOperatorsForField(fields.find((f) => f.name === currentField)?.type)
       : this.getAllOperators();
-
     for (const op of operators) {
       items.push({
         label: op.label,
@@ -255,10 +235,8 @@ export class AutocompleteService {
         sortText: `z-${op.label}`,
       });
     }
-
     return items;
   }
-
   private getOperatorsForField(
     fieldType?: FieldType
   ): { operator: FilterOperator; label: string }[] {
@@ -270,7 +248,6 @@ export class AutocompleteService {
       })) ?? this.getAllOperators()
     );
   }
-
   private getAllOperators(): { operator: FilterOperator; label: string }[] {
     const allOperators: { operator: FilterOperator; label: string }[] = [];
     for (const [, operators] of Object.entries(FIELD_OPERATORS)) {
@@ -282,7 +259,6 @@ export class AutocompleteService {
     }
     return allOperators;
   }
-
   private getOperatorLabel(op: FilterOperator): string {
     const labels: Record<FilterOperator, string> = {
       eq: "equals (=)",
@@ -306,26 +282,20 @@ export class AutocompleteService {
     };
     return labels[op] ?? op;
   }
-
   private getLastWord(text: string): string {
     const match = text.match(/[\w\.]+$/);
     return match ? match[0] : "";
   }
-
   selectNext(): void {
     const items = this.itemsSignal();
     if (items.length === 0) return;
-
     this.selectedIndexSignal.update((i) => (i + 1) % items.length);
   }
-
   selectPrevious(): void {
     const items = this.itemsSignal();
     if (items.length === 0) return;
-
     this.selectedIndexSignal.update((i) => (i - 1 + items.length) % items.length);
   }
-
   confirmSelection(): CompletionItem | null {
     const item = this.selectedItem();
     if (item) {
@@ -333,13 +303,11 @@ export class AutocompleteService {
     this.close();
     return item;
   }
-
   close(): void {
     this.isActiveSignal.set(false);
     this.itemsSignal.set([]);
     this.selectedIndexSignal.set(0);
   }
-
   updateItems(items: CompletionItem[]): void {
     this.itemsSignal.set(items);
     this.selectedIndexSignal.set(0);

@@ -66,7 +66,6 @@ import { SyntaxMode } from "../models";
             JSON
           </button>
         </div>
-
         <div class="flex items-center gap-2">
           <button
             type="button"
@@ -84,7 +83,6 @@ import { SyntaxMode } from "../models";
           </button>
         </div>
       </div>
-
       <!-- Editor Area -->
       <div class="relative flex-1">
         <textarea
@@ -97,7 +95,6 @@ import { SyntaxMode } from "../models";
           (focus)="onFocus()"
           (blur)="onBlur()"
         ></textarea>
-
         <!-- Line Numbers -->
         <div
           class="pointer-events-none absolute top-0 bottom-0 left-0 w-12 overflow-hidden border-r border-slate-700 bg-slate-800/50"
@@ -111,7 +108,6 @@ import { SyntaxMode } from "../models";
           </div>
         </div>
       </div>
-
       <!-- Validation Status -->
       @if (validationResult()) {
         <div class="border-t border-slate-700 px-4 py-2">
@@ -159,17 +155,13 @@ import { SyntaxMode } from "../models";
 })
 export class ProviderAwareEditorComponent implements OnInit, OnChanges {
   @ViewChild("editorTextarea") editorRef!: ElementRef<HTMLTextAreaElement>;
-
   private readonly providerDetector = inject(ProviderDetectorService);
   private readonly translationService = inject(QueryTranslationService);
   private readonly validator = inject(QueryValidatorService);
-
   @Input() initialQuery = "";
   @Input() collectionName = "";
-
   @Output() queryChange = new EventEmitter<string>();
   @Output() execute = new EventEmitter<void>();
-
   query = signal("");
   syntaxMode = this.providerDetector.currentSyntaxMode;
   validationResult = signal<{
@@ -177,60 +169,50 @@ export class ProviderAwareEditorComponent implements OnInit, OnChanges {
     errors: { message: string }[];
     warnings: { message: string }[];
   } | null>(null);
-
   lineNumbers = computed(() => {
     const lines = this.query().split("\n").length;
     return Array.from({ length: lines }, (_, i) => i + 1);
   });
-
   ngOnInit(): void {
     if (this.initialQuery) {
       this.query.set(this.initialQuery);
       this.validateQuery();
     }
   }
-
   ngOnChanges(changes: SimpleChanges): void {
     if (changes["initialQuery"] && !changes["initialQuery"].firstChange) {
       this.query.set(this.initialQuery);
       this.validateQuery();
     }
   }
-
   setSyntaxMode(mode: SyntaxMode): void {
     const currentQuery = this.query();
     const translated = this.translationService.translateToProvider(
       this.validator.parseQueryToFilter(currentQuery) ?? {},
       mode
     );
-
     if (translated.query && translated.query !== currentQuery) {
       this.query.set(translated.query);
       this.queryChange.emit(translated.query);
     }
   }
-
   onQueryChange(value: string): void {
     this.query.set(value);
     this.queryChange.emit(value);
     this.validateQuery();
   }
-
   onKeydown(event: KeyboardEvent): void {
     if (event.ctrlKey && event.key === "Enter") {
       event.preventDefault();
       this.onExecute();
     }
-
     if (event.ctrlKey && event.key === " ") {
       event.preventDefault();
       this.triggerAutocomplete();
     }
   }
-
   onFocus(): void {}
   onBlur(): void {}
-
   formatQuery(): void {
     const formatted = this.formatJson(this.query());
     if (formatted !== this.query()) {
@@ -238,23 +220,19 @@ export class ProviderAwareEditorComponent implements OnInit, OnChanges {
       this.queryChange.emit(formatted);
     }
   }
-
   clearQuery(): void {
     this.query.set("");
     this.queryChange.emit("");
     this.validationResult.set(null);
   }
-
   private validateQuery(): void {
     if (!this.query().trim()) {
       this.validationResult.set(null);
       return;
     }
-
     const result = this.validator.validateQuery(this.query());
     this.validationResult.set(result);
   }
-
   private formatJson(jsonStr: string): string {
     try {
       const parsed = JSON.parse(jsonStr);
@@ -263,17 +241,14 @@ export class ProviderAwareEditorComponent implements OnInit, OnChanges {
       return jsonStr;
     }
   }
-
   private triggerAutocomplete(): void {
     // Trigger autocomplete logic
   }
-
   private onExecute(): void {
     if (this.validationResult()?.isValid) {
       this.execute.emit();
     }
   }
-
   getPlaceholder(): string {
     switch (this.syntaxMode()) {
       case "sql":

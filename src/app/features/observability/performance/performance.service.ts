@@ -8,7 +8,6 @@ export interface QueryMetric {
   success: boolean;
   error?: string;
 }
-
 export interface PerformanceMetrics {
   qps: number;
   avgExecutionTime: number;
@@ -18,43 +17,31 @@ export interface PerformanceMetrics {
   latencyOverTime: { timestamp: number; value: number }[];
   errorRateOverTime: { timestamp: number; value: number }[];
 }
-
 type TimeRange = "1h" | "6h" | "24h" | "7d";
-
 @Injectable({ providedIn: "root" })
 export class PerformanceService {
   private metricsApi = inject(MetricsApiService);
-
   private queryMetrics = signal<QueryMetric[]>([]);
   private timeRangeSignal = signal<TimeRange>("1h");
   private refreshInterval: ReturnType<typeof setInterval> | null = null;
-
   readonly timeRange = this.timeRangeSignal.asReadonly();
-
   readonly metrics = computed<PerformanceMetrics>(() => {
     const metrics = this.queryMetrics();
     const now = Date.now();
     const rangeMs = this.getRangeMs(this.timeRangeSignal());
     const cutoff = now - rangeMs;
-
     const recentMetrics = metrics.filter((m) => m.timestamp >= cutoff);
-
     const totalQueries = recentMetrics.length;
     const successfulQueries = recentMetrics.filter((m) => m.success).length;
     const failedQueries = recentMetrics.filter((m) => !m.success).length;
-
     const qps = totalQueries / (rangeMs / 1000);
-
     const executionTimes = recentMetrics.map((m) => m.executionTime);
     const avgExecutionTime =
       executionTimes.length > 0
         ? executionTimes.reduce((a, b) => a + b, 0) / executionTimes.length
         : 0;
-
     const slowQueryCount = recentMetrics.filter((m) => m.executionTime > 1000).length;
-
     const memoryUsage = 0;
-
     const queriesOverTime = this.aggregateByTimeBucket(
       recentMetrics,
       TIME_CONSTANTS.ONE_MINUTE_MS,
@@ -73,7 +60,6 @@ export class PerformanceService {
       (m) => m.timestamp,
       (m) => (m.success ? 0 : 1)
     );
-
     return {
       qps,
       avgExecutionTime,
@@ -84,15 +70,12 @@ export class PerformanceService {
       errorRateOverTime,
     };
   });
-
   constructor() {
     this.startAutoRefresh();
   }
-
   setTimeRange(range: TimeRange): void {
     this.timeRangeSignal.set(range);
   }
-
   recordQuery(metric: Omit<QueryMetric, "timestamp">): void {
     this.queryMetrics.update((metrics) => {
       const newMetric: QueryMetric = {
@@ -104,11 +87,9 @@ export class PerformanceService {
       return updated.filter((m) => m.timestamp >= cutoff);
     });
   }
-
   clearMetrics(): void {
     this.queryMetrics.set([]);
   }
-
   private getRangeMs(range: TimeRange): number {
     switch (range) {
       case "1h":
@@ -121,7 +102,6 @@ export class PerformanceService {
         return TIME_CONSTANTS.TWENTY_FOUR_HOURS_MS * 7;
     }
   }
-
   private aggregateByTimeBucket<T>(
     metrics: QueryMetric[],
     bucketMs: number,
@@ -129,18 +109,15 @@ export class PerformanceService {
     getValue: (m: QueryMetric) => T
   ): { timestamp: number; value: T }[] {
     const buckets = new Map<number, T[]>();
-
     for (const metric of metrics) {
       const timestamp = getTimestamp(metric);
       const bucketKey = Math.floor(timestamp / bucketMs) * bucketMs;
       const value = getValue(metric);
-
       if (!buckets.has(bucketKey)) {
         buckets.set(bucketKey, []);
       }
       buckets.get(bucketKey)!.push(value);
     }
-
     const result: { timestamp: number; value: T }[] = [];
     buckets.forEach((values, timestamp) => {
       let aggregatedValue: T;
@@ -152,10 +129,8 @@ export class PerformanceService {
       }
       result.push({ timestamp, value: aggregatedValue });
     });
-
     return result.sort((a, b) => a.timestamp - b.timestamp);
   }
-
   private startAutoRefresh(): void {
     this.refreshInterval = setInterval(() => {
       this.queryMetrics.update((metrics) => {
@@ -164,7 +139,6 @@ export class PerformanceService {
       });
     }, TIME_CONSTANTS.THIRTY_SECONDS_MS);
   }
-
   ngOnDestroy(): void {
     if (this.refreshInterval) {
       clearInterval(this.refreshInterval);

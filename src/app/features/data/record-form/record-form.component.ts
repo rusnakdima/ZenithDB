@@ -22,28 +22,21 @@ import { isNullOrUndefined } from "@shared/utils/collection.utils";
 })
 export class RecordFormComponent {
   private cdr = inject(ChangeDetectorRef);
-
   mode = input<"add" | "edit">("add");
   columns = input<ColumnInfo[]>([]);
   data = input<RowData | null>(null);
-
   saved = output<RowData>();
   cancelled = output<void>();
-
   formData = signal<Record<string, unknown>>({});
   errors = signal<Record<string, string>>({});
   showDeleteConfirm = signal(false);
-
   primaryKeyColumn = computed(() => {
     return this.columns().find((col) => col.is_primary_key);
   });
-
   editableColumns = computed(() => {
     return this.columns().filter((col) => !col.is_primary_key);
   });
-
   isEditMode = computed(() => this.mode() === "edit");
-
   constructor() {
     effect(
       () => {
@@ -63,7 +56,6 @@ export class RecordFormComponent {
       { allowSignalWrites: true }
     );
   }
-
   private getDefaultValue(dataType: string): unknown {
     const t = dataType.toLowerCase();
     if (t === "string" || t === "text") return "";
@@ -74,7 +66,6 @@ export class RecordFormComponent {
     if (t === "array") return "[]";
     return "";
   }
-
   updateField(fieldName: string, value: unknown) {
     this.formData.update((data) => ({ ...data, [fieldName]: value }));
     if (this.errors()[fieldName]) {
@@ -85,7 +76,6 @@ export class RecordFormComponent {
       });
     }
   }
-
   validateJson(value: string, fieldName: string): boolean {
     if (!value || value.trim() === "") return true;
     try {
@@ -96,30 +86,24 @@ export class RecordFormComponent {
       return false;
     }
   }
-
   validateField(fieldName: string, dataType: string, value: unknown): boolean {
     const col = this.columns().find((c) => c.name === fieldName);
     if (!col) return true;
-
     if (col.nullable && (value === null || value === undefined || value === "")) {
       return true;
     }
-
     const t = dataType.toLowerCase();
     if ((t === "object" || t === "json") && typeof value === "string" && value.trim() !== "") {
       return this.validateJson(value, fieldName);
     }
-
     if (t === "number" || t === "integer" || t === "decimal" || t === "float") {
       if (value !== null && value !== undefined && value !== "" && isNaN(Number(value))) {
         this.errors.update((e) => ({ ...e, [fieldName]: "Must be a number" }));
         return false;
       }
     }
-
     return true;
   }
-
   getInputType(dataType: string): string {
     const t = dataType.toLowerCase();
     if (t === "number" || t === "integer" || t === "decimal" || t === "float") {
@@ -130,24 +114,19 @@ export class RecordFormComponent {
     }
     return "text";
   }
-
   getFieldValue(fieldName: string): unknown {
     return this.formData()[fieldName];
   }
-
   getError(fieldName: string): string | null {
     return this.errors()[fieldName] || null;
   }
-
   isJsonField(dataType: string): boolean {
     const t = dataType.toLowerCase();
     return t === "object" || t === "json" || t === "array";
   }
-
   onSubmit() {
     let hasErrors = false;
     const newErrors: Record<string, string> = {};
-
     for (const col of this.editableColumns()) {
       const value = this.formData()[col.name];
       if (!col.nullable && (value === null || value === undefined || value === "")) {
@@ -158,14 +137,11 @@ export class RecordFormComponent {
         hasErrors = true;
       }
     }
-
     if (hasErrors) {
       this.errors.set(newErrors);
       return;
     }
-
     const result: RowData = { ...this.formData() };
-
     for (const [key, value] of Object.entries(result)) {
       const col = this.columns().find((c) => c.name === key);
       if (col) {
@@ -185,31 +161,24 @@ export class RecordFormComponent {
         }
       }
     }
-
     this.saved.emit(result);
   }
-
   onCancel() {
     this.cancelled.emit();
   }
-
   onSaveClick() {
     this.onSubmit();
   }
-
   onCancelClick() {
     this.onCancel();
   }
-
   onDeleteClick() {
     this.showDeleteConfirm.set(true);
   }
-
   onDeleteConfirm() {
     this.saved.emit({ ...this.formData(), __delete: true } as RowData);
     this.showDeleteConfirm.set(false);
   }
-
   onDeleteCancel() {
     this.showDeleteConfirm.set(false);
   }

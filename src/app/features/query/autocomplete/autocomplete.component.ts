@@ -21,33 +21,25 @@ import { AutocompleteService, CompletionItem } from "../services";
 })
 export class AutocompleteComponent implements OnInit, OnDestroy {
   private readonly autocompleteService = inject(AutocompleteService);
-
   @Input() minWidth = 280;
   @Input() position = signal({ top: 0, left: 0 });
-
   @Output() itemSelect = new EventEmitter<CompletionItem>();
   @Output() close = new EventEmitter<void>();
-
   isActive = this.autocompleteService.isActive;
   items = this.autocompleteService.items;
   selectedIndex = this.autocompleteService.selectedIndex;
-
   private keydownHandler: ((e: KeyboardEvent) => void) | null = null;
-
   ngOnInit(): void {
     this.keydownHandler = (e: KeyboardEvent) => this.handleKeydown(e);
     document.addEventListener("keydown", this.keydownHandler);
   }
-
   ngOnDestroy(): void {
     if (this.keydownHandler) {
       document.removeEventListener("keydown", this.keydownHandler);
     }
   }
-
   handleKeydown(e: KeyboardEvent): void {
     if (!this.isActive()) return;
-
     switch (e.key) {
       case "ArrowDown":
         e.preventDefault();
@@ -71,23 +63,19 @@ export class AutocompleteComponent implements OnInit, OnDestroy {
         break;
     }
   }
-
   onItemClick(item: CompletionItem): void {
     this.itemSelect.emit(item);
     this.autocompleteService.close();
   }
-
   onMouseEnter(index: number): void {
     this.autocompleteService["selectedIndexSignal"].set(index);
   }
-
   private confirmSelection(): void {
     const item = this.autocompleteService.confirmSelection();
     if (item) {
       this.itemSelect.emit(item);
     }
   }
-
   onClose(): void {
     this.autocompleteService.close();
     this.close.emit();

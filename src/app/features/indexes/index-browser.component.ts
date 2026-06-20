@@ -9,7 +9,6 @@ import { IndexRecommendationsComponent } from "./index-recommendations.component
 import { ToastService } from "@services/services.toast.service";
 type SortColumn = "name" | "type" | "fields" | "unique" | "sparse";
 type SortDirection = "asc" | "desc";
-
 @Component({
   selector: "app-index-browser",
   standalone: true,
@@ -25,30 +24,23 @@ type SortDirection = "asc" | "desc";
 export class IndexBrowserComponent implements OnInit {
   private readonly indexService = inject(IndexService);
   private readonly toast = inject(ToastService);
-
   @Input() collectionName = "";
-
   @Output() indexCreated = new EventEmitter<void>();
   @Output() indexDropped = new EventEmitter<void>();
-
   indexes = signal<IndexInfo[]>([]);
   loading = signal(false);
   error = signal("");
-
   searchQuery = signal("");
   sortColumn = signal<SortColumn>("name");
   sortDirection = signal<SortDirection>("asc");
   expandedIndex = signal<string | null>(null);
-
   showCreateDialog = signal(false);
   showDropDialog = signal(false);
   showRecommendations = signal(false);
   selectedIndex = signal<IndexInfo | null>(null);
-
   ngOnInit(): void {
     this.loadIndexes();
   }
-
   async loadIndexes(): Promise<void> {
     this.loading.set(true);
     this.error.set("");
@@ -62,10 +54,8 @@ export class IndexBrowserComponent implements OnInit {
       this.loading.set(false);
     }
   }
-
   get filteredIndexes(): IndexInfo[] {
     let result = [...this.indexes()];
-
     const query = this.searchQuery().toLowerCase();
     if (query) {
       result = result.filter(
@@ -74,11 +64,9 @@ export class IndexBrowserComponent implements OnInit {
           idx.columns.some((c) => c.toLowerCase().includes(query))
       );
     }
-
     result.sort((a, b) => {
       const col = this.sortColumn();
       const dir = this.sortDirection() === "asc" ? 1 : -1;
-
       switch (col) {
         case "name":
           return a.name.localeCompare(b.name) * dir;
@@ -92,10 +80,8 @@ export class IndexBrowserComponent implements OnInit {
           return 0;
       }
     });
-
     return result;
   }
-
   onSort(column: SortColumn): void {
     if (this.sortColumn() === column) {
       this.sortDirection.update((d) => (d === "asc" ? "desc" : "asc"));
@@ -104,12 +90,10 @@ export class IndexBrowserComponent implements OnInit {
       this.sortDirection.set("asc");
     }
   }
-
   getSortIcon(column: SortColumn): string {
     if (this.sortColumn() !== column) return "";
     return this.sortDirection() === "asc" ? "asc" : "desc";
   }
-
   toggleExpand(indexName: string): void {
     if (this.expandedIndex() === indexName) {
       this.expandedIndex.set(null);
@@ -117,17 +101,14 @@ export class IndexBrowserComponent implements OnInit {
       this.expandedIndex.set(indexName);
     }
   }
-
   openCreateDialog(): void {
     this.selectedIndex.set(null);
     this.showCreateDialog.set(true);
   }
-
   openDropDialog(index: IndexInfo): void {
     this.selectedIndex.set(index);
     this.showDropDialog.set(true);
   }
-
   async onIndexCreated(indexDef: IndexDefinition): Promise<void> {
     try {
       await this.indexService.createIndex(this.collectionName, indexDef);
@@ -139,7 +120,6 @@ export class IndexBrowserComponent implements OnInit {
       this.toast.error("Failed to create index: " + (e as Error).message);
     }
   }
-
   async onIndexDropped(indexName: string): Promise<void> {
     try {
       await this.indexService.dropIndex(this.collectionName, indexName);
@@ -151,7 +131,6 @@ export class IndexBrowserComponent implements OnInit {
       this.toast.error("Failed to drop index: " + (e as Error).message);
     }
   }
-
   async onRebuildIndex(indexName: string): Promise<void> {
     try {
       await this.indexService.rebuildIndex(this.collectionName, indexName);
@@ -160,15 +139,12 @@ export class IndexBrowserComponent implements OnInit {
       this.toast.error("Failed to rebuild index: " + (e as Error).message);
     }
   }
-
   toggleRecommendations(): void {
     this.showRecommendations.update((v) => !v);
   }
-
   trackByIndex(index: number, idx: IndexInfo): string {
     return idx.name || String(index);
   }
-
   getIndexJson(index: IndexInfo): string {
     return JSON.stringify(
       {

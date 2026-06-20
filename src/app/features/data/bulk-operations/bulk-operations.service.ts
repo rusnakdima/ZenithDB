@@ -11,39 +11,31 @@ export interface BulkUpdateRequest {
   field: string;
   value: unknown;
 }
-
 export interface BulkDeleteRequest {
   collectionName: string;
   documentIds: string[];
   softDelete?: boolean;
 }
-
 export interface BulkOperationResult {
   success: number;
   failed: number;
   errors: string[];
 }
-
 @Injectable({ providedIn: "root" })
 export class BulkOperationsService {
   private readonly dataStore = inject(DataStoreService);
   private readonly toast = inject(ToastService);
   private readonly schemaCompletion = inject(SchemaCompletionService);
-
   private readonly operationInProgress = signal(false);
-
   get isOperating(): boolean {
     return this.operationInProgress();
   }
-
   async getFields(collectionName: string): Promise<FieldInfo[]> {
     return this.schemaCompletion.getFields(collectionName);
   }
-
   async executeBulkUpdate(request: BulkUpdateRequest): Promise<BulkOperationResult> {
     this.operationInProgress.set(true);
     const result: BulkOperationResult = { success: 0, failed: 0, errors: [] };
-
     try {
       for (const id of request.documentIds) {
         try {
@@ -61,25 +53,20 @@ export class BulkOperationsService {
           result.errors.push(`Failed to update ${id}: ${(e as Error).message}`);
         }
       }
-
       if (result.failed > 0) {
         this.toast.warning(`Updated ${result.success} records, ${result.failed} failed`);
       } else {
         this.toast.success(`Successfully updated ${result.success} records`);
       }
-
       this.dataStore.invalidateCollectionCache(request.collectionName);
     } finally {
       this.operationInProgress.set(false);
     }
-
     return result;
   }
-
   async executeBulkDelete(request: BulkDeleteRequest): Promise<BulkOperationResult> {
     this.operationInProgress.set(true);
     const result: BulkOperationResult = { success: 0, failed: 0, errors: [] };
-
     try {
       for (const id of request.documentIds) {
         try {
@@ -90,28 +77,23 @@ export class BulkOperationsService {
           result.errors.push(`Failed to delete ${id}: ${(e as Error).message}`);
         }
       }
-
       if (result.failed > 0) {
         this.toast.warning(`Deleted ${result.success} records, ${result.failed} failed`);
       } else {
         this.toast.success(`Successfully deleted ${result.success} records`);
       }
-
       this.dataStore.invalidateCollectionCache(request.collectionName);
     } finally {
       this.operationInProgress.set(false);
     }
-
     return result;
   }
-
   async executeBulkUpdateFields(
     collectionName: string,
     updates: Array<{ id: string; field: string; value: unknown }>
   ): Promise<BulkOperationResult> {
     this.operationInProgress.set(true);
     const result: BulkOperationResult = { success: 0, failed: 0, errors: [] };
-
     try {
       for (const update of updates) {
         try {
@@ -129,21 +111,17 @@ export class BulkOperationsService {
           result.errors.push(`Failed to update ${update.id}: ${(e as Error).message}`);
         }
       }
-
       if (result.failed > 0) {
         this.toast.warning(`Updated ${result.success} records, ${result.failed} failed`);
       } else {
         this.toast.success(`Successfully updated ${result.success} records`);
       }
-
       this.dataStore.invalidateCollectionCache(collectionName);
     } finally {
       this.operationInProgress.set(false);
     }
-
     return result;
   }
-
   private async fetchDocument(collectionName: string, id: string): Promise<RowData | null> {
     const result = await this.dataStore.queryData(
       collectionName,
@@ -153,10 +131,8 @@ export class BulkOperationsService {
       },
       true
     );
-
     return result.data.length > 0 ? result.data[0] : null;
   }
-
   getIdField(document: RowData): string | null {
     return getRecordId(document);
   }

@@ -11,7 +11,6 @@ interface ConnectionItem {
   isActive: boolean;
   status: "connected" | "disconnected" | "unknown";
 }
-
 @Component({
   selector: "app-connection-modal",
   standalone: true,
@@ -23,11 +22,9 @@ export class ConnectionModalComponent {
   private connState = inject(ConnectionStateService);
   private dataStore = inject(DataStoreService);
   private toast = inject(ToastService);
-
   isOpen = signal(false);
   searchQuery = signal("");
   selectedIndex = signal(0);
-
   connectionItems = computed<ConnectionItem[]>(() => {
     const connections = this.dataStore.connections();
     const activeId = this.connState.activeConnectionId();
@@ -37,39 +34,32 @@ export class ConnectionModalComponent {
       status: conn.id === activeId ? "connected" : "disconnected",
     }));
   });
-
   filteredItems = computed(() => {
     const query = this.searchQuery().toLowerCase().trim();
     const items = this.connectionItems();
     if (!query) return items;
     return items.filter((item) => item.connection.name.toLowerCase().includes(query));
   });
-
   open() {
     this.isOpen.set(true);
     this.searchQuery.set("");
     this.selectedIndex.set(0);
   }
-
   close() {
     this.isOpen.set(false);
   }
-
   onBackdropClick(event: MouseEvent) {
     if ((event.target as HTMLElement).classList.contains("connection-modal-backdrop")) {
       this.close();
     }
   }
-
   onSearchInput(value: string) {
     this.searchQuery.set(value);
     this.selectedIndex.set(0);
   }
-
   handleKeydown(event: KeyboardEvent) {
     const items = this.filteredItems();
     if (items.length === 0) return;
-
     switch (event.key) {
       case "ArrowDown":
         event.preventDefault();
@@ -89,13 +79,11 @@ export class ConnectionModalComponent {
         break;
     }
   }
-
   selectItem(item: ConnectionItem) {
     this.connState.setActiveConnection(item.connection);
     this.router.navigate(["/connections", item.connection.id]);
     this.close();
   }
-
   disconnect(item: ConnectionItem, event: MouseEvent) {
     event.stopPropagation();
     this.connState.activeConnectionId.set(null);
@@ -104,13 +92,11 @@ export class ConnectionModalComponent {
     this.connState.activeConnection.set(null);
     this.toast.success(`Disconnected from "${item.connection.name}"`);
   }
-
   viewDetails(item: ConnectionItem, event: MouseEvent) {
     event.stopPropagation();
     this.router.navigate(["/connections", item.connection.id]);
     this.close();
   }
-
   getStatusColor(status: string): string {
     switch (status) {
       case "connected":
@@ -121,7 +107,6 @@ export class ConnectionModalComponent {
         return "text-zinc-400";
     }
   }
-
   getStatusBg(status: string): string {
     switch (status) {
       case "connected":

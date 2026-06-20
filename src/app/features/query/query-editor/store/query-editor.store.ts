@@ -6,16 +6,12 @@ export interface HistoryItem {
   timestamp: Date;
   success: boolean;
 }
-
 @Injectable()
 export class QueryEditorStore {
   private storage = inject(PersistentStorageService);
-
   readonly showHistory = signal(false);
   readonly history = signal<HistoryItem[]>([]);
-
   readonly historyCount = computed(() => this.history().length);
-
   loadHistory(): void {
     const stored = this.storage.get<HistoryItem[]>("zenith_query_history");
     if (stored) {
@@ -29,7 +25,6 @@ export class QueryEditorStore {
       this.history.set([]);
     }
   }
-
   saveHistory(): void {
     const limited = this.history().slice(0, 20);
     this.storage.set(
@@ -37,7 +32,6 @@ export class QueryEditorStore {
       limited.map((h) => ({ ...h, timestamp: h.timestamp.toISOString() }))
     );
   }
-
   addToHistory(query: string, success: boolean): void {
     const item: HistoryItem = {
       id: crypto.randomUUID(),
@@ -49,17 +43,14 @@ export class QueryEditorStore {
     this.history.set(newHistory);
     this.saveHistory();
   }
-
   deleteHistoryItem(id: string): void {
     this.history.set(this.history().filter((h) => h.id !== id));
     this.saveHistory();
   }
-
   clearAllHistory(): void {
     this.history.set([]);
     this.storage.remove("zenith_query_history");
   }
-
   toggleHistory(): void {
     this.showHistory.update((v) => !v);
   }

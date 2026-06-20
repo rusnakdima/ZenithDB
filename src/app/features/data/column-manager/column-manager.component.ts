@@ -42,7 +42,6 @@ import { CheckboxComponent } from "@shared/components/checkbox/checkbox.componen
 })
 export class ColumnManagerComponent {
   private cdr = inject(ChangeDetectorRef);
-
   @Input() columns: ColumnInfo[] = [];
   @Input() visibleColumnsList: string[] = [];
   @Input() columnOrder: string[] = [];
@@ -51,7 +50,6 @@ export class ColumnManagerComponent {
   @Input() sortDirection: "asc" | "desc" = "asc";
   @Input() allSelected = false;
   @Input() previewData: RowData[] = [];
-
   @Output() sortChange = new EventEmitter<{ column: string; direction: "asc" | "desc" }>();
   @Output() columnDrop = new EventEmitter<CdkDragDrop<string[]>>();
   @Output() columnResizeStart = new EventEmitter<{ col: string; event: MouseEvent }>();
@@ -60,66 +58,52 @@ export class ColumnManagerComponent {
   @Output() toggleColumnVisibility = new EventEmitter<string>();
   @Output() columnsOrderChange = new EventEmitter<string[]>();
   @Output() toggleColumnMenu = new EventEmitter<void>();
-
   showColumnMenu = signal(false);
   draggedColumnName = signal<string>("");
   previewWidth = signal<number>(150);
   dragColumnName = signal<string | null>(null);
-
   previewRows = computed(() => this.previewData.slice(0, 5));
-
   gridTemplateColumns = computed(() => {
     const widths = this.columnWidths;
     const cols = this.visibleColumnsList.map((col) => `${widths[col] || 150}px`);
     return `40px ${cols.join(" ")} 56px`;
   });
-
   onSort(event: { column: string; direction: "asc" | "desc" }) {
     this.sortChange.emit(event);
   }
-
   onColumnDrop(event: CdkDragDrop<string[]>) {
     this.columnDrop.emit(event);
   }
-
   onColumnResizeStart(col: string, event: MouseEvent) {
     this.columnResizeStart.emit({ col, event });
   }
-
   onToggleSelectAll() {
     this.toggleSelectAll.emit();
   }
-
   onShowAllColumns() {
     this.showAllColumns.emit();
   }
-
   onToggleColumnVisibility(col: string) {
     this.toggleColumnVisibility.emit(col);
   }
-
   onToggleColumnMenu() {
     this.toggleColumnMenu.emit();
   }
-
   onDragStarted(columnName: string, width: number) {
     this.draggedColumnName.set(columnName);
     this.previewWidth.set(width || 150);
     this.dragColumnName.set(columnName);
   }
-
   onDragReleased() {
     this.draggedColumnName.set("");
     this.dragColumnName.set(null);
   }
-
   getCellValue(row: RowData, columnName: string): string {
     const value = row[columnName];
     if (isNullOrUndefined(value)) return "null";
     if (typeof value === "object") return JSON.stringify(value);
     return String(value);
   }
-
   get visibleColumnsSet(): Set<string> {
     return new Set(this.visibleColumnsList);
   }

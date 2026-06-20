@@ -8,47 +8,38 @@ export interface ParsedData {
   totalRows: number;
   format: "csv" | "json" | "jsonl";
 }
-
 export interface FieldMapping {
   sourceField: string;
   targetField: string;
 }
-
 export interface ImportOptions {
   collection: string;
   mappings: FieldMapping[];
   updateExisting: boolean;
   batchSize: number;
 }
-
 export interface ImportResult {
   imported: number;
   updated: number;
   errors: string[];
   duration: number;
 }
-
 export interface ImportProgress {
   current: number;
   total: number;
   percentage: number;
 }
-
 @Injectable({ providedIn: "root" })
 export class ImportService {
   private toast = inject(ToastService);
   private api = inject(ApiProvider);
   private connectionState = inject(ConnectionStateService);
-
   private progressSignal = signal<ImportProgress | null>(null);
   readonly progress = this.progressSignal.asReadonly();
-
   async parseFile(file: File): Promise<ParsedData> {
     const extension = file.name.split(".").pop()?.toLowerCase();
     const format = this.detectFormat(extension);
-
     const text = await file.text();
-
     switch (format) {
       case "csv":
         return this.parseCSV(text);
@@ -60,7 +51,6 @@ export class ImportService {
         throw new Error(`Unsupported file format: ${extension}`);
     }
   }
-
   private detectFormat(extension?: string): "csv" | "json" | "jsonl" {
     switch (extension) {
       case "csv":
@@ -74,17 +64,14 @@ export class ImportService {
         return "csv";
     }
   }
-
   private parseCSV(text: string): ParsedData {
     const lines = text.split(/\r?\n/).filter((line) => line.trim());
     if (lines.length === 0) {
       return { headers: [], rows: [], totalRows: 0, format: "csv" };
     }
-
     const delimiter = this.detectCSVDelimiter(lines[0]);
     const headers = this.parseCSVLine(lines[0], delimiter);
     const rows: Record<string, unknown>[] = [];
-
     for (let i = 1; i < lines.length; i++) {
       const values = this.parseCSVLine(lines[i], delimiter);
       const row: Record<string, unknown> = {};
@@ -93,7 +80,6 @@ export class ImportService {
       });
       rows.push(row);
     }
-
     return {
       headers,
       rows,
@@ -101,12 +87,10 @@ export class ImportService {
       format: "csv",
     };
   }
-
   private detectCSVDelimiter(line: string): string {
     const delimiters = [",", ";", "\t", "|"];
     let maxCount = 0;
     let detected = ",";
-
     for (const delimiter of delimiters) {
       const count = (line.match(new RegExp(`\\${delimiter}`, "g")) || []).length;
       if (count > maxCount) {
@@ -114,18 +98,14 @@ export class ImportService {
         detected = delimiter;
       }
     }
-
     return detected;
   }
-
   private parseCSVLine(line: string, delimiter: string): string[] {
     const result: string[] = [];
     let current = "";
     let inQuotes = false;
-
     for (let i = 0; i < line.length; i++) {
       const char = line[i];
-
       if (char === '"') {
         if (inQuotes && line[i + 1] === '"') {
           current += '"';
@@ -140,21 +120,16 @@ export class ImportService {
         current += char;
       }
     }
-
     result.push(current.trim());
     return result;
   }
-
   private parseJSON(text: string): ParsedData {
     const data = JSON.parse(text);
     const rows = Array.isArray(data) ? data : [data];
-
     if (rows.length === 0) {
       return { headers: [], rows: [], totalRows: 0, format: "json" };
     }
-
     const headers = [...new Set(rows.flatMap((row) => Object.keys(row)))];
-
     return {
       headers,
       rows,
@@ -162,11 +137,9 @@ export class ImportService {
       format: "json",
     };
   }
-
   private parseJSONL(text: string): ParsedData {
     const lines = text.split(/\r?\n/).filter((line) => line.trim());
     const rows: Record<string, unknown>[] = [];
-
     for (const line of lines) {
       try {
         rows.push(JSON.parse(line));
@@ -174,13 +147,10 @@ export class ImportService {
         continue;
       }
     }
-
     if (rows.length === 0) {
       return { headers: [], rows: [], totalRows: 0, format: "jsonl" };
     }
-
     const headers = [...new Set(rows.flatMap((row) => Object.keys(row)))];
-
     return {
       headers,
       rows,
@@ -188,7 +158,6 @@ export class ImportService {
       format: "jsonl",
     };
   }
-
   async importData(
     collection: string,
     data: Record<string, unknown>[],
@@ -199,19 +168,15 @@ export class ImportService {
     if (!connId) {
       throw new Error("No active connection");
     }
-
     const startTime = performance.now();
     let imported = 0;
     let updated = 0;
     const errors: string[] = [];
-
     const total = data.length;
     this.progressSignal.set({ current: 0, total, percentage: 0 });
-
     for (let i = 0; i < data.length; i += options.batchSize) {
       const batch = data.slice(i, i + options.batchSize);
       const mappedBatch = batch.map((row) => this.applyMappings(row, options.mappings));
-
       for (const row of mappedBatch) {
         try {
           const result = await this.api.saveRow(
@@ -228,17 +193,14 @@ export class ImportService {
           errors.push(`Row ${i}: ${(e as Error).message}`);
         }
       }
-
       const current = Math.min(i + options.batchSize, total);
       const percentage = Math.round((current / total) * 100);
       const progress: ImportProgress = { current, total, percentage };
       this.progressSignal.set(progress);
       onProgress?.(progress);
     }
-
     const duration = performance.now() - startTime;
     this.progressSignal.set(null);
-
     if (errors.length > 0) {
       this.toast.warning(`Import completed with ${errors.length} errors`);
     } else {
@@ -246,26 +208,20 @@ export class ImportService {
         `Imported ${imported} rows${updated > 0 ? `, updated ${updated} rows` : ""}`
       );
     }
-
     return { imported, updated, errors, duration };
   }
-
   private applyMappings(
     row: Record<string, unknown>,
     mappings: FieldMapping[]
   ): Record<string, unknown> {
     const result: Record<string, unknown> = {};
-
     for (const mapping of mappings) {
       result[mapping.targetField] = row[mapping.sourceField] ?? null;
     }
-
     return result;
   }
-
   generateAutoMappings(headers: string[], targetFields: string[]): FieldMapping[] {
     const mappings: FieldMapping[] = [];
-
     for (const header of headers) {
       const normalizedHeader = header.toLowerCase().replace(/[_\s-]/g, "");
       const matchingField = targetFields.find(
@@ -273,15 +229,12 @@ export class ImportService {
           field.toLowerCase().replace(/[_\s-]/g, "") === normalizedHeader ||
           field.toLowerCase() === header.toLowerCase()
       );
-
       if (matchingField) {
         mappings.push({ sourceField: header, targetField: matchingField });
       }
     }
-
     return mappings;
   }
-
   previewMappedData(
     rows: Record<string, unknown>[],
     mappings: FieldMapping[]

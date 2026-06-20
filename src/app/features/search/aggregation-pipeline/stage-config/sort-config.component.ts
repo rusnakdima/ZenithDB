@@ -12,24 +12,19 @@ import { FieldInfo, SortConfig } from "../../../query/models";
 })
 export class SortConfigComponent implements OnInit {
   private readonly schemaCompletion = inject(SchemaCompletionService);
-
   @Input() config!: SortStageConfig;
   @Input() collectionName = "";
   @Output() configChange = new EventEmitter<SortStageConfig>();
-
   fields = signal<FieldInfo[]>([]);
-
   ngOnInit(): void {
     this.loadFields();
   }
-
   private async loadFields(): Promise<void> {
     if (this.collectionName) {
       const fields = await this.schemaCompletion.getFields(this.collectionName);
       this.fields.set(fields);
     }
   }
-
   addSort(): void {
     const newSort: SortConfig = { field: "", direction: "asc" };
     this.configChange.emit({
@@ -37,13 +32,11 @@ export class SortConfigComponent implements OnInit {
       sorts: [...this.config.sorts, newSort],
     });
   }
-
   updateSortField(index: number, field: string): void {
     const sorts = [...this.config.sorts];
     sorts[index] = { ...sorts[index], field };
     this.configChange.emit({ ...this.config, sorts });
   }
-
   toggleDirection(index: number): void {
     const sorts = [...this.config.sorts];
     sorts[index] = {
@@ -52,7 +45,6 @@ export class SortConfigComponent implements OnInit {
     };
     this.configChange.emit({ ...this.config, sorts });
   }
-
   removeSort(index: number): void {
     this.configChange.emit({
       ...this.config,

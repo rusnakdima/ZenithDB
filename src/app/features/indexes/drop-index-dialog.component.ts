@@ -9,14 +9,11 @@ import { ModalComponent } from "@shared/components/modal/modal.component";
 })
 export class DropIndexDialogComponent {
   @Input() indexName = "";
-
   @Output() closed = new EventEmitter<void>();
   @Output() confirm = new EventEmitter<void>();
-
   onCancel(): void {
     this.closed.emit();
   }
-
   onConfirm(): void {
     this.confirm.emit();
   }

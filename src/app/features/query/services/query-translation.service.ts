@@ -9,11 +9,9 @@ export interface TranslationResult {
   errors: string[];
   warnings: string[];
 }
-
 @Injectable({ providedIn: "root" })
 export class QueryTranslationService {
   private readonly providerDetector = inject(ProviderDetectorService);
-
   translateToProvider(filter: FilterExpression, mode?: SyntaxMode): TranslationResult {
     const syntaxMode = mode ?? this.providerDetector.currentSyntaxMode();
     switch (syntaxMode) {
@@ -29,10 +27,8 @@ export class QueryTranslationService {
         return this.translateToSql(filter);
     }
   }
-
   translateFromProvider(query: string, mode?: SyntaxMode): FilterExpression | null {
     const syntaxMode = mode ?? this.providerDetector.currentSyntaxMode();
-
     switch (syntaxMode) {
       case "sql":
         return this.parseSqlWhere(query);
@@ -44,11 +40,9 @@ export class QueryTranslationService {
         return null;
     }
   }
-
   private translateToSql(filter: FilterExpression): TranslationResult {
     const errors: string[] = [];
     const warnings: string[] = [];
-
     try {
       const sql = this.buildSqlWhere(filter);
       return { query: sql, errors, warnings };
@@ -56,35 +50,27 @@ export class QueryTranslationService {
       return { query: "", errors: [(e as Error).message], warnings };
     }
   }
-
   private buildSqlWhere(filter: FilterExpression): string {
     if (!filter) return "";
-
     if (filter.and && filter.and.length > 0) {
       const conditions = filter.and.map((f) => this.buildSqlWhere(f)).filter(Boolean);
       return conditions.length > 1 ? `(${conditions.join(" AND ")})` : (conditions[0] ?? "");
     }
-
     if (filter.or && filter.or.length > 0) {
       const conditions = filter.or.map((f) => this.buildSqlWhere(f)).filter(Boolean);
       return conditions.length > 1 ? `(${conditions.join(" OR ")})` : (conditions[0] ?? "");
     }
-
     if (filter.not) {
       const inner = this.buildSqlWhere(filter.not);
       return inner ? `NOT (${inner})` : "";
     }
-
     if (filter.field && filter.operator) {
       return this.buildSqlCondition(filter.field, filter.operator, filter.value);
     }
-
     return "";
   }
-
   private buildSqlCondition(field: string, operator: FilterOperator, value: unknown): string {
     const escapedValue = this.escapeSqlValue(value);
-
     switch (operator) {
       case "eq":
         return value === null ? `${field} IS NULL` : `${field} = ${escapedValue}`;
@@ -127,15 +113,12 @@ export class QueryTranslationService {
         return `${field} = ${escapedValue}`;
     }
   }
-
   private escapeSqlValue(value: unknown): string {
     return escapeSqlValue(value);
   }
-
   private translateToMongoDB(filter: FilterExpression): TranslationResult {
     const errors: string[] = [];
     const warnings: string[] = [];
-
     try {
       const mongoFilter = this.buildMongoFilter(filter);
       const jsonStr = JSON.stringify(mongoFilter, null, 2);
@@ -144,29 +127,22 @@ export class QueryTranslationService {
       return { query: "", errors: [(e as Error).message], warnings };
     }
   }
-
   private buildMongoFilter(filter: FilterExpression): Record<string, unknown> {
     if (!filter) return {};
-
     if (filter.and && filter.and.length > 0) {
       return { $and: filter.and.map((f) => this.buildMongoFilter(f)) };
     }
-
     if (filter.or && filter.or.length > 0) {
       return { $or: filter.or.map((f) => this.buildMongoFilter(f)) };
     }
-
     if (filter.not) {
       return { $not: this.buildMongoFilter(filter.not) };
     }
-
     if (filter.field && filter.operator) {
       return this.buildMongoCondition(filter.field, filter.operator, filter.value);
     }
-
     return {};
   }
-
   private buildMongoCondition(
     field: string,
     operator: FilterOperator,
@@ -192,10 +168,8 @@ export class QueryTranslationService {
       or: "$or",
       not: "$not",
     };
-
     const mongoOp = mongoOps[operator];
     if (!mongoOp) return { [field]: value };
-
     switch (operator) {
       case "contains":
         return { [field]: { $regex: String(value), $options: "i" } };
@@ -220,15 +194,12 @@ export class QueryTranslationService {
         return { [field]: { [mongoOp]: value } };
     }
   }
-
   private escapeRegex(str: string): string {
     return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   }
-
   private translateToJson(filter: FilterExpression): TranslationResult {
     const errors: string[] = [];
     const warnings: string[] = [];
-
     try {
       const jsonFilter = this.buildJsonFilter(filter);
       const jsonStr = JSON.stringify(jsonFilter, null, 2);
@@ -237,22 +208,17 @@ export class QueryTranslationService {
       return { query: "", errors: [(e as Error).message], warnings };
     }
   }
-
   private buildJsonFilter(filter: FilterExpression): Record<string, unknown> {
     if (!filter) return {};
-
     if (filter.and && filter.and.length > 0) {
       return { $and: filter.and.map((f) => this.buildJsonFilter(f)) };
     }
-
     if (filter.or && filter.or.length > 0) {
       return { $or: filter.or.map((f) => this.buildJsonFilter(f)) };
     }
-
     if (filter.not) {
       return { $not: this.buildJsonFilter(filter.not) };
     }
-
     if (filter.field && filter.operator) {
       const cond: Record<string, unknown> = {};
       const opMap: Record<FilterOperator, string> = {
@@ -275,7 +241,6 @@ export class QueryTranslationService {
         or: "$or",
         not: "$not",
       };
-
       const op = opMap[filter.operator];
       if (filter.operator === "isNull") {
         cond[op] = true;
@@ -286,40 +251,31 @@ export class QueryTranslationService {
       } else {
         cond[op] = filter.value;
       }
-
       return { [filter.field]: cond };
     }
-
     return {};
   }
-
   private translateToKeyValue(filter: FilterExpression): TranslationResult {
     const errors: string[] = [];
     const warnings: string[] = [];
-
     if (filter.field && filter.operator === "eq") {
       return { query: `${filter.field}:${filter.value}`, errors, warnings };
     }
-
     warnings.push("Key-value mode only supports simple equality filters");
     return { query: "*", errors, warnings };
   }
-
   private parseSqlWhere(sql: string): FilterExpression | null {
     try {
       const whereClause = sql.replace(/^\s*SELECT.*?\s+FROM\s+\S+(\s+WHERE)?/i, "").trim();
       if (!whereClause) return null;
-
       const filter = this.parseSqlExpression(whereClause);
       return filter;
     } catch {
       return null;
     }
   }
-
   private parseSqlExpression(sql: string): FilterExpression {
     let expr = sql.trim();
-
     if (expr.startsWith("(") && expr.endsWith(")")) {
       const inner = expr.slice(1, -1).trim();
       if (inner.toLowerCase().startsWith("select")) {
@@ -328,38 +284,32 @@ export class QueryTranslationService {
         return this.parseSqlExpression(inner);
       }
     }
-
     const orMatch = this.splitByOperator(expr, " OR ");
     if (orMatch) {
       return {
         or: orMatch.map((part) => this.parseSqlExpression(part.trim())),
       };
     }
-
     const andMatch = this.splitByOperator(expr, " AND ");
     if (andMatch && andMatch.length > 1) {
       return {
         and: andMatch.map((part) => this.parseSqlExpression(part.trim())),
       };
     }
-
     const notMatch = expr.match(/^NOT\s+\((.+)\)$/i);
     if (notMatch) {
       return {
         not: this.parseSqlExpression(notMatch[1]),
       };
     }
-
     return this.parseSqlCondition(expr);
   }
-
   private splitByOperator(expr: string, operator: string): string[] | null {
     let depth = 0;
     let lastIndex = 0;
     const parts: string[] = [];
     const upperExpr = expr.toUpperCase();
     const opUpper = operator.toUpperCase();
-
     for (let i = 0; i < expr.length; i++) {
       if (expr[i] === "(") depth++;
       else if (expr[i] === ")") depth--;
@@ -370,29 +320,22 @@ export class QueryTranslationService {
         i += operator.length - 1;
       }
     }
-
     const remaining = expr.substring(lastIndex).trim();
     if (remaining) parts.push(remaining);
-
     return parts.length > 1 ? parts : null;
   }
-
   private parseSqlCondition(sql: string): FilterExpression {
     const sqlConditionRegex =
       /^(\w+(?:\.\w+)?)\s+(IS\s+NULL|IS\s+NOT\s+NULL|=|!=|<>|<|>|LIKE|ILIKE|IN\s*\(|NOT\s+IN\s*\(|BETWEEN|>=|<=)\s*(.+)$/i;
     const match = sql.match(sqlConditionRegex);
-
     if (!match) {
       return { field: "_raw", operator: "eq", value: sql.trim() };
     }
-
     const [, field, opStr, valueStr] = match;
     const operator = this.mapSqlOperator(opStr.trim());
-
     if (["IS NULL", "IS NOT NULL"].includes(opStr.toUpperCase())) {
       return { field, operator, value: null };
     }
-
     if (opStr.toUpperCase().startsWith("IN")) {
       const values = valueStr
         .replace(/^\(|\)$/g, "")
@@ -400,7 +343,6 @@ export class QueryTranslationService {
         .map((v) => v.trim());
       return { field, operator: "in", value: values };
     }
-
     if (opStr.toUpperCase() === "BETWEEN") {
       const betweenMatch = valueStr.match(/^(.+?)\s+AND\s+(.+)$/i);
       if (betweenMatch) {
@@ -411,7 +353,6 @@ export class QueryTranslationService {
         };
       }
     }
-
     let value: unknown = valueStr.trim();
     if (value === "NULL") value = null;
     else if (!isNaN(Number(value))) value = Number(value);
@@ -420,10 +361,8 @@ export class QueryTranslationService {
     else if (typeof value === "string" && value.startsWith("'") && value.endsWith("'")) {
       value = value.slice(1, -1).replace(/''/g, "'");
     }
-
     return { field, operator, value };
   }
-
   private mapSqlOperator(op: string): FilterOperator {
     const opUpper = op.toUpperCase();
     const mapping: Record<string, FilterOperator> = {
@@ -444,7 +383,6 @@ export class QueryTranslationService {
     };
     return mapping[opUpper] ?? "eq";
   }
-
   private parseMongoDbFilter(json: string): FilterExpression | null {
     try {
       const parsed = JSON.parse(json);
@@ -453,32 +391,26 @@ export class QueryTranslationService {
       return null;
     }
   }
-
   private convertMongoToFilter(obj: Record<string, unknown>): FilterExpression {
     const filter: FilterExpression = {};
-
     if (obj["$and"] && Array.isArray(obj["$and"])) {
       filter.and = (obj["$and"] as Record<string, unknown>[]).map((item) =>
         this.convertMongoToFilter(item)
       );
       return filter;
     }
-
     if (obj["$or"] && Array.isArray(obj["$or"])) {
       filter.or = (obj["$or"] as Record<string, unknown>[]).map((item) =>
         this.convertMongoToFilter(item)
       );
       return filter;
     }
-
     if (obj["$not"]) {
       filter.not = this.convertMongoToFilter(obj["$not"] as Record<string, unknown>);
       return filter;
     }
-
     for (const [key, value] of Object.entries(obj)) {
       if (key.startsWith("$")) continue;
-
       if (typeof value === "object" && value !== null) {
         const inner = value as Record<string, unknown>;
         for (const [op, opValue] of Object.entries(inner)) {
@@ -497,14 +429,11 @@ export class QueryTranslationService {
       }
       break;
     }
-
     return filter;
   }
-
   private mapMongoOperator(op: string): FilterOperator | null {
     return (MONGO_OPERATOR_MAP[op] as FilterOperator) ?? null;
   }
-
   private parseJsonFilter(json: string): FilterExpression | null {
     try {
       const parsed = JSON.parse(json);

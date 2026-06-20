@@ -13,19 +13,15 @@ export class IndexOptionsComponent {
   @Input() indexType: IndexType = "single";
   @Input() options: IndexOptions = {};
   @Output() optionsChange = new EventEmitter<IndexOptions>();
-
   onUniqueChange(unique: boolean): void {
     this.optionsChange.emit({ ...this.options, unique });
   }
-
   onSparseChange(sparse: boolean): void {
     this.optionsChange.emit({ ...this.options, sparse });
   }
-
   onTtlSecondsChange(ttlSeconds: number): void {
     this.optionsChange.emit({ ...this.options, ttlSeconds });
   }
-
   onDefaultLanguageChange(defaultLanguage: string): void {
     this.optionsChange.emit({ ...this.options, defaultLanguage });
   }

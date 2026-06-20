@@ -18,25 +18,20 @@ import { AuditService } from "./audit.service";
 })
 export class ChangeDetailComponent {
   private auditService = inject(AuditService);
-
   @Input() before: Record<string, unknown> | undefined;
   @Input() after: Record<string, unknown> | undefined;
   @Output() close = new EventEmitter<void>();
   @Output() exportChange = new EventEmitter<void>();
-
   diffs = computed(() => {
     const result = this.auditService.computeDiff(this.before, this.after);
     return result;
   });
-
   onClose(): void {
     this.close.emit();
   }
-
   onExport(): void {
     this.exportChange.emit();
   }
-
   formatValue(value: unknown): string {
     if (value == null) return "null";
     if (typeof value === "object") return JSON.stringify(value, null, 2);

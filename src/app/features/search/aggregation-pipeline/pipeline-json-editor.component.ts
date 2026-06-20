@@ -11,21 +11,17 @@ export class PipelineJsonEditorComponent {
   @Input() set json(value: string) {
     this.jsonContent.set(value);
   }
-
   @Output() jsonChange = new EventEmitter<string>();
   @Output() parseError = new EventEmitter<string | null>();
-
   jsonContent = signal("");
   error = signal<string | null>(null);
   isValid = signal(false);
   lineCount = computed(() => this.jsonContent().split("\n").length);
-
   onJsonChange(value: string): void {
     this.jsonContent.set(value);
     this.validateJson(value);
     this.jsonChange.emit(value);
   }
-
   private validateJson(value: string): void {
     if (!value.trim()) {
       this.error.set(null);
@@ -33,7 +29,6 @@ export class PipelineJsonEditorComponent {
       this.parseError.emit(null);
       return;
     }
-
     try {
       const parsed = JSON.parse(value);
       if (!Array.isArray(parsed)) {
@@ -52,7 +47,6 @@ export class PipelineJsonEditorComponent {
       this.parseError.emit(this.error());
     }
   }
-
   formatJson(): void {
     try {
       const parsed = JSON.parse(this.jsonContent());
@@ -61,7 +55,6 @@ export class PipelineJsonEditorComponent {
       this.jsonChange.emit(formatted);
     } catch {}
   }
-
   copyToClipboard(): void {
     navigator.clipboard
       .writeText(this.jsonContent())

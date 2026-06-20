@@ -24,22 +24,16 @@ export class CacheManagerComponent {
   private cdr = inject(ChangeDetectorRef);
   private cacheService = inject(QueryCacheService);
   private toast = inject(ToastService);
-
   expandedKeys = signal<Set<string>>(new Set());
   filterText = signal("");
-
   readonly entries = this.cacheService.entries;
   readonly stats = this.cacheService.stats;
-
   filteredEntries = computed(() => {
     const filter = this.filterText().toLowerCase();
     const allEntries = this.entries();
-
     if (!filter) return allEntries;
-
     return allEntries.filter((entry) => entry.key.toLowerCase().includes(filter));
   });
-
   toggleExpanded(key: string): void {
     const expanded = new Set(this.expandedKeys());
     if (expanded.has(key)) {
@@ -49,27 +43,21 @@ export class CacheManagerComponent {
     }
     this.expandedKeys.set(expanded);
   }
-
   isExpanded(key: string): boolean {
     return this.expandedKeys().has(key);
   }
-
   clearEntry(key: string): void {
     this.cacheService.clearCache(key);
     this.toast.success(`Cache entry cleared`);
   }
-
   clearAllCache(): void {
     this.cacheService.clearCache();
     this.toast.success(`All cache cleared`);
   }
-
   formatAge(timestamp: number): string {
     return formatTimeAgo(timestamp);
   }
-
   formatBytes = formatBytes;
-
   formatValue(value: unknown): string {
     const str = JSON.stringify(value);
     if (str.length > 200) {

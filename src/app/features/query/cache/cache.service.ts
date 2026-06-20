@@ -7,7 +7,6 @@ export interface CacheEntry<T = unknown> {
   hitCount: number;
   lastAccessed: number;
 }
-
 export interface CacheStats {
   totalEntries: number;
   memoryUsed: number;
@@ -15,18 +14,15 @@ export interface CacheStats {
   totalHits: number;
   totalMisses: number;
 }
-
 export interface CacheOptions {
   ttl?: number;
   key?: string;
 }
-
 @Injectable({ providedIn: "root" })
 export class QueryCacheService {
   private cache = new Map<string, CacheEntry>();
   private totalHits = 0;
   private totalMisses = 0;
-
   private statsSignal = signal<CacheStats>({
     totalEntries: 0,
     memoryUsed: 0,
@@ -34,9 +30,7 @@ export class QueryCacheService {
     totalHits: 0,
     totalMisses: 0,
   });
-
   readonly stats = this.statsSignal.asReadonly();
-
   readonly entries = computed(() => {
     const allEntries: CacheEntry[] = [];
     this.cache.forEach((entry) => {
@@ -44,30 +38,25 @@ export class QueryCacheService {
     });
     return allEntries.sort((a, b) => b.lastAccessed - a.lastAccessed);
   });
-
   getCachedResult<T>(key: string): T | null {
     const entry = this.cache.get(key);
-
     if (!entry) {
       this.totalMisses++;
       this.updateStats();
       return null;
     }
-
     if (this.isExpired(entry)) {
       this.cache.delete(key);
       this.totalMisses++;
       this.updateStats();
       return null;
     }
-
     entry.hitCount++;
     entry.lastAccessed = Date.now();
     this.totalHits++;
     this.updateStats();
     return entry.value as T;
   }
-
   setCachedResult<T>(key: string, value: T, ttlSeconds = 300): void {
     const now = Date.now();
     const entry: CacheEntry<T> = {
@@ -78,11 +67,9 @@ export class QueryCacheService {
       hitCount: 0,
       lastAccessed: now,
     };
-
     this.cache.set(key, entry as CacheEntry);
     this.updateStats();
   }
-
   clearCache(key?: string): void {
     if (key) {
       this.cache.delete(key);
@@ -91,7 +78,6 @@ export class QueryCacheService {
     }
     this.updateStats();
   }
-
   clearExpired(): void {
     const now = Date.now();
     for (const [k, entry] of this.cache.entries()) {
@@ -101,7 +87,6 @@ export class QueryCacheService {
     }
     this.updateStats();
   }
-
   getCacheEntry(key: string): CacheEntry | null {
     const entry = this.cache.get(key);
     if (!entry || this.isExpired(entry)) {
@@ -109,7 +94,6 @@ export class QueryCacheService {
     }
     return entry;
   }
-
   getCacheStatus(key: string): {
     cached: boolean;
     hitCount: number;
@@ -117,11 +101,9 @@ export class QueryCacheService {
     ttlRemaining: number;
   } {
     const entry = this.cache.get(key);
-
     if (!entry || this.isExpired(entry)) {
       return { cached: false, hitCount: 0, age: 0, ttlRemaining: 0 };
     }
-
     const now = Date.now();
     return {
       cached: true,
@@ -130,22 +112,17 @@ export class QueryCacheService {
       ttlRemaining: Math.max(0, entry.expiresAt - now),
     };
   }
-
   private isExpired(entry: CacheEntry): boolean {
     return Date.now() > entry.expiresAt;
   }
-
   private updateStats(): void {
     let memoryUsed = 0;
-
     this.cache.forEach((entry) => {
       const valueStr = JSON.stringify(entry.value);
       memoryUsed += valueStr.length * 2;
     });
-
     const totalRequests = this.totalHits + this.totalMisses;
     const hitRate = totalRequests > 0 ? (this.totalHits / totalRequests) * 100 : 0;
-
     this.statsSignal.set({
       totalEntries: this.cache.size,
       memoryUsed,
@@ -154,7 +131,6 @@ export class QueryCacheService {
       totalMisses: this.totalMisses,
     });
   }
-
   resetStats(): void {
     this.totalHits = 0;
     this.totalMisses = 0;

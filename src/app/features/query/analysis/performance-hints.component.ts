@@ -27,35 +27,28 @@ export class PerformanceHintsComponent implements OnInit, OnChanges {
   private cdr = inject(ChangeDetectorRef);
   private readonly queryAnalyzer = inject(QueryAnalyzerService);
   private readonly errorHandler = inject(ErrorHandlerService);
-
   @Input() collectionName = "";
   @Input() filterText = "";
-
   @Output() createIndex = new EventEmitter<{ collection: string; field: string }>();
   @Output() actionClick = new EventEmitter<{ hint: QueryHint; execute: () => void }>();
-
   hints = signal<QueryHint[]>([]);
   recommendations = signal<IndexRecommendation[]>([]);
   score = signal(100);
   isLoading = signal(false);
-
   ngOnInit(): void {
     this.analyze();
   }
-
   ngOnChanges(changes: SimpleChanges): void {
     if (changes["filterText"] || changes["collectionName"]) {
       this.analyze();
     }
   }
-
   private async analyze(): Promise<void> {
     if (!this.collectionName || !this.filterText) {
       this.hints.set([]);
       this.recommendations.set([]);
       return;
     }
-
     this.isLoading.set(true);
     try {
       let filter: FilterExpression;
@@ -67,12 +60,10 @@ export class PerformanceHintsComponent implements OnInit, OnChanges {
         this.isLoading.set(false);
         return;
       }
-
       const result: QueryAnalysisResult = await this.queryAnalyzer.analyzeQueryFull(
         filter,
         this.collectionName
       );
-
       this.hints.set(result.hints);
       this.recommendations.set(result.recommendations);
       this.score.set(result.score);
@@ -84,7 +75,6 @@ export class PerformanceHintsComponent implements OnInit, OnChanges {
       this.isLoading.set(false);
     }
   }
-
   getHintIcon(type: "info" | "warning" | "error"): string {
     switch (type) {
       case "error":
@@ -95,7 +85,6 @@ export class PerformanceHintsComponent implements OnInit, OnChanges {
         return "M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z";
     }
   }
-
   getHintColor(type: "info" | "warning" | "error"): string {
     switch (type) {
       case "error":
@@ -106,33 +95,27 @@ export class PerformanceHintsComponent implements OnInit, OnChanges {
         return "text-blue-400 border border-[var(--accent)]/30";
     }
   }
-
   getHintButtonColor(type: "info" | "warning" | "error"): string {
     return "bg-[var(--accent)] hover:bg-[var(--accent-hover)]";
   }
-
   onHintAction(hint: QueryHint): void {
     if (hint.action) {
       hint.action.execute();
       this.actionClick.emit({ hint, execute: hint.action.execute });
     }
   }
-
   onCreateIndex(field: string): void {
     this.createIndex.emit({ collection: this.collectionName, field });
   }
-
   getScoreColor(): string {
     const s = this.score();
     if (s >= 80) return "text-emerald-400";
     if (s >= 50) return "text-amber-400";
     return "text-red-400";
   }
-
   getScoreBgColor(): string {
     return "border border-[var(--accent)]/30";
   }
-
   refresh(collectionName: string, filterText: string): void {
     this.collectionName = collectionName;
     this.filterText = filterText;

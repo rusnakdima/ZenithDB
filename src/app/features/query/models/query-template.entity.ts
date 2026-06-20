@@ -1,9 +1,7 @@
 import { FilterOperator } from "@entities/entities.connection.config";
 import { ProviderType } from "./provider-info.entity";
-
 export type TemplateCategory = "search" | "modify" | "aggregate" | "admin";
 export type TemplateVariableType = "string" | "number" | "select" | "boolean";
-
 export interface TemplateVariable {
   name: string;
   label: string;
@@ -14,7 +12,6 @@ export interface TemplateVariable {
   defaultValue?: unknown;
   description?: string;
 }
-
 export interface QueryTemplate {
   id: string;
   name: string;
@@ -28,20 +25,17 @@ export interface QueryTemplate {
   isBuiltIn: boolean;
   keywords?: string[];
 }
-
 export interface QueryTemplateFilter {
   operator: "and" | "or";
   conditions: QueryTemplateCondition[];
   groups?: QueryTemplateFilter[];
 }
-
 export interface QueryTemplateCondition {
   field?: string;
   operator?: FilterOperator;
   value?: unknown;
   variable?: string;
 }
-
 export const TEMPLATE_CATEGORIES: Record<
   TemplateCategory,
   { label: string; icon: string; color: string }

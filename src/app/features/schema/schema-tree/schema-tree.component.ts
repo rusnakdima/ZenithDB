@@ -20,14 +20,12 @@ import { SkeletonLoaderComponent } from "@shared/components/loading/skeleton-loa
 import { CollectionMeta, ColumnInfo } from "@entities/entities.connection.config";
 import { withErrorHandling } from "@shared/utils/error-handler.utils";
 import { TreeNode, FieldNode } from "@entities/entities.tree-node.entity";
-
 interface ContextMenu {
   show: boolean;
   x: number;
   y: number;
   node: TreeNode | null;
 }
-
 @Component({
   selector: "app-schema-tree",
   standalone: true,
@@ -48,9 +46,7 @@ export class SchemaTreeComponent implements OnInit, OnDestroy {
   renamingCollection = signal<string | null>(null);
   renameValue = "";
   selectedNode = signal<TreeNode | null>(null);
-
   @Output() collectionSelect = new EventEmitter<string>();
-
   private store = inject(DataStoreService);
   private toast = inject(ToastService);
   private router = inject(Router);
@@ -58,25 +54,20 @@ export class SchemaTreeComponent implements OnInit, OnDestroy {
   private connectionState = inject(ConnectionStateService);
   private confirm = inject(ConfirmService);
   private errorHandler = inject(ErrorHandlerService);
-
   private boundCloseContextMenu: (() => void) | null = null;
-
   ngOnInit() {
     this.loadCollections();
     this.boundCloseContextMenu = () => this.closeContextMenu();
     document.addEventListener("click", this.boundCloseContextMenu);
   }
-
   ngOnDestroy(): void {
     if (this.boundCloseContextMenu) {
       document.removeEventListener("click", this.boundCloseContextMenu);
     }
   }
-
   async loadCollections() {
     const connId = this.connectionState.activeConnectionId();
     if (!connId) return;
-
     const result = await withErrorHandling(
       async () => {
         const cols = await this.store.listCollectionsPaginated(connId);
@@ -89,7 +80,6 @@ export class SchemaTreeComponent implements OnInit, OnDestroy {
       },
       { errorHandler: this.errorHandler, toastService: this.toast }
     );
-
     if (result.success && result.data) {
       this.collections.set(
         result.data.collections.map((c: CollectionMeta) => ({
@@ -105,7 +95,6 @@ export class SchemaTreeComponent implements OnInit, OnDestroy {
       this.error.set("Failed to load collections");
     }
   }
-
   async loadCollectionFields(collection: TreeNode) {
     if (collection.fields && collection.fields.length > 0) return;
     try {
@@ -121,7 +110,6 @@ export class SchemaTreeComponent implements OnInit, OnDestroy {
       this.toast.error(`Failed to load fields for ${collection.name}`);
     }
   }
-
   toggleExpand(name: string, event: MouseEvent) {
     event.stopPropagation();
     const current = new Set(this.expanded());
@@ -135,17 +123,14 @@ export class SchemaTreeComponent implements OnInit, OnDestroy {
     }
     this.expanded.set(current);
   }
-
   isExpanded(name: string): boolean {
     return this.expanded().has(name);
   }
-
   selectCollection(collection: TreeNode) {
     this.selectedCollection.set(collection.name);
     this.selectedNode.set(collection);
     this.collectionSelect.emit(collection.name);
   }
-
   onContextMenu(event: MouseEvent, node: TreeNode) {
     event.preventDefault();
     event.stopPropagation();
@@ -157,22 +142,18 @@ export class SchemaTreeComponent implements OnInit, OnDestroy {
     });
     this.selectCollection(node);
   }
-
   closeContextMenu() {
     this.contextMenu.set({ show: false, x: 0, y: 0, node: null });
   }
-
   refresh() {
     this.loadCollections();
     this.toast.info("Schema refreshed");
   }
-
   openNewCollectionModal() {
     this.closeContextMenu();
     this.newCollectionName = "";
     this.showNewCollectionModal.set(true);
   }
-
   async createCollection() {
     const name = this.newCollectionName.trim();
     if (!name) {
@@ -188,17 +169,14 @@ export class SchemaTreeComponent implements OnInit, OnDestroy {
       this.toast.error("Failed to create collection");
     }
   }
-
   closeNewCollectionModal() {
     this.showNewCollectionModal.set(false);
   }
-
   startRename(node: TreeNode) {
     this.closeContextMenu();
     this.renamingCollection.set(node.name);
     this.renameValue = node.name;
   }
-
   async confirmRename() {
     const oldName = this.renamingCollection();
     if (!oldName) return;
@@ -217,11 +195,9 @@ export class SchemaTreeComponent implements OnInit, OnDestroy {
       this.toast.error("Failed to rename collection");
     }
   }
-
   cancelRename() {
     this.renamingCollection.set(null);
   }
-
   async dropCollection(node: TreeNode) {
     this.closeContextMenu();
     if (await this.confirm.confirmDelete(node.name)) {
@@ -244,7 +220,6 @@ export class SchemaTreeComponent implements OnInit, OnDestroy {
       }
     }
   }
-
   viewData(collection: TreeNode) {
     const connId = this.connectionState.activeConnectionId();
     let dbName = this.connectionState.activeDatabaseName();
@@ -264,7 +239,6 @@ export class SchemaTreeComponent implements OnInit, OnDestroy {
       ]);
     }
   }
-
   viewDetails(collection: TreeNode) {
     const connId = this.connectionState.activeConnectionId();
     let dbName = this.connectionState.activeDatabaseName();
@@ -282,12 +256,10 @@ export class SchemaTreeComponent implements OnInit, OnDestroy {
       );
     }
   }
-
   setFilter(query: string) {
     this.searchQuery.set(query);
     this.applyFilter();
   }
-
   applyFilter() {
     const query = this.searchQuery().toLowerCase();
     if (!query) {
@@ -298,7 +270,6 @@ export class SchemaTreeComponent implements OnInit, OnDestroy {
       );
     }
   }
-
   getFieldTypeIcon(dataType: string): string {
     switch (dataType.toLowerCase()) {
       case "string":
@@ -324,7 +295,6 @@ export class SchemaTreeComponent implements OnInit, OnDestroy {
         return "text-slate-400";
     }
   }
-
   trackByName(index: number, node: TreeNode): string {
     return node.name || String(index);
   }

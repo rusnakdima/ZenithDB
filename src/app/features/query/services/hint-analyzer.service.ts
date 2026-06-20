@@ -11,27 +11,21 @@ export interface QueryHint {
     execute: () => void;
   };
 }
-
 export interface IndexRecommendation {
   field: string;
   reason: string;
   impact: "high" | "medium" | "low";
   suggestedIndex?: string;
 }
-
 @Injectable({ providedIn: "root" })
 export class HintAnalyzerService {
   private readonly schemaCompletion = inject(SchemaCompletionService);
   private readonly providerDetector = inject(ProviderDetectorService);
-
   async analyzeQuery(filter: FilterExpression, collectionName: string): Promise<QueryHint[]> {
     const hints: QueryHint[] = [];
-
     if (!filter) return hints;
-
     const fields = await this.schemaCompletion.getFields(collectionName);
     const fieldsSet = new Set(fields.map((f) => f.name));
-
     if (filter.field && !fieldsSet.has(filter.field)) {
       hints.push({
         type: "warning",
@@ -39,7 +33,6 @@ export class HintAnalyzerService {
         code: "UNKNOWN_FIELD",
       });
     }
-
     const usedFields = this.extractFields(filter);
     for (const field of usedFields) {
       if (!fieldsSet.has(field)) {
@@ -50,7 +43,6 @@ export class HintAnalyzerService {
         });
       }
     }
-
     if (filter.and && filter.and.length > 3) {
       hints.push({
         type: "info",
@@ -62,7 +54,6 @@ export class HintAnalyzerService {
         },
       });
     }
-
     if (this.hasFullTableScan(filter)) {
       hints.push({
         type: "warning",
@@ -74,7 +65,6 @@ export class HintAnalyzerService {
         },
       });
     }
-
     if (this.hasLeadingWildcard(filter)) {
       hints.push({
         type: "warning",
@@ -82,10 +72,8 @@ export class HintAnalyzerService {
         code: "LEADING_WILDCARD",
       });
     }
-
     return hints;
   }
-
   async getIndexRecommendations(
     collectionName: string,
     filter: FilterExpression
@@ -93,9 +81,7 @@ export class HintAnalyzerService {
     const recommendations: IndexRecommendation[] = [];
     const fields = await this.schemaCompletion.getFields(collectionName);
     const usedFields = this.extractFields(filter);
-
     if (usedFields.length === 0) return recommendations;
-
     const missingIndexes = usedFields.filter((f) => !this.hasIndex(fields, f));
     if (missingIndexes.length > 0) {
       recommendations.push({
@@ -105,75 +91,56 @@ export class HintAnalyzerService {
         suggestedIndex: this.buildIndexName(missingIndexes[0]),
       });
     }
-
     return recommendations;
   }
-
   private extractFields(filter: FilterExpression): string[] {
     const fields: string[] = [];
-
     if (filter.field) {
       fields.push(filter.field);
     }
-
     if (filter.and) {
       for (const subFilter of filter.and) {
         fields.push(...this.extractFields(subFilter));
       }
     }
-
     if (filter.or) {
       for (const subFilter of filter.or) {
         fields.push(...this.extractFields(subFilter));
       }
     }
-
     if (filter.not) {
       fields.push(...this.extractFields(filter.not));
     }
-
     return [...new Set(fields)];
   }
-
   private hasFullTableScan(filter: FilterExpression): boolean {
     return !filter.field && !filter.and && !filter.or && !filter.not;
   }
-
   private hasLeadingWildcard(filter: FilterExpression): boolean {
     if (filter.operator === "like" && typeof filter.value === "string") {
       return filter.value.startsWith("%");
     }
-
     if (filter.and) {
       return filter.and.some((f) => this.hasLeadingWildcard(f));
     }
-
     if (filter.or) {
       return filter.or.some((f) => this.hasLeadingWildcard(f));
     }
-
     if (filter.not) {
       return this.hasLeadingWildcard(filter.not);
     }
-
     return false;
   }
-
   private hasIndex(fields: { name: string }[], fieldName: string): boolean {
     return fields.some((f) => f.name === fieldName);
   }
-
   private buildIndexName(field: string): string {
     return `idx_${field.toLowerCase()}`;
   }
-
   private createCompoundIndexSuggestion(collectionName: string, fields: string[]): void {}
-
   private createIndexSuggestion(collectionName: string, field: string): void {}
-
   analyzeSort(sortField: string, collectionName: string): QueryHint[] {
     const hints: QueryHint[] = [];
-
     if (sortField && !sortField.startsWith("_")) {
       hints.push({
         type: "info",
@@ -181,13 +148,10 @@ export class HintAnalyzerService {
         code: "SORT_INDEX",
       });
     }
-
     return hints;
   }
-
   analyzeProjection(fields: string[], collectionName: string): QueryHint[] {
     const hints: QueryHint[] = [];
-
     if (fields.length === 0) {
       hints.push({
         type: "info",
@@ -195,7 +159,6 @@ export class HintAnalyzerService {
         code: "PROJECTION_HINT",
       });
     }
-
     return hints;
   }
 }

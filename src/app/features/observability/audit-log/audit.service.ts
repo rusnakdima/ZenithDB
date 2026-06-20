@@ -4,9 +4,7 @@ import { ApiProvider } from "@providers/providers.api.provider";
 import { LoadingService } from "@shared/services/loading.service";
 import { withConnectionAndLoading } from "@shared/utils/api-wrapper.util";
 import { AuditFilter as TauriAuditFilter } from "./audit.service";
-
 export type AuditOperation = "Insert" | "Update" | "Delete" | "SoftDelete" | "Restore";
-
 export interface AuditEntry {
   id: string;
   timestamp: string;
@@ -17,7 +15,6 @@ export interface AuditEntry {
   before?: Record<string, unknown>;
   after?: Record<string, unknown>;
 }
-
 export interface AuditFilter {
   operations?: AuditOperation[];
   collection?: string;
@@ -25,22 +22,18 @@ export interface AuditFilter {
   endDate?: string;
   searchQuery?: string;
 }
-
 @Injectable({ providedIn: "root" })
 export class AuditService {
   private connectionState = inject(ConnectionStateService);
   private api = inject(ApiProvider);
   private loadingService = inject(LoadingService);
-
   private auditLogSignal = signal<AuditEntry[]>([]);
   readonly auditLog = this.auditLogSignal.asReadonly();
-
   async fetchAuditLog(filter?: AuditFilter): Promise<AuditEntry[]> {
     const connId = this.connectionState.activeConnectionId();
     if (!connId) {
       throw new Error("No active connection");
     }
-
     return withConnectionAndLoading(
       connId,
       this.loadingService,
@@ -62,20 +55,17 @@ export class AuditService {
       }
     );
   }
-
   async exportAuditLog(
     format: "csv" | "json",
     filter?: AuditFilter
   ): Promise<{ filename: string; content: string }> {
     const entries = filter ? await this.fetchAuditLog(filter) : this.auditLog();
-
     if (format === "json") {
       return {
         filename: `audit_log_${Date.now()}.json`,
         content: JSON.stringify(entries, null, 2),
       };
     }
-
     const headers = ["Timestamp", "Operation", "Collection", "Document ID", "User"];
     const rows = entries.map((e) => [
       e.timestamp,
@@ -85,13 +75,11 @@ export class AuditService {
       e.user || "",
     ]);
     const csvContent = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
-
     return {
       filename: `audit_log_${Date.now()}.csv`,
       content: csvContent,
     };
   }
-
   filterEntries(entries: AuditEntry[], filter: AuditFilter): AuditEntry[] {
     return entries.filter((entry) => {
       if (filter.operations && filter.operations.length > 0) {
@@ -99,25 +87,21 @@ export class AuditService {
           return false;
         }
       }
-
       if (filter.collection) {
         if (!entry.collection.toLowerCase().includes(filter.collection.toLowerCase())) {
           return false;
         }
       }
-
       if (filter.startDate) {
         if (new Date(entry.timestamp) < new Date(filter.startDate)) {
           return false;
         }
       }
-
       if (filter.endDate) {
         if (new Date(entry.timestamp) > new Date(filter.endDate)) {
           return false;
         }
       }
-
       if (filter.searchQuery) {
         const query = filter.searchQuery.toLowerCase();
         const matchesSearch =
@@ -128,18 +112,15 @@ export class AuditService {
           return false;
         }
       }
-
       return true;
     });
   }
-
   computeDiff(
     before: Record<string, unknown> | undefined,
     after: Record<string, unknown> | undefined
   ): { field: string; before: unknown; after: unknown }[] {
     const diffs: { field: string; before: unknown; after: unknown }[] = [];
     const allKeys = new Set([...Object.keys(before || {}), ...Object.keys(after || {})]);
-
     for (const key of allKeys) {
       const beforeVal = before?.[key];
       const afterVal = after?.[key];
@@ -147,7 +128,6 @@ export class AuditService {
         diffs.push({ field: key, before: beforeVal, after: afterVal });
       }
     }
-
     return diffs;
   }
 }

@@ -11,26 +11,20 @@ import { TransactionService, TransactionOperation } from "./transaction.service"
 })
 export class TransactionLogComponent {
   private transactionService = inject(TransactionService);
-
   @Output() close = new EventEmitter<void>();
-
   operationLog = this.transactionService.operationLog;
-
   onClose(): void {
     this.close.emit();
   }
-
   onUndoOperation(index: number): void {
     const operations = this.operationLog();
     if (index >= operations.length - 1) {
       this.transactionService.undoLastOperation();
     }
   }
-
   onClearLog(): void {
     this.transactionService.clearOperationLog();
   }
-
   getOperationIcon(type: TransactionOperation["type"]): string {
     const iconMap: Record<TransactionOperation["type"], string> = {
       insert: "add",
@@ -40,7 +34,6 @@ export class TransactionLogComponent {
     };
     return iconMap[type] || "circle";
   }
-
   getOperationClass(type: TransactionOperation["type"]): string {
     const classMap: Record<TransactionOperation["type"], string> = {
       insert: "text-green-400",
@@ -50,7 +43,6 @@ export class TransactionLogComponent {
     };
     return classMap[type] || "text-[var(--text-main)]";
   }
-
   formatTimestamp(timestamp: string): string {
     return new Date(timestamp).toLocaleTimeString();
   }
