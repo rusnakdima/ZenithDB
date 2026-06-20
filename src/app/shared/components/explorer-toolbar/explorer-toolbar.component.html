@@ -9,7 +9,7 @@
     >
       <mat-icon [fontIcon]="treeCollapsed() ? 'menu' : 'menu_open'" class="h-5! w-4! text-base!" />
     </button>
-    <h1 class="text-xl font-bold text-white">Explorer</h1>
+    <h1 class="text-xl font-bold text-[var(--text-main)]">Explorer</h1>
   </div>
   <div class="flex items-center gap-3">
     <button
@@ -27,7 +27,7 @@
       <span class="hidden lg:inline">Import</span>
     </button>
     <button
-      class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-bold text-black transition-all hover:shadow-[0_0_20px_rgba(255,107,0,0.3)]"
+      class="flex items-center gap-2 rounded-lg bg-[var(--accent)] px-3 py-2 text-sm font-bold text-black transition-all hover:shadow-[0_0_20px_var(--accent)]"
       (click)="createDocument.emit()"
     >
       <mat-icon fontIcon="add" class="h-5! w-4! text-base!" />

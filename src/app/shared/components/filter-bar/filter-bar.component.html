@@ -19,9 +19,9 @@
       placeholder='{ "status": "active" }'
       class="min-w-0 flex-1 rounded-md border bg-[var(--bg-input)] px-2 py-1.5 font-mono text-xs transition-colors focus:border-[var(--accent)] focus:outline-none md:px-3 md:py-2 md:text-sm"
       [class.border-[var(--accent)]]="isValidFilter()"
-      [class.border-red-500]="!isValidFilter()"
+      [class.border-[var(--color-error)]]="!isValidFilter()"
       [class.text-[var(--text-main)]]="isValidFilter()"
-      [class.text-red-400]="!isValidFilter()"
+      [class.text-[var(--color-error)]]="!isValidFilter()"
     />
   </div>
   @if (showFieldDropdown()) {
@@ -76,7 +76,7 @@
           <span class="text-xs font-semibold text-[var(--text-dim)]">Recent Filters</span>
           @if (filterHistory().length > 0) {
             <button
-              class="text-xs text-[var(--text-dim)] hover:text-red-400"
+              class="text-xs text-[var(--text-dim)] hover:text-[var(--color-error)]"
               (click)="clearHistory()"
             >
               Clear all
@@ -107,7 +107,7 @@
 
   <div class="filter-actions flex items-center gap-1 md:gap-2">
     <button
-      class="flex items-center gap-1 rounded-md px-1.5 py-1 text-xs font-medium text-black transition-colors disabled:cursor-not-allowed disabled:opacity-50 sm:hidden lg:flex lg:px-4 lg:py-2 lg:text-sm"
+      class="flex items-center gap-1 rounded-md bg-[var(--accent)] px-1.5 py-1 text-xs font-medium text-black transition-colors disabled:cursor-not-allowed disabled:opacity-50 sm:hidden lg:flex lg:px-4 lg:py-2 lg:text-sm"
       [disabled]="!isValidFilter()"
       (click)="onApply()"
       title="Apply filter"
@@ -116,7 +116,7 @@
       <span class="hidden sm:inline lg:hidden">Apply</span>
     </button>
     <button
-      class="hidden rounded-md px-4 py-2 text-sm font-medium text-black transition-colors disabled:cursor-not-allowed disabled:opacity-50 sm:flex lg:hidden"
+      class="hidden rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-medium text-black transition-colors disabled:cursor-not-allowed disabled:opacity-50 sm:flex lg:hidden"
       [disabled]="!isValidFilter()"
       (click)="onApply()"
     >

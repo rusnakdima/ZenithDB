@@ -62,54 +62,23 @@ export class CollectionCacheService {
     return collections;
   }
   async refreshCollections(connectionId: string, dbName?: string): Promise<CollectionMeta[]> {
-    try {
-      this.invalidateCollections(connectionId);
-      const collections = await this.db.listCollections(connectionId, dbName);
-      this.updateCollections(connectionId, collections);
-      const duration = performance.now() - startTime;
-      return collections;
-    } catch (err) {
-      const duration = performance.now() - startTime;
-      throw err;
-    }
+    this.invalidateCollections(connectionId);
+    const collections = await this.db.listCollections(connectionId, dbName);
+    this.updateCollections(connectionId, collections);
+    return collections;
   }
   async createCollection(name: string): Promise<void> {
-    try {
-      await this.db.createCollection(name);
-      const duration = performance.now() - startTime;
-    } catch (err) {
-      const duration = performance.now() - startTime;
-      throw err;
-    }
+    await this.db.createCollection(name);
   }
   async renameCollection(connId: string, oldName: string, newName: string): Promise<void> {
-    try {
-      await this.db.renameCollection(connId, oldName, newName);
-      const duration = performance.now() - startTime;
-    } catch (err) {
-      const duration = performance.now() - startTime;
-      throw err;
-    }
+    await this.db.renameCollection(connId, oldName, newName);
   }
   async dropCollection(name: string): Promise<void> {
-    try {
-      await this.db.dropCollection(name);
-      const duration = performance.now() - startTime;
-    } catch (err) {
-      const duration = performance.now() - startTime;
-      throw err;
-    }
+    await this.db.dropCollection(name);
   }
   async getCollectionStats(
     collection: string
   ): Promise<import("@entities/entities.connection.config").CollectionStats> {
-    try {
-      const result = await this.db.getCollectionStats(collection);
-      const duration = performance.now() - startTime;
-      return result;
-    } catch (err) {
-      const duration = performance.now() - startTime;
-      throw err;
-    }
+    return this.db.getCollectionStats(collection);
   }
 }

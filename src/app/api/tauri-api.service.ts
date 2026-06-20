@@ -1,15 +1,15 @@
-import { Injectable, inject } from "@angular/core";
+import { Injectable } from "@angular/core";
 import { invoke } from "@tauri-apps/api/core";
-interface Response<T> {
-  status: "success" | "error";
-  data?: T;
-  message?: string;
-}
+import { Response, getData, isSuccess } from "@entities/response.model";
+import { ApiException } from "@entities/error.model";
+
 const DEFAULT_TIMEOUT_MS = 30000;
+
 export interface InvokeOptions {
   timeoutMs?: number;
   suppressError?: boolean;
 }
+
 @Injectable({ providedIn: "root" })
 export class TauriApiService {
   async invoke<T>(
@@ -18,25 +18,35 @@ export class TauriApiService {
     options: InvokeOptions = {}
   ): Promise<T> {
     const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+
     try {
       const response = await Promise.race([
         invoke<Response<T>>(command, args),
         new Promise<never>((_, reject) =>
           setTimeout(
-            () => reject(new Error(`Command "${command}" timed out after ${timeoutMs}ms`)),
+            () =>
+              reject(
+                new ApiException(`Command "${command}" timed out after ${timeoutMs}ms`, "TIMEOUT")
+              ),
             timeoutMs
           )
         ),
       ]);
-      if (response.status === "success") {
-        return response.data as T;
-      } else {
-        throw new Error(response.message || `Operation failed: ${command}`);
+
+      if (isSuccess(response)) {
+        return getData<T>(response) as T;
       }
+      throw new ApiException(response.message || `Operation failed: ${command}`, response.status);
     } catch (error: unknown) {
-      throw error;
+      if (error instanceof ApiException) throw error;
+      throw new ApiException(
+        error instanceof Error ? error.message : String(error),
+        "UNKNOWN",
+        error
+      );
     }
   }
+
   async invokeRaw<T>(
     command: string,
     args?: Record<string, unknown>,
@@ -48,13 +58,21 @@ export class TauriApiService {
         invoke<T>(command, args),
         new Promise<never>((_, reject) =>
           setTimeout(
-            () => reject(new Error(`Command "${command}" timed out after ${timeoutMs}ms`)),
+            () =>
+              reject(
+                new ApiException(`Command "${command}" timed out after ${timeoutMs}ms`, "TIMEOUT")
+              ),
             timeoutMs
           )
         ),
       ]);
     } catch (error: unknown) {
-      throw error;
+      if (error instanceof ApiException) throw error;
+      throw new ApiException(
+        error instanceof Error ? error.message : String(error),
+        "UNKNOWN",
+        error
+      );
     }
   }
 }

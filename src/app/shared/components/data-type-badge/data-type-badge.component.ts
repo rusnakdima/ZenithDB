@@ -1,13 +1,10 @@
 import { Component, input, computed } from "@angular/core";
 import { CommonModule } from "@angular/common";
-
 type DataTypeBadgeVariant = "icon" | "class" | "full";
-
 interface TypeConfig {
   icon: string;
   colorClass: string;
 }
-
 @Component({
   selector: "app-data-type-badge",
   standalone: true,
@@ -34,7 +31,6 @@ interface TypeConfig {
 export class DataTypeBadgeComponent {
   dataType = input<string>("");
   variant = input<DataTypeBadgeVariant>("icon");
-
   private readonly _typeMap: Record<string, TypeConfig> = {
     string: { icon: "Aa", colorClass: "text-blue-400" },
     text: { icon: "Aa", colorClass: "text-blue-400" },
@@ -50,9 +46,7 @@ export class DataTypeBadgeComponent {
     json: { icon: "{}", colorClass: "text-yellow-400" },
     array: { icon: "[]", colorClass: "text-pink-400" },
   };
-
   private readonly defaultConfig: TypeConfig = { icon: "?", colorClass: "text-slate-400" };
-
   readonly config = computed(() => {
     return this._typeMap[this.dataType().toLowerCase()] ?? this.defaultConfig;
   });

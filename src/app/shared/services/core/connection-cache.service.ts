@@ -50,9 +50,7 @@ export class ConnectionCacheService {
     try {
       await this.db.updateConnection(id, config);
       await this.refreshConnections();
-      const duration = performance.now() - startTime;
     } catch (err) {
-      const duration = performance.now() - startTime;
       throw err;
     }
   }
@@ -86,10 +84,8 @@ export class ConnectionCacheService {
         message: "Connection test failed",
       };
       this.updateHealth(connectionId, result);
-      const duration = performance.now() - startTime;
       return result;
     } catch (err) {
-      const duration = performance.now() - startTime;
       throw err;
     }
   }
@@ -119,10 +115,8 @@ export class ConnectionCacheService {
     try {
       const connections = await this.db.listConnections();
       this.connectionsSignal.set(connections);
-      const duration = performance.now() - startTime;
       return connections;
     } catch (err) {
-      const duration = performance.now() - startTime;
       throw err;
     }
   }
@@ -133,10 +127,8 @@ export class ConnectionCacheService {
     try {
       const result = await this.db.saveConnection(config);
       await this.refreshConnections();
-      const duration = performance.now() - startTime;
       return result;
     } catch (err) {
-      const duration = performance.now() - startTime;
       throw err;
     }
   }
@@ -144,9 +136,7 @@ export class ConnectionCacheService {
     try {
       await this.db.deleteConnection(id);
       this.removeConnection(id);
-      const duration = performance.now() - startTime;
     } catch (err) {
-      const duration = performance.now() - startTime;
       throw err;
     }
   }
@@ -158,20 +148,16 @@ export class ConnectionCacheService {
   async testConnectionById(connId: string): Promise<ConnectionHealth | null> {
     try {
       const result = await this.db.testConnectionById(connId);
-      const duration = performance.now() - startTime;
       return result;
     } catch (err) {
-      const duration = performance.now() - startTime;
       throw err;
     }
   }
   async testConnectionStatus(connId: string): Promise<ConnectionSummary | null> {
     try {
       const result = await this.db.testConnectionStatus(connId);
-      const duration = performance.now() - startTime;
       return result;
     } catch (err) {
-      const duration = performance.now() - startTime;
       throw err;
     }
   }

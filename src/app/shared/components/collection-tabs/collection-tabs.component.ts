@@ -1,7 +1,6 @@
 import { Component, input, output } from "@angular/core";
 import { MatIconModule } from "@angular/material/icon";
 import { Tab } from "@entities/entities.tab.entity";
-
 @Component({
   selector: "app-collection-tabs",
   standalone: true,
@@ -11,10 +10,8 @@ import { Tab } from "@entities/entities.tab.entity";
 export class CollectionTabsComponent {
   tabs = input<Tab[]>([]);
   activeCollection = input<string>("");
-
   tabSelect = output<string>();
   tabClose = output<string>();
-
   onCloseTab(collection: string) {
     this.tabClose.emit(collection);
   }

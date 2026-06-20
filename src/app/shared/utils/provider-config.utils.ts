@@ -1,5 +1,4 @@
 import { ProviderType } from "@entities/entities.provider.entity";
-
 export interface ProviderFormData {
   path: string;
   uri: string;
@@ -9,7 +8,6 @@ export interface ProviderFormData {
   password: string;
   database: string;
 }
-
 export function parseProviderConfig(config: Record<string, unknown>): ProviderFormData {
   const result: ProviderFormData = {
     path: "",
@@ -20,13 +18,10 @@ export function parseProviderConfig(config: Record<string, unknown>): ProviderFo
     password: "",
     database: "",
   };
-
   if (!config) return result;
-
   const configType = config["type"] as string;
   const configUri = config["uri"] as string | undefined;
   const configPath = config["path"] as string | undefined;
-
   switch (configType) {
     case "Json":
       result.path = String(configPath || "");
@@ -49,10 +44,8 @@ export function parseProviderConfig(config: Record<string, unknown>): ProviderFo
       }
       break;
   }
-
   return result;
 }
-
 interface ParsedUri {
   host: string;
   port: string;
@@ -60,7 +53,6 @@ interface ParsedUri {
   password: string;
   database: string;
 }
-
 export function parseUri(uri: string, type: string): ParsedUri {
   const result: ParsedUri = {
     host: "",
@@ -69,7 +61,6 @@ export function parseUri(uri: string, type: string): ParsedUri {
     password: "",
     database: "",
   };
-
   try {
     let url: URL;
     if (
@@ -82,18 +73,14 @@ export function parseUri(uri: string, type: string): ParsedUri {
     } else {
       return result;
     }
-
     result.host = url.hostname || "";
-
     if (type === "Mongo" || type === "Redis" || type === "Postgres" || type === "MySql") {
       result.port = url.port || getDefaultPort(type);
     }
-
     if (url.username && url.password) {
       result.username = decodeURIComponent(url.username);
       result.password = decodeURIComponent(url.password);
     }
-
     const path = url.pathname?.slice(1);
     if (path) {
       result.database = decodeURIComponent(path);
@@ -101,10 +88,8 @@ export function parseUri(uri: string, type: string): ParsedUri {
   } catch (e) {
     // Invalid URI, return empty result
   }
-
   return result;
 }
-
 function getDefaultPort(type: string): string {
   switch (type) {
     case "Mongo":

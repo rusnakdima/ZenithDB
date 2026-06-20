@@ -7,7 +7,6 @@ import {
   OnInit,
   OnChanges,
 } from "@angular/core";
-
 @Directive({
   selector: "[busyButton]",
   standalone: true,
@@ -15,30 +14,24 @@ import {
 export class BusyButtonDirective implements OnInit, OnChanges {
   @Input() busy = false;
   @Input() busyText = "Loading...";
-
   @HostBinding("disabled")
   get isDisabled(): boolean {
     return this.busy;
   }
-
   private originalInnerHTML: string = "";
-
   constructor(
     private el: ElementRef<HTMLButtonElement>,
     private renderer: Renderer2
   ) {}
-
   ngOnInit(): void {
     this.originalInnerHTML = this.el.nativeElement.innerHTML;
     this.updateContent();
   }
-
   ngOnChanges(): void {
     if (this.originalInnerHTML) {
       this.updateContent();
     }
   }
-
   private updateContent(): void {
     if (this.busy) {
       this.el.nativeElement.innerHTML = `

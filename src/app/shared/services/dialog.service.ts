@@ -7,14 +7,11 @@ export interface DialogConfig<T = unknown> {
   width?: string;
   closable?: boolean;
 }
-
 @Injectable({ providedIn: "root" })
 export class DialogService {
   private dialogsSignal = signal<DialogConfig<unknown>[]>([]);
   private counter = 0;
-
   readonly dialogs = computed(() => this.dialogsSignal());
-
   open(config: Omit<DialogConfig, "id">): string {
     const id = `dialog-${++this.counter}-${Date.now()}`;
     const dialog: DialogConfig = { ...config, id };

@@ -55,10 +55,8 @@ export class QueryCacheService {
         });
         return newMap;
       });
-      const duration = performance.now() - startTime;
       return result as QueryResult<RowData>;
     } catch (err) {
-      const duration = performance.now() - startTime;
       throw err;
     }
   }
@@ -126,42 +124,31 @@ export class QueryCacheService {
   async describeCollection(collection: string): Promise<CollectionSchema> {
     try {
       const result = await this.db.describeCollection(collection);
-      const duration = performance.now() - startTime;
       return result;
     } catch (err) {
-      const duration = performance.now() - startTime;
       throw err;
     }
   }
   async saveRow(collection: string, data: Record<string, unknown>): Promise<unknown> {
-    const startTime = performance.now();
     try {
       const result = await this.db.saveRow(collection, data);
-      const duration = performance.now() - startTime;
       return result;
     } catch (err) {
-      const duration = performance.now() - startTime;
       throw err;
     }
   }
   async deleteRow(collection: string, id: string): Promise<void> {
-    const startTime = performance.now();
     try {
       await this.db.deleteRow(collection, id);
-      const duration = performance.now() - startTime;
     } catch (err) {
-      const duration = performance.now() - startTime;
       throw err;
     }
   }
   async executeRaw(sql: string): Promise<import("@entities/entities.connection.config").RawResult> {
-    const startTime = performance.now();
     try {
       const result = await this.db.executeRaw(sql);
-      const duration = performance.now() - startTime;
       return result;
     } catch (err) {
-      const duration = performance.now() - startTime;
       throw err;
     }
   }

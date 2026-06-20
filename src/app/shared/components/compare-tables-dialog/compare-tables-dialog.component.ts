@@ -4,14 +4,12 @@ import { MatIconModule } from "@angular/material/icon";
 import { DataStoreService } from "@core/services/unified-storage.service";
 import { ToastService } from "@services/services.toast.service";
 import { CollectionMeta, ColumnInfo } from "@entities/entities.connection.config";
-
 interface ColumnComparison {
   name: string;
   leftType: string | null;
   rightType: string | null;
   status: "match" | "left_only" | "right_only" | "different";
 }
-
 @Component({
   selector: "app-compare-tables-dialog",
   standalone: true,
@@ -20,27 +18,19 @@ interface ColumnComparison {
 })
 export class CompareTablesDialogComponent {
   close = output<void>();
-
   private store = inject(DataStoreService);
   private toast = inject(ToastService);
-
   collections = input<CollectionMeta[]>([]);
   connectionId = input<string | null>(null);
-
   leftTable = signal<string>("");
   rightTable = signal<string>("");
-
   leftColumns = signal<ColumnInfo[]>([]);
   rightColumns = signal<ColumnInfo[]>([]);
-
   loading = signal(false);
   comparing = signal(false);
-
   comparisonResult = signal<ColumnComparison[]>([]);
-
   showLeftDropdown = signal(false);
   showRightDropdown = signal(false);
-
   filteredLeftCollections = computed(() => {
     const search = this.leftTable().toLowerCase();
     if (!search) return this.collections().slice(0, 20);
@@ -48,7 +38,6 @@ export class CompareTablesDialogComponent {
       .filter((c) => c.name.toLowerCase().includes(search))
       .slice(0, 20);
   });
-
   filteredRightCollections = computed(() => {
     const search = this.rightTable().toLowerCase();
     if (!search) return this.collections().slice(0, 20);
@@ -56,7 +45,6 @@ export class CompareTablesDialogComponent {
       .filter((c) => c.name.toLowerCase().includes(search))
       .slice(0, 20);
   });
-
   async loadColumnsForTable(tableName: string, side: "left" | "right") {
     if (!tableName) return;
     this.loading.set(true);
@@ -73,44 +61,35 @@ export class CompareTablesDialogComponent {
       this.loading.set(false);
     }
   }
-
   selectLeftTable(name: string) {
     this.leftTable.set(name);
     this.showLeftDropdown.set(false);
     this.loadColumnsForTable(name, "left");
     this.runComparison();
   }
-
   selectRightTable(name: string) {
     this.rightTable.set(name);
     this.showRightDropdown.set(false);
     this.loadColumnsForTable(name, "right");
     this.runComparison();
   }
-
   runComparison() {
     const left = this.leftColumns();
     const right = this.rightColumns();
-
     if (left.length === 0 && right.length === 0) {
       this.comparisonResult.set([]);
       return;
     }
-
     const leftMap = new Map(left.map((c) => [c.name, c]));
     const rightMap = new Map(right.map((c) => [c.name, c]));
-
     const allNames = new Set([...leftMap.keys(), ...rightMap.keys()]);
     const result: ColumnComparison[] = [];
-
     for (const name of Array.from(allNames).sort()) {
       const leftCol = leftMap.get(name);
       const rightCol = rightMap.get(name);
-
       let status: ColumnComparison["status"];
       let leftType: string | null = null;
       let rightType: string | null = null;
-
       if (leftCol && rightCol) {
         leftType = leftCol.data_type;
         rightType = rightCol.data_type;
@@ -122,23 +101,18 @@ export class CompareTablesDialogComponent {
         rightType = rightCol!.data_type;
         status = "right_only";
       }
-
       result.push({ name, leftType, rightType, status });
     }
-
     this.comparisonResult.set(result);
   }
-
   toggleLeftDropdown() {
     this.showLeftDropdown.update((v) => !v);
     this.showRightDropdown.set(false);
   }
-
   toggleRightDropdown() {
     this.showRightDropdown.update((v) => !v);
     this.showLeftDropdown.set(false);
   }
-
   getStatusIcon(status: ColumnComparison["status"]): string {
     switch (status) {
       case "match":
@@ -151,7 +125,6 @@ export class CompareTablesDialogComponent {
         return "arrow_forward";
     }
   }
-
   getStatusColor(status: ColumnComparison["status"]): string {
     switch (status) {
       case "match":
@@ -163,7 +136,6 @@ export class CompareTablesDialogComponent {
         return "text-red-400";
     }
   }
-
   getSummary() {
     const result = this.comparisonResult();
     const match = result.filter((r) => r.status === "match").length;
@@ -172,15 +144,12 @@ export class CompareTablesDialogComponent {
     const rightOnly = result.filter((r) => r.status === "right_only").length;
     return { match, different, leftOnly, rightOnly, total: result.length };
   }
-
   onBackdropClick(event: MouseEvent) {
     this.close.emit();
   }
-
   onDrawerClick(event: MouseEvent) {
     event.stopPropagation();
   }
-
   onClose() {
     this.close.emit();
   }

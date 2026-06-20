@@ -3,15 +3,12 @@ import { Router } from "@angular/router";
 import { Command } from "./command.entity";
 import { ThemeService } from "@shared/services/theme.service";
 import { findById } from "@shared/utils/array.utils";
-
 @Injectable({ providedIn: "root" })
 export class CommandPaletteService {
   private router = inject(Router);
   private themeService = inject(ThemeService);
-
   private readonly recentCommandsKey = "command_palette_recent";
   private readonly maxRecent = 5;
-
   readonly commands: Command[] = [
     {
       id: "go-connections",
@@ -101,21 +98,16 @@ export class CommandPaletteService {
       keywords: ["shortcuts", "keyboard", "help"],
     },
   ];
-
   filterCommands(query: string): Command[] {
     if (!query.trim()) {
       return this.commands;
     }
-
     const lowerQuery = query.toLowerCase();
     const scored: Array<{ command: Command; score: number }> = [];
-
     for (const command of this.commands) {
       const labelLower = command.label.toLowerCase();
       const keywordsLower = (command.keywords || []).map((k) => k.toLowerCase());
-
       let score = 0;
-
       if (labelLower === lowerQuery) {
         score = 100;
       } else if (labelLower.startsWith(lowerQuery)) {
@@ -128,22 +120,18 @@ export class CommandPaletteService {
           score = 40;
         }
       }
-
       if (score > 0) {
         scored.push({ command, score });
       }
     }
-
     return scored.sort((a, b) => b.score - a.score).map((item) => item.command);
   }
-
   addToRecent(command: Command): void {
     const recent = this.getRecent();
     const filtered = recent.filter((c) => c.id !== command.id);
     const updated = [command, ...filtered].slice(0, this.maxRecent);
     localStorage.setItem(this.recentCommandsKey, JSON.stringify(updated));
   }
-
   getRecent(): Command[] {
     try {
       const stored = localStorage.getItem(this.recentCommandsKey);
@@ -158,35 +146,27 @@ export class CommandPaletteService {
     }
     return [];
   }
-
   clearRecent(): void {
     localStorage.removeItem(this.recentCommandsKey);
   }
-
   private navigateTo(path: string): void {
     this.router.navigate([path]);
   }
-
   private createConnection(): void {
     document.dispatchEvent(new CustomEvent("zenith:open-connection-modal"));
   }
-
   private runQuery(): void {
     document.dispatchEvent(new CustomEvent("zenith:run-query"));
   }
-
   private toggleTheme(): void {
     this.themeService.toggle();
   }
-
   private exportView(): void {
     document.dispatchEvent(new CustomEvent("zenith:export-view"));
   }
-
   private openSettings(): void {
     this.router.navigate(["/settings"]);
   }
-
   private showShortcuts(): void {
     document.dispatchEvent(new CustomEvent("zenith:show-shortcuts"));
   }

@@ -1,5 +1,4 @@
 import { Injectable, signal, Signal, inject } from "@angular/core";
-
 @Injectable({ providedIn: "root" })
 export class CacheService {
   protected inFlightRequests = new Map<string, Promise<unknown>>();

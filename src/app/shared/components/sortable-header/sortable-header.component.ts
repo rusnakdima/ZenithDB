@@ -1,5 +1,4 @@
 import { Component, input, output, ChangeDetectionStrategy } from "@angular/core";
-
 @Component({
   selector: "app-sortable-header",
   standalone: true,
@@ -10,9 +9,7 @@ export class SortableHeaderComponent {
   column = input.required<string>();
   currentSort = input<string>("");
   direction = input<"asc" | "desc" | "none">("none");
-
   sortChange = output<{ column: string; direction: "asc" | "desc" }>();
-
   onSort() {
     const newDirection = this.direction() === "asc" ? "desc" : "asc";
     this.sortChange.emit({ column: this.column(), direction: newDirection });

@@ -1,14 +1,11 @@
 /// <reference lib="webworker" />
-
 import { highlightJsonLine } from "@shared/utils/json.utils";
 import { RowData } from "@entities/entities.connection.config";
-
 export interface WorkerMessage {
   type: "process";
   documents: RowData[];
   startIndex: number;
 }
-
 export interface WorkerResponse {
   type: "result";
   processed: Array<{
@@ -18,7 +15,6 @@ export interface WorkerResponse {
   }>;
   progress: number;
 }
-
 addEventListener("message", ({ data }: MessageEvent<WorkerMessage>) => {
   if (data.type === "process") {
     const { documents, startIndex } = data;
@@ -35,13 +31,11 @@ addEventListener("message", ({ data }: MessageEvent<WorkerMessage>) => {
         highlightedLines,
       };
     });
-
     const response: WorkerResponse = {
       type: "result",
       processed,
       progress: 100,
     };
-
     postMessage(response);
   }
 });

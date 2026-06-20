@@ -5,13 +5,11 @@ export const TIME_CONSTANTS = {
   ONE_HOUR_MS: 60 * 60 * 1000,
   TWENTY_FOUR_HOURS_MS: 24 * 60 * 60 * 1000,
 } as const;
-
 export const QUERY_CONSTANTS = {
   MAX_LIMIT: 10000,
   DEFAULT_PAGE_SIZE: 50,
   DEFAULT_TIMEOUT_MS: 30000,
 } as const;
-
 export const CACHE_CONSTANTS = {
   DEFAULT_TTL_MS: 5 * 60 * 1000,
   HEALTH_TTL_MS: 30 * 1000,

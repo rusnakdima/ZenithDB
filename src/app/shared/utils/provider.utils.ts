@@ -1,9 +1,6 @@
 import { Injectable } from "@angular/core";
-
 import { ProviderType } from "@entities/entities.provider.entity";
-
 export type { ProviderType };
-
 export const PROVIDER_REGISTRY: Record<
   ProviderType,
   {
@@ -40,7 +37,6 @@ export const PROVIDER_REGISTRY: Record<
     normalize: () => "mysql",
   },
 };
-
 const PROVIDER_KEYS: Record<string, ProviderType> = {
   postgresql: "postgres",
   mongodb: "mongo",
@@ -49,7 +45,6 @@ const PROVIDER_KEYS: Record<string, ProviderType> = {
   redis: "redis",
   json: "json",
 };
-
 const CONFIG_TYPE_MAP: Record<ProviderType, string> = {
   json: "Json",
   mongo: "Mongo",
@@ -58,14 +53,12 @@ const CONFIG_TYPE_MAP: Record<ProviderType, string> = {
   sqlite: "Sqlite",
   mysql: "MySql",
 };
-
 @Injectable({ providedIn: "root" })
 export class ProviderUtils {
   getProviderIcon(provider: string): string {
     const type = this.toProviderType(provider);
     return PROVIDER_REGISTRY[type]?.icon ?? "dns";
   }
-
   toProviderType(type: string): ProviderType {
     const normalized = type?.toLowerCase() || "";
     const mapped = PROVIDER_KEYS[normalized];
@@ -78,19 +71,15 @@ export class ProviderUtils {
     if (normalized.includes("json")) return "json";
     return "json";
   }
-
   toConfigType(provider: ProviderType): string {
     return CONFIG_TYPE_MAP[provider] ?? provider;
   }
-
   isNetworkProvider(provider: ProviderType): boolean {
     return PROVIDER_REGISTRY[provider]?.isNetwork ?? false;
   }
-
   isSingleDatabaseProvider(provider: ProviderType): boolean {
     return provider === "json" || provider === "sqlite";
   }
-
   formatBytes(bytes: number): string {
     if (bytes === 0) return "0 B";
     const k = 1024;

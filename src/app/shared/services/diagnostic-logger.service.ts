@@ -1,10 +1,8 @@
 import { Injectable } from "@angular/core";
 
-@Injectable()
+@Injectable({ providedIn: "root" })
 export class DiagnosticLoggerService {
-  debug(): void {}
-  info(): void {}
-  warn(): void {}
-  error(): void {}
-  log(): void {}
+  log(message: string, data?: unknown): void {
+    console.log(`[DIAGNOSTIC] ${message}`, data ?? "");
+  }
 }

@@ -1,7 +1,6 @@
 import { Component, input, output } from "@angular/core";
 import { MatIconModule } from "@angular/material/icon";
 import { ExportMenuDropdownComponent } from "@shared/components/export-menu-dropdown/export-menu-dropdown.component";
-
 @Component({
   selector: "app-explorer-toolbar",
   standalone: true,
@@ -11,7 +10,6 @@ import { ExportMenuDropdownComponent } from "@shared/components/export-menu-drop
 export class ExplorerToolbarComponent {
   treeCollapsed = input(false);
   showExportMenu = input(false);
-
   toggleTreeCollapse = output<void>();
   openCompareTables = output<void>();
   onImport = output<void>();

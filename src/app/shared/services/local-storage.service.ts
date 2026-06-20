@@ -1,7 +1,5 @@
 import { Injectable } from "@angular/core";
-
 const STORAGE_KEY_PREFIX = "zenithdb_";
-
 @Injectable({ providedIn: "root" })
 export class LocalStorageService {
   get<T>(key: string): T | null {
@@ -13,15 +11,12 @@ export class LocalStorageService {
       return null;
     }
   }
-
   set<T>(key: string, value: T): void {
     localStorage.setItem(STORAGE_KEY_PREFIX + key, JSON.stringify(value));
   }
-
   remove(key: string): void {
     localStorage.removeItem(STORAGE_KEY_PREFIX + key);
   }
-
   clear(): void {
     const keysToRemove: string[] = [];
     for (let i = 0; i < localStorage.length; i++) {

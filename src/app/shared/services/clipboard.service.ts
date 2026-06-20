@@ -3,7 +3,6 @@ import { ToastService } from "@services/services.toast.service";
 @Injectable({ providedIn: "root" })
 export class ClipboardService {
   private toast = inject(ToastService);
-
   async copyToClipboard(text: string, successMessage = "Copied to clipboard"): Promise<boolean> {
     try {
       await navigator.clipboard.writeText(text);

@@ -11,11 +11,8 @@ import {
   ChangeDetectorRef,
 } from "@angular/core";
 import { CommonModule } from "@angular/common";
-
 export type ModalSize = "sm" | "md" | "lg" | "xl" | "full";
-
 export type ModalContentPosition = "center" | "top";
-
 @Component({
   selector: "app-modal",
   standalone: true,
@@ -33,13 +30,10 @@ export class ModalComponent implements OnInit, OnDestroy {
   showHeader = input<boolean>(true);
   showFooter = input<boolean>(true);
   contentPosition = input<ModalContentPosition>("center");
-
   closed = output<void>();
   opened = output<void>();
-
   isVisible = signal(false);
   isAnimating = signal(false);
-
   private elementRef = inject(ElementRef);
   private cdr = inject(ChangeDetectorRef);
   private previousActiveElement: HTMLElement | null = null;
@@ -50,19 +44,16 @@ export class ModalComponent implements OnInit, OnDestroy {
       this.onClose();
     }
   };
-
   ngOnInit(): void {
     if (this.open()) {
       this.openModal();
     }
   }
-
   ngOnDestroy(): void {
     if (this.openedTimeoutId) clearTimeout(this.openedTimeoutId);
     if (this.closedTimeoutId) clearTimeout(this.closedTimeoutId);
     this.cleanup();
   }
-
   ngOnChanges(): void {
     if (this.open()) {
       this.openModal();
@@ -70,19 +61,16 @@ export class ModalComponent implements OnInit, OnDestroy {
       this.closeModal();
     }
   }
-
   openModal(): void {
     if (this.openedTimeoutId) {
       clearTimeout(this.openedTimeoutId);
       this.openedTimeoutId = null;
     }
-
     this.previousActiveElement = document.activeElement as HTMLElement;
     this.isVisible.set(true);
     this.isAnimating.set(true);
     document.body.style.overflow = "hidden";
     document.addEventListener("keydown", this.escapeKeyHandler);
-
     this.openedTimeoutId = setTimeout(() => {
       this.openedTimeoutId = null;
       this.isAnimating.set(false);
@@ -91,17 +79,14 @@ export class ModalComponent implements OnInit, OnDestroy {
       this.trapFocus();
     }, 50);
   }
-
   closeModal(): void {
     if (this.openedTimeoutId) {
       clearTimeout(this.openedTimeoutId);
       this.openedTimeoutId = null;
     }
-
     this.isAnimating.set(true);
     document.body.style.overflow = "";
     document.removeEventListener("keydown", this.escapeKeyHandler);
-
     this.closedTimeoutId = setTimeout(() => {
       this.closedTimeoutId = null;
       this.isVisible.set(false);
@@ -111,7 +96,6 @@ export class ModalComponent implements OnInit, OnDestroy {
       this.restoreFocus();
     }, 200);
   }
-
   onBackdropClick(event: MouseEvent): void {
     if (
       this.closeOnBackdrop() &&
@@ -120,11 +104,9 @@ export class ModalComponent implements OnInit, OnDestroy {
       this.onClose();
     }
   }
-
   onClose(): void {
     this.closeModal();
   }
-
   get sizeClasses(): string {
     const sizes: Record<ModalSize, string> = {
       sm: "max-w-[400px]",
@@ -135,11 +117,9 @@ export class ModalComponent implements OnInit, OnDestroy {
     };
     return sizes[this.size()];
   }
-
   get contentPositionClasses(): string {
     return this.contentPosition() === "top" ? "items-start pt-[10vh]" : "items-center";
   }
-
   private trapFocus(): void {
     const focusableElements = this.elementRef.nativeElement.querySelectorAll(
       'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
@@ -148,14 +128,12 @@ export class ModalComponent implements OnInit, OnDestroy {
       (focusableElements[0] as HTMLElement).focus();
     }
   }
-
   private restoreFocus(): void {
     if (this.previousActiveElement) {
       this.previousActiveElement.focus();
       this.previousActiveElement = null;
     }
   }
-
   private cleanup(): void {
     document.body.style.overflow = "";
     document.removeEventListener("keydown", this.escapeKeyHandler);

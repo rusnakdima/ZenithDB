@@ -7,7 +7,7 @@
       <span class="text-xs text-[var(--text-muted)]">({{ fullJsonData().length }} documents)</span>
     </div>
     <button
-      class="flex items-center gap-2 rounded px-3 py-1.5 text-sm font-bold text-black transition-colors"
+      class="flex items-center gap-2 rounded bg-[var(--accent)] px-3 py-1.5 text-sm font-bold text-black transition-colors hover:opacity-90"
       (click)="onCopyFullJson()"
     >
       <mat-icon fontIcon="content_copy" class="h-5! w-4! text-base!" />
@@ -52,7 +52,7 @@
           <div class="flex justify-center py-4">
             <button
               (click)="onLoadMore()"
-              class="rounded px-4 py-2 text-sm font-bold text-black transition-colors"
+              class="rounded bg-[var(--accent)] px-4 py-2 text-sm font-bold text-black transition-colors hover:opacity-90"
             >
               Load More
             </button>

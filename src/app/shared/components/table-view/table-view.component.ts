@@ -9,7 +9,6 @@ import {
 import { DataTableGridComponent } from "@features/data/data-table-grid/data-table-grid.component";
 import { PaginationComponent } from "@shared/components/pagination/pagination.component";
 import { ColumnInfo, RowData } from "@entities/entities.connection.config";
-
 @Component({
   selector: "app-table-view",
   standalone: true,
@@ -19,7 +18,6 @@ import { ColumnInfo, RowData } from "@entities/entities.connection.config";
 })
 export class TableViewComponent {
   private cdr = inject(ChangeDetectorRef);
-
   collectionName = input<string>("");
   filter = input<string>("");
   page = input(0);
@@ -28,7 +26,6 @@ export class TableViewComponent {
   columns = input<ColumnInfo[]>([]);
   reloadTrigger = input<number>(0);
   totalItems = input<number>(0);
-
   documentClick = output<RowData>();
   pageChange = output<number>();
   pageSizeChange = output<number>();

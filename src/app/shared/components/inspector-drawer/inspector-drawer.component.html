@@ -1,11 +1,11 @@
 <div class="fixed inset-0 z-40 bg-black/50" (click)="onBackdropClick($event)">
   <div
-    class="inspector-drawer fixed top-0 right-0 z-50 flex h-full w-[420px] transform flex-col border-l border-[var(--accent)] bg-[var(--bg-modal)] shadow-2xl backdrop-blur-md transition-transform duration-300"
+    class="inspector-drawer fixed top-0 right-0 z-50 flex h-full w-[420px] transform flex-col border-l border-[var(--border-visible)] bg-[var(--bg-modal)] shadow-2xl backdrop-blur-md transition-transform duration-300"
     [class.inspector-drawer-open]="true"
     (click)="onDrawerClick($event)"
   >
     <div
-      class="flex items-center justify-between border-b border-[var(--accent)] bg-[var(--bg-modal)] px-5 py-4"
+      class="flex items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--bg-modal)] px-5 py-4"
     >
       <div class="flex items-center gap-3">
         <mat-icon
@@ -19,7 +19,7 @@
       <div class="flex items-center gap-3">
         @if (!isCreateMode()) {
           <span
-            class="mono rounded-lg border border-[var(--accent)] bg-transparent px-2 py-1 text-xs text-[var(--text-muted)]"
+            class="mono rounded-lg border border-[var(--border-subtle)] bg-transparent px-2 py-1 text-xs text-[var(--text-muted)]"
           >
             {{ documentId() }}
           </span>
@@ -68,16 +68,16 @@
             </div>
           </div>
           @if (!isEditMode()) {
-            <div class="rounded-xl border border-[var(--accent)] bg-transparent p-4">
+            <div class="rounded-xl border border-[var(--border-subtle)] bg-transparent p-4">
               <div class="flex gap-2">
                 <button
-                  class="flex-1 rounded-lg px-4 py-2.5 text-xs font-bold text-black transition-all hover:shadow-[0_0_20px_rgba(255,107,0,0.3)]"
+                  class="flex-1 rounded-lg bg-[var(--accent)] px-4 py-2.5 text-xs font-bold text-black transition-all hover:bg-[var(--accent-hover)]"
                   (click)="exportDocument('json')"
                 >
                   JSON
                 </button>
                 <button
-                  class="flex-1 rounded-lg border border-[var(--accent)] bg-transparent px-4 py-2.5 text-xs font-bold text-[var(--text-dim)] transition-all hover:bg-[var(--accent)]/10 hover:text-[var(--text-main)]"
+                  class="flex-1 rounded-lg border border-[var(--border-visible)] bg-transparent px-4 py-2.5 text-xs font-bold text-[var(--text-dim)] transition-all hover:bg-[var(--accent)]/10 hover:text-[var(--text-main)]"
                   (click)="exportDocument('csv')"
                 >
                   CSV
@@ -101,11 +101,13 @@
               <mat-icon fontIcon="content_copy" class="h-6! w-5! text-xl!" />
             </button>
           </div>
-          <div class="overflow-hidden rounded-xl border border-[var(--accent)] bg-transparent">
+          <div
+            class="overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-transparent"
+          >
             <table class="w-full text-sm">
               <tbody>
                 @for (meta of metadata(); track meta.key) {
-                  <tr class="border-b border-[var(--accent)] last:border-b-0">
+                  <tr class="border-b border-[var(--border-subtle)] last:border-b-0">
                     <td class="mono px-4 py-3 text-xs text-[var(--text-dim)]">{{ meta.key }}</td>
                     <td class="mono px-4 py-3 text-right text-xs text-[var(--text-main)]">
                       {{ meta.value }}
@@ -138,7 +140,7 @@
         </div>
 
         @if (isEditMode()) {
-          <div class="rounded-xl border border-[var(--accent)] bg-transparent p-4">
+          <div class="rounded-xl border border-[var(--border-subtle)] bg-transparent p-4">
             <app-record-form
               [mode]="'edit'"
               [columns]="columns()"
@@ -148,7 +150,7 @@
             ></app-record-form>
           </div>
         } @else if (isCreateMode()) {
-          <div class="rounded-xl border border-[var(--accent)] bg-transparent p-4">
+          <div class="rounded-xl border border-[var(--border-subtle)] bg-transparent p-4">
             <app-record-form
               [mode]="'add'"
               [columns]="columns()"
@@ -158,7 +160,9 @@
             ></app-record-form>
           </div>
         } @else {
-          <div class="overflow-hidden rounded-xl border border-[var(--accent)] bg-transparent">
+          <div
+            class="overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-transparent"
+          >
             <div class="json-display p-4">
               <div class="min-w-max">
                 @for (line of formatJsonLinesFn(jsonPayload()); track $index; let i = $index) {
@@ -180,23 +184,23 @@
       </div>
 
       @if (showDeleteConfirm()) {
-        <div class="section rounded-xl border border-[var(--accent)] bg-transparent p-5">
+        <div class="section rounded-xl border border-[var(--border-subtle)] bg-transparent p-5">
           <div class="mb-3 flex items-center gap-2">
-            <mat-icon fontIcon="warning" class="h-6! w-5! text-xl! text-[var(--accent)]" />
-            <span class="text-sm font-bold text-[var(--accent)]">Delete Document</span>
+            <mat-icon fontIcon="warning" class="h-6! w-5! text-xl! text-[var(--color-warning)]" />
+            <span class="text-sm font-bold text-[var(--color-error)]">Delete Document</span>
           </div>
           <p class="mb-4 text-sm text-[var(--text-dim)]">
             Are you sure you want to permanently delete this document? This action cannot be undone.
           </p>
           <div class="flex items-center gap-2">
             <button
-              class="flex-1 rounded-xl bg-[var(--color-error)] px-4 py-2.5 text-sm font-bold text-white transition-all"
+              class="flex-1 rounded-xl bg-[var(--color-error)] px-4 py-2.5 text-sm font-bold text-white transition-all hover:bg-[var(--color-error-light)]"
               (click)="confirmDelete()"
             >
               Delete Permanently
             </button>
             <button
-              class="rounded-xl border border-[var(--accent)] bg-transparent px-4 py-2.5 text-sm font-bold text-[var(--text-dim)] transition-all hover:bg-[var(--accent)]/10 hover:text-[var(--text-main)]"
+              class="rounded-xl border border-[var(--border-visible)] bg-transparent px-4 py-2.5 text-sm font-bold text-[var(--text-dim)] transition-all hover:bg-[var(--accent)]/10 hover:text-[var(--text-main)]"
               (click)="cancelDelete()"
             >
               Cancel
@@ -206,13 +210,15 @@
       }
     </div>
 
-    <div class="drawer-footer border-t border-[var(--accent)] bg-[var(--bg-modal)] px-5 py-4">
+    <div
+      class="drawer-footer border-t border-[var(--border-subtle)] bg-[var(--bg-modal)] px-5 py-4"
+    >
       @if (!showDeleteConfirm() && !isEditMode() && !isCreateMode()) {
         <button
-          class="flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--accent)] bg-transparent px-4 py-3 text-sm font-bold text-[var(--accent)] transition-all hover:bg-[var(--accent)]/10"
+          class="flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--border-visible)] bg-transparent px-4 py-3 text-sm font-bold text-[var(--color-error)] transition-all hover:bg-[var(--color-error)]/10"
           (click)="onDelete()"
         >
-          <mat-icon fontIcon="delete" class="h-6! w-5! text-xl!" />
+          <mat-icon fontIcon="delete" class="h-6! w-5! text-xl! text-[var(--color-error)]" />
           Delete
         </button>
       }

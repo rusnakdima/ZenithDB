@@ -6,7 +6,6 @@ interface Result<T> {
   data?: T;
   error?: AppError;
 }
-
 interface WithErrorHandlingOptions {
   loading?: { set: (value: boolean) => void } | boolean;
   toast?: boolean;
@@ -15,27 +14,19 @@ interface WithErrorHandlingOptions {
   context?: string;
   showToastOnError?: boolean;
 }
-
 function isSignalLoading(loading: unknown): loading is { set: (value: boolean) => void } {
   if (loading === null || loading === undefined) return false;
   if (typeof loading === "boolean") return false;
-
   const loadingObj = loading as { set?: unknown };
-
-  // Direct function check
   if (typeof loadingObj.set === "function") {
     return true;
   }
-
-  // Angular signals use getters, so check descriptor
   const descriptor = Object.getOwnPropertyDescriptor(loadingObj, "set");
   if (descriptor && typeof descriptor.get === "function") {
     return true;
   }
-
   return false;
 }
-
 function resolveLoadingSetter(
   loading: WithErrorHandlingOptions["loading"]
 ): ((v: boolean) => void) | null {
@@ -44,33 +35,20 @@ function resolveLoadingSetter(
   if (isSignalLoading(loading)) return loading.set;
   return null;
 }
-
 export function withErrorHandling<T>(
   operation: () => Promise<T>,
   options: WithErrorHandlingOptions = {},
   services?: {
     errorHandler?: ErrorHandlerService;
     toastService?: ToastService;
-    logger?: {
-      debug: (...args: unknown[]) => void;
-      info: (...args: unknown[]) => void;
-      warn: (...args: unknown[]) => void;
-      error: (...args: unknown[]) => void;
-    };
   }
 ): Promise<Result<T>> {
   const errorHandler = services?.errorHandler;
   const toastService = services?.toastService;
-  const logger = services?.logger;
-
   const setLoading = resolveLoadingSetter(options.loading);
-  logger?.debug("[ERROR_HANDLER_UTILS]", "setLoading function", { found: !!setLoading });
-
   if (setLoading) {
-    logger?.debug("[ERROR_HANDLER_UTILS]", "Setting loading to true");
     setLoading(true);
   }
-
   return operation()
     .then((data) => {
       if (options.toastSuccess && toastService) {
@@ -82,7 +60,6 @@ export function withErrorHandling<T>(
       if (errorHandler) {
         errorHandler.handleError(err, options.context);
       }
-
       if (options.showToastOnError !== false && toastService) {
         if (options.errorMessage) {
           toastService.error(options.errorMessage);
@@ -90,7 +67,6 @@ export function withErrorHandling<T>(
           toastService.error(err.message);
         }
       }
-
       const appError = errorHandler
         ? {
             code: "UNKNOWN" as ErrorCode,
@@ -106,12 +82,10 @@ export function withErrorHandling<T>(
             timestamp: new Date(),
             retryable: true,
           };
-
       return { success: false, error: appError } as Result<T>;
     })
     .finally(() => {
       if (setLoading) {
-        logger?.debug("[ERROR_HANDLER_UTILS]", "Setting loading to false");
         setLoading(false);
       }
     });

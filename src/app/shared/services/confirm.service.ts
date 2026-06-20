@@ -7,13 +7,11 @@ export interface ConfirmOptions {
   confirmClass?: string;
   itemName?: string;
 }
-
 @Injectable({ providedIn: "root" })
 export class ConfirmService {
   private resolvePromise: ((value: boolean) => void) | null = null;
   isOpen = signal(false);
   options = signal<ConfirmOptions>({ message: "" });
-
   async confirmDelete(itemName: string): Promise<boolean> {
     return this.confirm({
       title: "Delete",
@@ -24,7 +22,6 @@ export class ConfirmService {
         "rounded-xl border border-[var(--accent)]/50 bg-transparent px-4 py-3 text-sm font-medium text-[var(--accent)] transition-colors hover:border-[var(--accent)]",
     });
   }
-
   async confirm(options: ConfirmOptions): Promise<boolean> {
     this.options.set(options);
     this.isOpen.set(true);
@@ -32,7 +29,6 @@ export class ConfirmService {
       this.resolvePromise = resolve;
     });
   }
-
   confirmResult(result: boolean): void {
     this.isOpen.set(false);
     this.resolvePromise?.(result);

@@ -1,8 +1,6 @@
 import { Component, input, output, ViewEncapsulation } from "@angular/core";
 import { FormsModule } from "@angular/forms";
-
 export type CheckboxVariant = "accent" | "gray";
-
 @Component({
   selector: "app-checkbox",
   standalone: true,
@@ -17,16 +15,12 @@ export class CheckboxComponent {
   label = input<string>("");
   variant = input<CheckboxVariant>("accent");
   value = input<string>("");
-
   changed = output<boolean>();
-
   static idCounter = 0;
   uniqueId = `checkbox-${++CheckboxComponent.idCounter}`;
-
   get inputId(): string {
     return this.id() || this.uniqueId;
   }
-
   onChange(checked: boolean) {
     this.changed.emit(checked);
   }

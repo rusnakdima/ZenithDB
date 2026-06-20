@@ -1,7 +1,6 @@
 import { Component, input, output, ChangeDetectionStrategy } from "@angular/core";
 import { FilterBarComponent } from "@shared/components/filter-bar/filter-bar.component";
 import { ColumnInfo } from "@entities/entities.connection.config";
-
 @Component({
   selector: "app-explorer-filter-panel",
   standalone: true,

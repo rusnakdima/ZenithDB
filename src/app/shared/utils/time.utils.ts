@@ -1,5 +1,4 @@
 import { TIME_CONSTANTS } from "./constants";
-
 export function formatTimeAgo(timestamp: number): string {
   const age = Date.now() - timestamp;
   if (age < TIME_CONSTANTS.ONE_SECOND_MS) return "< 1s";
@@ -9,7 +8,6 @@ export function formatTimeAgo(timestamp: number): string {
     return `${Math.floor(age / TIME_CONSTANTS.ONE_MINUTE_MS)}m ago`;
   return `${Math.floor(age / TIME_CONSTANTS.ONE_HOUR_MS)}h ago`;
 }
-
 export function formatDuration(ms: number): string {
   if (ms < 1000) return `${ms}ms`;
   if (ms < TIME_CONSTANTS.ONE_MINUTE_MS) return `${(ms / 1000).toFixed(1)}s`;

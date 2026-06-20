@@ -1,6 +1,5 @@
 import { Pipe } from "@angular/core";
 import { ProviderUtils } from "@shared/utils/provider.utils";
-
 @Pipe({ name: "formatBytes", standalone: true })
 export class FormatBytesPipe {
   private providerUtils = new ProviderUtils();

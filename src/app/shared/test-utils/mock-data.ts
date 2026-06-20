@@ -13,7 +13,6 @@ export const mockConnectionSummaries: import("@entities/entities.connection.conf
       status: "connected",
     },
   ];
-
 export const mockConnectionConfigResult: import("@entities/entities.connection.config").ConnectionConfigResult =
   {
     id: "12345678-1234-1234-1234-123456789012",
@@ -22,7 +21,6 @@ export const mockConnectionConfigResult: import("@entities/entities.connection.c
       config: { type: "Json", name: "Test JSON", path: "/tmp/test" },
     },
   };
-
 export const mockConnectionHealth: import("@entities/entities.connection.config").ConnectionHealth =
   {
     healthy: true,
@@ -30,13 +28,11 @@ export const mockConnectionHealth: import("@entities/entities.connection.config"
     server_version: "1.0.0",
     latency_ms: 5,
   };
-
 export const mockCollectionMetas: import("@entities/entities.connection.config").CollectionMeta[] =
   [
     { name: "users", count: 100 },
     { name: "orders", count: 50 },
   ];
-
 export const mockCollectionSchema: import("@entities/entities.connection.config").CollectionSchema =
   {
     name: "users",
@@ -47,14 +43,12 @@ export const mockCollectionSchema: import("@entities/entities.connection.config"
     ],
     indexes: [{ name: "email_unique", columns: ["email"], is_unique: true }],
   };
-
 export const mockCollectionStats: import("@entities/entities.connection.config").CollectionStats = {
   name: "users",
   document_count: 100,
   size_bytes: 4096,
   index_count: 1,
 };
-
 export const mockQueryResult: import("@entities/entities.connection.config").QueryResult = {
   data: [
     { id: "1", name: "Alice", email: "alice@test.com" },
@@ -63,7 +57,6 @@ export const mockQueryResult: import("@entities/entities.connection.config").Que
   total: 2,
   has_more: false,
 };
-
 export const mockSystemMetrics: import("@entities/entities.connection.config").SystemMetrics = {
   cpu_usage: 25.5,
   ram_used: 8 * 1024 * 1024 * 1024,
@@ -75,7 +68,6 @@ export const mockSystemMetrics: import("@entities/entities.connection.config").S
   uptime: 3600,
   status: "optimal",
 };
-
 export const mockDatabaseMetadata: import("@entities/entities.connection.config").DatabaseMetadata =
   {
     id: 1,
@@ -86,7 +78,6 @@ export const mockDatabaseMetadata: import("@entities/entities.connection.config"
     updated_at: Date.now(),
     metadata: null,
   };
-
 export const mockRawResult: import("@entities/entities.connection.config").RawResult = {
   columns: ["id", "name"],
   rows: [

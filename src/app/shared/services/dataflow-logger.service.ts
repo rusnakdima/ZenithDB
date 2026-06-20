@@ -1,12 +1,8 @@
-import { Injectable, signal } from "@angular/core";
+import { Injectable } from "@angular/core";
 
-@Injectable()
+@Injectable({ providedIn: "root" })
 export class DataflowLoggerService {
-  private readonly enabled = signal(false);
-
-  debug(): void {}
-  info(): void {}
-  warn(): void {}
-  error(): void {}
-  log(): void {}
+  log(message: string, data?: unknown): void {
+    console.log(`[DATAFLOW] ${message}`, data ?? "");
+  }
 }

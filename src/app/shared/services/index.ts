@@ -8,8 +8,6 @@ export * from "./core/storage-cache.service";
 export * from "./core/storage-entity.service";
 export * from "./core/storage-query.service";
 export * from "./core/unified-storage.service";
-export * from "./dataflow-logger.service";
-export * from "./diagnostic-logger.service";
 export * from "./dialog.service";
 export * from "./error-handler.service";
 export * from "./keyboard-shortcuts.service";

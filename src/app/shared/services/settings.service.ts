@@ -2,7 +2,6 @@ import { Injectable, signal, effect, inject } from "@angular/core";
 import { PersistentStorageService } from "./persistent-storage.service";
 type ThemeSetting = "dark" | "light" | "system";
 type TabSize = 2 | 4 | 8;
-
 interface GeneralSettings {
   theme: ThemeSetting;
   accentColor: string;
@@ -10,33 +9,28 @@ interface GeneralSettings {
   startMinimized: boolean;
   checkUpdates: boolean;
 }
-
 interface EditorSettings {
   fontSize: number;
   tabSize: TabSize;
   autoSave: boolean;
   lineNumbers: boolean;
 }
-
 interface DataSettings {
   defaultPageSize: number;
   confirmBeforeDelete: boolean;
   maxRows: number;
 }
-
 interface ConnectionSettings {
   connectionTimeout: number;
   maxConcurrent: number;
   autoReconnect: boolean;
 }
-
 interface AppSettings {
   general: GeneralSettings;
   editor: EditorSettings;
   data: DataSettings;
   connections: ConnectionSettings;
 }
-
 const DEFAULT_SETTINGS: AppSettings = {
   general: {
     theme: "dark",
@@ -62,25 +56,19 @@ const DEFAULT_SETTINGS: AppSettings = {
     autoReconnect: true,
   },
 };
-
 @Injectable({ providedIn: "root" })
 export class SettingsService {
   private storage = inject(PersistentStorageService);
-
   private settingsSignal = signal<AppSettings>(this.loadSettings());
-
   readonly settings = this.settingsSignal;
-
   constructor() {
     effect(() => {
       this.saveSettings(this.settingsSignal());
     });
   }
-
   get currentSettings(): AppSettings {
     return this.settingsSignal();
   }
-
   get(path: string): unknown {
     const keys = path.split(".");
     let value: AppSettings | Record<string, unknown> = this.settingsSignal();
@@ -90,39 +78,33 @@ export class SettingsService {
     }
     return value;
   }
-
   updateGeneral(partial: Partial<GeneralSettings>): void {
     this.settingsSignal.update((current) => ({
       ...current,
       general: { ...current.general, ...partial },
     }));
   }
-
   updateEditor(partial: Partial<EditorSettings>): void {
     this.settingsSignal.update((current) => ({
       ...current,
       editor: { ...current.editor, ...partial },
     }));
   }
-
   updateData(partial: Partial<DataSettings>): void {
     this.settingsSignal.update((current) => ({
       ...current,
       data: { ...current.data, ...partial },
     }));
   }
-
   updateConnections(partial: Partial<ConnectionSettings>): void {
     this.settingsSignal.update((current) => ({
       ...current,
       connections: { ...current.connections, ...partial },
     }));
   }
-
   resetToDefaults(): void {
     this.settingsSignal.set(structuredClone(DEFAULT_SETTINGS));
   }
-
   private loadSettings(): AppSettings {
     try {
       const stored = this.storage.getSettings<AppSettings>();
@@ -132,11 +114,9 @@ export class SettingsService {
     } catch (e) {}
     return structuredClone(DEFAULT_SETTINGS);
   }
-
   private saveSettings(settings: AppSettings): void {
     this.storage.setSettings(settings);
   }
-
   private mergeWithDefaults(stored: Partial<AppSettings>): AppSettings {
     return {
       general: { ...DEFAULT_SETTINGS.general, ...stored.general },

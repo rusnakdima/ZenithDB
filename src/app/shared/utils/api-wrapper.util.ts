@@ -1,5 +1,4 @@
 import { LoadingService } from "@shared/services/loading.service";
-
 export async function withLoading<T>(
   loading: LoadingService,
   message: string,
@@ -12,7 +11,6 @@ export async function withLoading<T>(
     loading.hide();
   }
 }
-
 export async function withConnectionAndLoading<T>(
   connectionId: string | null,
   loading: LoadingService,
