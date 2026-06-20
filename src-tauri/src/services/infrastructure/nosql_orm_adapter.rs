@@ -5,17 +5,18 @@ pub(crate) fn validate_safe_path(base: &str, user_input: &str) -> Result<PathBuf
   let base_path = PathBuf::from(base);
   let base_canonical = base_path.canonicalize().map_err_string()?;
   let joined = base_path.join(user_input);
-  let joined_canonical = joined.canonicalize().map_err_string()?;
-  if joined_canonical.starts_with(&base_canonical) {
-    log::debug!(
-      "validated_path = {} [ADAPTER] Path validation successful",
-      joined_canonical.display()
-    );
-    Ok(joined)
-  } else {
-    log::debug!("[ADAPTER] Path traversal detected");
-    Err("Path traversal detected".to_string())
+  if joined.exists() {
+    let joined_canonical = joined.canonicalize().map_err_string()?;
+    if !joined_canonical.starts_with(&base_canonical) {
+      log::debug!("[ADAPTER] Path traversal detected");
+      return Err("Path traversal detected".to_string());
+    }
   }
+  log::debug!(
+    "validated_path = {} [ADAPTER] Path validation successful",
+    joined.display()
+  );
+  Ok(joined)
 }
 impl NosqlOrmAdapter {
   pub async fn create_database_json(base_path: &str, name: &str) -> Result<(), String> {
