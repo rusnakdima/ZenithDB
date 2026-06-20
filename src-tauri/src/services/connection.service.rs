@@ -8,20 +8,18 @@ use crate::commands::provider::{
 };
 use crate::commands::settings_command::delete_connection_databases_metadata;
 use crate::constants::CONNECTION_TIMEOUT_SECS;
-use crate::models::response::ResponseModel;
+use crate::models::response::{Response, ResponseModel, Status};
 use nosql_orm::prelude::*;
 use rusqlite::{params, Connection};
+use serde_json::Value;
 use std::sync::Arc;
 use tokio::sync::Mutex;
-
 pub struct ConnectionService {
   connections_db: Arc<Mutex<ConnectionsDb>>,
 }
-
 struct ConnectionsDb {
   conn: Connection,
 }
-
 impl ConnectionsDb {
   fn new() -> Result<Self, String> {
     let db_path = Self::path()?;
@@ -34,7 +32,6 @@ impl ConnectionsDb {
     db.init()?;
     Ok(db)
   }
-
   fn path() -> Result<std::path::PathBuf, String> {
     let path = dirs::home_dir()
       .ok_or("Failed to get home dir")?
@@ -42,7 +39,6 @@ impl ConnectionsDb {
       .join("connections.db");
     Ok(path)
   }
-
   fn init(&self) -> Result<(), String> {
     self
       .conn
@@ -58,10 +54,8 @@ impl ConnectionsDb {
         [],
       )
       .map_err(|e| e.to_string())?;
-    log::info!("Connections table schema created");
     Ok(())
   }
-
   fn save(&self, entity: &ConnectionEntity) -> Result<(), String> {
     let now = chrono::Utc::now().to_rfc3339();
     self.conn.execute(
@@ -74,14 +68,10 @@ impl ConnectionsDb {
         entity.created_at.map(|d| d.to_rfc3339()).unwrap_or_else(|| now.clone()),
         now,
       ],
-    ).map_err(|e| e.to_string())?;
-    log::info!(
-      "Saved connection: {}",
-      entity.id.clone().unwrap_or_default()
-    );
+    )
+    .map_err(|e| e.to_string())?;
     Ok(())
   }
-
   fn find_by_id(&self, id: &str) -> Result<Option<ConnectionEntity>, String> {
     let mut stmt = self
       .conn
@@ -96,7 +86,6 @@ impl ConnectionsDb {
       Ok(None)
     }
   }
-
   fn find_all(&self) -> Result<Vec<ConnectionEntity>, String> {
     let mut stmt = self
       .conn
@@ -109,16 +98,13 @@ impl ConnectionsDb {
     }
     Ok(entities)
   }
-
   fn delete(&self, id: &str) -> Result<(), String> {
     self
       .conn
       .execute("DELETE FROM connections WHERE id = ?1", params![id])
       .map_err(|e| e.to_string())?;
-    log::info!("Deleted connection: {}", id);
     Ok(())
   }
-
   fn exists(&self, id: &str) -> Result<bool, String> {
     let mut stmt = self
       .conn
@@ -127,7 +113,6 @@ impl ConnectionsDb {
     let exists = stmt.exists(params![id]).map_err(|e| e.to_string())?;
     Ok(exists)
   }
-
   fn row_to_entity(&self, row: &rusqlite::Row) -> Result<ConnectionEntity, String> {
     let created_at: Option<String> = row.get(4).map_err(|e| e.to_string())?;
     let updated_at: Option<String> = row.get(5).map_err(|e| e.to_string())?;
@@ -149,7 +134,6 @@ impl ConnectionsDb {
     })
   }
 }
-
 impl ConnectionService {
   pub fn new() -> Result<Self, String> {
     let db = ConnectionsDb::new()?;
@@ -157,7 +141,6 @@ impl ConnectionService {
       connections_db: Arc::new(Mutex::new(db)),
     })
   }
-
   pub async fn get_instance() -> Arc<ConnectionService> {
     static SERVICE: tokio::sync::OnceCell<Arc<ConnectionService>> =
       tokio::sync::OnceCell::const_new();
@@ -167,7 +150,6 @@ impl ConnectionService {
       .expect("Failed to create ConnectionService")
       .clone()
   }
-
   fn get_type_string(config: &ConnectionConfig) -> String {
     match config.config {
       ConnectionConfigEnum::Json { .. } => "Json".to_string(),
@@ -178,7 +160,6 @@ impl ConnectionService {
       ConnectionConfigEnum::MySql { .. } => "MySql".to_string(),
     }
   }
-
   pub async fn check_provider_health(&self, config: &ConnectionConfig) -> ConnectionHealth {
     match &config.config {
       ConnectionConfigEnum::Json { path, .. } => self.check_json_health(path).await,
@@ -191,7 +172,6 @@ impl ConnectionService {
       ConnectionConfigEnum::MySql { uri, .. } => self.check_mysql_health(uri).await,
     }
   }
-
   async fn check_json_health(&self, path: &str) -> ConnectionHealth {
     let path_obj = std::path::Path::new(path);
     if !path_obj.exists() {
@@ -215,7 +195,6 @@ impl ConnectionService {
       Err(_) => ConnectionHealth::err("json: health check timed out"),
     }
   }
-
   async fn check_mongo_health(&self, uri: &str, database: &str) -> ConnectionHealth {
     match create_mongo_provider(uri, database).await {
       Ok(p) => {
@@ -239,7 +218,6 @@ impl ConnectionService {
       Err(e) => ConnectionHealth::err(&e),
     }
   }
-
   async fn check_redis_health(&self, uri: &str) -> ConnectionHealth {
     match create_redis_provider(uri).await {
       Ok(p) => match p.health_check().await {
@@ -250,7 +228,6 @@ impl ConnectionService {
       Err(e) => ConnectionHealth::err(&e),
     }
   }
-
   async fn check_postgres_health(&self, uri: &str) -> ConnectionHealth {
     match create_postgres_provider(uri).await {
       Ok(p) => match p.execute_raw("SELECT 1", vec![]).await {
@@ -260,7 +237,6 @@ impl ConnectionService {
       Err(e) => ConnectionHealth::err(&e),
     }
   }
-
   async fn check_sqlite_health(&self, path: &str) -> ConnectionHealth {
     match create_sqlite_provider(path).await {
       Ok(p) => match p.execute_raw("SELECT 1", vec![]).await {
@@ -270,7 +246,6 @@ impl ConnectionService {
       Err(e) => ConnectionHealth::err(&e),
     }
   }
-
   async fn check_mysql_health(&self, uri: &str) -> ConnectionHealth {
     match create_mysql_provider(uri).await {
       Ok(p) => match p.execute_raw("SELECT 1", vec![]).await {
@@ -280,30 +255,21 @@ impl ConnectionService {
       Err(e) => ConnectionHealth::err(&e),
     }
   }
-
-  pub async fn save_connection(
-    &self,
-    config: ConnectionConfig,
-  ) -> Result<ResponseModel, ResponseModel> {
+  pub async fn save_connection(&self, config: ConnectionConfig) -> Result<Response, String> {
     let id = uuid::Uuid::new_v4().to_string();
     let type_str = Self::get_type_string(&config);
-
     let entity = ConnectionEntity::new(id.clone(), type_str, config.name.clone(), config);
     let db = self.connections_db.lock().await;
-    db.save(&entity).map_err(|e| ResponseModel::error(e))?;
-
-    log::info!("Saved connection: {} ({})", id, entity.name);
-    Ok(ResponseModel::success_message(format!(
-      "Connection saved: {}",
-      id
-    )))
+    db.save(&entity).map_err(|e| e.to_string())?;
+    Ok(Response::success(
+      format!("Connection saved: {}", id),
+      Value::Null,
+    ))
   }
-
-  pub async fn list_connections(&self) -> Result<ResponseModel, ResponseModel> {
+  pub async fn list_connections(&self) -> Result<Response, String> {
     let db = self.connections_db.lock().await;
-    let entities = db.find_all().map_err(|e| ResponseModel::error(e))?;
+    let entities = db.find_all().map_err(|e| e.to_string())?;
     drop(db);
-
     let mut summaries = Vec::new();
     for e in entities {
       let config: ConnectionConfig = match serde_json::from_str(&e.config) {
@@ -323,94 +289,82 @@ impl ConnectionService {
         status,
       });
     }
-
-    Ok(ResponseModel::success(summaries))
+    Ok(Response::success(
+      "Connections listed",
+      serde_json::to_value(summaries).unwrap_or(Value::Null),
+    ))
   }
-
-  pub async fn test_connection_status(&self, id: &str) -> Result<ResponseModel, ResponseModel> {
+  pub async fn test_connection_status(&self, id: &str) -> Result<Response, String> {
     let db = self.connections_db.lock().await;
     let entity = db
       .find_by_id(id)
-      .map_err(|e| ResponseModel::error(e))?
-      .ok_or_else(|| ResponseModel::error(format!("Connection {} not found", id)))?;
+      .map_err(|e| e.to_string())?
+      .ok_or_else(|| format!("Connection {} not found", id))?;
     drop(db);
-
-    let config: ConnectionConfig = serde_json::from_str(&entity.config)
-      .map_err(|e| ResponseModel::error(format!("Failed to parse config: {}", e)))?;
+    let config: ConnectionConfig =
+      serde_json::from_str(&entity.config).map_err(|e| format!("Failed to parse config: {}", e))?;
     let health = self.check_provider_health(&config).await;
     let status = if health.healthy {
       "connected".to_string()
     } else {
       "disconnected".to_string()
     };
-
     let summary = ConnectionSummary {
       id: entity.id.unwrap_or_default(),
       name: entity.name,
       provider: entity.type_.to_lowercase(),
       status,
     };
-
-    Ok(ResponseModel::success(summary))
+    Ok(Response::success(
+      "Connection status retrieved",
+      serde_json::to_value(summary).unwrap_or(Value::Null),
+    ))
   }
-
-  pub async fn check_health(&self, conn_id: &str) -> Result<ResponseModel, ResponseModel> {
+  pub async fn check_health(&self, conn_id: &str) -> Result<Response, String> {
     let db = self.connections_db.lock().await;
     let entity = db
       .find_by_id(conn_id)
-      .map_err(|e| ResponseModel::error(e))?
-      .ok_or_else(|| ResponseModel::error(format!("Connection {} not found", conn_id)))?;
+      .map_err(|e| e.to_string())?
+      .ok_or_else(|| format!("Connection {} not found", conn_id))?;
     drop(db);
-
-    let config: ConnectionConfig = serde_json::from_str(&entity.config)
-      .map_err(|e| ResponseModel::error(format!("Failed to parse config: {}", e)))?;
+    let config: ConnectionConfig =
+      serde_json::from_str(&entity.config).map_err(|e| format!("Failed to parse config: {}", e))?;
     let health_result = tokio::time::timeout(
       std::time::Duration::from_secs(CONNECTION_TIMEOUT_SECS),
       async { self.check_provider_health(&config).await },
     )
     .await
-    .map_err(|_| ResponseModel::error("Health check timed out"))?;
-
-    Ok(ResponseModel::success(health_result))
+    .map_err(|_| "Health check timed out".to_string())?;
+    Ok(Response::success(
+      "Health check completed",
+      serde_json::to_value(health_result).unwrap_or(Value::Null),
+    ))
   }
-
-  pub async fn delete_connection(&self, id: &str) -> Result<ResponseModel, ResponseModel> {
+  pub async fn delete_connection(&self, id: &str) -> Result<Response, String> {
     let db = self.connections_db.lock().await;
-
-    if !db.exists(id).map_err(|e| ResponseModel::error(e))? {
-      return Err(ResponseModel::error(format!("Connection {} not found", id)));
+    if !db.exists(id).map_err(|e| e.to_string())? {
+      return Err(format!("Connection {} not found", id));
     }
-
-    db.delete(id).map_err(|e| ResponseModel::error(e))?;
+    db.delete(id).map_err(|e| e.to_string())?;
     drop(db);
-
-    if let Err(e) = delete_connection_databases_metadata(id.to_string()).await {
-      log::warn!("Failed to delete connection metadata: {}", e);
-    }
-
-    log::info!("Deleted connection: {}", id);
-    Ok(ResponseModel::success_message(format!(
-      "Connection {} deleted",
-      id
-    )))
+    if let Err(e) = delete_connection_databases_metadata(id.to_string()).await {};
+    Ok(Response::success(
+      format!("Connection {} deleted", id),
+      Value::Null,
+    ))
   }
-
   pub async fn update_connection(
     &self,
     id: &str,
     config: ConnectionConfig,
-  ) -> Result<ResponseModel, ResponseModel> {
+  ) -> Result<Response, String> {
     let db = self.connections_db.lock().await;
-
     let existing = db
       .find_by_id(id)
-      .map_err(|e| ResponseModel::error(e))?
-      .ok_or_else(|| ResponseModel::error(format!("Connection {} not found", id)))?;
-
+      .map_err(|e| e.to_string())?
+      .ok_or_else(|| format!("Connection {} not found", id))?;
     let type_str = Self::get_type_string(&config);
-    let config_json =
-      serde_json::to_string(&config).map_err(|e| ResponseModel::error(e.to_string()))?;
-
+    let config_json = serde_json::to_string(&config).map_err(|e| e.to_string())?;
     let entity = ConnectionEntity {
       id: Some(id.to_string()),
       type_: type_str,
@@ -419,47 +373,43 @@ impl ConnectionService {
       created_at: existing.created_at,
       updated_at: Some(chrono::Utc::now()),
     };
-
-    db.save(&entity).map_err(|e| ResponseModel::error(e))?;
+    db.save(&entity).map_err(|e| e.to_string())?;
     drop(db);
-    log::info!("Updated connection: {}", id);
-    Ok(ResponseModel::success_message(format!(
-      "Connection {} updated",
-      id
-    )))
+    Ok(Response::success(
+      format!("Connection {} updated", id),
+      Value::Null,
+    ))
   }
-
-  pub async fn get_connection(&self, id: &str) -> Result<ResponseModel, ResponseModel> {
+  pub async fn get_connection(&self, id: &str) -> Result<Response, String> {
     let db = self.connections_db.lock().await;
     let entity = db
       .find_by_id(id)
-      .map_err(|e| ResponseModel::error(e))?
-      .ok_or_else(|| ResponseModel::error(format!("Connection {} not found", id)))?;
+      .map_err(|e| e.to_string())?
+      .ok_or_else(|| format!("Connection {} not found", id))?;
     drop(db);
-
     #[derive(serde::Serialize)]
     struct ConnectionConfigResult {
       id: String,
       config: ConnectionConfig,
     }
-
-    let config: ConnectionConfig = serde_json::from_str(&entity.config)
-      .map_err(|e| ResponseModel::error(format!("Failed to parse config: {}", e)))?;
-
-    Ok(ResponseModel::success(ConnectionConfigResult {
-      id: entity.id.unwrap_or_default(),
-      config,
-    }))
+    let config: ConnectionConfig =
+      serde_json::from_str(&entity.config).map_err(|e| format!("Failed to parse config: {}", e))?;
+    Ok(Response::success(
+      "Connection retrieved",
+      serde_json::to_value(ConnectionConfigResult {
+        id: entity.id.unwrap_or_default(),
+        config,
+      })
+      .unwrap_or(Value::Null),
+    ))
   }
-
-  pub async fn test_connection(
-    &self,
-    config: ConnectionConfig,
-  ) -> Result<ResponseModel, ResponseModel> {
+  pub async fn test_connection(&self, config: ConnectionConfig) -> Result<Response, String> {
     let health = self.check_provider_health(&config).await;
-    Ok(ResponseModel::success(health))
+    Ok(Response::success(
+      "Connection tested",
+      serde_json::to_value(health).unwrap_or(Value::Null),
+    ))
   }
-
   pub async fn find_entity_by_id(&self, id: &str) -> Result<Option<ConnectionEntity>, String> {
     let db = self.connections_db.lock().await;
     db.find_by_id(id)

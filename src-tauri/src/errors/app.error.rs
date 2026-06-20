@@ -1,6 +1,5 @@
 use serde::{Deserialize, Serialize};
 use std::fmt;
-
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub enum AppError {
@@ -16,7 +15,6 @@ pub enum AppError {
   PermissionDenied(String),
   InvalidPath(String),
 }
-
 impl fmt::Display for AppError {
   fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
     match self {
@@ -34,9 +32,7 @@ impl fmt::Display for AppError {
     }
   }
 }
-
 impl std::error::Error for AppError {}
-
 impl From<std::io::Error> for AppError {
   fn from(err: std::io::Error) -> Self {
     match err.kind() {
@@ -46,13 +42,11 @@ impl From<std::io::Error> for AppError {
     }
   }
 }
-
 impl From<serde_json::Error> for AppError {
   fn from(err: serde_json::Error) -> Self {
     Self::ValidationError(err.to_string())
   }
 }
-
 impl From<nosql_orm::error::OrmError> for AppError {
   fn from(err: nosql_orm::error::OrmError) -> Self {
     use nosql_orm::error::OrmError;
@@ -63,21 +57,21 @@ impl From<nosql_orm::error::OrmError> for AppError {
     }
   }
 }
-
 impl AppError {
   pub fn into_response(self) -> crate::models::response::Response<serde_json::Value> {
+    use crate::models::response::{Response, Status};
     match self {
-      Self::NotFound(msg) => crate::models::response::Response::not_found(&msg),
-      Self::ValidationError(msg) => crate::models::response::Response::validation_error(msg),
-      Self::Duplicate(msg) => crate::models::response::Response::error(msg),
-      Self::Unauthorized => crate::models::response::Response::unauthorized(),
-      Self::Forbidden => crate::models::response::Response::forbidden(),
-      Self::Internal(msg) => crate::models::response::Response::error(msg),
-      Self::Database(msg) => crate::models::response::Response::error(msg),
-      Self::Network(msg) => crate::models::response::Response::error(msg),
-      Self::Io(msg) => crate::models::response::Response::error(msg),
-      Self::PermissionDenied(_) => crate::models::response::Response::forbidden(),
-      Self::InvalidPath(msg) => crate::models::response::Response::error(msg),
+      Self::NotFound(msg) => Response::error(Status::NotFound, msg),
+      Self::ValidationError(msg) => Response::error(Status::ValidationError, msg),
+      Self::Duplicate(msg) => Response::error(Status::Error, msg),
+      Self::Unauthorized => Response::error(Status::Unauthorized, "Unauthorized"),
+      Self::Forbidden => Response::error(Status::Forbidden, "Forbidden"),
+      Self::Internal(msg) => Response::error(Status::Error, msg),
+      Self::Database(msg) => Response::error(Status::Error, msg),
+      Self::Network(msg) => Response::error(Status::Error, msg),
+      Self::Io(msg) => Response::error(Status::Error, msg),
+      Self::PermissionDenied(_) => Response::error(Status::Forbidden, "Permission denied"),
+      Self::InvalidPath(msg) => Response::error(Status::Error, msg),
     }
   }
 }

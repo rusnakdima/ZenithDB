@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct QueryParams {
   pub filter: Option<String>,
@@ -9,7 +8,6 @@ pub struct QueryParams {
   #[serde(rename = "direction")]
   pub direction: Option<String>,
 }
-
 #[derive(Debug, Clone, Serialize)]
 pub struct QueryResult<T> {
   pub data: Vec<T>,

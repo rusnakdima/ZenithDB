@@ -7,9 +7,6 @@ mod repositories;
 mod services;
 mod state;
 mod utils;
-
-use tauri::Manager;
-
 use commands::connection_command::{
   check_health, delete_connection, get_connection, list_connections, save_connection,
   test_connection, test_connection_status, update_connection,
@@ -22,7 +19,6 @@ use commands::ipc_commands::{
   initialize_app, insert_document, is_connected, rebuild_index, rollback_transaction,
   soft_delete_document, update_document,
 };
-
 use commands::query_command::{
   query_delete, query_execute, query_raw, query_save, query_server_version,
 };
@@ -36,25 +32,19 @@ use commands::settings_command::{
   get_database_metadata, get_system_status, init_decentralized_storage, list_databases_metadata,
   save_database_metadata, save_log_file, update_database_metadata,
 };
-
 use state::AppState;
-
+use tauri::Manager;
 pub fn run() -> Result<(), String> {
   std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
   std::env::set_var("__NV_DISABLE_EXPLICIT_SYNC", "1");
-
   tauri::Builder::default()
     .plugin(tauri_plugin_opener::init())
     .plugin(tauri_plugin_dialog::init())
     .plugin(tauri_plugin_mcp_bridge::init())
     .setup(|app| {
       let app_state =
-        tauri::async_runtime::block_on(AppState::new(app.handle().clone())).map_err(|e| {
-          log::error!("Failed to create AppState: {}", e);
-          e
-        })?;
+        tauri::async_runtime::block_on(AppState::new(app.handle().clone())).map_err(|e| e)?;
       app.manage(app_state);
-      log::info!("AppState initialized");
       Ok(())
     })
     .invoke_handler(tauri::generate_handler![

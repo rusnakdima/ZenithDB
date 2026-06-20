@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub enum Status {
@@ -15,13 +15,15 @@ pub enum Status {
   Unauthorized,
   Forbidden,
 }
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Response<T = Value> {
+pub struct Response<T = serde_json::Value> {
   pub status: Status,
   pub message: String,
   pub data: T,
 }
+
 impl<T> Response<T> {
   pub fn success(message: impl Into<String>, data: T) -> Self {
     Self {
@@ -30,6 +32,7 @@ impl<T> Response<T> {
       data,
     }
   }
+
   pub fn created(message: impl Into<String>, data: T) -> Self {
     Self {
       status: Status::Created,
@@ -37,6 +40,7 @@ impl<T> Response<T> {
       data,
     }
   }
+
   pub fn updated(message: impl Into<String>, data: T) -> Self {
     Self {
       status: Status::Updated,
@@ -44,6 +48,7 @@ impl<T> Response<T> {
       data,
     }
   }
+
   pub fn deleted(message: impl Into<String>, data: T) -> Self {
     Self {
       status: Status::Deleted,
@@ -51,30 +56,52 @@ impl<T> Response<T> {
       data,
     }
   }
+
+  pub fn info(message: impl Into<String>, data: T) -> Self {
+    Self {
+      status: Status::Info,
+      message: message.into(),
+      data,
+    }
+  }
+
+  pub fn warning(message: impl Into<String>, data: T) -> Self {
+    Self {
+      status: Status::Warning,
+      message: message.into(),
+      data,
+    }
+  }
 }
-impl Response<Value> {
+
+impl Response<serde_json::Value> {
   pub fn error(status: Status, message: impl Into<String>) -> Self {
     Self {
       status,
       message: message.into(),
-      data: Value::Null,
+      data: serde_json::Value::Null,
     }
   }
+
   pub fn validation_error(message: impl Into<String>) -> Self {
     Self::error(Status::ValidationError, message)
   }
+
   pub fn not_found(entity: &str) -> Self {
     Self::error(Status::NotFound, format!("{} not found", entity))
   }
+
   pub fn unauthorized() -> Self {
     Self::error(Status::Unauthorized, "Unauthorized")
   }
+
   pub fn forbidden() -> Self {
     Self::error(Status::Forbidden, "Forbidden")
   }
 }
+
 impl<T: Serialize> Response<T> {
-  pub fn to_json_value(self) -> Value {
+  pub fn to_json_value(self) -> serde_json::Value {
     serde_json::to_value(self).unwrap_or_else(|_| {
       serde_json::json!({
           "status": "error",
@@ -84,46 +111,9 @@ impl<T: Serialize> Response<T> {
     })
   }
 }
+
 impl Default for Status {
   fn default() -> Self {
     Status::Success
-  }
-}
-pub type ResponseModel = Response<Value>;
-pub type ResponseStatus = Status;
-impl ResponseModel {
-  pub fn success_empty() -> Self {
-    Self {
-      status: Status::Success,
-      message: String::new(),
-      data: Value::Null,
-    }
-  }
-  pub fn success_message(message: impl Into<String>) -> Self {
-    Self {
-      status: Status::Success,
-      message: message.into(),
-      data: Value::Null,
-    }
-  }
-}
-impl From<Box<dyn std::error::Error + Send + Sync>> for ResponseModel {
-  fn from(error: Box<dyn std::error::Error + Send + Sync>) -> Self {
-    ResponseModel::error(Status::Error, error.to_string())
-  }
-}
-impl From<serde_json::Error> for ResponseModel {
-  fn from(error: serde_json::Error) -> Self {
-    ResponseModel::error(Status::Error, error.to_string())
-  }
-}
-impl From<String> for ResponseModel {
-  fn from(error: String) -> Self {
-    ResponseModel::error(Status::Error, error)
-  }
-}
-impl From<&str> for ResponseModel {
-  fn from(error: &str) -> Self {
-    ResponseModel::error(Status::Error, error)
   }
 }
