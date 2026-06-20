@@ -1,21 +1,17 @@
 import { Injectable, inject, signal } from "@angular/core";
 import { CacheService } from "@shared/services/cache.service";
-import { TauriBridgeService } from "@providers/tauri-bridge.service";
+import { TauriBridgeService } from "@providers/providers.tauri-bridge.service";
 import { SystemMetrics } from "@entities/entities.connection.config";
-
 @Injectable({ providedIn: "root" })
 export class MetricsApiService extends CacheService {
   private tauriBridge = inject(TauriBridgeService);
-
   private metricsSignal = signal<SystemMetrics | null>(null);
   private metricsTimestamp = signal<number>(0);
   private refreshCallbacks: Set<() => void> = new Set();
   private readonly METRICS_TTL_MS = 10 * 1000;
-
   getMetrics(): SystemMetrics | null {
     return this.metricsSignal();
   }
-
   async fetchMetrics(): Promise<SystemMetrics> {
     const cached = this.metricsSignal();
     const timestamp = this.metricsTimestamp();
@@ -24,27 +20,22 @@ export class MetricsApiService extends CacheService {
     }
     return this.fetchMetricsInternal();
   }
-
   async fetchMetricsWithRefresh(): Promise<SystemMetrics> {
     const result = await this.fetchMetricsInternal();
     this.notifyRefresh();
     return result;
   }
-
   onMetricsRefreshed(callback: () => void): () => void {
     this.refreshCallbacks.add(callback);
     return () => this.refreshCallbacks.delete(callback);
   }
-
   invalidateMetrics(): void {
     this.metricsSignal.set(null);
     this.metricsTimestamp.set(0);
   }
-
   private getMetricsTimestamp(): number {
     return this.metricsTimestamp();
   }
-
   private async fetchMetricsInternal(): Promise<SystemMetrics> {
     const fetchFn = async (): Promise<SystemMetrics> => {
       const metrics = await this.tauriBridge.invoke<SystemMetrics>("get_system_status", {});
@@ -56,7 +47,6 @@ export class MetricsApiService extends CacheService {
       return result;
     });
   }
-
   private notifyRefresh(): void {
     this.refreshCallbacks.forEach((cb) => cb());
   }

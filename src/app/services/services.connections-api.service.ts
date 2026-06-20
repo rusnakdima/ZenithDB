@@ -1,6 +1,6 @@
 import { Injectable, inject, signal, Injector } from "@angular/core";
 import { CacheService } from "@shared/services/cache.service";
-import { TauriBridgeService } from "@providers/tauri-bridge.service";
+import { TauriBridgeService } from "@providers/providers.tauri-bridge.service";
 import { DataStoreService } from "@core/services/unified-storage.service";
 import { ConnectionSummary } from "@entities/entities.connection.config";
 @Injectable({ providedIn: "root" })
@@ -22,6 +22,7 @@ export class ConnectionsApiService extends CacheService {
     return this.fetchConnections();
   }
   async listConnectionsWithRefresh(): Promise<ConnectionSummary[]> {
+    const startTime = performance.now();
     try {
       const result = await this.fetchConnections();
       this.notifyRefresh();

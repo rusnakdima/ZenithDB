@@ -1,6 +1,6 @@
 import { Injectable, inject, signal } from "@angular/core";
 import { CacheService } from "@shared/services/cache.service";
-import { TauriBridgeService } from "@providers/tauri-bridge.service";
+import { TauriBridgeService } from "@providers/providers.tauri-bridge.service";
 import { DatabaseMetadata } from "@entities/entities.connection.config";
 export interface DatabaseListResult {
   databases: DatabaseMetadata[];
@@ -44,6 +44,7 @@ export class DecentralizationApiService extends CacheService {
     return promise;
   }
   async listDatabasesWithRefresh(connectionId: string): Promise<DatabaseListResult> {
+    const startTime = performance.now();
     try {
       const result = await this.fetchDatabases(connectionId, 0, 10);
       this.notifyRefresh(connectionId);
@@ -55,6 +56,7 @@ export class DecentralizationApiService extends CacheService {
     }
   }
   async saveDatabase(connId: string, name: string, path?: string): Promise<DatabaseMetadata> {
+    const startTime = performance.now();
     try {
       const optimistic = this.getDatabases(connId);
       const tempDb: DatabaseMetadata = {
@@ -87,6 +89,7 @@ export class DecentralizationApiService extends CacheService {
     }
   }
   async deleteDatabase(id: number): Promise<void> {
+    const startTime = performance.now();
     try {
       let connId = "";
       this.databasesSignal.update((map) => {
@@ -115,6 +118,7 @@ export class DecentralizationApiService extends CacheService {
     }
   }
   async updateDatabase(id: number, name: string, path?: string): Promise<DatabaseMetadata> {
+    const startTime = performance.now();
     try {
       this.databasesSignal.update((map) => {
         const newMap = new Map(map);

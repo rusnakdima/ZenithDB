@@ -1,18 +1,16 @@
 import { Injectable, inject } from "@angular/core";
 import { ConnectionStateService } from "@services/services.connection-state.service";
-import { DataProviderService } from "@services/data-provider.service";
+import { DataProviderService } from "@services/services.data-provider.service";
 import { LoadingService } from "@shared/services/loading.service";
 import { withConnectionAndLoading } from "@shared/utils/api-wrapper.util";
 import { ApiProvider } from "@providers/providers.api.provider";
 import { RawResult } from "@entities/entities.connection.config";
-
 @Injectable({ providedIn: "root" })
 export class AdminService {
   private connectionState = inject(ConnectionStateService);
   private dataProvider = inject(DataProviderService);
   private loadingService = inject(LoadingService);
   private api = inject(ApiProvider);
-
   async createCollection(name: string): Promise<void> {
     const connId = this.connectionState.activeConnectionId();
     return withConnectionAndLoading(
@@ -25,7 +23,6 @@ export class AdminService {
         })
     );
   }
-
   async dropCollection(name: string): Promise<void> {
     const connId = this.connectionState.activeConnectionId();
     return withConnectionAndLoading(
@@ -35,7 +32,6 @@ export class AdminService {
       (connId) => this.api.dropCollection(connId, name)
     );
   }
-
   async renameCollection(connId: string, oldName: string, newName: string): Promise<void> {
     return withConnectionAndLoading(
       connId,
@@ -44,7 +40,6 @@ export class AdminService {
       (connId) => this.api.renameCollection(connId, oldName, newName)
     );
   }
-
   async renameDatabase(connId: string, oldName: string, newName: string): Promise<void> {
     return withConnectionAndLoading(
       connId,
@@ -53,7 +48,6 @@ export class AdminService {
       (connId) => this.api.renameDatabase(connId, oldName, newName)
     );
   }
-
   async deleteDatabase(connId: string, name: string): Promise<void> {
     return withConnectionAndLoading(
       connId,
@@ -62,7 +56,6 @@ export class AdminService {
       (connId) => this.api.deleteDatabase(connId, name)
     );
   }
-
   async executeRaw(sql: string): Promise<RawResult> {
     const connId = this.connectionState.activeConnectionId();
     return withConnectionAndLoading(connId, this.loadingService, "Executing SQL...", (connId) =>

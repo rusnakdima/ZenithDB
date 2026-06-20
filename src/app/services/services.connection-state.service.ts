@@ -1,6 +1,5 @@
 import { Injectable, signal, inject } from "@angular/core";
 import { ConnectionSummary, ConnectionConfig } from "@entities/entities.connection.config";
-
 @Injectable({ providedIn: "root" })
 export class ConnectionStateService {
   activeConnectionId = signal<string | null>(null);
@@ -9,10 +8,8 @@ export class ConnectionStateService {
   activeConnection = signal<ConnectionSummary | null>(null);
   activeConnectionConfig = signal<ConnectionConfig | null>(null);
   readOnly = signal(true);
-
   activeDatabaseName = signal<string | null>(null);
   activeCollectionName = signal<string | null>(null);
-
   setActiveConnection(connOrId: ConnectionSummary | string): void {
     if (typeof connOrId === "string") {
       this.activeConnectionId.set(connOrId);
@@ -23,15 +20,12 @@ export class ConnectionStateService {
       this.activeConnection.set(connOrId);
     }
   }
-
   setActiveConnectionConfig(config: ConnectionConfig) {
     this.activeConnectionConfig.set(config);
   }
-
   setActiveDatabase(dbName: string | null): void {
     this.activeDatabaseName.set(dbName);
   }
-
   setActiveCollection(collectionName: string | null): void {
     this.activeCollectionName.set(collectionName);
   }

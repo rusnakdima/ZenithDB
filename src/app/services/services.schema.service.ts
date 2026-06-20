@@ -8,13 +8,11 @@ import {
   CollectionSchema,
   CollectionStats,
 } from "@entities/entities.connection.config";
-
 @Injectable({ providedIn: "root" })
 export class SchemaService {
   private connectionState = inject(ConnectionStateService);
   private loadingService = inject(LoadingService);
   private api = inject(ApiProvider);
-
   async listCollections(connId?: string, dbName?: string): Promise<CollectionMeta[]> {
     const id = connId || this.connectionState.activeConnectionId();
     if (!id) {
@@ -24,7 +22,6 @@ export class SchemaService {
       this.api.listCollections(connId, dbName)
     );
   }
-
   async listCollectionsPaginated(
     connId: string,
     dbName?: string,
@@ -33,7 +30,6 @@ export class SchemaService {
   ): Promise<{ collections: CollectionMeta[]; hasMore: boolean; totalCount: number }> {
     return this.api.listCollectionsPaginated(connId, dbName, offset, limit);
   }
-
   async createDatabase(name: string): Promise<void> {
     const connId = this.connectionState.activeConnectionId();
     return withConnectionAndLoading(
@@ -43,7 +39,6 @@ export class SchemaService {
       (connId) => this.api.createDatabase(connId, name)
     );
   }
-
   async describeCollection(collection: string): Promise<CollectionSchema> {
     const connId = this.connectionState.activeConnectionId();
     return withConnectionAndLoading(
@@ -53,7 +48,6 @@ export class SchemaService {
       (connId) => this.api.describeCollection(connId, collection)
     );
   }
-
   async getCollectionStats(collection: string): Promise<CollectionStats> {
     const connId = this.connectionState.activeConnectionId();
     return withConnectionAndLoading(
@@ -63,7 +57,6 @@ export class SchemaService {
       (connId) => this.api.getCollectionStats(connId, collection)
     );
   }
-
   async getServerVersion(): Promise<string> {
     const connId = this.connectionState.activeConnectionId();
     return withConnectionAndLoading(

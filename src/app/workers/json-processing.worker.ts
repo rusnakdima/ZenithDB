@@ -1,11 +1,9 @@
 /// <reference lib="webworker" />
-
 interface ProcessedItem {
   index: number;
   highlightedLines: Array<{ num: number; html: string }>;
   json: string;
 }
-
 addEventListener("message", ({ data }) => {
   if (data.type === "process") {
     const documents = data.documents as Array<{ index: number; json: string }>;

@@ -16,6 +16,7 @@ export class QueryExecutionService {
   private readonly store = inject(DataStoreService);
   private readonly page = "QueryExecutionService";
   async executeWithTiming(query: string): Promise<QueryExecutionResult> {
+    const startTime = performance.now();
     this.tabService.updateActiveTab({ loading: true, error: "" });
     try {
       const rawResults = await this.store.executeRaw(query);

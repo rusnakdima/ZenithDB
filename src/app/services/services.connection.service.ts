@@ -9,19 +9,18 @@ import {
   TestConnectionConfig,
   ConnectionHealth,
 } from "@entities/entities.connection.config";
+
 @Injectable({ providedIn: "root" })
 export class ConnectionService {
   private loadingService = inject(LoadingService);
   private api = inject(ApiProvider);
 
   async listConnections(): Promise<ConnectionSummary[]> {
-    const startTime = performance.now();
     const result = await this.api.listConnections();
     return result;
   }
 
   async getConnection(id: string): Promise<ConnectionConfigResult> {
-    const startTime = performance.now();
     const result = await withLoading(this.loadingService, "Loading connection...", () =>
       this.api.getConnection(id)
     );
@@ -29,7 +28,6 @@ export class ConnectionService {
   }
 
   async saveConnection(config: TestConnectionConfig): Promise<string> {
-    const startTime = performance.now();
     const result = await withLoading(this.loadingService, "Saving connection...", () =>
       this.api.saveConnection(config)
     );
@@ -37,14 +35,12 @@ export class ConnectionService {
   }
 
   async deleteConnection(id: string): Promise<void> {
-    const startTime = performance.now();
     await withLoading(this.loadingService, "Deleting connection...", () =>
       this.api.deleteConnection(id)
     );
   }
 
   async testConnection(config: TestConnectionConfig): Promise<ConnectionHealth> {
-    const startTime = performance.now();
     const result = await withLoading(this.loadingService, "Testing connection...", () =>
       this.api.testConnection(config)
     );
@@ -52,7 +48,6 @@ export class ConnectionService {
   }
 
   async testConnectionById(connId: string): Promise<ConnectionHealth | null> {
-    const startTime = performance.now();
     try {
       const fullConn = await this.getConnection(connId);
       const config = {
@@ -62,14 +57,11 @@ export class ConnectionService {
       const result = await this.api.testConnection(config);
       return result;
     } catch (e) {
-      const error = e instanceof Error ? e.message : String(e);
-      this.appLogger?.warn("[CONNECTION]", "Failed to test connection", { error });
       return null;
     }
   }
 
   async testConnectionStatus(connId: string): Promise<ConnectionSummary | null> {
-    const startTime = performance.now();
     try {
       const result = await this.api.testConnectionStatus(connId);
       return result;
@@ -79,7 +71,6 @@ export class ConnectionService {
   }
 
   async updateConnection(id: string, config: TestConnectionConfig): Promise<void> {
-    const startTime = performance.now();
     await this.api.updateConnection(id, config);
   }
 }

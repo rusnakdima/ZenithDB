@@ -1,6 +1,6 @@
 import { Injectable, signal, inject } from "@angular/core";
 import { ApiProvider } from "@providers/providers.api.provider";
-import { ConnectionStateService } from "./connection-state.service";
+import { ConnectionStateService } from "@services/services.connection-state.service";
 import {
   ColumnInfo,
   RowData,
@@ -10,7 +10,6 @@ import {
 } from "@entities/entities.connection.config";
 import { evictLRU } from "@shared/utils/cache.utils";
 import { CACHE_CONSTANTS } from "@shared/utils/constants";
-
 export interface DataProviderParams {
   collection: string;
   filter?: FilterExpression;
@@ -19,7 +18,6 @@ export interface DataProviderParams {
   order_by?: string;
   direction?: string;
 }
-
 interface CacheEntry {
   data: RowData[];
   total: number;
@@ -27,30 +25,24 @@ interface CacheEntry {
   cachedAt: number;
   queryParams: QueryParams;
 }
-
 interface ColumnsCacheEntry {
   columns: ColumnInfo[];
   timestamp: number;
   lastAccessed: number;
 }
-
 @Injectable({ providedIn: "root" })
 export class DataProviderService {
   private api = inject(ApiProvider);
   private connectionState = inject(ConnectionStateService);
-
   private readonly MAX_ENTRIES_PER_COLLECTION = CACHE_CONSTANTS.MAX_ENTRIES_PER_COLLECTION;
   private readonly COLUMNS_CACHE_TTL = CACHE_CONSTANTS.DEFAULT_TTL_MS;
   private readonly MAX_COLUMNS_CACHE_SIZE = CACHE_CONSTANTS.MAX_COLUMNS_CACHE_SIZE;
-
   private collectionDataCache = signal<Map<string, CacheEntry>>(new Map());
   private columnsCache = signal<Map<string, ColumnsCacheEntry>>(new Map());
   private inFlightRequests = new Map<string, Promise<QueryResult>>();
-
   currentParams = signal<DataProviderParams | null>(null);
   isDataLoaded = signal<boolean>(false);
   loading = signal<boolean>(false);
-
   generateCacheKey(params: DataProviderParams): string {
     const cacheParams = {
       filter: params.filter,
@@ -62,7 +54,6 @@ export class DataProviderService {
     const filterJson = JSON.stringify(cacheParams.filter || {});
     return `${params.collection}_${filterJson}_${cacheParams.skip}_${cacheParams.limit}`;
   }
-
   private getCollectionEntries(collection: string): Map<string, CacheEntry> {
     const cache = this.collectionDataCache();
     const entries = new Map<string, CacheEntry>();
@@ -73,7 +64,6 @@ export class DataProviderService {
     }
     return entries;
   }
-
   private evictLRU(collection: string): void {
     const entries = this.getCollectionEntries(collection);
     if (entries.size >= this.MAX_ENTRIES_PER_COLLECTION) {
@@ -88,7 +78,6 @@ export class DataProviderService {
       this.collectionDataCache.set(newCache);
     }
   }
-
   private evictLRUColumns(): void {
     const cache = this.columnsCache();
     const newCache = evictLRU(cache, this.MAX_COLUMNS_CACHE_SIZE);
@@ -96,7 +85,6 @@ export class DataProviderService {
       this.columnsCache.set(newCache);
     }
   }
-
   private updateAccessTime(key: string): void {
     const cache = this.collectionDataCache();
     const entry = cache.get(key);
@@ -105,10 +93,8 @@ export class DataProviderService {
       this.collectionDataCache.set(new Map(cache));
     }
   }
-
   async loadData(params: DataProviderParams, forceRefresh?: boolean): Promise<QueryResult> {
     const cacheKey = this.generateCacheKey(params);
-
     if (!forceRefresh) {
       const cached = this.collectionDataCache().get(cacheKey);
       if (cached) {
@@ -123,11 +109,9 @@ export class DataProviderService {
         };
       }
     }
-
     if (this.inFlightRequests.has(cacheKey)) {
       return this.inFlightRequests.get(cacheKey)!;
     }
-
     this.loading.set(true);
     const requestPromise = (async () => {
       try {
@@ -141,9 +125,7 @@ export class DataProviderService {
         const connId = this.connectionState.activeConnectionId();
         if (!connId) throw new Error("No active connection");
         const result = await this.api.queryData(connId, params.collection, queryParams);
-
         this.evictLRU(params.collection);
-
         const cachedData: CacheEntry = {
           data: result.data,
           total: result.total,
@@ -157,11 +139,9 @@ export class DataProviderService {
             direction: params.direction,
           },
         };
-
         const cache = this.collectionDataCache();
         cache.set(cacheKey, cachedData);
         this.collectionDataCache.set(new Map(cache));
-
         this.currentParams.set(params);
         this.isDataLoaded.set(true);
         return result;
@@ -170,15 +150,12 @@ export class DataProviderService {
         this.inFlightRequests.delete(cacheKey);
       }
     })();
-
     this.inFlightRequests.set(cacheKey, requestPromise);
     return requestPromise;
   }
-
   async loadColumns(collection: string, forceRefresh?: boolean): Promise<ColumnInfo[]> {
     const cacheKey = `${collection}_schema`;
     const cached = this.columnsCache().get(cacheKey);
-
     if (!forceRefresh && cached) {
       if (Date.now() - cached.timestamp < this.COLUMNS_CACHE_TTL) {
         cached.lastAccessed = Date.now();
@@ -186,9 +163,7 @@ export class DataProviderService {
         return cached.columns;
       }
     }
-
     this.evictLRUColumns();
-
     const connId = this.connectionState.activeConnectionId();
     if (!connId) throw new Error("No active connection");
     const schema = await this.api.describeCollection(connId, collection);
@@ -202,7 +177,6 @@ export class DataProviderService {
     );
     return columns;
   }
-
   invalidateCache(collection: string): void {
     const cache = this.collectionDataCache();
     const keysToDelete: string[] = [];
@@ -219,7 +193,6 @@ export class DataProviderService {
       this.collectionDataCache.set(newCache);
     }
   }
-
   invalidateColumnsCache(collection?: string): void {
     const cache = this.columnsCache();
     if (collection) {

@@ -1,6 +1,6 @@
 import { Injectable, inject } from "@angular/core";
 import { ConnectionStateService } from "@services/services.connection-state.service";
-import { DataProviderService } from "@services/data-provider.service";
+import { DataProviderService } from "@services/services.data-provider.service";
 import { LoadingService } from "@shared/services/loading.service";
 import { withConnectionAndLoading } from "@shared/utils/api-wrapper.util";
 import { ApiProvider } from "@providers/providers.api.provider";
@@ -11,7 +11,6 @@ export class QueryService {
   private dataProvider = inject(DataProviderService);
   private loadingService = inject(LoadingService);
   private api = inject(ApiProvider);
-
   async queryData(collection: string, params: QueryParams): Promise<QueryResult<RowData>> {
     const connId = this.connectionState.activeConnectionId();
     const startTime = performance.now();
@@ -23,7 +22,6 @@ export class QueryService {
     );
     return result;
   }
-
   async saveRow(collection: string, data: Record<string, unknown>): Promise<unknown> {
     const connId = this.connectionState.activeConnectionId();
     const startTime = performance.now();
@@ -39,7 +37,6 @@ export class QueryService {
     );
     return result;
   }
-
   async deleteRow(collection: string, id: string): Promise<void> {
     const connId = this.connectionState.activeConnectionId();
     const startTime = performance.now();
