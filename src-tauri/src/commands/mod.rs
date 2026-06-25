@@ -1,5 +1,7 @@
 use crate::services::connection_service::ConnectionService;
 use crate::utils::metrics::DataflowTimer;
+#[path = "cloud_sync_command.rs"]
+pub mod cloud_sync_command;
 #[path = "connection.command.rs"]
 pub mod connection_command;
 #[path = "connection-entity.command.rs"]

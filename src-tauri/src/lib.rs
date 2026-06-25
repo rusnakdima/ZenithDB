@@ -7,6 +7,9 @@ mod repositories;
 mod services;
 mod state;
 mod utils;
+use commands::cloud_sync_command::{
+  list_cloud_schemas, pull_schema_from_cloud, sync_schema_to_cloud,
+};
 use commands::connection_command::{
   check_health, delete_connection, get_connection, list_connections, save_connection,
   test_connection, test_connection_status, update_connection,
@@ -95,6 +98,9 @@ pub fn run() -> Result<(), String> {
       begin_transaction,
       commit_transaction,
       rollback_transaction,
+      sync_schema_to_cloud,
+      pull_schema_from_cloud,
+      list_cloud_schemas,
     ])
     .run(tauri::generate_context!())
     .map_err(|e| e.to_string())?;
