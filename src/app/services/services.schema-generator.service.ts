@@ -1,5 +1,5 @@
 import { Injectable, inject } from "@angular/core";
-import { TauriApiService } from "@api/api.api.service";
+import { TauriApiService } from "@app/api/api.api.service";
 import { CollectionSchema, ColumnInfo } from "@entities/entities.connection.config";
 
 export interface UISchema {
@@ -76,7 +76,7 @@ export class SchemaGeneratorService {
 
   private generateListPage(name: string, schema: CollectionSchema): PageSchema {
     const tableColumns = schema.columns
-      .filter((col) => !col.isPrimaryKey || col.name !== "_id")
+      .filter((col) => !col.is_primary_key || col.name !== "_id")
       .map((col, idx) => this.columnToTableColumn(col, idx));
 
     return {
@@ -100,7 +100,7 @@ export class SchemaGeneratorService {
 
   private generateDetailPage(name: string, schema: CollectionSchema): PageSchema {
     const formFields = schema.columns
-      .filter((col) => !col.isPrimaryKey || col.name !== "_id")
+      .filter((col) => !col.is_primary_key || col.name !== "_id")
       .map((col, idx) => this.columnToFormField(col, idx));
 
     return {
@@ -126,14 +126,14 @@ export class SchemaGeneratorService {
     return {
       field: col.name,
       header: this.formatHeader(col.name),
-      type: this.mapColumnType(col.dataType),
+      type: this.mapColumnType(col.data_type),
       sortable: true,
       filterable: true,
     };
   }
 
   private columnToFormField(col: ColumnInfo, idx: number): Record<string, unknown> {
-    const inputType = this.getInputType(col.dataType);
+    const inputType = this.getInputType(col.data_type);
     return {
       name: col.name,
       label: this.formatHeader(col.name),
