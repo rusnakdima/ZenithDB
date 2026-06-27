@@ -1752,4 +1752,12 @@ html.light .json-key {
     @apply rounded px-1.5 py-0.5;
     color: var(--text-dim);
   }
+
+  .workbench-history-overlay {
+    @apply fixed inset-0 z-40 bg-black/50;
+  }
+
+  .workbench-history-panel {
+    @apply fixed bottom-0 right-0 top-14 z-50 w-96 shadow-xl;
+  }
 }

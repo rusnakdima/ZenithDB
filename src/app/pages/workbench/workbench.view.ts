@@ -22,11 +22,13 @@ import { TabService } from "@services/services.tab.service";
 import { QueryExecutionService } from "@services/services.query-execution.service";
 import { formatSQL } from "@shared/utils/sql-formatter.utils";
 import { findById } from "@shared/utils/array.utils";
+import { QueryHistoryService } from "@features/query/history/query-history.service";
+import { QueryHistoryComponent } from "@features/query/history/query-history.component";
 @Component({
   selector: "app-workbench",
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, MatIconModule, SqlEditorComponent, OutputConsoleComponent],
+  imports: [FormsModule, MatIconModule, SqlEditorComponent, OutputConsoleComponent, QueryHistoryComponent],
   templateUrl: "./workbench.view.html",
 })
 export class WorkbenchComponent implements OnDestroy {
@@ -35,6 +37,7 @@ export class WorkbenchComponent implements OnDestroy {
   protected toast = inject(ToastService);
   protected tabService = inject(TabService);
   private readonly queryExecution = inject(QueryExecutionService);
+  private readonly historyService = inject(QueryHistoryService);
   private cdr = inject(ChangeDetectorRef);
   private readonly page = "Workbench";
   @ViewChild("splitContainer") splitContainer!: ElementRef<HTMLDivElement>;
@@ -44,6 +47,7 @@ export class WorkbenchComponent implements OnDestroy {
   editorHeight = signal(250);
   mobileView = signal<"editor" | "results">("editor");
   isResizing = false;
+  showHistoryPanel = signal(false);
   private boundOnMove: ((e: MouseEvent) => void) | null = null;
   private boundOnUp: (() => void) | null = null;
   @HostListener("window:keydown", ["$event"])
@@ -85,15 +89,25 @@ export class WorkbenchComponent implements OnDestroy {
     if (!tab || !tab.query.trim()) return;
     this.tabService.updateTab(tabId, { loading: true, error: "" });
     const startTime = performance.now();
+    let success = false;
+    let rowsReturned = 0;
     try {
       const results = await this.store.executeRaw(tab.query);
       const executionTime = performance.now() - startTime;
+      success = true;
+      rowsReturned = results?.rows?.length ?? 0;
       this.tabService.updateTab(tabId, {
         results,
         error: "",
         loading: false,
         executionTime,
         modified: false,
+      });
+      this.historyService.addQuery({
+        query: tab.query,
+        duration: executionTime,
+        rowsReturned,
+        success: true,
       });
     } catch (e: unknown) {
       const executionTime = performance.now() - startTime;
@@ -102,6 +116,12 @@ export class WorkbenchComponent implements OnDestroy {
         error: errorMessage,
         loading: false,
         executionTime,
+      });
+      this.historyService.addQuery({
+        query: tab.query,
+        duration: executionTime,
+        rowsReturned: 0,
+        success: false,
       });
     }
   }
@@ -120,6 +140,16 @@ export class WorkbenchComponent implements OnDestroy {
       error: "",
       modified: false,
     });
+  }
+  toggleHistoryPanel() {
+    this.showHistoryPanel.set(!this.showHistoryPanel());
+  }
+  closeHistoryPanel() {
+    this.showHistoryPanel.set(false);
+  }
+  onHistoryLoadQuery(query: string) {
+    this.tabService.updateActiveTab({ query, modified: true });
+    this.showHistoryPanel.set(false);
   }
   startResize(event: MouseEvent) {
     event.preventDefault();
