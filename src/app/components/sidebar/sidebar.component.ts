@@ -12,6 +12,7 @@ import {
   ChangeDetectorRef,
 } from "@angular/core";
 import { Router, RouterLink, NavigationEnd } from "@angular/router";
+import { FormsModule } from "@angular/forms";
 import { MatIconModule } from "@angular/material/icon";
 import { ConnectionStateService } from "@services/services.connection-state.service";
 import { DataStoreService } from "@core/services/unified-storage.service";
@@ -36,7 +37,7 @@ import { findById } from "@shared/utils/array.utils";
   selector: "app-sidebar",
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, MatIconModule],
+  imports: [RouterLink, MatIconModule, FormsModule],
   templateUrl: "./sidebar.component.html",
 })
 export class SidebarComponent implements OnInit {
@@ -77,6 +78,8 @@ export class SidebarComponent implements OnInit {
     y: 0,
     node: null,
   });
+  showNewDatabaseModal = signal(false);
+  newDatabaseName = "";
   isAtConnections = computed(
     () => this.currentUrl() === "/connections" || this.currentUrl() === "/connections/"
   );
@@ -587,6 +590,34 @@ export class SidebarComponent implements OnInit {
       this.dataStore.invalidateCollections(connId);
     } catch (e) {
       this.toast.error(`Failed to rename collection: ${(e as Error).message}`);
+    }
+  }
+  openNewDatabaseModal() {
+    this.hideContextMenu();
+    this.newDatabaseName = "";
+    this.showNewDatabaseModal.set(true);
+  }
+  closeNewDatabaseModal() {
+    this.showNewDatabaseModal.set(false);
+  }
+  async createDatabase() {
+    const name = this.newDatabaseName.trim();
+    if (!name) {
+      this.toast.warning("Database name is required");
+      return;
+    }
+    const connId = this.activeConnectionId();
+    if (!connId) {
+      this.toast.error("No active connection");
+      return;
+    }
+    try {
+      await this.db.createDatabase(name);
+      this.toast.success(`Database "${name}" created`);
+      this.showNewDatabaseModal.set(false);
+      this.loadDatabasesInBackground(connId);
+    } catch (e) {
+      this.toast.error(`Failed to create database: ${(e as Error).message}`);
     }
   }
 }

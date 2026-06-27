@@ -46,6 +46,7 @@
               class="tree-item flex items-center gap-2 p-2 text-xs font-bold text-[var(--text-dim)]"
               [class.active]="activeConnectionId() === conn.id"
               (click)="selectConnection(conn)"
+              (contextmenu)="showContextMenu($event, { name: conn.name, type: 'connection', id: conn.id })"
             >
               <mat-icon
                 [fontIcon]="providerUtils.getProviderIcon(conn.provider)"
@@ -167,10 +168,20 @@
     >
       <button
         class="flex w-full items-center gap-2 px-4 py-2 text-xs text-[var(--text-main)] hover:bg-[var(--accent)]/10"
+        (click)="onRefreshClick()"
       >
         <mat-icon fontIcon="refresh" class="h-6! w-5! text-xl!" />
         Refresh
       </button>
+      @if (contextMenu().node?.type === "connection") {
+        <button
+          class="flex w-full items-center gap-2 px-4 py-2 text-xs text-[var(--text-main)] hover:bg-[var(--accent)]/10"
+          (click)="openNewDatabaseModal()"
+        >
+          <mat-icon fontIcon="add" class="h-6! w-5! text-xl!" />
+          Create Database
+        </button>
+      }
       @if (contextMenu().node?.type === "database") {
         <button
           class="flex w-full items-center gap-2 px-4 py-2 text-xs text-[var(--text-main)] hover:bg-[var(--accent)]/10"
@@ -206,6 +217,39 @@
           Delete
         </button>
       }
+    </div>
+  }
+
+  @if (showNewDatabaseModal()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-[var(--bg-backdrop-light)]">
+      <div
+        class="w-full max-w-md rounded-xl border border-[var(--border-visible)] bg-[var(--bg-modal)] p-6 shadow-2xl"
+      >
+        <h3 class="mb-4 text-lg font-semibold text-[var(--text-main)]">Create New Database</h3>
+        <input
+          type="text"
+          [(ngModel)]="newDatabaseName"
+          placeholder="Database name"
+          class="mb-4 w-full rounded-lg border border-[var(--border-color)] bg-[var(--bg-input)] px-4 py-2.5 text-sm text-[var(--text-main)] placeholder-[var(--text-muted)] focus:border-[var(--border-visible)] focus:outline-none"
+          (keyup.enter)="createDatabase()"
+          (keyup.escape)="closeNewDatabaseModal()"
+          autofocus
+        />
+        <div class="flex justify-end gap-3">
+          <button
+            (click)="closeNewDatabaseModal()"
+            class="rounded-lg border border-[var(--border-visible)] px-4 py-2 text-sm text-[var(--text-main)] hover:bg-[var(--bg-elevated)]"
+          >
+            Cancel
+          </button>
+          <button
+            (click)="createDatabase()"
+            class="rounded-lg px-4 py-2 text-sm font-medium text-black hover:opacity-90"
+          >
+            Create
+          </button>
+        </div>
+      </div>
     </div>
   }
 </div>
