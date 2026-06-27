@@ -8,7 +8,10 @@ mod services;
 mod state;
 mod utils;
 use commands::cloud_sync_command::{
-  list_cloud_schemas, pull_schema_from_cloud, sync_schema_to_cloud,
+  list_cloud_schemas, pull_schema_from_cloud as cloud_pull_schema, sync_schema_to_cloud,
+};
+use commands::sync_command::{
+  pull_schema, get_cached_schema, clear_schema_cache, save_to_local_cache,
 };
 use commands::connection_command::{
   check_health, delete_connection, get_connection, list_connections, save_connection,
@@ -23,11 +26,11 @@ use commands::ipc_commands::{
   soft_delete_document, update_document,
 };
 use commands::query_command::{
-  query_delete, query_execute, query_raw, query_save, query_server_version,
+  query_aggregate, query_delete, query_execute, query_raw, query_save, query_server_version,
 };
 use commands::schema_command::{
   collection_create, collection_drop, collection_list, collection_rename, collection_stats,
-  describe_collection,
+  describe_collection, get_ui_schema,
 };
 use commands::screenshot_command::capture_screenshot;
 use commands::settings_command::{
@@ -69,6 +72,7 @@ pub fn run() -> Result<(), String> {
       query_save,
       query_delete,
       query_raw,
+      query_aggregate,
       query_server_version,
       create_database,
       rename_database,
@@ -99,8 +103,28 @@ pub fn run() -> Result<(), String> {
       commit_transaction,
       rollback_transaction,
       sync_schema_to_cloud,
-      pull_schema_from_cloud,
+      pull_schema,
       list_cloud_schemas,
+      get_cached_schema,
+      clear_schema_cache,
+      save_to_local_cache,
+      commands::rbac_command::rbac_list_roles,
+      commands::rbac_command::rbac_create_role,
+      commands::rbac_command::rbac_delete_role,
+      commands::rbac_command::rbac_list_permissions,
+      commands::rbac_command::rbac_create_permission,
+      commands::rbac_command::rbac_delete_permission,
+      commands::rbac_command::rbac_assign_role_to_user,
+      commands::rbac_command::rbac_remove_role_from_user,
+      commands::rbac_command::rbac_grant_permission,
+      commands::rbac_command::rbac_revoke_permission,
+      commands::rbac_command::rbac_get_user_roles,
+      commands::rbac_command::rbac_get_role_permissions,
+      commands::rbac_command::login,
+      commands::rbac_command::logout,
+      commands::rbac_command::register,
+      commands::rbac_command::get_current_user,
+      get_ui_schema,
     ])
     .run(tauri::generate_context!())
     .map_err(|e| e.to_string())?;

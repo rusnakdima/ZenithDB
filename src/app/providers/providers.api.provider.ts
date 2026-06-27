@@ -299,4 +299,7 @@ export class ApiProvider {
   async getServerVersion(connId: string): Promise<string> {
     return this.queryApi.getServerVersion(connId);
   }
+  async queryAggregate(connId: string, collection: string, pipeline: object[]): Promise<RowData[]> {
+    return this.queryApi.queryAggregate(connId, collection, pipeline);
+  }
 }

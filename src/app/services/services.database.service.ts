@@ -113,6 +113,11 @@ export class DatabaseService {
     const result = await this.adminService.executeRaw(sql);
     return result;
   }
+  async queryAggregate(collection: string, pipeline: object[]) {
+    const startTime = performance.now();
+    const result = await this.queryService.queryAggregate(collection, pipeline);
+    return result;
+  }
   async renameCollection(connId: string, oldName: string, newName: string) {
     const startTime = performance.now();
     const result = await this.adminService.renameCollection(connId, oldName, newName);

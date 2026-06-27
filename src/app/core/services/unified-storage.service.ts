@@ -359,6 +359,9 @@ export class DataStoreService {
   async executeRaw(sql: string): Promise<RawResult> {
     return this.queryCache.executeRaw(sql);
   }
+  async queryAggregate(collection: string, pipeline: object[]): Promise<RowData[]> {
+    return this.queryCache.queryAggregate(collection, pipeline);
+  }
   async testConnectionById(connId: string) {
     return this.connectionCache.testConnectionById(connId);
   }

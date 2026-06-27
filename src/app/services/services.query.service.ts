@@ -46,4 +46,15 @@ export class QueryService {
       })
     );
   }
+  async queryAggregate(collection: string, pipeline: object[]): Promise<RowData[]> {
+    const connId = this.connectionState.activeConnectionId();
+    const startTime = performance.now();
+    const result = await withConnectionAndLoading(
+      connId,
+      this.loadingService,
+      "Running aggregation...",
+      (connId) => this.api.queryAggregate(connId, collection, pipeline)
+    );
+    return result;
+  }
 }

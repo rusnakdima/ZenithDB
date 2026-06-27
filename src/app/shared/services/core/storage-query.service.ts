@@ -152,4 +152,12 @@ export class QueryCacheService {
       throw err;
     }
   }
+  async queryAggregate(collection: string, pipeline: object[]): Promise<RowData[]> {
+    try {
+      const result = await this.db.queryAggregate(collection, pipeline);
+      return result;
+    } catch (err) {
+      throw err;
+    }
+  }
 }

@@ -117,4 +117,12 @@ export class QueryApiService extends CacheService {
       { signal: this.cancellation.createAbortSignal(), suppressError: true }
     );
   }
+
+  async queryAggregate(connId: string, collection: string, pipeline: object[]): Promise<RowData[]> {
+    return this.tauriBridge.invoke<RowData[]>(
+      "query_aggregate",
+      { connectionId: connId, collection, pipeline },
+      { signal: this.cancellation.createAbortSignal(), suppressError: true }
+    );
+  }
 }

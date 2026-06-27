@@ -5,7 +5,7 @@ use crate::commands::types::RawResult;
 use crate::commands::validate_conn_id;
 use crate::commands::validate_name;
 use crate::dispatch_provider;
-use crate::models::response::{Response, ResponseModel};
+use crate::models::response::{Response, ResponseModel, success};
 use crate::models::types::{QueryParams, QueryResult};
 use crate::utils::metrics::{redact_sensitive_data, DataflowTimer};
 use nosql_orm::prelude::*;
@@ -103,14 +103,14 @@ pub async fn query_execute(
     has_more,
   };
   timer.finish_success();
-  Ok(Response::success("Query executed", result))
+  Ok(Response::success(result, Some("Query executed")))
 }
 #[tauri::command(rename_all = "camelCase")]
 pub async fn query_save(
   connectionId: String,
   collection: String,
   data: Value,
-) -> Result<Response, String> {
+) -> Result<ResponseModel, String> {
   let timer = DataflowTimer::new("query_save");
   let params_log =
     serde_json::json!({ "connectionId": &connectionId, "collection": &collection, "data": &data });
@@ -148,7 +148,7 @@ pub async fn query_save(
     }
   };
   timer.finish_success();
-  Ok(Response::success("", result))
+  Ok(success("", result))
 }
 #[tauri::command(rename_all = "camelCase")]
 pub async fn query_delete(
@@ -217,6 +217,42 @@ pub async fn query_raw(connectionId: String, sql: String) -> Result<RawResult, S
   };
   timer.finish_success();
   Ok(result)
+}
+#[tauri::command(rename_all = "camelCase")]
+pub async fn query_aggregate(
+  connectionId: String,
+  collection: String,
+  pipeline: Vec<Value>,
+) -> Result<Response<Vec<Value>>, String> {
+  let timer = DataflowTimer::new("query_aggregate");
+  let params_log =
+    serde_json::json!({ "connectionId": &connectionId, "collection": &collection, "pipeline": &pipeline });
+  if let Err(e) = validate_conn_id(&connectionId) {
+    timer.clone().finish_error(&e);
+    return Err(e);
+  }
+  if let Err(e) = validate_name(&collection) {
+    timer.clone().finish_error(&e);
+    return Err(e);
+  }
+  let entry = match get_connection_entry(&connectionId).await {
+    Ok(e) => e,
+    Err(e) => {
+      timer.clone().finish_error(&e);
+      return Err(e);
+    }
+  };
+  let result: Vec<Value> = match dispatch_provider!(entry, connectionId, provider => {
+      provider.aggregate(&collection, pipeline).await.map_err_string()
+  }) {
+    Ok(r) => r,
+    Err(e) => {
+      timer.clone().finish_error(&e);
+      return Err(e);
+    }
+  };
+  timer.finish_success();
+  Ok(Response::success(result, Some("Aggregation executed")))
 }
 #[tauri::command(rename_all = "camelCase")]
 pub async fn query_server_version(connectionId: String) -> Result<String, String> {
