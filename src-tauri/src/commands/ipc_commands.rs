@@ -19,6 +19,106 @@ pub async fn get_version() -> Result<String, String> {
 pub async fn is_connected() -> Result<bool, String> {
   Ok(true)
 }
+fn parse_index_definition(def: &Value) -> Result<NosqlIndex, String> {
+  let name = def
+    .get("name")
+    .and_then(|v| v.as_str())
+    .ok_or("Index definition must have a 'name' field")?;
+  let index_type = def
+    .get("type")
+    .and_then(|v| v.as_str())
+    .unwrap_or("single");
+  let fields = def
+    .get("fields")
+    .and_then(|v| v.as_array())
+    .ok_or("Index definition must have a 'fields' array")?;
+  let options = def.get("options");
+
+  let mut index = match index_type {
+    "compound" => {
+      let field_tuples: Vec<(&str, i32)> = fields
+        .iter()
+        .map(|f| {
+          let field_name = f.get("name").and_then(|v| v.as_str()).unwrap_or("");
+          let direction = f.get("direction").and_then(|v| v.as_str()).unwrap_or("asc");
+          let order = if direction == "desc" { -1 } else { 1 };
+          (field_name, order)
+        })
+        .collect();
+      nosql_orm::nosql_index::NosqlIndex::compound(&field_tuples)
+    }
+    "text" => {
+      let field_tuples: Vec<(&str, i32)> = fields
+        .iter()
+        .map(|f| {
+          let field_name = f.get("name").and_then(|v| v.as_str()).unwrap_or("");
+          let weight = f.get("weight").and_then(|v| v.as_i64()).unwrap_or(1) as i32;
+          (field_name, weight)
+        })
+        .collect();
+      nosql_orm::nosql_index::NosqlIndex::text(&field_tuples)
+    }
+    "geospatial" => {
+      let field_name = fields
+        .first()
+        .and_then(|f| f.get("name").and_then(|v| v.as_str()))
+        .unwrap_or("location");
+      nosql_orm::nosql_index::NosqlIndex::geospatial_2dsphere(field_name)
+    }
+    "hashed" => {
+      let field_name = fields
+        .first()
+        .and_then(|f| f.get("name").and_then(|v| v.as_str()))
+        .unwrap_or("_id");
+      nosql_orm::nosql_index::NosqlIndex::hashed(field_name)
+    }
+    "ttl" => {
+      let field_name = fields
+        .first()
+        .and_then(|f| f.get("name").and_then(|v| v.as_str()))
+        .unwrap_or("created_at");
+      let ttl_seconds = options
+        .and_then(|o| o.get("ttlSeconds"))
+        .and_then(|v| v.as_u64())
+        .unwrap_or(3600) as u32;
+      nosql_orm::nosql_index::NosqlIndex::ttl(field_name, ttl_seconds)
+    }
+    _ => {
+      let field_name = fields
+        .first()
+        .and_then(|f| f.get("name").and_then(|v| v.as_str()))
+        .unwrap_or("_id");
+      let direction = fields
+        .first()
+        .and_then(|f| f.get("direction").and_then(|v| v.as_str()))
+        .unwrap_or("asc");
+      let order = if direction == "desc" { -1 } else { 1 };
+      nosql_orm::nosql_index::NosqlIndex::single(field_name, order)
+    }
+  };
+
+  index = index.name(name);
+
+  if let Some(opts) = options {
+    if opts
+      .get("unique")
+      .and_then(|v| v.as_bool())
+      .unwrap_or(false)
+    {
+      index = index.unique();
+    }
+    if opts
+      .get("sparse")
+      .and_then(|v| v.as_bool())
+      .unwrap_or(false)
+    {
+      index = index.sparse();
+    }
+  }
+
+  Ok(index)
+}
+
 #[tauri::command(rename_all = "camelCase")]
 pub async fn rebuild_index(
   conn_id: String,
@@ -26,7 +126,6 @@ pub async fn rebuild_index(
   index_name: String,
 ) -> Result<(), String> {
   let timer = DataflowTimer::new("rebuild_index");
-  let params = serde_json::json!({ "conn_id": &conn_id, "collection": &collection, "index_name": &index_name });
   if let Err(e) = validate_conn_id(&conn_id) {
     timer.clone().finish_error(&e);
     return Err(e);
@@ -35,27 +134,49 @@ pub async fn rebuild_index(
     timer.clone().finish_error(&e);
     return Err(e);
   }
-  let _entry = match get_connection_entry(&conn_id).await {
+  if let Err(e) = validate_name(&index_name) {
+    timer.clone().finish_error(&e);
+    return Err(e);
+  }
+  let entry = match get_connection_entry(&conn_id).await {
     Ok(e) => e,
     Err(e) => {
       timer.clone().finish_error(&e);
       return Err(e);
     }
   };
-  timer.finish_success();
-  Ok(())
+
+  match dispatch_provider!(entry, conn_id, provider => {
+    let indexes = nosql_orm::provider::SchemaIntrospection::list_indexes(&provider, &collection).await.map_err_string()?;
+    let index_info = indexes.iter().find(|i| i.name == index_name)
+      .ok_or_else(|| format!("Index '{}' not found", index_name))?;
+    
+    provider.drop_index(&collection, &index_name).await.map_err_string()?;
+    
+    let fields: Vec<(&str, i32)> = index_info.fields.iter()
+      .map(|f: &String| (f.as_str(), 1))
+      .collect();
+    let rebuild_index = nosql_orm::nosql_index::NosqlIndex::compound(&fields)
+      .name(&index_name);
+    provider.create_index(&collection, &rebuild_index).await.map_err_string()
+  }) {
+    Ok(_) => {
+      timer.finish_success();
+      Ok(())
+    }
+    Err(e) => {
+      timer.clone().finish_error(&e);
+      Err(e)
+    }
+  }
 }
 #[tauri::command(rename_all = "camelCase")]
 pub async fn create_index(
   conn_id: String,
   collection: String,
-  _index_definition: Value,
+  index_definition: Value,
 ) -> Result<(), String> {
   let timer = DataflowTimer::new("create_index");
-  let params = serde_json::json!({
-      "conn_id": &conn_id,
-      "collection": &collection,
-  });
   if let Err(e) = validate_conn_id(&conn_id) {
     timer.clone().finish_error(&e);
     return Err(e);
@@ -64,15 +185,34 @@ pub async fn create_index(
     timer.clone().finish_error(&e);
     return Err(e);
   }
-  let _entry = match get_connection_entry(&conn_id).await {
+  let entry = match get_connection_entry(&conn_id).await {
     Ok(e) => e,
     Err(e) => {
       timer.clone().finish_error(&e);
       return Err(e);
     }
   };
-  timer.finish_success();
-  Ok(())
+
+  let index = match parse_index_definition(&index_definition) {
+    Ok(idx) => idx,
+    Err(e) => {
+      timer.clone().finish_error(&e);
+      return Err(e);
+    }
+  };
+
+  match dispatch_provider!(entry, conn_id, provider => {
+    provider.create_index(&collection, &index).await.map_err_string()
+  }) {
+    Ok(_) => {
+      timer.finish_success();
+      Ok(())
+    }
+    Err(e) => {
+      timer.clone().finish_error(&e);
+      Err(e)
+    }
+  }
 }
 #[tauri::command(rename_all = "camelCase")]
 pub async fn drop_index(
@@ -81,7 +221,6 @@ pub async fn drop_index(
   index_name: String,
 ) -> Result<(), String> {
   let timer = DataflowTimer::new("drop_index");
-  let params = serde_json::json!({ "conn_id": &conn_id, "collection": &collection, "index_name": &index_name });
   if let Err(e) = validate_conn_id(&conn_id) {
     timer.clone().finish_error(&e);
     return Err(e);
@@ -90,15 +229,30 @@ pub async fn drop_index(
     timer.clone().finish_error(&e);
     return Err(e);
   }
-  let _entry = match get_connection_entry(&conn_id).await {
+  if let Err(e) = validate_name(&index_name) {
+    timer.clone().finish_error(&e);
+    return Err(e);
+  }
+  let entry = match get_connection_entry(&conn_id).await {
     Ok(e) => e,
     Err(e) => {
       timer.clone().finish_error(&e);
       return Err(e);
     }
   };
-  timer.finish_success();
-  Ok(())
+
+  match dispatch_provider!(entry, conn_id, provider => {
+    provider.drop_index(&collection, &index_name).await.map_err_string()
+  }) {
+    Ok(_) => {
+      timer.finish_success();
+      Ok(())
+    }
+    Err(e) => {
+      timer.clone().finish_error(&e);
+      Err(e)
+    }
+  }
 }
 #[tauri::command(rename_all = "camelCase")]
 pub async fn insert_document(
