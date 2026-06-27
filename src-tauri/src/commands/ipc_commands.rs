@@ -7,6 +7,35 @@ use crate::models::response::{Response, ResponseModel};
 use crate::utils::metrics::{redact_sensitive_data, DataflowTimer};
 use nosql_orm::prelude::*;
 use serde_json::Value;
+use std::collections::HashMap;
+use std::sync::Arc;
+use tokio::sync::RwLock;
+
+static TRANSACTION_REGISTRY: std::sync::OnceLock<Arc<RwLock<HashMap<String, String>>>> =
+  std::sync::OnceLock::new();
+
+fn get_transaction_registry() -> &'static Arc<RwLock<HashMap<String, String>>> {
+  TRANSACTION_REGISTRY
+    .get_or_init(|| Arc::new(RwLock::new(HashMap::new())))
+}
+
+async fn store_transaction(conn_id: String, transaction_id: String) {
+  let registry = get_transaction_registry();
+  let mut guard = registry.write().await;
+  guard.insert(transaction_id.clone(), conn_id);
+}
+
+async fn get_conn_id_for_transaction(transaction_id: &str) -> Option<String> {
+  let registry = get_transaction_registry();
+  let guard = registry.read().await;
+  guard.get(transaction_id).cloned()
+}
+
+async fn remove_transaction(transaction_id: &str) {
+  let registry = get_transaction_registry();
+  let mut guard = registry.write().await;
+  guard.remove(transaction_id);
+}
 #[tauri::command]
 pub async fn initialize_app() -> Result<(), String> {
   Ok(())
@@ -426,8 +455,10 @@ pub async fn begin_transaction(
       provider.begin_transaction().await.map_err_string()
   }) {
     Ok(transaction_id) => {
+      let tx_id_str = transaction_id.to_string();
+      store_transaction(conn_id.clone(), tx_id_str.clone()).await;
       let result = TransactionResult {
-        transaction_id: transaction_id.to_string(),
+        transaction_id: tx_id_str,
       };
       timer.finish_success();
       Ok(result)
@@ -439,14 +470,66 @@ pub async fn begin_transaction(
   }
 }
 #[tauri::command(rename_all = "camelCase")]
-pub async fn commit_transaction(_transaction_id: String) -> Result<(), String> {
+pub async fn commit_transaction(transaction_id: String) -> Result<(), String> {
   let timer = DataflowTimer::new("commit_transaction");
-  timer.finish_success();
-  Ok(())
+  let conn_id = match get_conn_id_for_transaction(&transaction_id).await {
+    Some(id) => id,
+    None => {
+      timer.clone().finish_error("Transaction not found");
+      return Err("Transaction not found".to_string());
+    }
+  };
+  let entry = match get_connection_entry(&conn_id).await {
+    Ok(e) => e,
+    Err(e) => {
+      timer.clone().finish_error(&e);
+      return Err(e);
+    }
+  };
+  match dispatch_provider!(entry, conn_id, provider => {
+    let tx_id = TransactionId::new(transaction_id.clone());
+    provider.commit_transaction(tx_id).await.map_err_string()
+  }) {
+    Ok(_) => {
+      remove_transaction(&transaction_id).await;
+      timer.finish_success();
+      Ok(())
+    }
+    Err(e) => {
+      timer.clone().finish_error(&e);
+      Err(e)
+    }
+  }
 }
 #[tauri::command(rename_all = "camelCase")]
-pub async fn rollback_transaction(_transaction_id: String) -> Result<(), String> {
+pub async fn rollback_transaction(transaction_id: String) -> Result<(), String> {
   let timer = DataflowTimer::new("rollback_transaction");
-  timer.finish_success();
-  Ok(())
+  let conn_id = match get_conn_id_for_transaction(&transaction_id).await {
+    Some(id) => id,
+    None => {
+      timer.clone().finish_error("Transaction not found");
+      return Err("Transaction not found".to_string());
+    }
+  };
+  let entry = match get_connection_entry(&conn_id).await {
+    Ok(e) => e,
+    Err(e) => {
+      timer.clone().finish_error(&e);
+      return Err(e);
+    }
+  };
+  match dispatch_provider!(entry, conn_id, provider => {
+    let tx_id = TransactionId::new(transaction_id.clone());
+    provider.rollback_transaction(tx_id).await.map_err_string()
+  }) {
+    Ok(_) => {
+      remove_transaction(&transaction_id).await;
+      timer.finish_success();
+      Ok(())
+    }
+    Err(e) => {
+      timer.clone().finish_error(&e);
+      Err(e)
+    }
+  }
 }
