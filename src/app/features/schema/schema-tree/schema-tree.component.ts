@@ -186,8 +186,12 @@ export class SchemaTreeComponent implements OnInit, OnDestroy {
       return;
     }
     try {
-      await this.store.dropCollection(oldName);
-      await this.store.createCollection(newName);
+      const connId = this.connectionState.activeConnectionId();
+      if (!connId) {
+        this.toast.error("No active connection");
+        return;
+      }
+      await this.store.renameCollection(connId, oldName, newName);
       this.toast.success(`Renamed to "${newName}"`);
       this.renamingCollection.set(null);
       this.loadCollections();
