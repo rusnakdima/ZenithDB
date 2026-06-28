@@ -4,7 +4,7 @@ use crate::commands::get_connection_entry;
 use crate::commands::types::DatabaseMeta;
 use crate::commands::validate_conn_id;
 use crate::commands::validate_name;
-use crate::models::response::{Response, ResponseModel};
+use crate::models::response::{success, ResponseModel};
 use crate::services::infrastructure::nosql_orm_adapter::NosqlOrmAdapter;
 use crate::utils::metrics::DataflowTimer;
 use nosql_orm::prelude::*;
@@ -45,7 +45,7 @@ pub struct DatabaseListResult {
 const MAX_DIRS_PER_LEVEL: usize = 10;
 const SCAN_TIMEOUT_SECS: u64 = 30;
 #[tauri::command]
-pub async fn create_database(connection_id: &str, name: &str) -> Result<Response, String> {
+pub async fn create_database(connection_id: &str, name: &str) -> Result<ResponseModel, String> {
   let timer = DataflowTimer::new("create_database");
   let result = (|| async {
     validate_conn_id(connection_id).map_err(|e| e.to_string())?;
@@ -60,13 +60,13 @@ pub async fn create_database(connection_id: &str, name: &str) -> Result<Response
             .await
             .map_err(|e| e.to_string())?;
         }
-        Ok(Response::success("Database created", Value::Null))
+        Ok(success("Database created", Value::Null))
       }
       ConnectionConfigEnum::Json { path, .. } => NosqlOrmAdapter::create_database_json(path, name)
         .await
-        .map(|_| Response::success("Database created", Value::Null))
+        .map(|_| success("Database created", Value::Null))
         .map_err(|e| e.to_string()),
-      ConnectionConfigEnum::Redis { .. } => Ok(Response::success("Database created", Value::Null)),
+      ConnectionConfigEnum::Redis { .. } => Ok(success("Database created", Value::Null)),
       ConnectionConfigEnum::Mongo { uri, .. } => {
         let provider = crate::commands::provider::create_mongo_provider(uri, &name)
           .await
@@ -75,7 +75,7 @@ pub async fn create_database(connection_id: &str, name: &str) -> Result<Response
           .execute_raw("create", vec![])
           .await
           .map_err(|e| e.to_string())?;
-        Ok(Response::success("Database created", Value::Null))
+        Ok(success("Database created", Value::Null))
       }
       ConnectionConfigEnum::Postgres { uri, .. } => {
         let provider = crate::commands::provider::create_postgres_provider(uri)
@@ -85,7 +85,7 @@ pub async fn create_database(connection_id: &str, name: &str) -> Result<Response
           .execute_raw(&format!("CREATE DATABASE \"{}\"", name), vec![])
           .await
           .map_err(|e| e.to_string())?;
-        Ok(Response::success("Database created", Value::Null))
+        Ok(success("Database created", Value::Null))
       }
       ConnectionConfigEnum::MySql { uri, .. } => {
         let provider = crate::commands::provider::create_mysql_provider(uri)
@@ -95,7 +95,7 @@ pub async fn create_database(connection_id: &str, name: &str) -> Result<Response
           .execute_raw(&format!("CREATE DATABASE IF NOT EXISTS `{}`", name), vec![])
           .await
           .map_err(|e| e.to_string())?;
-        Ok(Response::success("Database created", Value::Null))
+        Ok(success("Database created", Value::Null))
       }
     }
   })()
@@ -111,7 +111,7 @@ pub async fn rename_database(
   connection_id: &str,
   old_name: &str,
   new_name: &str,
-) -> Result<Response, String> {
+) -> Result<ResponseModel, String> {
   let timer = DataflowTimer::new("rename_database");
   let result = (|| async {
     validate_conn_id(connection_id).map_err(|e| e.to_string())?;
@@ -132,7 +132,7 @@ pub async fn rename_database(
             .await
             .map_err(|e| e.to_string())?;
         }
-        Ok(Response::success("Database renamed", Value::Null))
+        Ok(success("Database renamed", Value::Null))
       }
       ConnectionConfigEnum::Redis { .. } => Err(
         "Redis does not support renaming databases.".to_string(),
@@ -151,7 +151,7 @@ pub async fn rename_database(
           )
           .await
           .map_err(|e| e.to_string())?;
-        Ok(Response::success("Database renamed", Value::Null))
+        Ok(success("Database renamed", Value::Null))
       }
       ConnectionConfigEnum::MySql { uri: _, .. } => Err(
         "MySQL does not support renaming databases directly. Create a new database and migrate data.".to_string(),
@@ -165,7 +165,7 @@ pub async fn rename_database(
   result
 }
 #[tauri::command]
-pub async fn delete_database(connection_id: &str, name: &str) -> Result<Response, String> {
+pub async fn delete_database(connection_id: &str, name: &str) -> Result<ResponseModel, String> {
   let timer = DataflowTimer::new("delete_database");
   let result = (|| async {
     validate_conn_id(connection_id).map_err(|e| e.to_string())?;
@@ -179,7 +179,7 @@ pub async fn delete_database(connection_id: &str, name: &str) -> Result<Response
       ),
       ConnectionConfigEnum::Json { path, .. } => NosqlOrmAdapter::drop_database_json(path, name)
         .await
-        .map(|_| Response::success("Database deleted", Value::Null))
+        .map(|_| success("Database deleted", Value::Null))
         .map_err(|e| e.to_string()),
       ConnectionConfigEnum::Redis { .. } => {
         Err("Redis does not support deleting databases.".to_string())
@@ -195,7 +195,7 @@ pub async fn delete_database(connection_id: &str, name: &str) -> Result<Response
           .execute_raw(&format!("DROP DATABASE \"{}\"", name), vec![])
           .await
           .map_err(|e| e.to_string())?;
-        Ok(Response::success("Database deleted", Value::Null))
+        Ok(success("Database deleted", Value::Null))
       }
       ConnectionConfigEnum::MySql { uri, .. } => {
         let provider = crate::commands::provider::create_mysql_provider(uri)
@@ -205,7 +205,7 @@ pub async fn delete_database(connection_id: &str, name: &str) -> Result<Response
           .execute_raw(&format!("DROP DATABASE IF EXISTS `{}`", name), vec![])
           .await
           .map_err(|e| e.to_string())?;
-        Ok(Response::success("Database deleted", Value::Null))
+        Ok(success("Database deleted", Value::Null))
       }
     }
   })()
@@ -221,7 +221,7 @@ pub async fn database_list(
   conn_id: String,
   offset: Option<usize>,
   limit: Option<usize>,
-) -> Result<Response, String> {
+) -> Result<ResponseModel, String> {
   let timer = DataflowTimer::new("database_list");
   let params = serde_json::json!({ "conn_id": &conn_id, "offset": offset, "limit": limit });
   if let Err(e) = validate_conn_id(&conn_id) {
@@ -241,7 +241,7 @@ pub async fn database_list(
     ConnectionConfigEnum::Json { path, .. } => {
       let path_obj = std::path::Path::new(path).to_path_buf();
       if !path_obj.is_dir() {
-        return Ok(Response::success(
+        return Ok(success(
           "",
           serde_json::to_value(DatabaseListResult {
             databases: Vec::new(),
@@ -252,7 +252,7 @@ pub async fn database_list(
         ));
       }
       match list_json_databases(path_obj.clone(), offset, limit).await {
-        Ok(r) => Response::success(
+        Ok(r) => success(
           "Databases listed",
           serde_json::to_value(r).unwrap_or(serde_json::Value::Null),
         ),
@@ -262,7 +262,7 @@ pub async fn database_list(
         }
       }
     }
-    ConnectionConfigEnum::Sqlite { path, .. } => Response::success(
+    ConnectionConfigEnum::Sqlite { path, .. } => success(
       "Databases listed",
       serde_json::to_value(DatabaseListResult {
         databases: vec![DatabaseMeta::from_name(
@@ -276,7 +276,7 @@ pub async fn database_list(
       })
       .unwrap_or(serde_json::Value::Null),
     ),
-    ConnectionConfigEnum::Redis { .. } => Response::success(
+    ConnectionConfigEnum::Redis { .. } => success(
       "Databases listed",
       serde_json::to_value(DatabaseListResult {
         databases: vec![DatabaseMeta::from_name("default")],
@@ -288,7 +288,7 @@ pub async fn database_list(
     ConnectionConfigEnum::Mongo { uri, .. } => {
       match crate::commands::provider::get_or_create_mongo_provider(&conn_id, uri, "admin").await {
         Ok(provider) => match provider.list_databases().await.map_err_string() {
-          Ok(db_names) => Response::success(
+          Ok(db_names) => success(
             "Databases listed",
             serde_json::to_value(list_databases_with_pagination(db_names, offset, limit))
               .unwrap_or(serde_json::Value::Null),
@@ -307,7 +307,7 @@ pub async fn database_list(
     ConnectionConfigEnum::Postgres { uri, .. } => {
       match crate::commands::provider::get_or_create_postgres_provider(&conn_id, uri).await {
         Ok(provider) => match provider.list_databases().await.map_err_string() {
-          Ok(db_names) => Response::success(
+          Ok(db_names) => success(
             "Databases listed",
             serde_json::to_value(list_databases_with_pagination(db_names, offset, limit))
               .unwrap_or(serde_json::Value::Null),
@@ -326,7 +326,7 @@ pub async fn database_list(
     ConnectionConfigEnum::MySql { uri, .. } => {
       match crate::commands::provider::get_or_create_mysql_provider(&conn_id, uri).await {
         Ok(provider) => match provider.list_databases().await.map_err_string() {
-          Ok(db_names) => Response::success(
+          Ok(db_names) => success(
             "Databases listed",
             serde_json::to_value(list_databases_with_pagination(db_names, offset, limit))
               .unwrap_or(serde_json::Value::Null),

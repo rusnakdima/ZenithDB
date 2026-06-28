@@ -58,20 +58,20 @@ impl From<nosql_orm::error::OrmError> for AppError {
   }
 }
 impl AppError {
-  pub fn into_response(self) -> crate::models::response::Response<serde_json::Value> {
-    use crate::models::response::{Response, Status};
+  pub fn into_response(self) -> crate::models::response::ResponseModel {
+    use crate::models::response::{error, Status};
     match self {
-      Self::NotFound(msg) => Response::error(Status::NotFound, msg),
-      Self::ValidationError(msg) => Response::error(Status::ValidationError, msg),
-      Self::Duplicate(msg) => Response::error(Status::Error, msg),
-      Self::Unauthorized => Response::error(Status::Unauthorized, "Unauthorized"),
-      Self::Forbidden => Response::error(Status::Forbidden, "Forbidden"),
-      Self::Internal(msg) => Response::error(Status::Error, msg),
-      Self::Database(msg) => Response::error(Status::Error, msg),
-      Self::Network(msg) => Response::error(Status::Error, msg),
-      Self::Io(msg) => Response::error(Status::Error, msg),
-      Self::PermissionDenied(_) => Response::error(Status::Forbidden, "Permission denied"),
-      Self::InvalidPath(msg) => Response::error(Status::Error, msg),
+      Self::NotFound(msg) => error(Status::NotFound, msg),
+      Self::ValidationError(msg) => error(Status::ValidationError, msg),
+      Self::Duplicate(msg) => error(Status::Error, msg),
+      Self::Unauthorized => error(Status::Unauthorized, "Unauthorized"),
+      Self::Forbidden => error(Status::Forbidden, "Forbidden"),
+      Self::Internal(msg) => error(Status::Error, msg),
+      Self::Database(msg) => error(Status::Error, msg),
+      Self::Network(msg) => error(Status::Error, msg),
+      Self::Io(msg) => error(Status::Error, msg),
+      Self::PermissionDenied(_) => error(Status::Forbidden, "Permission denied"),
+      Self::InvalidPath(msg) => error(Status::Error, msg),
     }
   }
 }

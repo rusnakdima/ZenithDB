@@ -15,8 +15,7 @@ static TRANSACTION_REGISTRY: std::sync::OnceLock<Arc<RwLock<HashMap<String, Stri
   std::sync::OnceLock::new();
 
 fn get_transaction_registry() -> &'static Arc<RwLock<HashMap<String, String>>> {
-  TRANSACTION_REGISTRY
-    .get_or_init(|| Arc::new(RwLock::new(HashMap::new())))
+  TRANSACTION_REGISTRY.get_or_init(|| Arc::new(RwLock::new(HashMap::new())))
 }
 
 async fn store_transaction(conn_id: String, transaction_id: String) {
@@ -53,10 +52,7 @@ fn parse_index_definition(def: &Value) -> Result<NosqlIndex, String> {
     .get("name")
     .and_then(|v| v.as_str())
     .ok_or("Index definition must have a 'name' field")?;
-  let index_type = def
-    .get("type")
-    .and_then(|v| v.as_str())
-    .unwrap_or("single");
+  let index_type = def.get("type").and_then(|v| v.as_str()).unwrap_or("single");
   let fields = def
     .get("fields")
     .and_then(|v| v.as_array())
@@ -179,9 +175,9 @@ pub async fn rebuild_index(
     let indexes = nosql_orm::provider::SchemaIntrospection::list_indexes(&provider, &collection).await.map_err_string()?;
     let index_info = indexes.iter().find(|i| i.name == index_name)
       .ok_or_else(|| format!("Index '{}' not found", index_name))?;
-    
+
     provider.drop_index(&collection, &index_name).await.map_err_string()?;
-    
+
     let fields: Vec<(&str, i32)> = index_info.fields.iter()
       .map(|f: &String| (f.as_str(), 1))
       .collect();

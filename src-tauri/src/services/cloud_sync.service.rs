@@ -1,6 +1,6 @@
 use crate::commands::error_utils::ToStringError;
 use crate::commands::provider::create_mongo_provider;
-use crate::models::response::Response;
+use crate::models::response::{created, success, updated, ResponseModel};
 use chrono::{DateTime, Utc};
 use nosql_orm::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -29,7 +29,7 @@ impl CloudSyncService {
     name: String,
     version: String,
     schema_json: Value,
-  ) -> Result<Response, String> {
+  ) -> Result<ResponseModel, String> {
     let provider = create_mongo_provider(CLOUD_MONGO_URI, CLOUD_DATABASE)
       .await
       .map_err(|e| format!("Failed to connect to cloud database: {}", e))?;
@@ -62,18 +62,18 @@ impl CloudSyncService {
         .update(SCHEMAS_COLLECTION, &id, update_data)
         .await
         .map_err_string()?;
-      Ok(Response::updated("Schema updated in cloud", Value::Null))
+      Ok(updated("Schema updated in cloud", Value::Null))
     } else {
       let insert_data = serde_json::to_value(&cloud_schema).map_err_string()?;
       provider
         .insert(SCHEMAS_COLLECTION, insert_data)
         .await
         .map_err_string()?;
-      Ok(Response::created("Schema synced to cloud", Value::Null))
+      Ok(created("Schema synced to cloud", Value::Null))
     }
   }
 
-  pub async fn pull_schema_from_cloud(id: String) -> Result<Response, String> {
+  pub async fn pull_schema_from_cloud(id: String) -> Result<ResponseModel, String> {
     let provider = create_mongo_provider(CLOUD_MONGO_URI, CLOUD_DATABASE)
       .await
       .map_err(|e| format!("Failed to connect to cloud database: {}", e))?;
@@ -90,10 +90,10 @@ impl CloudSyncService {
       .next()
       .ok_or_else(|| "Schema not found in cloud".to_string())?;
 
-    Ok(Response::success("Schema pulled from cloud", schema))
+    Ok(success("Schema pulled from cloud", schema))
   }
 
-  pub async fn list_cloud_schemas() -> Result<Response, String> {
+  pub async fn list_cloud_schemas() -> Result<ResponseModel, String> {
     let provider = create_mongo_provider(CLOUD_MONGO_URI, CLOUD_DATABASE)
       .await
       .map_err(|e| format!("Failed to connect to cloud database: {}", e))?;
@@ -103,9 +103,6 @@ impl CloudSyncService {
       .await
       .map_err_string()?;
 
-    Ok(Response::success(
-      "Cloud schemas listed",
-      Value::Array(schemas),
-    ))
+    Ok(success("Cloud schemas listed", Value::Array(schemas)))
   }
 }

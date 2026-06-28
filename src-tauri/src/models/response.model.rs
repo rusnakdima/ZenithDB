@@ -1,129 +1,99 @@
-use serde::{Deserialize, Serialize};
+pub use tauri_shared::response::{Response, Status};
+
 use serde_json::Value;
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
-pub enum Status {
-  Success,
-  Info,
-  Warning,
-  Error,
-  Created,
-  Updated,
-  Deleted,
-  ValidationError,
-  NotFound,
-  Unauthorized,
-  Forbidden,
-}
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Response<T = Value> {
-  pub status: Status,
-  pub message: String,
-  pub data: T,
-}
-impl<T> Response<T> {
-  pub fn success(message: impl Into<String>, data: T) -> Self {
-    Self {
-      status: Status::Success,
-      message: message.into(),
-      data,
-    }
-  }
-  pub fn created(message: impl Into<String>, data: T) -> Self {
-    Self {
-      status: Status::Created,
-      message: message.into(),
-      data,
-    }
-  }
-  pub fn updated(message: impl Into<String>, data: T) -> Self {
-    Self {
-      status: Status::Updated,
-      message: message.into(),
-      data,
-    }
-  }
-  pub fn deleted(message: impl Into<String>, data: T) -> Self {
-    Self {
-      status: Status::Deleted,
-      message: message.into(),
-      data,
-    }
-  }
-}
-impl Response<Value> {
-  pub fn error(status: Status, message: impl Into<String>) -> Self {
-    Self {
-      status,
-      message: message.into(),
-      data: Value::Null,
-    }
-  }
-  pub fn validation_error(message: impl Into<String>) -> Self {
-    Self::error(Status::ValidationError, message)
-  }
-  pub fn not_found(entity: &str) -> Self {
-    Self::error(Status::NotFound, format!("{} not found", entity))
-  }
-  pub fn unauthorized() -> Self {
-    Self::error(Status::Unauthorized, "Unauthorized")
-  }
-  pub fn forbidden() -> Self {
-    Self::error(Status::Forbidden, "Forbidden")
-  }
-}
-impl<T: Serialize> Response<T> {
-  pub fn to_json_value(self) -> Value {
-    serde_json::to_value(self).unwrap_or_else(|_| {
-      serde_json::json!({
-          "status": "error",
-          "message": "Serialization failed",
-          "data": null
-      })
-    })
-  }
-}
-impl Default for Status {
-  fn default() -> Self {
-    Status::Success
-  }
-}
+
 pub type ResponseModel = Response<Value>;
+
+pub fn success(message: impl Into<String>, data: Value) -> ResponseModel {
+  ResponseModel::success(data, Some(&*message.into()))
+}
+
+pub fn created(message: impl Into<String>, data: Value) -> ResponseModel {
+  ResponseModel {
+    status: Status::Created,
+    message: message.into(),
+    data: Some(data),
+  }
+}
+
+pub fn updated(message: impl Into<String>, data: Value) -> ResponseModel {
+  ResponseModel {
+    status: Status::Updated,
+    message: message.into(),
+    data: Some(data),
+  }
+}
+
+pub fn deleted(message: impl Into<String>, data: Value) -> ResponseModel {
+  ResponseModel {
+    status: Status::Deleted,
+    message: message.into(),
+    data: Some(data),
+  }
+}
+
+pub fn info(message: impl Into<String>, data: Value) -> ResponseModel {
+  ResponseModel {
+    status: Status::Info,
+    message: message.into(),
+    data: Some(data),
+  }
+}
+
+pub fn warning(message: impl Into<String>, data: Value) -> ResponseModel {
+  ResponseModel {
+    status: Status::Warning,
+    message: message.into(),
+    data: Some(data),
+  }
+}
+
+pub fn duplicate(message: impl Into<String>, data: Value) -> ResponseModel {
+  ResponseModel {
+    status: Status::Duplicate,
+    message: message.into(),
+    data: Some(data),
+  }
+}
+
+pub fn error(status: Status, message: impl Into<String>) -> ResponseModel {
+  ResponseModel {
+    status,
+    message: message.into(),
+    data: None,
+  }
+}
+
+pub fn validation_error(message: impl Into<String>) -> ResponseModel {
+  ResponseModel::validation_error(message)
+}
+
+pub fn not_found(entity: impl Into<String>) -> ResponseModel {
+  ResponseModel::not_found(entity)
+}
+
+pub fn unauthorized() -> ResponseModel {
+  ResponseModel::unauthorized("Unauthorized")
+}
+
+pub fn forbidden() -> ResponseModel {
+  ResponseModel::forbidden("Forbidden")
+}
+
+pub fn success_empty() -> ResponseModel {
+  ResponseModel {
+    status: Status::Success,
+    message: String::new(),
+    data: Some(Value::Null),
+  }
+}
+
+pub fn success_message(message: impl Into<String>) -> ResponseModel {
+  ResponseModel {
+    status: Status::Success,
+    message: message.into(),
+    data: Some(Value::Null),
+  }
+}
+
 pub type ResponseStatus = Status;
-impl ResponseModel {
-  pub fn success_empty() -> Self {
-    Self {
-      status: Status::Success,
-      message: String::new(),
-      data: Value::Null,
-    }
-  }
-  pub fn success_message(message: impl Into<String>) -> Self {
-    Self {
-      status: Status::Success,
-      message: message.into(),
-      data: Value::Null,
-    }
-  }
-}
-impl From<Box<dyn std::error::Error + Send + Sync>> for ResponseModel {
-  fn from(error: Box<dyn std::error::Error + Send + Sync>) -> Self {
-    ResponseModel::error(Status::Error, error.to_string())
-  }
-}
-impl From<serde_json::Error> for ResponseModel {
-  fn from(error: serde_json::Error) -> Self {
-    ResponseModel::error(Status::Error, error.to_string())
-  }
-}
-impl From<String> for ResponseModel {
-  fn from(error: String) -> Self {
-    ResponseModel::error(Status::Error, error)
-  }
-}
-impl From<&str> for ResponseModel {
-  fn from(error: &str) -> Self {
-    ResponseModel::error(Status::Error, error)
-  }
-}

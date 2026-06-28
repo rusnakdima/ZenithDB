@@ -76,7 +76,7 @@ impl ConnectionHealth {
 pub async fn save_connection(
   state: State<'_, AppState>,
   config: ConnectionConfig,
-) -> Result<Response, String> {
+) -> Result<ResponseModel, String> {
   let timer = DataflowTimer::new("save_connection");
   let params = serde_json::json!({ "config": &config });
   match state.connection_service.save_connection(config).await {
@@ -91,7 +91,7 @@ pub async fn save_connection(
   }
 }
 #[tauri::command]
-pub async fn list_connections(state: State<'_, AppState>) -> Result<Response, String> {
+pub async fn list_connections(state: State<'_, AppState>) -> Result<ResponseModel, String> {
   let timer = DataflowTimer::new("list_connections");
   match state.connection_service.list_connections().await {
     Ok(r) => {
@@ -108,7 +108,7 @@ pub async fn list_connections(state: State<'_, AppState>) -> Result<Response, St
 pub async fn test_connection_status(
   state: State<'_, AppState>,
   id: &str,
-) -> Result<Response, String> {
+) -> Result<ResponseModel, String> {
   let timer = DataflowTimer::new("test_connection_status");
   if let Err(e) = validate_conn_id(id) {
     timer.finish_error(&e);
@@ -130,7 +130,7 @@ pub async fn test_connection_status(
 pub async fn check_health(
   state: State<'_, AppState>,
   connection_id: &str,
-) -> Result<Response, String> {
+) -> Result<ResponseModel, String> {
   let timer = DataflowTimer::new("check_health");
   if let Err(e) = validate_conn_id(connection_id) {
     timer.finish_error(&e);
@@ -149,7 +149,10 @@ pub async fn check_health(
   }
 }
 #[tauri::command]
-pub async fn delete_connection(state: State<'_, AppState>, id: &str) -> Result<Response, String> {
+pub async fn delete_connection(
+  state: State<'_, AppState>,
+  id: &str,
+) -> Result<ResponseModel, String> {
   let timer = DataflowTimer::new("delete_connection");
   if let Err(e) = validate_conn_id(id) {
     timer.finish_error(&e);
@@ -172,7 +175,7 @@ pub async fn update_connection(
   state: State<'_, AppState>,
   id: &str,
   config: ConnectionConfig,
-) -> Result<Response, String> {
+) -> Result<ResponseModel, String> {
   let timer = DataflowTimer::new("update_connection");
   if let Err(e) = validate_conn_id(id) {
     timer.finish_error(&e);
@@ -191,7 +194,7 @@ pub async fn update_connection(
   }
 }
 #[tauri::command]
-pub async fn get_connection(state: State<'_, AppState>, id: &str) -> Result<Response, String> {
+pub async fn get_connection(state: State<'_, AppState>, id: &str) -> Result<ResponseModel, String> {
   let timer = DataflowTimer::new("get_connection");
   if let Err(e) = validate_conn_id(id) {
     timer.finish_error(&e);
@@ -213,7 +216,7 @@ pub async fn get_connection(state: State<'_, AppState>, id: &str) -> Result<Resp
 pub async fn test_connection(
   state: State<'_, AppState>,
   config: ConnectionConfig,
-) -> Result<Response, String> {
+) -> Result<ResponseModel, String> {
   let timer = DataflowTimer::new("test_connection");
   let params = serde_json::json!({ "config": &config });
   match state.connection_service.test_connection(config).await {

@@ -8,7 +8,7 @@ use crate::commands::provider::{
 };
 use crate::commands::settings_command::delete_connection_databases_metadata;
 use crate::constants::CONNECTION_TIMEOUT_SECS;
-use crate::models::response::{Response, ResponseModel, Status};
+use crate::models::response::{success, ResponseModel};
 use nosql_orm::prelude::*;
 use rusqlite::{params, Connection};
 use serde_json::Value;
@@ -255,18 +255,15 @@ impl ConnectionService {
       Err(e) => ConnectionHealth::err(&e),
     }
   }
-  pub async fn save_connection(&self, config: ConnectionConfig) -> Result<Response, String> {
+  pub async fn save_connection(&self, config: ConnectionConfig) -> Result<ResponseModel, String> {
     let id = uuid::Uuid::new_v4().to_string();
     let type_str = Self::get_type_string(&config);
     let entity = ConnectionEntity::new(id.clone(), type_str, config.name.clone(), config);
     let db = self.connections_db.lock().await;
     db.save(&entity).map_err(|e| e.to_string())?;
-    Ok(Response::success(
-      format!("Connection saved: {}", id),
-      Value::Null,
-    ))
+    Ok(success(format!("Connection saved: {}", id), Value::Null))
   }
-  pub async fn list_connections(&self) -> Result<Response, String> {
+  pub async fn list_connections(&self) -> Result<ResponseModel, String> {
     let db = self.connections_db.lock().await;
     let entities = db.find_all().map_err(|e| e.to_string())?;
     drop(db);
@@ -289,12 +286,12 @@ impl ConnectionService {
         status,
       });
     }
-    Ok(Response::success(
+    Ok(success(
       "Connections listed",
       serde_json::to_value(summaries).unwrap_or(Value::Null),
     ))
   }
-  pub async fn test_connection_status(&self, id: &str) -> Result<Response, String> {
+  pub async fn test_connection_status(&self, id: &str) -> Result<ResponseModel, String> {
     let db = self.connections_db.lock().await;
     let entity = db
       .find_by_id(id)
@@ -315,12 +312,12 @@ impl ConnectionService {
       provider: entity.type_.to_lowercase(),
       status,
     };
-    Ok(Response::success(
+    Ok(success(
       "Connection status retrieved",
       serde_json::to_value(summary).unwrap_or(Value::Null),
     ))
   }
-  pub async fn check_health(&self, conn_id: &str) -> Result<Response, String> {
+  pub async fn check_health(&self, conn_id: &str) -> Result<ResponseModel, String> {
     let db = self.connections_db.lock().await;
     let entity = db
       .find_by_id(conn_id)
@@ -335,12 +332,12 @@ impl ConnectionService {
     )
     .await
     .map_err(|_| "Health check timed out".to_string())?;
-    Ok(Response::success(
+    Ok(success(
       "Health check completed",
       serde_json::to_value(health_result).unwrap_or(Value::Null),
     ))
   }
-  pub async fn delete_connection(&self, id: &str) -> Result<Response, String> {
+  pub async fn delete_connection(&self, id: &str) -> Result<ResponseModel, String> {
     let db = self.connections_db.lock().await;
     if !db.exists(id).map_err(|e| e.to_string())? {
       return Err(format!("Connection {} not found", id));
@@ -348,16 +345,13 @@ impl ConnectionService {
     db.delete(id).map_err(|e| e.to_string())?;
     drop(db);
     if let Err(e) = delete_connection_databases_metadata(id.to_string()).await {};
-    Ok(Response::success(
-      format!("Connection {} deleted", id),
-      Value::Null,
-    ))
+    Ok(success(format!("Connection {} deleted", id), Value::Null))
   }
   pub async fn update_connection(
     &self,
     id: &str,
     config: ConnectionConfig,
-  ) -> Result<Response, String> {
+  ) -> Result<ResponseModel, String> {
     let db = self.connections_db.lock().await;
     let existing = db
       .find_by_id(id)
@@ -375,12 +369,9 @@ impl ConnectionService {
     };
     db.save(&entity).map_err(|e| e.to_string())?;
     drop(db);
-    Ok(Response::success(
-      format!("Connection {} updated", id),
-      Value::Null,
-    ))
+    Ok(success(format!("Connection {} updated", id), Value::Null))
   }
-  pub async fn get_connection(&self, id: &str) -> Result<Response, String> {
+  pub async fn get_connection(&self, id: &str) -> Result<ResponseModel, String> {
     let db = self.connections_db.lock().await;
     let entity = db
       .find_by_id(id)
@@ -394,7 +385,7 @@ impl ConnectionService {
     }
     let config: ConnectionConfig =
       serde_json::from_str(&entity.config).map_err(|e| format!("Failed to parse config: {}", e))?;
-    Ok(Response::success(
+    Ok(success(
       "Connection retrieved",
       serde_json::to_value(ConnectionConfigResult {
         id: entity.id.unwrap_or_default(),
@@ -403,9 +394,9 @@ impl ConnectionService {
       .unwrap_or(Value::Null),
     ))
   }
-  pub async fn test_connection(&self, config: ConnectionConfig) -> Result<Response, String> {
+  pub async fn test_connection(&self, config: ConnectionConfig) -> Result<ResponseModel, String> {
     let health = self.check_provider_health(&config).await;
-    Ok(Response::success(
+    Ok(success(
       "Connection tested",
       serde_json::to_value(health).unwrap_or(Value::Null),
     ))

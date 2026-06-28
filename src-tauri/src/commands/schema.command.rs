@@ -5,7 +5,7 @@ use crate::commands::types::{CollectionMeta, CollectionSchema, CollectionStats, 
 use crate::commands::validate_conn_id;
 use crate::commands::validate_name;
 use crate::dispatch_provider;
-use crate::models::response::{Response, ResponseModel};
+use crate::models::response::{success, ResponseModel};
 use crate::utils::metrics::{redact_sensitive_data, DataflowTimer};
 use nosql_orm::prelude::*;
 use serde_json::Value;
@@ -21,7 +21,7 @@ pub async fn collection_list(
   db_name: Option<String>,
   offset: Option<usize>,
   limit: Option<usize>,
-) -> Result<Response, String> {
+) -> Result<ResponseModel, String> {
   let timer = DataflowTimer::new("collection_list");
   let params = serde_json::json!({ "conn_id": &conn_id, "db_name": &db_name, "offset": offset, "limit": limit });
   if let Err(e) = validate_conn_id(&conn_id) {
@@ -50,7 +50,7 @@ pub async fn collection_list(
           total_count,
       })
   }) {
-    Ok(r) => Response::success(
+    Ok(r) => success(
       "Collections listed",
       serde_json::to_value(r).unwrap_or(serde_json::Value::Null),
     ),
@@ -63,7 +63,10 @@ pub async fn collection_list(
   Ok(result)
 }
 #[tauri::command(rename_all = "camelCase")]
-pub async fn collection_stats(connection_id: String, name: String) -> Result<Response, String> {
+pub async fn collection_stats(
+  connection_id: String,
+  name: String,
+) -> Result<ResponseModel, String> {
   let timer = DataflowTimer::new("collection_stats");
   let params = serde_json::json!({ "connection_id": &connection_id, "name": &name });
   if let Err(e) = validate_conn_id(&connection_id) {
@@ -83,7 +86,7 @@ pub async fn collection_stats(connection_id: String, name: String) -> Result<Res
           index_count: stats.index_count,
       })
   }) {
-    Ok(r) => Response::success(
+    Ok(r) => success(
       "Collection stats retrieved",
       serde_json::to_value(r).unwrap_or(serde_json::Value::Null),
     ),
@@ -96,7 +99,10 @@ pub async fn collection_stats(connection_id: String, name: String) -> Result<Res
   Ok(result)
 }
 #[tauri::command(rename_all = "camelCase")]
-pub async fn collection_create(connection_id: String, name: String) -> Result<Response, String> {
+pub async fn collection_create(
+  connection_id: String,
+  name: String,
+) -> Result<ResponseModel, String> {
   let timer = DataflowTimer::new("collection_create");
   let params = serde_json::json!({ "connection_id": &connection_id, "name": &name });
   if let Err(e) = validate_conn_id(&connection_id) {
@@ -114,7 +120,7 @@ pub async fn collection_create(connection_id: String, name: String) -> Result<Re
   let result = match dispatch_provider!(entry, connection_id, provider => {
       provider.create_collection(&name, None).await.map_err_string()
   }) {
-    Ok(_) => Response::success("Collection created", Value::Null),
+    Ok(_) => success("Collection created", Value::Null),
     Err(e) => {
       timer.clone().finish_error(&e);
       return Err(e);
@@ -124,7 +130,7 @@ pub async fn collection_create(connection_id: String, name: String) -> Result<Re
   Ok(result)
 }
 #[tauri::command(rename_all = "camelCase")]
-pub async fn collection_drop(connection_id: String, name: String) -> Result<Response, String> {
+pub async fn collection_drop(connection_id: String, name: String) -> Result<ResponseModel, String> {
   let timer = DataflowTimer::new("collection_drop");
   let params = serde_json::json!({ "connection_id": &connection_id, "name": &name });
   if let Err(e) = validate_conn_id(&connection_id) {
@@ -142,7 +148,7 @@ pub async fn collection_drop(connection_id: String, name: String) -> Result<Resp
   let result = match dispatch_provider!(entry, connection_id, provider => {
       provider.drop_collection(&name).await.map_err_string()
   }) {
-    Ok(_) => Response::success("Collection dropped", Value::Null),
+    Ok(_) => success("Collection dropped", Value::Null),
     Err(e) => {
       timer.clone().finish_error(&e);
       return Err(e);
@@ -157,7 +163,7 @@ pub async fn collection_rename(
   db_name: Option<String>,
   oldName: String,
   newName: String,
-) -> Result<Response, String> {
+) -> Result<ResponseModel, String> {
   let timer = DataflowTimer::new("collection_rename");
   let params = serde_json::json!({ "connection_id": &connection_id, "db_name": &db_name, "oldName": &oldName, "newName": &newName });
   if let Err(e) = validate_conn_id(&connection_id) {
@@ -179,7 +185,7 @@ pub async fn collection_rename(
   let result = match dispatch_provider!(entry, connection_id, provider => {
       provider.rename_collection(&oldName, &newName).await.map_err_string()
   }) {
-    Ok(_) => Response::success("Collection renamed", Value::Null),
+    Ok(_) => success("Collection renamed", Value::Null),
     Err(e) => {
       timer.clone().finish_error(&e);
       return Err(e);
@@ -192,9 +198,9 @@ pub async fn collection_rename(
 pub async fn describe_collection(
   connection_id: &str,
   collection: &str,
-) -> Result<Response, String> {
+) -> Result<ResponseModel, String> {
   let timer = DataflowTimer::new("describe_collection");
-  let result: Result<Response, String> = (|| async {
+  let result: Result<ResponseModel, String> = (|| async {
     validate_conn_id(connection_id).map_err(|e| e.to_string())?;
     validate_name(collection).map_err(|e| e.to_string())?;
     let entry = get_connection_entry(connection_id)
@@ -226,7 +232,7 @@ pub async fn describe_collection(
         is_unique: idx.unique,
       })
       .collect();
-    Ok(Response::success(
+    Ok(success(
       "Collection described",
       serde_json::to_value(CollectionSchema {
         name: collection.to_string(),
@@ -242,4 +248,17 @@ pub async fn describe_collection(
     Err(err) => timer.finish_error(err),
   }
   result
+}
+
+#[tauri::command]
+pub fn get_ui_schema() -> Result<String, String> {
+  let path = std::path::PathBuf::from(std::env::var("HOME").unwrap_or_else(|_| ".".to_string()))
+    .join(".zenithdb")
+    .join("ui_schema.json");
+
+  if path.exists() {
+    std::fs::read_to_string(&path).map_err(|e| e.to_string())
+  } else {
+    Ok(r#"{"schemaVersion":"1.0.0","app":{"id":"zenithdb","name":"ZenithDB","version":"1.0.0"},"pages":[],"layouts":[],"components":[],"sharedComponents":[],"services":[],"modules":[],"i18n":{"locale":"en","translations":{}}}"#.to_string())
+  }
 }

@@ -5,7 +5,7 @@ use crate::commands::types::RawResult;
 use crate::commands::validate_conn_id;
 use crate::commands::validate_name;
 use crate::dispatch_provider;
-use crate::models::response::{Response, ResponseModel, success};
+use crate::models::response::{success, Response, ResponseModel};
 use crate::models::types::{QueryParams, QueryResult};
 use crate::utils::metrics::{redact_sensitive_data, DataflowTimer};
 use nosql_orm::prelude::*;
@@ -225,8 +225,7 @@ pub async fn query_aggregate(
   pipeline: Vec<Value>,
 ) -> Result<Response<Vec<Value>>, String> {
   let timer = DataflowTimer::new("query_aggregate");
-  let params_log =
-    serde_json::json!({ "connectionId": &connectionId, "collection": &collection, "pipeline": &pipeline });
+  let params_log = serde_json::json!({ "connectionId": &connectionId, "collection": &collection, "pipeline": &pipeline });
   if let Err(e) = validate_conn_id(&connectionId) {
     timer.clone().finish_error(&e);
     return Err(e);

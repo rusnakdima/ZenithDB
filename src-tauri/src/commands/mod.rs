@@ -18,12 +18,16 @@ pub mod ipc_commands;
 pub mod provider;
 #[path = "query.command.rs"]
 pub mod query_command;
+#[path = "rbac.command.rs"]
+pub mod rbac_command;
 #[path = "schema.command.rs"]
 pub mod schema_command;
 #[path = "screenshot.command.rs"]
 pub mod screenshot_command;
 #[path = "settings.command.rs"]
 pub mod settings_command;
+#[path = "sync_command.rs"]
+pub mod sync_command;
 #[path = "types.command.rs"]
 pub mod types;
 pub use connection_command::ConnectionConfig;

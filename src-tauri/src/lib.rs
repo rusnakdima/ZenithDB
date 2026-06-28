@@ -10,9 +10,6 @@ mod utils;
 use commands::cloud_sync_command::{
   list_cloud_schemas, pull_schema_from_cloud as cloud_pull_schema, sync_schema_to_cloud,
 };
-use commands::sync_command::{
-  pull_schema, get_cached_schema, clear_schema_cache, save_to_local_cache,
-};
 use commands::connection_command::{
   check_health, delete_connection, get_connection, list_connections, save_connection,
   test_connection, test_connection_status, update_connection,
@@ -37,6 +34,9 @@ use commands::settings_command::{
   append_log_file, delete_connection_databases_metadata, delete_database_metadata,
   get_database_metadata, get_system_status, init_decentralized_storage, list_databases_metadata,
   save_database_metadata, save_log_file, update_database_metadata,
+};
+use commands::sync_command::{
+  clear_schema_cache, get_cached_schema, pull_schema, save_to_local_cache,
 };
 use state::AppState;
 use tauri::Manager;

@@ -1,5 +1,5 @@
 use crate::constants::LIST_TIMEOUT_SECS;
-use crate::models::response::{Response, ResponseModel};
+use crate::models::response::{success, ResponseModel};
 use crate::utils::metrics::{redact_sensitive_data, DataflowTimer};
 use chrono::{DateTime, Local, Utc};
 use nosql_orm::prelude::*;
@@ -486,7 +486,7 @@ pub async fn delete_connection_databases_metadata(connection_id: String) -> Resu
   }
 }
 #[tauri::command]
-pub async fn get_system_status() -> Result<Response, String> {
+pub async fn get_system_status() -> Result<ResponseModel, String> {
   let timer = DataflowTimer::new("get_system_status");
   let sys = tokio::task::spawn_blocking(|| {
     let mut sys = System::new_all();
@@ -535,13 +535,13 @@ pub async fn get_system_status() -> Result<Response, String> {
     format!("Task join error: {}", e)
   })?;
   timer.finish_success();
-  Ok(Response::success(
+  Ok(success(
     "System status retrieved",
     serde_json::to_value(sys).unwrap_or(serde_json::Value::Null),
   ))
 }
 #[tauri::command]
-pub async fn save_log_file(filename: String, data: String) -> Result<Response, String> {
+pub async fn save_log_file(filename: String, data: String) -> Result<ResponseModel, String> {
   let timer = DataflowTimer::new("save_log_file");
   let logs_dir = get_logs_dir()?;
   let file_path = logs_dir.join(&filename);
@@ -551,13 +551,13 @@ pub async fn save_log_file(filename: String, data: String) -> Result<Response, S
       .finish_error(&format!("Failed to write log file: {}", e));
     format!("Failed to write log file: {}", e)
   })?;
-  Ok(Response::success(
+  Ok(success(
     "Log file saved",
     serde_json::Value::String(file_path.to_string_lossy().to_string()),
   ))
 }
 #[tauri::command]
-pub async fn append_log_file(data: String) -> Result<Response, String> {
+pub async fn append_log_file(data: String) -> Result<ResponseModel, String> {
   let timer = DataflowTimer::new("append_log_file");
   let logs_dir = get_logs_dir()?;
   let date = Local::now().format("%Y-%m-%d").to_string();
@@ -579,7 +579,7 @@ pub async fn append_log_file(data: String) -> Result<Response, String> {
       .finish_error(&format!("Failed to write to log file: {}", e));
     format!("Failed to write to log file: {}", e)
   })?;
-  Ok(Response::success(
+  Ok(success(
     "Log appended",
     serde_json::Value::String(file_path.to_string_lossy().to_string()),
   ))
