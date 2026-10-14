@@ -1,0 +1,29 @@
+ PID=1823644
+
+(zenithdb:1823647): dbind-WARNING **: 15:34:27.039: Couldn't connect to accessibility bus: Failed to connect to socket /run/user/1000/at-spi/bus_99: Connection refused
+
+(zenithdb:1823647): GVFS-WARNING **: 15:34:27.354: can't init metadata tree /home/dmitriy/.local/share/gvfs-metadata/root: open: Permission denied
+
+(zenithdb:1823647): GVFS-WARNING **: 15:34:27.358: can't init metadata tree /home/dmitriy/.local/share/gvfs-metadata/root: open: Permission denied
+
+(zenithdb:1823647): GVFS-WARNING **: 15:34:27.368: can't init metadata tree /home/dmitriy/.local/share/gvfs-metadata/root: open: Permission denied
+
+(zenithdb:1823647): GVFS-WARNING **: 15:34:27.377: can't init metadata tree /home/dmitriy/.local/share/gvfs-metadata/root: open: Permission denied
+
+(zenithdb:1823647): GVFS-WARNING **: 15:34:27.379: can't init metadata tree /home/dmitriy/.local/share/gvfs-metadata/root: open: Permission denied
+
+(zenithdb:1823647): GVFS-WARNING **: 15:34:27.381: can't init metadata tree /home/dmitriy/.local/share/gvfs-metadata/root: open: Permission denied
+
+(zenithdb:1823647): GVFS-WARNING **: 15:34:27.384: can't init metadata tree /home/dmitriy/.local/share/gvfs-metadata/root: open: Permission denied
+
+(zenithdb:1823647): GVFS-WARNING **: 15:34:27.386: can't init metadata tree /home/dmitriy/.local/share/gvfs-metadata/root: open: Permission denied
+
+(zenithdb:1823647): GVFS-WARNING **: 15:34:27.389: can't init metadata tree /home/dmitriy/.local/share/gvfs-metadata/root: open: Permission denied
+
+(zenithdb:1823647): GVFS-WARNING **: 15:34:27.551: can't init metadata tree /home/dmitriy/.local/share/gvfs-metadata/root: open: Permission denied
+
+(zenithdb:1823647): GVFS-WARNING **: 15:34:27.558: can't init metadata tree /home/dmitriy/.local/share/gvfs-metadata/root: open: Permission denied
+
+(zenithdb:1823647): GVFS-WARNING **: 15:34:27.571: can't init metadata tree /home/dmitriy/.local/share/gvfs-metadata/root: open: Permission denied
+
+** (process:1823960): WARNING **: 15:34:27.751: Can't connect to a11y bus: Could not connect: Connection refused

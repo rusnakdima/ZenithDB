@@ -1,0 +1,5 @@
+connections
+explorer
+workbench
+new-connection
+settings
