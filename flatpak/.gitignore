@@ -1,7 +1,0 @@
-# Flatpak
-/build
-/repo
-.flatpak-builder/
-
-# Built flatpak installer
-*.flatpak
