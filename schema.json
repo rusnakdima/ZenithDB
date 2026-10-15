@@ -7,32 +7,119 @@
     {
       "name": "Connection",
       "fields": [
-        { "name": "id", "type": "string", "required": false, "default": null },
-        { "name": "kind", "type": "string", "required": true, "default": null, "allowed": ["postgres", "sqlite", "mysql", "mongodb", "redis"] },
-        { "name": "name", "type": "string", "required": true, "default": null },
-        { "name": "uri", "type": "string", "required": false, "default": null },
-        { "name": "database", "type": "string", "required": false, "default": null },
-        { "name": "config", "type": "json", "required": false, "default": null },
-        { "name": "created_at", "type": "date", "required": false, "default": null },
-        { "name": "updated_at", "type": "date", "required": false, "default": null }
+        {
+          "name": "id",
+          "type": "string",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "kind",
+          "type": "string",
+          "required": true,
+          "default": null,
+          "allowed": [
+            "postgres",
+            "sqlite",
+            "mysql",
+            "mongodb",
+            "redis"
+          ]
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "required": true,
+          "default": null
+        },
+        {
+          "name": "uri",
+          "type": "string",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "database",
+          "type": "string",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "config",
+          "type": "json",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "created_at",
+          "type": "date",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "updated_at",
+          "type": "date",
+          "required": false,
+          "default": null
+        }
       ]
     },
     {
       "name": "Role",
       "fields": [
-        { "name": "id", "type": "string", "required": false, "default": null },
-        { "name": "name", "type": "string", "required": true, "default": null },
-        { "name": "description", "type": "string", "required": false, "default": null }
+        {
+          "name": "id",
+          "type": "string",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "required": true,
+          "default": null
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "required": false,
+          "default": null
+        }
       ]
     },
     {
       "name": "User",
       "fields": [
-        { "name": "id", "type": "string", "required": false, "default": null },
-        { "name": "username", "type": "string", "required": true, "default": null },
-        { "name": "email", "type": "string", "required": false, "default": null },
-        { "name": "password_hash", "type": "string", "required": true, "default": null },
-        { "name": "created_at", "type": "date", "required": false, "default": null }
+        {
+          "name": "id",
+          "type": "string",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "username",
+          "type": "string",
+          "required": true,
+          "default": null
+        },
+        {
+          "name": "email",
+          "type": "string",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "password_hash",
+          "type": "string",
+          "required": true,
+          "default": null
+        },
+        {
+          "name": "created_at",
+          "type": "date",
+          "required": false,
+          "default": null
+        }
       ]
     }
   ],
@@ -41,74 +128,215 @@
       "route": "/connections",
       "title": "Connections",
       "components": [
-        { "type": "list", "source": "Connection" },
-        { "type": "button", "label": "New Connection", "action": "new_connection" }
+        {
+          "type": "list",
+          "source": "Connection"
+        },
+        {
+          "type": "button",
+          "label": "New Connection",
+          "action": "new_connection"
+        }
       ]
     },
     {
       "route": "/new-connection",
       "title": "New Connection",
       "components": [
-        { "type": "form", "entity": "Connection", "fields": ["kind", "name", "uri", "database", "config"] },
-        { "type": "button", "label": "Save", "action": "save_connection" },
-        { "type": "button", "label": "Test", "action": "test_connection_status" }
+        {
+          "type": "form",
+          "entity": "Connection",
+          "fields": [
+            "kind",
+            "name",
+            "uri",
+            "database",
+            "config"
+          ]
+        },
+        {
+          "type": "button",
+          "label": "Save",
+          "action": "save_connection"
+        },
+        {
+          "type": "button",
+          "label": "Test",
+          "action": "test_connection_status"
+        }
       ]
     },
     {
       "route": "/explorer",
       "title": "Explorer",
       "components": [
-        { "type": "table", "source": "Connection" },
-        { "type": "input", "placeholder": "Search...", "action": "query" }
+        {
+          "type": "table",
+          "source": "Connection"
+        },
+        {
+          "type": "input",
+          "placeholder": "Search...",
+          "action": "query"
+        }
       ]
     },
     {
       "route": "/workbench",
       "title": "Workbench",
       "components": [
-        { "type": "textarea", "placeholder": "Enter query...", "action": "query" },
-        { "type": "button", "label": "Run", "action": "query" }
+        {
+          "type": "textarea",
+          "placeholder": "Enter query...",
+          "action": "query"
+        },
+        {
+          "type": "button",
+          "label": "Run",
+          "action": "query"
+        }
       ]
     },
     {
       "route": "/settings",
       "title": "Settings",
       "components": [
-        { "type": "form", "entity": "User" },
-        { "type": "button", "label": "Save", "action": "save_settings" }
+        {
+          "type": "form",
+          "entity": "User"
+        },
+        {
+          "type": "button",
+          "label": "Save",
+          "action": "save_settings"
+        }
       ]
     }
   ],
   "actions": [
-    { "name": "save_connection", "blueprint": null },
-    { "name": "list_connections", "blueprint": null },
-    { "name": "get_connection", "blueprint": null },
-    { "name": "update_connection", "blueprint": null },
-    { "name": "delete_connection", "blueprint": null },
-    { "name": "test_connection_status", "blueprint": null },
-    { "name": "check_health", "blueprint": null },
-    { "name": "query", "blueprint": null },
-    { "name": "schema", "blueprint": null },
-    { "name": "settings", "blueprint": null },
-    { "name": "save_settings", "blueprint": null },
-    { "name": "rbac_list_roles", "blueprint": null },
-    { "name": "rbac_create_role", "blueprint": null },
-    { "name": "rbac_delete_role", "blueprint": null },
-    { "name": "rbac_list_permissions", "blueprint": null },
-    { "name": "rbac_create_permission", "blueprint": null },
-    { "name": "rbac_delete_permission", "blueprint": null },
-    { "name": "rbac_assign_role_to_user", "blueprint": null },
-    { "name": "rbac_remove_role_from_user", "blueprint": null },
-    { "name": "rbac_grant_permission", "blueprint": null },
-    { "name": "rbac_revoke_permission", "blueprint": null },
-    { "name": "rbac_get_user_roles", "blueprint": null },
-    { "name": "rbac_get_role_permissions", "blueprint": null },
-    { "name": "login", "blueprint": null },
-    { "name": "logout", "blueprint": null },
-    { "name": "register", "blueprint": null },
-    { "name": "get_current_user", "blueprint": null },
-    { "name": "screenshot", "blueprint": null },
-    { "name": "sync", "blueprint": null },
-    { "name": "cloud_sync", "blueprint": null }
+    {
+      "name": "save_connection",
+      "blueprint": null
+    },
+    {
+      "name": "list_connections",
+      "blueprint": null
+    },
+    {
+      "name": "get_connection",
+      "blueprint": null
+    },
+    {
+      "name": "update_connection",
+      "blueprint": null
+    },
+    {
+      "name": "delete_connection",
+      "blueprint": null
+    },
+    {
+      "name": "test_connection_status",
+      "blueprint": null
+    },
+    {
+      "name": "check_health",
+      "blueprint": null
+    },
+    {
+      "name": "query",
+      "blueprint": null
+    },
+    {
+      "name": "schema",
+      "blueprint": null
+    },
+    {
+      "name": "settings",
+      "blueprint": null
+    },
+    {
+      "name": "save_settings",
+      "blueprint": null
+    },
+    {
+      "name": "rbac_list_roles",
+      "blueprint": null
+    },
+    {
+      "name": "rbac_create_role",
+      "blueprint": null
+    },
+    {
+      "name": "rbac_delete_role",
+      "blueprint": null
+    },
+    {
+      "name": "rbac_list_permissions",
+      "blueprint": null
+    },
+    {
+      "name": "rbac_create_permission",
+      "blueprint": null
+    },
+    {
+      "name": "rbac_delete_permission",
+      "blueprint": null
+    },
+    {
+      "name": "rbac_assign_role_to_user",
+      "blueprint": null
+    },
+    {
+      "name": "rbac_remove_role_from_user",
+      "blueprint": null
+    },
+    {
+      "name": "rbac_grant_permission",
+      "blueprint": null
+    },
+    {
+      "name": "rbac_revoke_permission",
+      "blueprint": null
+    },
+    {
+      "name": "rbac_get_user_roles",
+      "blueprint": null
+    },
+    {
+      "name": "rbac_get_role_permissions",
+      "blueprint": null
+    },
+    {
+      "name": "login",
+      "blueprint": null
+    },
+    {
+      "name": "logout",
+      "blueprint": null
+    },
+    {
+      "name": "register",
+      "blueprint": null
+    },
+    {
+      "name": "get_current_user",
+      "blueprint": null
+    },
+    {
+      "name": "screenshot",
+      "blueprint": null
+    },
+    {
+      "name": "sync",
+      "blueprint": null
+    },
+    {
+      "name": "cloud_sync",
+      "blueprint": null
+    },
+    {
+      "name": "new_connection",
+      "blueprint": null
+    }
   ]
 }
