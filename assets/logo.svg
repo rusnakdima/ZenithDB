@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" role="img" aria-label="ZenithDB">
+  <ellipse cx="24" cy="12" rx="16" ry="7" fill="#0891b2"/>
+  <path d="M8 12 v12 c0 3.9 7.2 7 16 7s16-3.1 16-7V12c0 3.9-7.2 7-16 7s-16-3.1-16-7z" fill="#22d3ee"/>
+  <path d="M8 24 v12 c0 3.9 7.2 7 16 7s16-3.1 16-7V24c0 3.9-7.2 7-16 7s-16-3.1-16-7z" fill="#155e75"/>
+</svg>
