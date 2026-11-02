@@ -3,5 +3,11 @@ name = "zenithdb"
 version = "0.1.0"
 edition = "2021"
 
+[features]
+# The native shell is opt-in for this app: `cargo run -p zenithdb --features
+# native-shell`. Off by default, so the workspace default build — and the
+# purity gate's default-feature tree — still holds no UI framework.
+native-shell = ["forge/native-shell"]
+
 [dependencies]
 forge = { path = "../forge" }
